@@ -1,6 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@font-face {
+  font-family: "nunitoo";
+  src: url("/fonts/Nunito/Nunito-Bold.ttf");
+}
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -8,20 +16,103 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+}
+
+.st0{fill:#0acf83}
+.st1{fill:#a259ff}
+.st2{fill:#f24e1e}
+.st3{fill:#ff7262}
+.st4{fill:#1abcfe}
+
+h1{
+  @apply font-nunito text-4xl font-bold text-gray-900 mb-6;
+}
+h2{
+  @apply font-nunito text-3xl font-bold text-gray-900 mb-4;
+}
+h3{
+  @apply font-nunito text-2xl font-bold text-gray-900;
+}
+h4{
+  @apply font-nunito text-xl font-bold text-gray-900;
+}
+h5{
+  @apply font-nunito text-lg font-bold text-gray-900;
+}
+
+section{
+  @apply px-4 py-8 lg:py-24 lg:px-6;
+}
+
+footer{
+  @apply px-4 py-6 lg:pt-8 lg:px-6;
+}
+.btn{
+  @apply inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center rounded-lg sm:w-auto ;
+}
+.btn-primary{
+  @apply text-white bg-primary-default border border-gray-200  hover:bg-transparent hover:border-primary-default hover:text-primary-default focus:ring-4 focus:ring-gray-100;
+}
+.btn-secondary{
+  @apply border-primary-default text-primary-default focus:ring-4 focus:ring-gray-100 hover:text-white hover:bg-primary-default border hover:border-gray-200 hover:bg-transparent ;
+}
+.section-wrapper{
+  @apply items-center max-w-screen-xl mx-auto ;
+}
+.partner img{
+  @apply mx-auto;
+}
+.icon{
+  @apply flex px-12 py-6 rounded-full bg-primary-default justify-center mx-auto mb-6 w-[42px];
+}
+
+.swiper-button-next::after, .swiper-button-prev::after{
+  @apply text-primary-default rounded-full w-10 h-10 flex items-center justify-center;
+}
+
+.swiper-button-next, .swiper-button-prev {
+  /* position: absolute; */
+  top: var(--swiper-navigation-top-offset,50%);
+  width: calc(var(--swiper-navigation-size)/ 44 * 27);
+  height: var(--swiper-navigation-size);
+  /* margin-top: calc(0px - (var(--swiper-navigation-size)/ 2)); */
+  z-index: 10;
+  cursor: pointer;
+  display: inline-block;
+  align-items: center;
+  justify-content: center;
+  color: var(--swiper-navigation-color,var(--swiper-theme-color));
+}
+
+.swiper, .swiper-container {
+  margin-left: auto;
+  margin-right: auto;
+  position: absolute;
+  overflow: visible;
+  list-style: none;
+  padding: 0;
+  z-index: 9999;
+  display: block;
+}
+
+
+.swiper-pagination {
+  position: revert !important;
+  margin-top: 30px !important;
+}
+
+.swiper-pagination-bullet-active{
+  @apply bg-primary-default !important;
+}
+
+.feature_image {    
+  height: 480px;
+  width: 480px;
+}
+
+.feature_image img{
+  height: 100%;
+  width: 100%;
 }

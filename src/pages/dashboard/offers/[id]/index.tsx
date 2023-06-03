@@ -13,7 +13,6 @@ import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { Listing, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import EditListingModal from "@/components/modals/EditOfferModal";
 import StatusChecker from "@/utils/status";
 import { useQRCode } from "next-qrcode";
 import { toast } from "react-hot-toast";
@@ -420,18 +419,7 @@ const Index = ({ listing }: any) => {
             </div>
           </div>
         </div>
-        {editMode && (
-          <EditListingModal
-            editMode={editMode}
-            setEditMode={setEditModal}
-            listingId={listing.id}
-            initialData={{
-              title: listing.title,
-              description: listing.description,
-              price: listing.price,
-            }}
-          />
-        )}
+       
       </Dash>
     )
   );

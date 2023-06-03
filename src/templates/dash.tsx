@@ -25,13 +25,6 @@ const Dash = (props: IDashProps) => {
   const { data: session, status } = useSession();
   
 
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login"); // Redirect to the login page if not authenticated
-    }
-  }, [status]);
-
   if (status === "loading") {
     // Show loading state if session is still being fetched
     return <div>Loading...</div>;

@@ -1,6 +1,4 @@
 'use client';
-
-import { usePathname } from 'next/navigation';
 import { Meta } from '../layouts/meta';
 import { Main } from '../templates/main';
 import Hero from '../components/Hero';
@@ -9,8 +7,8 @@ import Partners from '../components/Partners';
 import About from '../components/About';
 import Newsletter from '../components/Newsletter';
 
+
 const Index = () => {
-  const path = usePathname();
 
   return (
     <Main

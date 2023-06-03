@@ -5,4 +5,5 @@ export const AppConfig = {
   title: 'Make You An Offer',
   description: 'This is the Make You An Offer application.',
   locale: 'en',
+  siteUrl: 'https://myao-ceoash-s-team.vercel.app',
 };

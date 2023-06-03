@@ -1,6 +1,48 @@
+"use client";
+import Button from "@/components/Button";
 import React from "react";
+import axios from "axios";
+import { useState } from "react";
+import { FieldValues, useForm, SubmitHandler } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import { useRouter } from 'next/router';
 
-const Login = () => {
+const Register = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FieldValues>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    }
+  });
+
+  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    setIsLoading(true);
+    setDisabled(true);
+    
+
+    axios.post("/api/register", data)
+    .then((res) => {
+      setIsLoading(false);
+      setDisabled(false);
+      console.log(res.data);
+      toast.success(res.data.message);
+      router.push('/login');
+    }).catch((err) => {
+      console.log(err);
+      toast.error(err.response.data.message);
+    });
+  
+  };
+
   return (
     <div className="bg-gray-50">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
@@ -18,7 +60,24 @@ const Login = () => {
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
               Create Account
             </h1>
-            <form className="space-y-4 md:space-y-6" action="#">
+            <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit(onSubmit)}>
+
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  Your name
+                </label>
+                <input
+                  {...register("name", { required: true })}
+                  type="text"
+                  name="name"
+                  id="name"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                  placeholder="joe bloggs"
+                />
+              </div>
               <div>
                 <label
                   htmlFor="email"
@@ -27,12 +86,12 @@ const Login = () => {
                   Your email
                 </label>
                 <input
+                  {...register("email", { required: true })}
                   type="email"
                   name="email"
                   id="email"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                   placeholder="name@company.com"
-                  required
                 />
               </div>
 
@@ -44,12 +103,12 @@ const Login = () => {
                   Password
                 </label>
                 <input
+                  {...register("password", { required: true })}
                   type="password"
                   name="password"
                   id="password"
                   placeholder="••••••••"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  required
                 />
               </div>
               <div>
@@ -60,12 +119,12 @@ const Login = () => {
                   Confirm password
                 </label>
                 <input
-                  type="confirm-password"
-                  name="confirm-password"
-                  id="confirm-password"
+                  {...register("passwordConfirmation", { required: true })}
+                  type="password"
+                  name="passwordConfirmation"
+                  id="passwordConfirmation"
                   placeholder="••••••••"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  required
                 />
               </div>
               <div className="flex items-start">
@@ -94,12 +153,11 @@ const Login = () => {
                 </div>
               </div>
 
-              <button
+              <Button
+                label={`Register`}
+                disabled={disabled}
                 type="submit"
-                className="w-full text-white bg-primary-default focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-              >
-                Register
-              </button>
+              />
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Already have an account?{" "}
                 <a
@@ -117,4 +175,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

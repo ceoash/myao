@@ -78,8 +78,26 @@ const Timeline = ({ listing, user, disabled }: any) => {
       <div className="flex flex-col h-full overflow-x-auto mb-4">
         <div className="flex flex-col h-full">
           <div className="md:grid md:grid-cols-12 gap-y-2">
+            <div className="col-span-12 flex justify-between items-center">
+              <div className="border-t border-gray-200 h-1 w-full"></div>
+              <div className="w-auto whitespace-nowrap mx-4 text-sm text-gray-500">
+                We are here to protect you from fraud please do not share your personal information
+              </div>
+              <div className="border-t border-gray-200 w-full"></div>
+            </div>
             {disabled && (
-              <div className="col-span-12 bg-orange-100 p-4 rounded-md ">Assign a user to start negotiating</div>
+              <div className="col-span-12 bg-orange-100 p-4 rounded-md ">
+                Assign a user to start negotiating
+              </div>
+            )}
+            {messages.length === 0 && !disabled && (
+              <div
+                className={`relative ml-3 text-sm col-span-4 border-2 border-orange-300 rounded-lg p-2 bg-orange-200`}
+              >
+                <div className="mb-1">
+                  Write a message to start your negotiation
+                </div>
+              </div>
             )}
             {messages?.map((message: any) => {
               const dateString = message.createdAt;
@@ -151,12 +169,23 @@ const Timeline = ({ listing, user, disabled }: any) => {
           <div className="relative w-full">
             <Input
               id="message"
-              placeholder="Message"
+              placeholder="write a message"
               label=""
               register={register}
               disabled={disabled}
             />
-            <button className="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600" onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+           
+          </div>
+        </div>
+       
+        
+      </div>
+      <div className="flex justify-between items-center relative">
+
+      <button
+              className="flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -172,12 +201,16 @@ const Timeline = ({ listing, user, disabled }: any) => {
                 ></path>
               </svg>
             </button>
-          </div>
-        </div>
-        <div className="relative">
-          <button
+            {showEmojiPicker && (
+            <div className="absolute left-0">
+              <EmojiPicker onEmojiClick={(emoji) => console.log(emoji)} />
+            </div>
+          )}
+      <button
             onClick={handleSubmit(onSubmit)}
-            className={`flex items-center justify-center ${disabled ? `bg-gray-400`:`bg-orange-500 hover:bg-orange-600`} rounded-md text-white px-4 py-2 flex-shrink-0`}
+            className={`flex items-center justify-center ${
+              disabled ? `bg-gray-400` : `text-orange-500 hover:text-orange-600`
+            } rounded-md px-4 py-2 flex-shrink-0 text-sm`}
             disabled={disabled}
           >
             <span className="hidden md:block">Send</span>
@@ -198,13 +231,10 @@ const Timeline = ({ listing, user, disabled }: any) => {
               </svg>
             </span>
           </button>
-          {showEmojiPicker && (
-            <div className="absolute right-0">
-              <EmojiPicker onEmojiClick={(emoji) => console.log(emoji)} />
-            </div>
-          )}
-        </div>
+
       </div>
+      
+          
     </div>
   );
 };

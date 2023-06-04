@@ -13,9 +13,10 @@ export default async function listingsApi(
 ) {
   if (req.method === "POST") {
 
-    const { title, description, price, image, senderId, category, recipientId  } = req.body;
+    const { title, description, price, image, senderId, category, recipientId, status  } = req.body;
 
     try {
+      if (recipientId){
       const listing = await prisma.listing.create({
         data: {
           title,
@@ -24,7 +25,7 @@ export default async function listingsApi(
           price,
           image,
           senderId,
-          status: "pending",
+          status: "negotiating",
           recipientId,
         },
         include: {
@@ -33,16 +34,16 @@ export default async function listingsApi(
         },
       });
 
-       await prisma.notification.create({
-        data: {
-          message: "A new listing has been created",
-          read: false,
-          url: `/dashboard/offers/${listing.id}`, 
-          userId: senderId, 
-          senderId: senderId,
-        },
-      });
-
+      await prisma.notification.create({
+        data: 
+          {
+            message: "You have been invited to a new listing",
+            read: false,
+            url: `/dashboard/offers/${listing.id}`,
+            userId: recipientId,
+            senderId: senderId,
+          },
+      })
       await axios.post("/api/email/sendUserEmailInvitation", {
         email: listing?.recipient?.email,
         sender: listing?.sender?.name,
@@ -55,8 +56,27 @@ export default async function listingsApi(
       })
       .catch((err) => {
         console.log("Something went wrong!");
-      })
+      });
       res.status(200).json(listing);
+    } else {
+      const listing = await prisma.listing.create({
+        data: {
+          title,
+          description,
+          category,
+          price,
+          image,
+          senderId,
+          status: "pending",
+        },
+        include: {
+          sender: true,
+        },
+      });
+
+      res.status(200).json(listing);
+    }
+      
     } catch (error) {
       console.error("Error creating listing:", error);
       res.status(500).json({ error: "Something went wrong" });

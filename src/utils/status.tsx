@@ -6,7 +6,7 @@ import { CgEditBlackPoint } from "react-icons/cg";
 function StatusChecker(status: string) {
   
     switch (status) {
-        case "negotiation":
+        case "negotiating":
             return ( <div className='flex gap-1 items-center text-yellow-500'><CgEditBlackPoint className='text-yellow-500' /><span >Under Negotiation</span> </div>)
         case "accepted":
             return ( <div className='flex gap-1 items-center text-green-500'><CgEditBlackPoint /><span>Accepted</span></div> )

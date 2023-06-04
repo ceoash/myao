@@ -23,8 +23,11 @@ interface searchModalProps {
   onAssignUser?: (user: User) => void;
   sender?: User;
   url?: string;
+  setRecipientId?: (newRecipientId: string | null) => void; // 
+  setStatus?: (newStatus: string | null) => void; // 
+
 }
-const SearchModal = ({ onAssignUser, sender, url }: searchModalProps) => {
+const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: searchModalProps) => {
   const { isOpen, listingId, onClose } = useSearchModal();
 
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
@@ -78,8 +81,6 @@ const SearchModal = ({ onAssignUser, sender, url }: searchModalProps) => {
           setFoundUser(null);
           setNotFoundUser(data.email);
         } else {
-          // User found
-          toast.success("Search completed!");
           setFoundUser(user);
         }
 
@@ -96,6 +97,9 @@ const SearchModal = ({ onAssignUser, sender, url }: searchModalProps) => {
   };
   const handleUserSelect = (user: any) => {
     setSelectedUser(user);
+    if (setRecipientId) {
+      setRecipientId(user.id || null);
+    }
 
     // Make the API call to assign the user to the listing here
     axios
@@ -104,7 +108,7 @@ const SearchModal = ({ onAssignUser, sender, url }: searchModalProps) => {
         userId: user.id,
       })
       .then((response) => {
-        // Handle response of assignUserToListing API call
+        router.refresh();
 
         if (response.status === 200) {
           toast.success("User assigned successfully!");
@@ -126,15 +130,14 @@ const SearchModal = ({ onAssignUser, sender, url }: searchModalProps) => {
       })
       .then((response) => {
         if (response.status === 200) {
-          toast.success("Invitation sent successfully!");
+          toast.success("Invitation sent!");
           console.log("Invitation sent successfully!");
           setInvitationSent(true);
         }
         reset();
       })
       .catch((err) => {
-        toast.error("Something went wrong!");
-        console.log("Something went wrong!");
+        console.log("user not found");
       })
       .finally(() => {
         setIsLoading(false);

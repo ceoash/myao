@@ -45,7 +45,7 @@ const Input: React.FC<InputProps> = ({
       <input
         id={id}
         disabled={disabled}
-        placeholder=" "
+        placeholder={placeholder}
         type={type}
         value={value}
         className={`

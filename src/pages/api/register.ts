@@ -17,6 +17,11 @@ export default async function handler(req: any, res: any) {
         email,
         name,
         hashedPassword,
+        profile: {
+          create: {
+            username: email,
+          },
+        }
       },
     });
 

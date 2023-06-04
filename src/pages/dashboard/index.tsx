@@ -17,9 +17,10 @@ interface dashboardProps {
   listings: Listing[];
   user: User;
   requests: Listing[];
+  negotiations: Listing[];
 }
 
-const Index = ({ listings, user, requests }: dashboardProps) => {
+const Index = ({ listings, user, requests, negotiations }: dashboardProps) => {
   const [session, setSession] = useState<any>(null);
   const offerModal = useOfferModal();
 
@@ -63,46 +64,47 @@ const Index = ({ listings, user, requests }: dashboardProps) => {
             <EmptyState showReset />
           ) : (
             <div>
-              { listings.length > 0 && (
+              {requests.length > 0 && (
                 <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
-                  <div className="border border-gray-200 bg-white p-4">
-                    <div className="font-extrabold">Your Offer Listings</div>
+                  <div className="border border-gray-200 bg-gray-50 p-4">
+                    <div className="font-extrabold flex justify-between">Offer Requests <span className="bg-orange-200 rounded-full px-2 py-1 text-orange-500">{requests.length}</span></div>
                   </div>
 
-                  <div className="inline-block min-w-full border-l border-r border-b border-gray-200">
+                  <div className="min-w-full border-l border-r border-b border-gray-200">
+                    {requests.map((item: Listing) => {
+                      if (item.recipientId === session?.user?.id)
+                        if (item.status === "pending")
+                          return <Offer key={item.id} {...item} />;
+                    })}
+                  </div>
+                </div>
+              )}
+              {listings.length > 0 && (
+                <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+                  <div className="border border-gray-200 bg-gray-50 p-4">
+                    <div className="font-extrabold flex justify-between">Your Offer Listings<span className="bg-orange-200 rounded-full px-2 py-1 text-orange-500">{listings.length}</span></div>
+                  </div>
+
+                  <div className="min-w-full border-l border-r border-b border-gray-200">
                     {listings.map((item: Listing) => {
                       if (item.senderId === session?.user?.id)
                         return <Offer key={item.id} {...item} />;
                     })}
                   </div>
                 </div>
-          )}
-              {requests.length > 0 && (
-                <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
-                  <div className="border border-gray-200 bg-white p-4">
-                    <div className="font-extrabold">Offer Requests</div>
-                  </div>
-
-                  <div className="inline-block min-w-full border-l border-r border-b border-gray-200">
-                    {requests.map((item: Listing) => {
-                      if (item.recipientId === session?.user?.id)
-                      if (item.status === "pending")
-                        return <Offer key={item.id} {...item} />;
-                    })}
-                  </div>
-                </div>
               )}
+
               {requests.length > 0 && (
                 <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
-                  <div className="border border-gray-200 bg-white p-4">
-                    <div className="font-extrabold">Under Negotiation</div>
+                  <div className="border border-gray-200 bg-gray-50 p-4">
+                    <div className="font-extrabold flex justify-between">Under Negotiation <span className="bg-orange-200 rounded-full px-2 py-1 text-orange-500">{requests.length}</span></div>
                   </div>
 
-                  <div className="inline-block min-w-full border-l border-r border-b border-gray-200">
+                  <div className="min-w-full border-l border-r border-b border-gray-200">
                     {requests.map((item: Listing) => {
                       if (item.recipientId === session?.user?.id)
-                      if (item.status !== 'pending')
-                        return <Offer key={item.id} {...item} />;
+                        if (item.status !== "pending")
+                          return <Offer key={item.id} {...item} />;
                     })}
                   </div>
                 </div>
@@ -139,13 +141,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const user = await getCurrentUser(session);
     const listings = await getListingsByUserId(session.user.id);
-    const requests = await getRequestsByUserId(session.user.id);
+    const recieved = await getRequestsByUserId(session.user.id);
+
+    const requests = recieved.filter((item) => item.status === "pending");
+    const negotiations = recieved.filter((item) => item.status == "negotiating");
 
     return {
       props: {
         listings,
         user,
         requests,
+        negotiations,
       },
     };
   } catch (error) {
@@ -154,6 +160,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         listings: [],
         requests: [],
+        negotiations: [],
       },
     };
   }

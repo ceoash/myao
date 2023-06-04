@@ -54,8 +54,8 @@ const Offer: React.FC<Listing> = ({
     };
   }, [isOffer]);
   return (
-    <div className=" w-full mt-6 lg:mt-0 bg-white ">
-      <div className="md:px-6 md:py-6 md:flex gap-4">
+    <div className=" w-full  bg-white border-b border-gray-200">
+      <div className="md:px-6 md:py-4 md:flex gap-4">
         <div className="md:aspect-w-16 md:aspect-h-9 flex justify-center">
           <img
             className="object-cover rounded-t-md md:rounded-md object-center h-24 md:h-42 w-full md:w-64"
@@ -82,13 +82,13 @@ const Offer: React.FC<Listing> = ({
               </div>
               <div>
                 <div className="text-right text-sm">Current Bid</div>
-                <div className="font-extrabold md:text-3xl text-right">
+                <div className="font-extrabold md:text-2xl text-right">
                   £ {bid ? bid : price}
                 </div>
               </div>
             </div>
           </div>
-          <div className=" flex justify-between">
+          <div className=" flex justify-between items-end">
             <div className="hidden md:block text-sm">
               <div className="leading-relaxed text-sm">
                 {StatusChecker(status ? status : "Pending")}
@@ -103,7 +103,7 @@ const Offer: React.FC<Listing> = ({
                 <AiOutlineEye />
                 View
               </Link>
-              { session?.user?.id === senderId ? (
+              { session?.user?.id === senderId && (
                 <>
                 <button
                 onClick={handleEditListing}
@@ -148,13 +148,21 @@ const Offer: React.FC<Listing> = ({
                 Delete
               </button>
               </>
-              ) :
-              (
+              ) 
+              
+                
+              
+              
+              }
+              { session?.user?.id !== senderId &&
+                status !== "rejected" && 
+                status !== "accepted" &&
+                (
                 <button className="flex gap-1 items-center text-red-500">
                   <IoClose  />
                   Reject
                 </button>
-              )
+                )
               }
               
             </div>

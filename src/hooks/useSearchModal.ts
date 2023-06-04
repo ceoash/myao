@@ -1,27 +1,30 @@
 import { create } from 'zustand';
 
 interface SearchModalStore {
-    isOpen: boolean;
-    listingId: string | null;
-    onOpen: (id: string) => void;
-    onClose: () => void;
-  }
-  
-  const useSearchModal = create<SearchModalStore>((set) => ({
-    isOpen: false,
-    listingId: null,
-    onOpen: (id: string) => {
-      set({ isOpen: true, listingId: id });
-      console.log("id", id);
-      return;  // Ensure the function returns void
-    },
-    onClose: () => {
-      set({ isOpen: false, listingId: null });
-      return;  // Ensure the function returns void
-    },
-  }));
+  isOpen: boolean;
+  listingId: string | null;
+  onOpen: (
+    id: string,
+    setRecipientId: (newRecipientId: string | null) => void,
+    setStatus: (newStatus: string | null) => void
+  ) => void;
+  onClose: () => void;
+}
 
-  
-  
-  export default useSearchModal;
-  
+const useSearchModal = create<SearchModalStore>((set) => ({
+  isOpen: false,
+  listingId: null,
+  onOpen: (
+    id: string,
+    setRecipientId: (newRecipientId: string | null) => void,
+    setStatus: (newStatus: string | null) => void
+  ) => {
+    set({ isOpen: true, listingId: id });
+    setRecipientId(null);
+  },
+  onClose: () => {
+    set({ isOpen: false, listingId: null });
+  },
+}));
+
+export default useSearchModal;

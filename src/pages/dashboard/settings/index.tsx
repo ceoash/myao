@@ -417,8 +417,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const user = await getCurrentUser(session);
     const listings = await getListingsByUserId(session.user.id);
 
-    console.log("getServerSideProps", user);
-
     return {
       props: {
         user,

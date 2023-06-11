@@ -23,15 +23,7 @@ export default async function submitBid(
         },
       });
 
-      await prisma.notification.create({
-        data: {
-          message: `New bid of ${price} has been placed`,
-          read: false,
-          url: `/listings/${listing.id}`, 
-          userId: listing.buyerId ? listing.buyerId : listing.buyerId, 
-          buyerId: listing.buyerId, 
-        }
-      })
+    
 
       if (listing) {
         res.status(200).json(listing);

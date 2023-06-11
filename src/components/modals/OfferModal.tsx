@@ -203,7 +203,7 @@ const OfferModal = () => {
         offerModal.onClose();
       })
       .catch((err) => {
-        console.log("Something went wrong!");
+        console.log(err);
         toast.error("Something went wrong!");
       })
       .finally(() => {

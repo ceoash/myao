@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from "react";
-import { set } from "react-hook-form";
+import { FieldErrors, FieldValues, set } from "react-hook-form";
 import { IoClose } from "react-icons/io5"
 import Button from "../Button";
 
@@ -17,8 +17,8 @@ interface ModalProps {
     secondaryAction?: () => void;
     secondaryActionLabel?: string;
     listingId?: string;
-    children?: React.ReactNode; // Add this line
-
+    children?: React.ReactNode;
+    errors?: FieldErrors<FieldValues> | undefined;
 
 }
 
@@ -33,13 +33,17 @@ const Modal: React.FC<ModalProps> = ({
     disabled,
     secondaryAction,
     secondaryActionLabel,
-    listingId
+    listingId,
+    errors
+
 }) => {
     const [showModal, setShowModal] = useState(isOpen);
 
     useEffect(() => {
         setShowModal(isOpen)
     }, [isOpen]);
+
+   
 
     const handleClose = useCallback(() => {
         if (disabled) return;
@@ -61,6 +65,31 @@ const Modal: React.FC<ModalProps> = ({
 
     if (!isOpen) return null;
 
+    const renderErrorMessages = () => {
+        if (!errors) return null;
+      
+        return Object.entries(errors).map(([fieldName, error]) => {
+          if (typeof error === "string") {
+            return (
+              <div key={fieldName} className="text-red-500">
+                {error}
+              </div>
+            );
+          }
+      
+          if (error instanceof Object && "message" in error && typeof error.message === 'string') {
+            return (
+              <div key={fieldName} className="text-red-500">
+                {error.message}
+              </div>
+            );
+          }
+      
+          return null;
+        });
+      };
+      
+      
     return (
     <>
     <div 
@@ -72,7 +101,7 @@ const Modal: React.FC<ModalProps> = ({
         overflow-y-auto
         fixed
         inset-0
-        z-50
+        z-10
         outline-none
         focus:outline-none
        ${showModal && 'bg-neutral-800/70'}
@@ -153,7 +182,7 @@ const Modal: React.FC<ModalProps> = ({
                     {/* FOOTER */}
                     <div className="flex flex-col gap-2 p-6">
                         <div className="flex flex-row items-center gap-4 w-full">
-                            { secondaryAction && <Button disabled={disabled} label={secondaryActionLabel || 'Back'} outline onClick={secondaryAction}/> }
+                            { secondaryAction && <Button label={secondaryActionLabel || 'Back'} outline onClick={secondaryAction}/> }
                            <Button disabled={disabled} label={actionLabel || 'Submit'} onClick={handleSubmit}/>
                         </div>
                         {footer}

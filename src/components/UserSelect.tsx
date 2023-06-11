@@ -21,21 +21,21 @@ export interface ErrorResponse {
 
 interface searchModalProps {
   onAssignUser?: (user: User) => void;
-  sender?: User;
+  buyer?: User;
   url?: string;
   create?: boolean;
 }
 const UserSelect = ({
-    onAssignUser,
-    sender,
-    url,
-    create,
-    formValues,
-    updateFormValues,
-  }: searchModalProps & {
-    formValues: FieldValues;
-    updateFormValues: (values: FieldValues) => void;
-  }) => {
+  onAssignUser,
+  buyer,
+  url,
+  create,
+  formValues,
+  updateFormValues,
+}: searchModalProps & {
+  formValues: FieldValues;
+  updateFormValues: (values: FieldValues) => void;
+}) => {
   const { isOpen, listingId, onClose } = useSearchModal();
 
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
@@ -47,7 +47,6 @@ const UserSelect = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
 
   const router = useRouter();
 
@@ -61,7 +60,7 @@ const UserSelect = ({
   } = useForm<FieldValues>({
     defaultValues: {
       email: "",
-      recipientId: "",
+      sellerId: "",
     },
   });
 
@@ -69,7 +68,7 @@ const UserSelect = ({
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     if (status === "authenticated" && session?.user) {
-      data.senderId = session.user.id;
+      data.buyerId = session.user.id;
       console.log("User authenticated");
     } else {
       // Handle the case when the user is unauthenticated or the session doesn't contain the user object
@@ -105,33 +104,28 @@ const UserSelect = ({
       });
   };
 
-  
-
   const handleUserSelect = (user: User) => {
     setSelectedUser(foundUser);
 
     if (create) {
+      const updatedFormValues = {
+        ...formValues,
+        sellerId: foundUser?.id,
+      };
 
-        const updatedFormValues = {
-            ...formValues,
-            recipientId: foundUser?.id,
-        };
-
-        updateFormValues(updatedFormValues);
-        setUserAssigned(true)
-
-      
+      updateFormValues(updatedFormValues);
+      setUserAssigned(true);
     } else {
       axios
         .post("/api/assignUserToListing", {
-          listingId: listingId, 
+          listingId: listingId,
           userId: user.id,
         })
         .then((response) => {
           if (response.status === 200) {
             toast.success("User assigned successfully!");
             SearchModal.onClose();
-            setUserAssigned(true)
+            setUserAssigned(true);
           }
         })
         .catch((err) => {
@@ -143,30 +137,30 @@ const UserSelect = ({
 
   const handleEmailSubmit = async () => {
     if (create) {
-        console.log("user assigned")
+      console.log("user assigned");
     } else {
-    await axios
-      .post("/api/email/sendUserEmailInvitation", {
-        email: notFoundUser,
-        sender: sender,
-        url: url,
-      })
-      .then((response) => {
-        if (response.status === 200) {
-          toast.success("Invitation sent successfully!");
-          console.log("Invitation sent successfully!");
-          setInvitationSent(true);
-        }
-        reset();
-      })
-      .catch((err) => {
-        toast.error("Something went wrong!");
-        console.log("Something went wrong!");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-    };
+      await axios
+        .post("/api/email/sendUserEmailInvitation", {
+          email: notFoundUser,
+          buyer: buyer,
+          url: url,
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            toast.success("Invitation sent successfully!");
+            console.log("Invitation sent successfully!");
+            setInvitationSent(true);
+          }
+          reset();
+        })
+        .catch((err) => {
+          toast.error("Something went wrong!");
+          console.log("Something went wrong!");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
   };
 
   return (
@@ -192,10 +186,16 @@ const UserSelect = ({
       </div>
       {foundUser ? (
         <div className="px-4 py-2 flex rounded border-gray-200 justify-between">
-          <div>{foundUser.name ? foundUser.name : foundUser.email}</div>
+          <div>
+            {foundUser.name ? (
+              <div className="capitalize">{foundUser.name}</div>
+            ) : (
+              foundUser.email
+            )}
+          </div>
           <div className="flex gap-2">
-            {userAssigned && (
-                <button
+            {userAssigned ? (
+              <button
                 onClick={() => setUserAssigned(false)}
                 className="
           bg-orange-500 
@@ -207,23 +207,24 @@ const UserSelect = ({
           items-center
           "
               >
-               Change 
+                Change
+              </button>
+            ) : (
+              <button
+                onClick={() => handleUserSelect(foundUser)}
+                className="
+                bg-orange-500 
+                px-2 rounded-md 
+                text-sm py-1 
+                text-white 
+                flex 
+                gap-2 
+                items-center
+                "
+              >
+                Assign
               </button>
             )}
-            <button
-              onClick={() => handleUserSelect(foundUser)}
-              className="
-        bg-orange-500 
-        px-2 rounded-md 
-        text-sm py-1 
-        text-white 
-        flex 
-        gap-2 
-        items-center
-        "
-            >
-             {userAssigned ? `Assigned ` : `Assign`}  
-            </button>
           </div>
         </div>
       ) : (

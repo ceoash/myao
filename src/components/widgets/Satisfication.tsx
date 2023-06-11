@@ -4,7 +4,7 @@ import { BiChart } from 'react-icons/bi'
 
 const Satisfication = () => {
   return (
-    <Card title="Rating Score" icon={<BiChart />}>
+<Card title="Rating Score" icon={<BiChart />}>
       <div className="md:grid md:grid-cols-3 items-center gap-4">
         <div className="flex flex-col justify-evenly items-center w-full lg:flex lg:flex-row  p-6 my-4  border-2 border-gray-200 rounded">
           <svg

@@ -12,7 +12,7 @@ interface InputProps {
   formatPrice?: boolean;
   required?: boolean;
   errors?:   FieldErrors<FieldValues>;
-
+  sm?: boolean;
   value?: string;
   modal?: boolean;
   register: UseFormRegister<FieldValues>;
@@ -62,15 +62,15 @@ const Input: React.FC<InputProps> = ({
           disabled:opacity-50
           my-2
           ${formatPrice ? "pl-10" : "pl-4"}
-          ${errors ? "border-red-500" : "border-neutral-200"}
-          ${errors ? "text-red-500" : "text-neutral-700"}
+          ${errors && errors[id] ? "border-red-500" : "border-gray-200"}
+          ${errors && errors[id] ? "text-red-500" : "text-gray-700"}
         `}
         {...register(id, {
           required: required && "This field is required",
           ...registerOptions,
         })}
       />
-      {errors && errors[id] && <div>{String(errors[id]?.message)}</div>}
+      {errors && errors[id] && <div className="absolute top-0 -mt-4">{String(errors[id]?.message)}</div>}
     </div>
   );
 };

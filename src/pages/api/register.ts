@@ -8,7 +8,7 @@ export default async function handler(req: any, res: any) {
   
   try {
     const body = req.body;
-    const { email, name, password } = body;
+    const { email, name, password, username} = body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -17,11 +17,7 @@ export default async function handler(req: any, res: any) {
         email,
         name,
         hashedPassword,
-        profile: {
-          create: {
-            username: email,
-          },
-        }
+        username: username ? username : email,
       },
     });
 

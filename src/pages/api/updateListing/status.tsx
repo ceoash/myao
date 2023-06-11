@@ -18,16 +18,7 @@ export default async function listingsApi(
         data: { status }
       });
 
-      await prisma.notification.create({
-        data: {
-          message: `Offer ${listing.status}`,
-          read: false,
-          url: `/dashboard/offers/${listing.id}`, 
-          userId: listing.recipientId ? listing.recipientId : listing.senderId, 
-          senderId: listing.senderId, 
-        }
-      })
-
+  
       res.status(200).json(listing);
     } catch (error) {
       console.error("Error updating listing:", error);

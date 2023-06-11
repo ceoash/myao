@@ -13,10 +13,10 @@ export default async function listingsApi(
 ) {
   if (req.method === "POST") {
 
-    const { title, description, price, image, senderId, category, recipientId, status  } = req.body;
+    const { title, description, price, image, sellerId, category, buyerId  } = req.body;
 
     try {
-      if (recipientId){
+      if (buyerId){
       const listing = await prisma.listing.create({
         data: {
           title,
@@ -24,29 +24,29 @@ export default async function listingsApi(
           category,
           price,
           image,
-          senderId,
-          status: "negotiating",
-          recipientId,
+          sellerId,
+          status: "awaiting approval",
+          buyerId,
         },
         include: {
-          sender: true,
-          recipient: true,
+          seller: true,
+          buyer: true,
         },
       });
 
-      await prisma.notification.create({
+      /* await prisma.notification.create({
         data: 
           {
             message: "You have been invited to a new listing",
             read: false,
             url: `/dashboard/offers/${listing.id}`,
-            userId: recipientId,
-            senderId: senderId,
+            userId: buyerId,
+            sellerId: sellerId,
           },
-      })
+      }) */
       await axios.post("/api/email/sendUserEmailInvitation", {
-        email: listing?.recipient?.email,
-        sender: listing?.sender?.name,
+        email: listing?.buyer?.email,
+        seller: listing?.seller?.name,
         url: listing?.id,
       })
       .then((response) => {
@@ -66,11 +66,11 @@ export default async function listingsApi(
           category,
           price,
           image,
-          senderId,
+          sellerId,
           status: "pending",
         },
         include: {
-          sender: true,
+          seller: true,
         },
       });
 
@@ -83,12 +83,12 @@ export default async function listingsApi(
     }
   } else if (req.method === "PUT") {
     const id = req.query.id as string;
-    const { title, description, price, image, senderId, category } = req.body;
+    const { title, description, price, image, buyerId, category } = req.body;
 
     try {
       const listing = await prisma.listing.update({
         where: { id },
-        data: { title, description, category, price, image, senderId },
+        data: { title, description, category, price, image, buyerId },
       });
       res.status(200).json(listing);
     } catch (error) {

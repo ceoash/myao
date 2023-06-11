@@ -5,12 +5,15 @@ interface IParams {
 }
 
 export default async function getUserById({ id }: IParams) {
-    console.log(id);
+
     try {
         const user = await prisma?.user.findUnique({
             where: {
                 id: id // filter by the userId
             },
+            include: {
+                profile: true
+            }
         });
 
         if (!user) {

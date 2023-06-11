@@ -16,8 +16,8 @@ export default async function messagesApi(
         const messages = await prisma.message.findMany({
           where: { listingId: String(listingId) },
           include: {
-            sender: true,
-            recipient: true,
+            buyer: true,
+            seller: true,
             listing: true,
           },
           orderBy: { createdAt: 'asc' },

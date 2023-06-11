@@ -14,25 +14,17 @@ export default async function handler(
             id: listingId
         },
         data: {
-            recipientId: userId,
-            status: "negotiating"
+            buyerId: userId,
+            status: "awaiting approval"
         },
         include: {
-          sender: true,      // Include sender details
-          recipient: true,    // Include recipient details
+          buyer: true,      // Include buyer details
+          seller: true,    // Include buyer details
           messages: true     // Include messages
       }
     });
     
-    await prisma.notification.create({
-      data: {
-        message: `New offer from ${listing?.sender?.name ? listing?.sender?.name : listing?.sender?.email}}`,
-        read: false,
-        url: `/listings/${listingId}`, 
-        userId: userId, 
-        senderId: listing?.senderId, 
-      }
-    })
+  
 
     if (!listing) {
         res.status(404).json({ error: 'Listing not found' });

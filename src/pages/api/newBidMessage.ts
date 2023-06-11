@@ -11,7 +11,7 @@ export default async function listingsApi(
   res: NextApiResponse<Listing | ErrorResponse>
 ) {
   if (req.method === "POST") {
-    const { message, recipientId, senderId, listingId } = req.body;
+    const { message, sellerId, buyerId, listingId } = req.body;
 
     
     try {
@@ -23,16 +23,16 @@ export default async function listingsApi(
             messages: {
               create: [
                 {
-                  senderId: senderId,
-                  recipientId: recipientId,
+                  buyerId: buyerId,
+                  sellerId: sellerId,
                   text: message,
                 },
               ],
             },
           },
           include: {
-            sender: true, // Include sender details
-            recipient: true, // Include recipient details
+            buyer: true, // Include buyer details
+            seller: true, // Include seller details
             messages: true, // Include messages
           },
       });
@@ -41,8 +41,8 @@ export default async function listingsApi(
           message: "New Offer message",
           read: false,
           url: `/dashboard/offers/${listingId}`, 
-          userId: recipientId, 
-          senderId: senderId, 
+          userId: sellerId, 
+          buyerId: buyerId, 
         }
       })
       res.status(200).json(newMessage);

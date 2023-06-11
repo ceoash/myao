@@ -4,12 +4,12 @@ interface UseListingStore {
     isOpen: boolean;
     listingId: string | null;
     listing: any;  
-    recipientId: string | null; 
-    recipient: any; 
+    sellerId: string | null; 
+    seller: any; 
     onOpen: (id: string) => void;
     onClose: () => void;
     setListing: (listing: any) => void;  // Add this line
-    setRecipient: (recipient: any) => void;  // Add this line
+    setSeller: (seller: any) => void;  // Add this line
     
 }
 
@@ -17,8 +17,8 @@ const useListing = create<UseListingStore>((set) => ({
     isOpen: false,
     listingId: null,
     listing: null,
-    recipientId: null,
-    recipient: null,
+    sellerId: null,
+    seller: null,
     messages: [],
     onOpen: (id: string) => {
         set({ isOpen: true, listingId: id });
@@ -27,7 +27,7 @@ const useListing = create<UseListingStore>((set) => ({
         set({ isOpen: false, listingId: null, listing: null });
     },
     setListing: (listing: any) => set({ listing }),
-    setRecipient: (recipient: any) => set({ recipient }),
+    setSeller: (seller: any) => set({ seller }),
     
 }));
 

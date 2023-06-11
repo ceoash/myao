@@ -21,13 +21,13 @@ export interface ErrorResponse {
 
 interface searchModalProps {
   onAssignUser?: (user: User) => void;
-  sender?: User;
+  buyer?: User;
   url?: string;
-  setRecipientId?: (newRecipientId: string | null) => void; // 
+  setSellerId?: (newSellerId: string | null) => void; // 
   setStatus?: (newStatus: string | null) => void; // 
 
 }
-const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: searchModalProps) => {
+const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searchModalProps) => {
   const { isOpen, listingId, onClose } = useSearchModal();
 
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
@@ -62,7 +62,7 @@ const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: s
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     if (status === "authenticated" && session?.user) {
-      data.senderId = session.user.id;
+      data.buyerId = session.user.id;
       console.log("User authenticated");
     } else {
       // Handle the case when the user is unauthenticated or the session doesn't contain the user object
@@ -72,14 +72,14 @@ const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: s
     }
 
     await axios
-      .post("/api/searchUserByEmail", data)
+      .post("/api/searchUserByUsername", data)
       .then((response) => {
         const user: User | ErrorResponse = response.data;
         if ("error" in user) {
           // User not found
           toast.error("User not found!");
           setFoundUser(null);
-          setNotFoundUser(data.email);
+          setNotFoundUser(data.username);
         } else {
           setFoundUser(user);
         }
@@ -89,7 +89,7 @@ const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: s
       .catch((err) => {
         toast.error("Something went wrong!");
         setFoundUser(null);
-        setNotFoundUser(data.email);
+        setNotFoundUser(data.username);
       })
       .finally(() => {
         setIsLoading(false);
@@ -97,8 +97,8 @@ const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: s
   };
   const handleUserSelect = (user: any) => {
     setSelectedUser(user);
-    if (setRecipientId) {
-      setRecipientId(user.id || null);
+    if (setSellerId) {
+      setSellerId(user.id || null);
     }
 
     // Make the API call to assign the user to the listing here
@@ -125,7 +125,7 @@ const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: s
     await axios
       .post("/api/email/sendUserEmailInvitation", {
         email: notFoundUser,
-        sender: sender,
+        buyer: buyer,
         url: url,
       })
       .then((response) => {
@@ -151,9 +151,9 @@ const SearchModal = ({ onAssignUser, sender, url, setRecipientId, setStatus }: s
         description="Search for a user to send the offer to"
       />
       <Input
-        id="email"
-        label="Enter user email"
-        type="email"
+        id="username"
+        label="Enter Username"
+        type="text"
         required
         register={register}
       />

@@ -1,7 +1,9 @@
-import { User } from "@prisma/client";
+import removeFriend from "@/pages/api/deleteFriend";
+import { on } from "events";
 import Link from "next/link";
 import React from "react";
 import { BiStar } from "react-icons/bi";
+import { User } from "@/types";
 
 interface UserCardProps {
   currentUser: User;
@@ -10,6 +12,12 @@ interface UserCardProps {
   messages: number;
   dashboard?: boolean;
   profile?: boolean;
+  public?: boolean;
+  onMessageClick?: () => void; 
+  onAddFriendClick?: () => void; 
+  isFriend?: boolean;
+  onRemoveFriendClick?: () => void;
+  
 }
 
 const UserCard = ({
@@ -18,8 +26,13 @@ const UserCard = ({
   offers,
   messages,
   dashboard,
-profile,
+  profile,
+  onMessageClick, 
+  onAddFriendClick, 
+  onRemoveFriendClick,
+  isFriend,
 }: UserCardProps) => {
+  console.log(currentUser);
   return (
     <div
       id="profile-card"
@@ -29,7 +42,7 @@ profile,
         <div className="flex w-1/3  md:w-1/5 lg:w-full ">
           <div className=" mx-auto">
             <img
-              src={"/images/placeholders/avatar.png"}
+              src={currentUser?.profile?.image || "/images/placeholders/avatar.png"}
               className="w-full rounded-full border-2 border-gray-200 p-2 max-w-[200px]"
             />
           </div>
@@ -54,13 +67,21 @@ profile,
           <div>{offers}</div>
         </div>
         <div className="text-center w-full">
-          <div className="font-bold">Sales</div>
+          <div className="font-bold">Requests</div>
           <div>{sales}</div>
         </div>
+        {profile ? (
         <div className="text-center w-full">
           <div className="font-bold">Messages</div>
           <div>{messages}</div>
         </div>
+
+        ) : (
+          <div className="text-center w-full">
+          <div className="font-bold">Completed</div>
+          <div>{messages}</div>
+        </div>
+        )}
       </div>
 
       <div className="mt-5 flex gap-2 text-sm text-center">
@@ -88,12 +109,33 @@ profile,
               </Link>
           </>
         ) : (
-          <a
-            href="#"
+          <>
+          {isFriend === false ? (
+             <button
+             onClick={onAddFriendClick}
+             className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
+           >
+             Add User
+           </button>
+
+          ) :(
+
+            <button
+            onClick={onRemoveFriendClick}
+            className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
+          >
+            Unfollow
+          </button>
+
+          )}
+         
+          <button
+            onClick={onMessageClick}
             className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
           >
             Message
-          </a>
+          </button>
+          </>
         )}
       </div>
     </div>

@@ -5,7 +5,7 @@ interface SearchModalStore {
   listingId: string | null;
   onOpen: (
     id: string,
-    setRecipientId: (newRecipientId: string | null) => void,
+    setSellerId: (newSellerId: string | null) => void,
     setStatus: (newStatus: string | null) => void
   ) => void;
   onClose: () => void;
@@ -16,11 +16,11 @@ const useSearchModal = create<SearchModalStore>((set) => ({
   listingId: null,
   onOpen: (
     id: string,
-    setRecipientId: (newRecipientId: string | null) => void,
+    setSellerId: (newSellerId: string | null) => void,
     setStatus: (newStatus: string | null) => void
   ) => {
     set({ isOpen: true, listingId: id });
-    setRecipientId(null);
+    setSellerId(null);
   },
   onClose: () => {
     set({ isOpen: false, listingId: null });

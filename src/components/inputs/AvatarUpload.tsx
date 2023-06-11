@@ -57,6 +57,8 @@ const AvatarUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
                   alt="Upload"
                   fill={true}
                   style={{ objectFit: "cover" }}
+                  className="rounded-full"
+                  
                 />
               </div>
           )}

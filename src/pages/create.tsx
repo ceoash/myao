@@ -16,7 +16,7 @@ const CreatePage = () => {
         description: 'This is a dummy listing',
         price: 100,
         image: 'https://example.com/image.jpg',
-        senderId: session?.user?.id, // Replace with the actual senderId
+        buyerId: session?.user?.id, // Replace with the actual buyerId
       });
 
       console.log('Listing created:', response.data);

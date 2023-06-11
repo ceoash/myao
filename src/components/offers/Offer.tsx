@@ -21,7 +21,7 @@ const Offer: React.FC<Listing> = ({
   image,
   bid,
   status,
-  senderId
+  sellerId
 
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -54,11 +54,11 @@ const Offer: React.FC<Listing> = ({
     };
   }, [isOffer]);
   return (
-    <div className=" w-full  bg-white border-b border-gray-200">
+    <div className=" w-full  bg-white border-b border-gray-200 mb-6 md:mb-0">
       <div className="md:px-6 md:py-4 md:flex gap-4">
         <div className="md:aspect-w-16 md:aspect-h-9 flex justify-center">
           <img
-            className="object-cover rounded-t-md md:rounded-md object-center h-24 md:h-42 w-full md:w-64"
+            className="object-cover rounded-t-md md:rounded-md object-center h-42 md:h-24 lg:h-24 w-full md:w-64"
             src={image || "/images/cat.png"}
             alt="content"
           />
@@ -76,7 +76,7 @@ const Offer: React.FC<Listing> = ({
             <div className="flex justify-between md:block border-b border-gray-200 md:border-0 mb-2 pb-2 md:pb-0 md:m-0">
               <div className="md:hidden">
                 <div className="text-sm">Status</div>
-                <div className="-mt-1">
+                <div className="text-sm">
                   {StatusChecker(status ? status : "Pending")}
                 </div>
               </div>
@@ -103,7 +103,7 @@ const Offer: React.FC<Listing> = ({
                 <AiOutlineEye />
                 View
               </Link>
-              { session?.user?.id === senderId && (
+              { session?.user?.id === sellerId && (
                 <>
                 <button
                 onClick={handleEditListing}
@@ -154,7 +154,7 @@ const Offer: React.FC<Listing> = ({
               
               
               }
-              { session?.user?.id !== senderId &&
+              { session?.user?.id !== sellerId &&
                 status !== "rejected" && 
                 status !== "accepted" &&
                 (

@@ -12,7 +12,7 @@ export default async function assignUserToListing({ listingId, userId }: IParams
                 id: listingId,
             },
             data: {
-                recipientId: userId,
+                sellerId: userId,
             },
         });
 

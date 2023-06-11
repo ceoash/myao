@@ -11,8 +11,8 @@ export default async function getBidByID({ bidId }: IParams) {
               id: bidId,
             },
             include: {
-              sender: true,
-              recipient: true,
+              buyer: true,
+              seller: true,
             },
           });
           
@@ -25,16 +25,16 @@ export default async function getBidByID({ bidId }: IParams) {
             createdAt: bid.createdAt.toISOString(), // Convert to ISO string
             updatedAt: bid.updatedAt.toISOString(),
             expireAt: bid.expireAt?.toISOString() || null,
-            sender: {
-              ...bid.sender,
-              createdAt: bid.sender.createdAt.toISOString(),
-              updatedAt: bid.sender.updatedAt.toISOString(),
+            seller: {
+              ...bid.seller,
+              createdAt: bid.seller?.createdAt.toISOString(),
+              updatedAt: bid.seller?.updatedAt.toISOString(),
             },
-            recipient: bid.recipient
+            buyer: bid.buyer
               ? {
-                  ...bid.recipient,
-                  createdAt: bid.recipient.createdAt.toISOString(),
-                  updatedAt: bid.recipient.updatedAt.toISOString(),
+                  ...bid.buyer,
+                  createdAt: bid.buyer.createdAt.toISOString(),
+                  updatedAt: bid.buyer.updatedAt.toISOString(),
                 }
               : null,
           };         

@@ -12,7 +12,6 @@ const Index = ({ listings }: any) => {
 
   const { data: session } = useSession();
 
-  console.log(session?.user?.id);
 
   if (listings.length === 0) {
     return (
@@ -69,7 +68,7 @@ const Index = ({ listings }: any) => {
                   </thead>
                   <tbody>
                     {listings.map((item: Listing) => {
-                      if(item.senderId === session?.user?.id){
+                      if(item.buyerId === session?.user?.id){
                         return <Offer key={item.id} {...item} />;
                       }
                         

@@ -5,7 +5,7 @@ import axios from "axios";
 import { useState } from "react";
 import { FieldValues, useForm, SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +20,7 @@ const Register = () => {
     defaultValues: {
       name: "",
       email: "",
+      username: "",
       password: "",
     }
   });
@@ -76,6 +77,22 @@ const Register = () => {
                   id="name"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                   placeholder="joe bloggs"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  MYAO name
+                </label>
+                <input
+                  {...register("username", { required: true })}
+                  type="text"
+                  name="username"
+                  id="username"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                  placeholder="joebloggs23"
                 />
               </div>
               <div>

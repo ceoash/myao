@@ -1,18 +1,15 @@
-import React, { ReactNode, useCallback } from "react";
-
-import { Session } from "next-auth";
-import { useEffect, useState } from "react";
-
-import Modal from "@/components/modals/Modal";
+import React, { ReactNode, useEffect, useState } from "react";
 import UserMenu from "@/components/UserMenu";
 import OfferModal from "@/components/modals/OfferModal";
-
-import { getSession, useSession } from "next-auth/react";
 import SearchModal from "@/components/modals/UserSearchModal";
-import { Toaster } from "react-hot-toast";
+import MessageModal from "@/components/modals/MessageModal";
 import DeleteConfirmation from "@/components/modals/DeleteConfirmation";
+import StartConversation from "@/components/modals/StartConversation";
+import { useSession } from "next-auth/react";
+import { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
+import getCurrentUser from "@/actions/getCurrentUser";
+import { SafeUser } from "@/types";
 
 type IDashProps = {
   meta: ReactNode;
@@ -23,6 +20,9 @@ const Dash = (props: IDashProps) => {
   const router = useRouter();
 
   const { data: session, status } = useSession();
+  if (status === "unauthenticated") {
+    router.push("/login");
+  }
   
 
   if (status === "loading") {
@@ -30,18 +30,19 @@ const Dash = (props: IDashProps) => {
     return <div>Loading...</div>;
   }
   return (
-    <div className="w-full min-h-screen bg-gray-50 px-1 text-gray-700 antialiased">
+    <div className="w-full h-screen bg-gray-50 px-1 text-gray-700 antialiased flex flex-col">
       {props.meta}
-      <Toaster />
-      <OfferModal  />
-      <SearchModal  />
-      <DeleteConfirmation  />
-      <UserMenu />
-      <main className="content flex flex-col h-full container mx-auto">
+        <Toaster />
+        <OfferModal  />
+        <MessageModal  />
+        <StartConversation />
+        <SearchModal  />
+        <DeleteConfirmation  />
+        <UserMenu session={session} />
+      <main className="content flex flex-col flex-grow container mx-auto overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch">
         {props.children}
       </main>
     </div>
   );
 };
-
 export { Dash };

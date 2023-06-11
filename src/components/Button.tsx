@@ -8,6 +8,7 @@ interface ButtonProps {
     small?: boolean;
     icon?: React.ReactNode;
     type?: 'button' | 'submit' | 'reset';
+    noBg?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({

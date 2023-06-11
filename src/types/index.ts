@@ -1,5 +1,11 @@
-import { User, Listing } from "@prisma/client";
+import { Listing } from "@prisma/client";
+import { User as PrismaUser, Profile as PrismaProfile } from "@prisma/client";
 
+export interface Profile extends PrismaProfile {}
+
+export interface User extends PrismaUser {
+  profile?: Profile;
+}
 export type SafeUser = Omit<
 User,
 "createdAt" | "updatedAt" > & {

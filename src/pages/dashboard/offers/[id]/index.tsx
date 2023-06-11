@@ -18,24 +18,23 @@ import { useQRCode } from "next-qrcode";
 import { toast } from "react-hot-toast";
 import "react-datepicker/dist/react-datepicker.css";
 import SetExpiryDate from "@/components/SetExpiryDate";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { IoThumbsUp } from "react-icons/io5";
 import axios from "axios";
 import { AppConfig } from "@/utils/AppConfig";
 import { BsHandThumbsUp } from "react-icons/bs";
 import { AiFillWarning } from "react-icons/ai";
+import { BiTrash } from "react-icons/bi";
 
 const Index = ({ listing }: any) => {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const [recipientId, setRecipientId] = useState<string | null>(null);
+  const [sellerId, setSellerId] = useState<string | null>(null);
   const SearchModal = useSearchModal();
   const DeleteListing = useDeleteConfirmationModal();
   const router = useRouter();
   const { Canvas } = useQRCode();
   const [status, setStatus] = useState<string | null>(listing.status);
-
 
   const handleEditListing = () => {
     router.push(`/dashboard/editListing/${listing.id}`);
@@ -45,17 +44,15 @@ const Index = ({ listing }: any) => {
     if (status === "pending") {
       setDisabled(true);
     }
+    if (status === "awaiting approval") {
+      setDisabled(true);
+    }
     if (status === "accepted") {
       setDisabled(true);
     }
-   
   }, [listing]);
 
-
-
   const { data: session } = useSession();
-
-  console.log(session?.user);
 
   const [bidPrice, setBidPrice] = useState<string | null>(
     listing?.bid ? listing.bid : listing?.price
@@ -107,6 +104,7 @@ const Index = ({ listing }: any) => {
       });
   };
 
+
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
@@ -129,12 +127,12 @@ const Index = ({ listing }: any) => {
               <span>View more →</span>
             </div>
           )}
-          {status === "pending" && (
+          {status === "pending" && session?.user.id === listing.buyer (
             <div
               className="col-span-12 flex flex-col md:flex-row md:items-center md:justify-between p-4 mb-8 text-sm font-semibold text-white bg-gray-600 rounded-lg shadow-md focus:outline-none focus:shadow-outline-purple"
               onClick={(e) => {
                 e.preventDefault();
-                SearchModal.onOpen(listing.id, setRecipientId, setStatus);
+                SearchModal.onOpen(listing.id, setSellerId, setStatus);
               }}
             >
               <div className="flex items-start md:items-center">
@@ -151,15 +149,14 @@ const Index = ({ listing }: any) => {
             </div>
           )}
 
-          <div className="col-span-12 flex border-b border-gray-200 font-bold font-xl gap-4 uppercase">
-            <div className="border-b-2 border-orange-500">Activity</div>
+          <div className="col-span-12 flex border-b border-gray-200 font-bold font-xl gap-4 uppercase mb-4 md:mb-0">
+            <div className="border-b-4 border-orange-500">Activity</div>
             <div>Details</div>
-
           </div>
 
-          <div className="w-full md:col-span-8 lg:col-span-9 ">
-            <div className="mx-auto flex flex-col bg-white border border-gray-200 rounded-t-md">
-              <div className="aspect-w-16 aspect-h-9 flex justify-center">
+          <div className="w-full col-span-8 xl:col-span-9 ">
+            <div className=" mx-auto flex flex-col bg-white border border-gray-200 rounded-t-md">
+              <div className="hidden md:flex aspect-w-16 aspect-h-9 = justify-center">
                 <img
                   alt="ecommerce"
                   className="object-center object-contain lg:object-scale-down w-full h-full max-h-96"
@@ -169,9 +166,9 @@ const Index = ({ listing }: any) => {
                 />
               </div>
 
-              <hr className="border-t border-gray-200" />
+              <hr className="hidden md:flex border-t border-gray-200" />
               <div className=" w-full mt-6 lg:mt-0 ">
-                <div className="px-6 pt-6 bg-gray-100 border-b pb-6 border-gray-200">
+                <div className="hidden md:block px-6 pt-6 bg-gray-100 border-b pb-6 border-gray-200">
                   <div className="md:flex md:justify-between">
                     <div>
                       <div className="text-gray-900 text-xl  md:text-2xl  font-medium  px-4 lg:px-0">
@@ -199,12 +196,13 @@ const Index = ({ listing }: any) => {
                       listing={listing}
                       user={session?.user}
                       disabled={disabled}
+                      session={session}
                     />
                   )}
                   {status === "accepted" && (
                     <div className="w-full  p-4 white border-l-4 border-orange-500">
                       <div>
-                        Your offer has been accepted. If you need to contact the
+                        Your offer has been accepted. If you need to contact the {listing.buyerId === session?.user?.id ? "seller" : "buyer"}{" "}
                         seller{" "}
                         <span className="text-orange-400 underline cursor-pointer">
                           click here
@@ -212,13 +210,42 @@ const Index = ({ listing }: any) => {
                       </div>
                     </div>
                   )}
-                  {status === "pending" && (
-                    <div className="w-full  p-4 white border-l-4 border-orange-500" onClick={(e) => {
-                      e.preventDefault();
-                      SearchModal.onOpen(listing.id, setRecipientId, setStatus);
-                    }}>
+                  {status === "awaiting approval" &&   (
+                    <div className="w-full  p-4 white border-l-4 border-orange-500">
+                      {listing.sellerId === session?.user?.id ? (
+                        <div>
+                        Your offer has been created. A request has been sent to the buyer.{" "}
+                        
+                      </div>
+
+                      ):(
+                        <div>
+
+                        You have received a offer. To start negotiating.{" "}
+                        <span className="text-orange-400 underline cursor-pointer" >
+                          click here
+                        </span>
+                      </div>
+
+                      )}
+                      
+                    </div>
+                  )}
+                  {status === "pending" && session?.user.id === listing?.seller?.id && (
+                    <div
+                      className="w-full  p-4 white border-l-4 border-orange-500"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        SearchModal.onOpen(
+                          listing.id,
+                          setSellerId,
+                          setStatus
+                        );
+                      }}
+                    >
                       <div>
-                        Your offer has been created. Assign a user to start negotiating{" "}
+                        Your offer has been created. Assign a user to start
+                        negotiating{" "}
                         <span className="text-orange-400 underline cursor-pointer">
                           click here
                         </span>
@@ -229,10 +256,10 @@ const Index = ({ listing }: any) => {
               </div>
             </div>
           </div>
-          <div className="w-full lg:col-span-3 flex flex-col gap-4">
-            <div className="border border-gray-200 rounded p-4 bg-white flex flex-col gap-2">
-              <div className="flex">
-                <div className="w-1/3 aspect-video">
+          <div className="w-full md:col-span-4 xl:col-span-3 flex flex-col gap-4">
+            <div className="border border-gray-200 rounded p-6 bg-white md:flex xl:flex-col gap-2">
+              <div className="w-full md:flex md:gap-2  md:w-1/3  xl:w-full">
+                <div className="w-full xl:w-1/3 xl:full aspect-video mb-4">
                   <img
                     src={
                       listing?.image ? listing.image : "/images/placeholder.png"
@@ -243,175 +270,228 @@ const Index = ({ listing }: any) => {
                     className="object-cover rounded-md"
                   />
                 </div>
-                <div className="flex flex-col">
-                  <p>{listing.title}</p>
-                  <div className="my-2">{StatusChecker(listing.status)}</div>
+                <div className="hidden xl:flex flex-col">
+                  <p className="font-medium mt-1">{listing.title}</p>
+                  <div className="my-2 text-sm">{StatusChecker(listing.status)}</div>
                 </div>
               </div>
-              <div className="flex justify-between">
-                <p className="font-bold">Current Bid</p>
-                <div className="flex items-center gap-1 font-extrabold">
-                  £ {bidPrice ? bidPrice : listing.bid}
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-bold">Status</p>
-                <div className="flex items-center gap-1">
-                  {StatusChecker(listing.status)}
-                </div>
-              </div>
-              <div className="">
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between">
-                    <p className="font-bold">Created</p>
-
-                    <span className="title-font">
-                      {format(
-                        new Date(listing.createdAt),
-                        "MM/dd/yyyy, HH:mm:ss"
-                      )}
-                    </span>
+              <div className="w-full">
+                <div className=" xl:hidden">
+                  <p className="mb-2 font-medium text-lg">{listing.title}</p>
+                  <div className="flex justify-between mb-2">
+                  <p className="font-bold">Status</p>
+                  <div className="">                  
+                  <div className="">{StatusChecker(listing.status)}</div>
                   </div>
+                </div>
+                  
+                </div>
+                <div className="flex justify-between mb-2">
+                  <p className="font-bold">Offer Price</p>
+                  <div className="flex items-center gap-1 font-extrabold">
+                    £ {listing.price}
+                  </div>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <p className="font-bold">Current Bid</p>
+                  <div className="flex items-center gap-1 font-extrabold">
+                    £ {bidPrice ? bidPrice : listing.bid}
+                  </div>
+                </div>
 
-                  <div className="flex justify-between">
-                    <p className="font-bold">Expiry</p>
+                <div className="">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between">
+                      <p className="font-bold">Created</p>
 
-                    {session?.user.id === listing.sender.id ? (
-                      listing.expireAt === null ? (
-                        !isDatePickerOpen ? (
-                          <div>
-                            <SetExpiryDate id={listing.id} />
-                          </div>
+                      <span className="title-font">
+                        {format(
+                          new Date(listing.createdAt),
+                          "MM/dd/yyyy, HH:mm:ss"
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <div className="font-bold">Expiry</div>
+
+                      {session?.user.id === listing.seller.id ? (
+                        listing.expireAt === null ? (
+                          !isDatePickerOpen ? (
+                            <div>
+                              <SetExpiryDate id={listing.id} />
+                            </div>
+                          ) : (
+                            <div
+                              className="text-orange-300 underline"
+                              onClick={() => setIsDatePickerOpen(false)}
+                            >
+                              Set expiry date
+                            </div>
+                          )
                         ) : (
-                          <div
-                            className="text-orange-300 underline"
-                            onClick={() => setIsDatePickerOpen(false)}
-                          >
-                            Set expiry date
+                          <div>
+                            {new Date(listing.expireAt).toLocaleString(
+                              "lookup"
+                            )}
                           </div>
                         )
                       ) : (
-                        <div>
-                          {new Date(listing.expireAt).toLocaleString("lookup")}
-                        </div>
-                      )
-                    ) : (
-                      "N/A"
+                        "N/A"
+                      )}
+                    </div>
+                    {listing.seller.email === session?.user.email && (
+                      <div className="flex text-sm gap-2 mt-2">
+                        <button
+                          onClick={handleEditListing}
+                          className="flex text-orange-400 border-orange-400 border-2 py-1 px-6 focus:outline-none hover:bg-orange-400 hover:text-white rounded"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => DeleteListing.onOpen(listing.id)}
+                          className="flex items-center gap-1 text-white bg-orange-400 border-0 py-1 px-4 focus:outline-none hover:bg-orange-400 rounded "
+                        > <BiTrash />
+                          Delete
+                         
+                        </button>
+                      </div>
+                    )}
+
+                    {listing?.buyerId === session?.user?.id && (
+                      <div>
+                        {status === "negotiating" && (
+                          <div className="flex text-sm gap-2 mt-2">
+                            <button
+                              className=" text-white bg-orange-400 py-1 text-xs px-3 focus:outline-none hover:bg-orange-400 rounded"
+                              onClick={() => handleStatusChange("accepted")}
+                            >
+                              Accept Offer
+                            </button>
+                            <button
+                              className="flex text-white text-sx bg-orange-400 border-0 py-1 px-3 focus:outline-none hover:bg-orange-500 rounded"
+                              onClick={() => handleStatusChange("rejected")}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                        {status === "awaiting approval" && (
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              className="flex text-sm mt-2  text-white bg-orange-400  py-2 px-2 focus:outline-none hover:bg-orange-500 rounded"
+                              onClick={() => handleStatusChange("negotiating")}
+                            >
+                              Start negotiating
+                            </button>
+                            <button
+                              className="flex items-center text-sm mt-2 gap-2  text-white bg-orange-500  px-2 focus:outline-none hover:bg-orange-500 rounded"
+                              onClick={() => handleStatusChange("accepted")}
+                            >
+                              <IoThumbsUp className="mr-[2px]" /> Accept Offer
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
-                  {listing.sender.email === session?.user.email && (
-                    <div className="flex text-sm gap-2 mt-2">
-                      <button
-                        onClick={handleEditListing}
-                        className="flex text-orange-500 border-orange-500 border-2 py-2 px-6 focus:outline-none hover:bg-orange-600 hover:text-white rounded"
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => DeleteListing.onOpen(listing.id)}
-                        className="flex text-white bg-orange-500 border-0 py-2 px-6 focus:outline-none hover:bg-orange-600 rounded "
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-
-                  {listing?.recipientId === session?.user?.id && (
-                    <div>
-                      {status === "negotiating" && (
-                        <div className="flex text-sm gap-2">
-                          <button
-                            className="flex  text-orange-500 border-orange-500 border-2 py-2 px-2 focus:outline-none hover:bg-orange-600 rounded"
-                            onClick={() => handleStatusChange("accepted")}
-                          >
-                            Accept Offer
-                          </button>
-                          <button
-                            className="flex text-white bg-orange-500 border-0 py-2 px-2 focus:outline-none hover:bg-orange-600 rounded"
-                            onClick={() => handleStatusChange("rejected")}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                      {status === "pending" && (
-                        <div className="flex gap-2">
-                          <button
-                            className="flex text-sm mt-2  text-white bg-orange-500  py-2 px-2 focus:outline-none hover:bg-orange-600 rounded"
-                            onClick={() => handleStatusChange("negotiating")}
-                          >
-                            Start negotiatingg
-                          </button>
-                          <button
-                            className="flex items-center text-sm mt-2  text-white bg-orange-500  px-2 focus:outline-none hover:bg-orange-600 rounded"
-                            onClick={() => handleStatusChange("accepted")}
-                          >
-                            <IoThumbsUp className="mr-[2px]" /> Accept Offer
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
-            {session?.user.id !== listing?.recipient?.id && (
-              <div
-                className="border border-gray-200 rounded p-4 bg-white cursor-pointer"
-                onClick={() =>
-                  router.push(`/dashboard/profile/${listing.sender.id}`)
-                }
-              >
-                <div>
-                  <h5 className="mb-2">
-                    {listing?.recipient?.email === session?.user.email
-                      ? "You"
-                      : "Seller"}
-                  </h5>
-                  {listing?.recipient && (
-                    <div className="flex flex-col gap-1">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-green-500 w-1/5 ">
-                            <img
-                              src={`${listing.recipient?.profile?.image ? listing.recipient?.profile?.image : '/images/placeholders/avatar.png'}`}
-                              alt="user avatar"
-                              className="rounded-full border-2 p-2 border-gray-200"
-                            />
-                          </span>
-                          <div>
-                            <div className="capitalize font-bold">
-                              {listing?.recipient
-                                ? listing.recipient.name
-                                : "No name"}
-                            </div>
-
+            
+                <div
+                  className="border border-gray-200 rounded p-4 bg-white cursor-pointer"
+                  onClick={() =>
+                    router.push(`/dashboard/profile/${listing?.buyer?.id !== session?.user.id ? listing?.buyer?.id : listing?.seller.id}`)
+                  }
+                >
+                  <div>
+                    <h5 className="mb-2 text-sm md:text-md">
+                      {listing?.seller?.email === session?.user.email
+                        ? "BUYER"
+                        : "SELLER"}
+                    </h5>
+                    {listing?.seller?.id !== session?.user.id ? (
+                      <div className="flex flex-col gap-1">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-500 w-1/5 ">
+                              <img
+                                src={`${
+                                  listing.seller?.profile?.image
+                                    ? listing.seller?.profile?.image
+                                    : "/images/placeholders/avatar.png"
+                                }`}
+                                alt="user avatar"
+                                className="rounded-full border-2 p-2 border-gray-200"
+                              />
+                            </span>
                             <div>
-                              {listing?.recipient
-                                ? listing?.recipient.email
-                                : "No email"}
+                              <div className="capitalize font-bold">
+                                {listing?.seller
+                                  ? listing.seller.name
+                                  : "No name"}
+                              </div>
+
+                              <div>
+                                {listing?.seller
+                                  ? listing?.seller.email
+                                  : "No email"}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-500 w-1/5 ">
+                              <img
+                                src={`${
+                                  listing.buyer?.profile?.image
+                                    ? listing.buyer?.profile?.image
+                                    : "/images/placeholders/avatar.png"
+                                }`}
+                                alt="user avatar"
+                                className="rounded-full border-2 p-2 border-gray-200"
+                              />
+                            </span>
+                            <div>
+                              <div className="capitalize font-bold">
+                                {listing?.buyer
+                                  ? listing.buyer.name
+                                  : "No name"}
+                              </div>
 
-            {status === "pending" && listing.sender.id === session?.user.id && (
+                              <div>
+                                {listing?.buyer
+                                  ? listing?.buyer.username
+                                  : "No username"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                    )
+                    }
+                  </div>
+                </div>
+             
+
+            {status === "pending" && listing.seller.id === session?.user.id && (
               <div className="border border-gray-200 bg-white p-4">
-                <p className="font-bold mb-1">Assign a user</p>
+                <h5 className="text-sm">ASSIGN USER</h5>
                 <p className="mb-4">Assign a user to start negotiating</p>
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    SearchModal.onOpen(listing.id, setRecipientId, setStatus);
+                    SearchModal.onOpen(listing.id, setSellerId, setStatus);
                   }}
-                  className="flex text-white bg-orange-500 border-0 py-2 px-6 focus:outline-none hover:bg-orange-600 rounded "
+                  className="flex  md:text-md text-white bg-orange-400 border-0 py-2 px-6 focus:outline-none hover:bg-orange-500 rounded "
                 >
                   Assign User
                 </button>
@@ -427,8 +507,8 @@ const Index = ({ listing }: any) => {
               </div>
             )}
             <div className="flex flex-col border border-gray-200 bg-white p-4">
-              <p className="font-bold mb-2">QR Code</p>
-              <div className="items-center mx-auto border-2 border-gray-200 mb-4">
+              <h5 className="text-sm md:text-md mb-4">QR CODE</h5>
+              <div className="items-center mx-auto border-2 border-gray-200 rounded-md mb-4">
                 <Canvas
                   text={`${AppConfig.siteUrl}/dashboard/offers/${listing.id}`}
                   options={{
@@ -447,13 +527,13 @@ const Index = ({ listing }: any) => {
               <div className="flex gap-2 text-sm justify-center">
                 <button
                   onClick={handleDownloadQR}
-                  className="flex text-white bg-orange-500 border-0 py-2 px-4 focus:outline-none hover:bg-orange-600 rounded "
+                  className="flex text-white bg-orange-400 border-0 py-2 px-4 focus:outline-none hover:bg-orange-500 rounded "
                 >
                   Download QR
                 </button>
                 <button
                   onClick={handleCopy}
-                  className="flex text-white bg-orange-500 border-0 py-2 px-4 focus:outline-none hover:bg-orange-600 rounded "
+                  className="flex text-white bg-orange-400 border-0 py-2 px-4 focus:outline-none hover:bg-orange-500 rounded "
                 >
                   Copy Link
                 </button>

@@ -18,7 +18,7 @@ enum STEPS {
   DESCRIPTION = 0,
   CATEGORY = 1,
   IMAGES = 2,
-  SELLER = 3,
+  BUYER = 3,
   REVIEW = 4,
 }
 
@@ -32,14 +32,14 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
   const [price, setPrice] = useState(listing.price);
   const [category, setCategory] = useState(listing.category);
   const [img, setImg] = useState(listing?.image);
-  const [senderId, setSenderId] = useState(listing.senderId);
+  const [buyerId, setBuyerId] = useState(listing.buyerId);
   const [location, setLocation] = useState(listing?.location);
   const [email, setEmail] = useState(listing?.email);
   const [isPublic, setIsPublic] = useState(listing.public);
-  const [recipientId, setRecipientId] = useState(listing.recipientId);
+  const [sellerId, setSellerId] = useState(listing.sellerId);
   const [selectedCategory, setSelectedCategory] = useState(listing.category);
 
-  const [isSeller, setIsSeller] = useState(true);
+  const [isBuyer, setIsBuyer] = useState(true);
   const [isLocation, setIsLocation] = useState(true);
 
   const [step, setStep] = useState(STEPS.DESCRIPTION);
@@ -62,10 +62,10 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       price: price,
       category: category,
       image: img,
-      senderId: senderId,
+      buyerId: buyerId,
       public: isPublic,
       email: email,
-      recipientId: recipientId,
+      sellerId: sellerId,
     },
   });
 
@@ -99,8 +99,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       case STEPS.IMAGES:
         // Add validation for the image field if required
         break;
-      case STEPS.SELLER:
-        // Add validation for the seller fields if required
+      case STEPS.BUYER:
+        // Add validation for the buyer fields if required
         break;
       case STEPS.REVIEW:
         // No validation required for the review step
@@ -140,7 +140,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         return "Next";
       case STEPS.IMAGES:
         return "Next";
-      case STEPS.SELLER:
+      case STEPS.BUYER:
         return "Next";
       case STEPS.REVIEW:
         return "Update Offer";
@@ -155,7 +155,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         return "Back";
       case STEPS.IMAGES:
         return "Back";
-      case STEPS.SELLER:
+      case STEPS.BUYER:
         return "Back";
       case STEPS.REVIEW:
         return "Back";
@@ -267,22 +267,22 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       </div>
     );
   }
-  if (step === STEPS.SELLER) {
+  if (step === STEPS.BUYER) {
     bodyContent = (
       <div className="flex flex-col">
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
           <div
             className="flex gap-2 items-center cursor-pointer"
-            onClick={() => setIsSeller(!isSeller)}
+            onClick={() => setIsBuyer(!isBuyer)}
           >
-            {isSeller ? (
+            {isBuyer ? (
               <BiCheckbox className="text-xl" />
             ) : (
               <BiCheckboxChecked className="text-xl" />
             )}
-            <span>I don't know the seller</span>
+            <span>I don't know the buyer</span>
           </div>
-          {isSeller && (
+          {isBuyer && (
             <>
               <Input
                 id="email"
@@ -290,46 +290,11 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
                 type="email"
                 register={register}
               />
-              <Input
-                id="phone"
-                label="Phone No"
-                type="phone"
-                register={register}
-              />
+          
             </>
           )}
         </div>
-        <hr className=" border-b-neutral-200 mb-6 mt-6" />
-        <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-          <div
-            className="flex gap-2 items-center cursor-pointer"
-            onClick={() => setLocation(!location)}
-          >
-            {isLocation ? (
-              <BiCheckbox className="text-xl" />
-            ) : (
-              <BiCheckboxChecked className="text-xl" />
-            )}
-            <span>I don't know the location</span>
-          </div>
-          {isLocation && (
-            <>
-              <Input
-                id="street"
-                label="Street"
-                type="text"
-                register={register}
-              />
-              <Input id="city" label="City" type="text" register={register} />
-              <Input
-                id="postcode"
-                label="Postcode"
-                type="text"
-                register={register}
-              />
-            </>
-          )}
-        </div>
+        
       </div>
     );
   }

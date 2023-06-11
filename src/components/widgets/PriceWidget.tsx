@@ -42,7 +42,7 @@ const PriceWidget = ({listingId, onBidPriceChange, bid}: PriceWidgetProps) => {
        
        
         if (status === "authenticated" && session?.user) {
-          data.senderId = session.user.id;
+          data.buyerId = session.user.id;
           console.log("User authenticated");
         
         } else {
@@ -84,7 +84,7 @@ const PriceWidget = ({listingId, onBidPriceChange, bid}: PriceWidgetProps) => {
   };
   return (
     <div>
-      <h5>Counter Offer</h5>
+      <h5 className='text-sm md:text-md'>COUNTER OFFER</h5>
       <div className='mb-2'>
       <Input id={'price'} placeholder="£ 0.00" label="" formatPrice required register={register} />
       </div>

@@ -12,23 +12,14 @@ export default async function listingsApi(
 ) {
   
     const id = req.query.id as string;
-    const { title, description, price, image, senderId, category, recipientId } = req.body;
+    const { title, description, price, image, buyerId, category } = req.body;
 
     try {
       const listing = await prisma.listing.update({
         where: { id },
-        data: { title, description, category, price, image, recipientId },
+        data: { title, description, category, price, image, buyerId },
       });
 
-      await prisma.notification.create({
-        data: {
-          message: "Offer Updated",
-          read: false,
-          url: `/dashboard/offers/${listing.id}`, 
-          userId: listing.recipientId ? listing.recipientId : listing.senderId, 
-          senderId: senderId, 
-        }
-      })
 
       res.status(200).json(listing);
     } catch (error) {

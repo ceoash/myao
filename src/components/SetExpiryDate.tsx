@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 
@@ -14,7 +14,7 @@ const SetExpiryDate = ({id}: any) => {
         expiry: selectedDate,
         id: id
       });
-      router.reload();
+      router.refresh();
     } catch (error) {
       console.error('Error updating listing:', error);
       // Handle the error

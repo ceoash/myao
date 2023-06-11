@@ -14,14 +14,13 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getSession, useSession } from "next-auth/react";
 import { BiCheckbox, BiCheckboxChecked } from "react-icons/bi";
-import UserSelect from "../UserSelect";
-import getCurrentUser from "@/actions/getCurrentUser";
+import UsernameSelect from "../UsernameSelect";
 
 enum STEPS {
   DESCRIPTION = 0,
   CATEGORY = 1,
   IMAGES = 2,
-  SELLER = 3,
+  BUYER = 3,
   REVIEW = 4,
 }
 
@@ -32,10 +31,8 @@ interface ErrorResponse {
 const currentUser = async () => {
   const session = await getSession();
 
-    return session?.user?.email;
-  }
-
-
+  return session?.user?.email;
+};
 
 const OfferModal = () => {
   const offerModal = useOfferModal();
@@ -43,14 +40,14 @@ const OfferModal = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [seller, setSeller] = useState(true);
+  const [buyer, setBuyer] = useState(true);
   const [location, setLocation] = useState(true);
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
   const router = useRouter();
 
   const [formValues, setFormValues] = useState<FieldValues>({
     email: "",
-    recipientId: "",
+    buyerId: "",
   });
 
   const {
@@ -68,21 +65,21 @@ const OfferModal = () => {
       price: "",
       category: "",
       image: "",
-      senderId: "",
-      recipientId: "",
+      buyerId: "",
+      sellerId: "",
       public: false,
     },
   });
 
-   // Callback function to update form values
-   const updateFormValues = (values: FieldValues) => {
+  // Callback function to update form values
+  const updateFormValues = (values: FieldValues) => {
     setFormValues(values);
   };
 
   const validateStep = (step: any, data: any) => {
     const validation = {
       isValid: true,
-      errors: {},
+      errors: {} as Record<string, { message: string }>,
     };
 
     switch (step) {
@@ -101,15 +98,15 @@ const OfferModal = () => {
         }
         break;
       case STEPS.CATEGORY:
-        if (!data.category) {
+        if (selectedCategory.length === 0) {
           validation.isValid = false;
-          setError("category", { message: "Category is required" }); // Set the error for the "category" field
+          validation.errors["category"] = { message: "Category is required" };
         }
         break;
       case STEPS.IMAGES:
         // Add validation for the image field if required
         break;
-      case STEPS.SELLER:
+      case STEPS.BUYER:
         // Add validation for the seller fields if required
         break;
       case STEPS.REVIEW:
@@ -150,7 +147,7 @@ const OfferModal = () => {
         return "Next";
       case STEPS.IMAGES:
         return "Next";
-      case STEPS.SELLER:
+      case STEPS.BUYER:
         return "Next";
       case STEPS.REVIEW:
         return "Create Offer";
@@ -165,7 +162,7 @@ const OfferModal = () => {
         return "Back";
       case STEPS.IMAGES:
         return "Back";
-      case STEPS.SELLER:
+      case STEPS.BUYER:
         return "Back";
       case STEPS.REVIEW:
         return "Back";
@@ -187,14 +184,14 @@ const OfferModal = () => {
       return onNext();
     }
     if (status === "authenticated" && session?.user) {
-      data.senderId = session.user.id;
+      data.sellerId = session.user.id;
     } else {
       return;
     }
 
     setIsLoading(true);
 
-    data.recipientId = formValues.recipientId;
+    data.buyerId = formValues.buyerId;
 
     await axios
       .post("/api/listings", data)
@@ -217,10 +214,14 @@ const OfferModal = () => {
   let bodyContent = (
     <div className="flex flex-col">
       <Heading
-        title="Tell us about your item"
+        title="Tell us about your offer"
         description="Enter the title and description of the item."
       />
       <Input id="title" label="Title" type="text" register={register} />
+      {errors.title && typeof errors.title.message === "string" && (
+        <div className="text-red-500">{errors.title.message}</div>
+      )}
+
       <label className="mb-2" htmlFor="description">
         Description
       </label>
@@ -239,19 +240,24 @@ const OfferModal = () => {
           transition
           disabled:cursor-not-allowed
           disabled:opacity-50
-          
-      `}
+        `}
         {...register("description")}
       />
+      {errors.description && typeof errors.description.message === "string" && (
+        <div className="text-red-500">{errors.description.message}</div>
+      )}
+
       <Input
         id="price"
         label="Price"
         type="number"
         modal
         formatPrice
-        required
         register={register}
       />
+      {errors.price && typeof errors.price.message === "string" && (
+        <div className="text-red-500">{errors.price.message}</div>
+      )}
     </div>
   );
   if (step === STEPS.CATEGORY) {
@@ -266,6 +272,12 @@ const OfferModal = () => {
           title="Select a category"
           description="Choose the category that best describes the item."
         />
+         {errors.category && typeof errors.category.message === "string" && (
+          <div className="text-red-500 text-sm">{errors.category.message}</div>
+        )}
+        {!selectedCategory && (
+          <div className="text-red-500 text-sm">Select a category</div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
           {categories.map((category) => (
             <div key={category.id}>
@@ -276,12 +288,13 @@ const OfferModal = () => {
                   key={item.slug}
                   selected={selectedCategory === item.name}
                   onClick={updateCategory}
-                  register={register} // Add this
+                  register={register}
                 />
               ))}
             </div>
           ))}
         </div>
+       
       </div>
     );
   }
@@ -301,7 +314,7 @@ const OfferModal = () => {
       </div>
     );
   }
-  if (step === STEPS.SELLER) {
+  if (step === STEPS.BUYER) {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
@@ -312,53 +325,24 @@ const OfferModal = () => {
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
           <div
             className="flex gap-2 items-center cursor-pointer"
-            onClick={() => setSeller(!seller)}
+            onClick={() => setBuyer(!buyer)}
           >
-            {seller ? (
+            {buyer ? (
               <BiCheckbox className="text-xl" />
             ) : (
               <BiCheckboxChecked className="text-xl" />
             )}
-            <span>I don't know the seller</span>
+            <span>I don't know the buyer</span>
           </div>
-          {seller && (
-            <UserSelect 
+          {buyer && (
+            <UsernameSelect
               create
               formValues={formValues}
-              updateFormValues={updateFormValues}/>
+              updateFormValues={updateFormValues}
+            />
           )}
         </div>
-        <hr className=" border-b-neutral-200 mb-6 mt-6" />
-        <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-          <div
-            className="flex gap-2 items-center cursor-pointer"
-            onClick={() => setLocation(!location)}
-          >
-            {location ? (
-              <BiCheckbox className="text-xl" />
-            ) : (
-              <BiCheckboxChecked className="text-xl" />
-            )}
-            <span>I don't know the location</span>
-          </div>
-          {location && (
-            <>
-              <Input
-                id="street"
-                label="Street"
-                type="text"
-                register={register}
-              />
-              <Input id="city" label="City" type="text" register={register} />
-              <Input
-                id="postcode"
-                label="Postcode"
-                type="text"
-                register={register}
-              />
-            </>
-          )}
-        </div>
+        
       </div>
     );
   }
@@ -366,8 +350,8 @@ const OfferModal = () => {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
-          title="Image upload"
-          description="Upload images of the item."
+          title="Create your offer"
+          description="Click create to create your offer."
         />
         <div>
           <h3>Review</h3>
@@ -386,6 +370,7 @@ const OfferModal = () => {
       secondaryActionLabel={secondaryActionLabel}
       body={bodyContent}
       disabled={Object.keys(errors).length > 0}
+      errors={errors}
     />
   );
 };

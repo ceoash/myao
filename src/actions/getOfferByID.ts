@@ -11,7 +11,7 @@ export default async function getOfferByID({ offerID }: IParams) {
         id: offerID,
       },
       include: {
-        recipient: true,
+        seller: true,
       },
     });
 
@@ -24,9 +24,9 @@ export default async function getOfferByID({ offerID }: IParams) {
       updatedAt: bid.updatedAt.toISOString(),
       expireAt: bid.expireAt?.toISOString() || null,
       user: {
-        ...bid.recipient,
-        createdAt: bid.recipient?.createdAt.toISOString(),
-        updatedAt: bid.recipient?.updatedAt.toISOString(),
+        ...bid.seller,
+        createdAt: bid.seller?.createdAt.toISOString(),
+        updatedAt: bid.seller?.updatedAt.toISOString(),
       },
     };
   } catch (error: any) {

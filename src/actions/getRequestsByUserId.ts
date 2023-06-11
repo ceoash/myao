@@ -5,15 +5,15 @@ export default async function getRequestsByUserId(id: any) {
   try {
     const listings = await prisma?.listing.findMany({
         where: {
-            recipientId: id // filter by the userId
+            buyerId: id // filter by the userId
         },
         orderBy: {
             createdAt: 'desc'
         },
 
         include: {
-            sender: true,      
-            recipient: true,   
+            buyer: true,      
+            seller: true,   
             messages: true 
         }
     });
@@ -23,21 +23,21 @@ export default async function getRequestsByUserId(id: any) {
       expireAt: listing.createdAt.toISOString(),
       createdAt: listing.createdAt.toISOString(),
       updatedAt: listing.updatedAt.toISOString(),
-      recipient: listing.recipient
+      buyer: listing.buyer
         ? {
-            ...listing.recipient,
-            createdAt: listing.recipient.createdAt
-              ? listing.recipient.createdAt.toISOString()
+            ...listing.buyer,
+            createdAt: listing.buyer.createdAt
+              ? listing.buyer.createdAt.toISOString()
               : null,
-            updatedAt: listing.recipient.updatedAt
-              ? listing.recipient.updatedAt.toISOString()
+            updatedAt: listing.buyer.updatedAt
+              ? listing.buyer.updatedAt.toISOString()
               : null,
           }
         : null,
-      sender: {
-        ...listing.sender,
-        createdAt: listing.sender.createdAt.toISOString(),
-        updatedAt: listing.sender.updatedAt.toISOString(),
+      seller: {
+        ...listing.seller,
+        createdAt: listing.seller?.createdAt.toISOString(),
+        updatedAt: listing.seller?.updatedAt.toISOString(),
       },
       messages: listing.messages?.map((message) => ({
         ...message,

@@ -42,13 +42,13 @@ export default async function UpdateProfile(
       data: {
         name: name,
         email: email,
+        username: username,
         profile: {
           upsert: {
             create: {
               address: address,
               city: city,
               postcode: postcode,
-              username: username,
               image: image,
               website: website,
               bio: bio,
@@ -69,7 +69,6 @@ export default async function UpdateProfile(
               address: address,
               city: city,
               postcode: postcode,
-              username: username,
               image: image,
               website: website,
               bio: bio,

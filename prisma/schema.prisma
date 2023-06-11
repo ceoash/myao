@@ -11,49 +11,52 @@ datasource db {
 }
 
 model Account {
-  id String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId             String @db.ObjectId
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.String
-  access_token       String?  @db.String
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.String
-  session_state      String?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model User {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  email        String?  @unique
-  name         String?
-  role         String?
-  emailVerified DateTime?
-  verified     Boolean  @default(false)
-  hashedPassword String?
-  profile       Profile?
-  accounts     Account[]
-  sender Listing[] @relation("sender")
-  recipient Listing[] @relation("recipient")
-  sentMessages Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  sentdirectMessages DirectMessage[] @relation("SentDirectMessages")
-  receiveddirectMessages DirectMessage[] @relation("ReceivedDirectMessages")
-  notifications Notification[]
-  NotificationSender Notification[] @relation("NotificationSender")
-  listingActivity ListingActivity[]
+  id                     String            @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  email                  String?           @unique
+  name                   String?
+  username               String?           @unique
+  role                   String?
+  emailVerified          DateTime?
+  verified               Boolean           @default(false)
+  hashedPassword         String?
+  profile                Profile?
+  accounts               Account[]
+  buyer                  Listing[]         @relation("buyer")
+  seller                 Listing[]         @relation("seller")
+  sentMessages           Message[]         @relation("SentMessages")
+  receivedMessages       Message[]         @relation("ReceivedMessages")
+  participant1Conversations Conversation[] @relation("Participant1")
+  participant2Conversations Conversation[] @relation("Participant2")
+  directMessages         DirectMessage[]
+  notifications          Notification[]
+  NotificationBuyer      Notification[]    @relation("NotificationBuyer")
+  listingActivity        ListingActivity[]
+  addedFriends           Friendship[]      @relation("UserAdds")
+  addedBy                Friendship[]      @relation("FriendAdds")
 }
 
 model Profile {
-  id     String   @id @default(auto()) @map("_id") @db.ObjectId
-  username String? @unique
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
   address  String?
   city     String?
   postcode String?
@@ -61,87 +64,115 @@ model Profile {
   website  String?
   bio      String?
   social   Social?
-  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String   @db.ObjectId @unique
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String  @unique @db.ObjectId
 }
+
 model Social {
-  id     String   @id @default(auto()) @map("_id") @db.ObjectId
-  instagram  String?
-  facebook   String?
-  twitter    String?
-  youtube  String?
-  twitch  String?
-  reddit  String?
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  instagram String?
+  facebook  String?
+  twitter   String?
+  youtube   String?
+  twitch    String?
+  reddit    String?
   linkedin  String?
-  tiktok  String?
-  profile   Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId String   @db.ObjectId @unique
+  tiktok    String?
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String  @unique @db.ObjectId
 }
 
 model Listing {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  expireAt     DateTime?
-  title        String?
-  description  String?
-  category     String?
-  status       String?
-  image        String?
-  senderId     String   @db.ObjectId
-  sender       User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
-  recipientId  String?  @db.ObjectId
-  recipient    User?    @relation("recipient", fields: [recipientId], references: [id], onDelete: Cascade)
-  price        String?
-  bid          String?
-  messages     Message[]
-  listingActivity   ListingActivity[]
-
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  expireAt        DateTime?
+  title           String?
+  description     String?
+  category        String?
+  status          String?
+  image           String?
+  buyerId         String?           @db.ObjectId
+  buyer           User?             @relation("buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId        String            @db.ObjectId
+  seller          User              @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
+  price           String?
+  bid             String?
+  messages        Message[]
+  listingActivity ListingActivity[]
 }
+
 model ListingActivity {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  description  String?
-  type     String?
-  listingId    String   @db.ObjectId
-  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  userId       String   @db.ObjectId
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String?
+  type        String?
+  listingId   String   @db.ObjectId
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Message {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  text         String?
-  listingId    String   @db.ObjectId
-  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  senderId     String   @db.ObjectId
-  sender       User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  recipientId  String   @db.ObjectId
-  recipient    User     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
-}
-model DirectMessage {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  text         String?
-  senderId     String   @db.ObjectId
-  sender       User     @relation("SentDirectMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  recipientId  String   @db.ObjectId
-  recipient    User     @relation("ReceivedDirectMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  text      String?
+  listingId String   @db.ObjectId
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId   String   @db.ObjectId
+  buyer     User     @relation("SentMessages", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId  String   @db.ObjectId
+  seller    User     @relation("ReceivedMessages", fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
+model DirectMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  text      String?
+  image     String?
+  userId   String   @db.ObjectId
+  user     User     @relation( fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String  @db.ObjectId
+
+}
+model Conversation {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  participant1Id String       @db.ObjectId
+  participant1   User         @relation("Participant1", fields: [participant1Id], references: [id])
+  participant2Id String       @db.ObjectId
+  participant2   User         @relation("Participant2", fields: [participant2Id], references: [id])
+  directMessages DirectMessage[]
+  @@unique([participant1Id, participant2Id])
+}
+
+
 model Notification {
-  id           String      @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  message      String
-  read         Boolean     @default(false)
-  url          String
-  userId       String      @db.ObjectId
-  user         User        @relation(fields: [userId], references: [id])
-  senderId     String      @db.ObjectId
-  sender       User        @relation("NotificationSender", fields: [senderId], references: [id])
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  message   String
+  read      Boolean  @default(false)
+  url       String
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  buyerId   String   @db.ObjectId
+  buyer     User     @relation("NotificationBuyer", fields: [buyerId], references: [id])
+}
+
+model Friendship {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userAdds     User     @relation("UserAdds", fields: [userAddsId], references: [id])
+  userAddsId   String   @db.ObjectId
+  friendAdds   User     @relation("FriendAdds", fields: [friendAddsId], references: [id])
+  friendAddsId String   @db.ObjectId
+  accepted     Boolean  @default(false)
+  @@unique([userAddsId, friendAddsId])
 }

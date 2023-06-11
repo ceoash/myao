@@ -28,8 +28,8 @@ export default async function submitBid(
           message: `New bid of ${price} has been placed`,
           read: false,
           url: `/listings/${listing.id}`, 
-          userId: listing.recipientId ? listing.recipientId : listing.senderId, 
-          senderId: listing.senderId, 
+          userId: listing.buyerId ? listing.buyerId : listing.buyerId, 
+          buyerId: listing.buyerId, 
         }
       })
 

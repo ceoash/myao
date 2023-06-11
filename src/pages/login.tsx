@@ -4,7 +4,7 @@ import React from "react";
 import { useState } from "react";
 import { FieldValues, useForm, SubmitHandler } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { getProviders, getSession, signIn } from "next-auth/react"
 
 const Login = () => {

@@ -1,30 +1,49 @@
 import React, { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import { AiOutlineMenu } from "react-icons/ai";
-import { BiBell, BiCog, BiMessage, BiTrash } from "react-icons/bi";
+import { BiCog, BiMessage, BiSearch, BiTrash } from "react-icons/bi";
 import Avatar from "./Avatar";
 import Link from "next/link";
 import MenuItem from "./MenuItem";
 import { User } from "@prisma/client";
 import { SafeUser } from "@/types";
+import axios from "axios";
+import SearchComponent from "./SearchComponent";
 
 interface IUserMenuProps {
   currentUser?: SafeUser | null;
+  session: any; 
 }
 
 const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const settingsRef = useRef<HTMLDivElement | null>(null);
-  const notificationsRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const handleClickOutside = (e: any) => {
     if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
       setIsOpen(false);
     }
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get('/api/getUserByIdApi');
+        setUser(response.data);
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+      }
+    };
+
+    if (session) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,7 +58,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
   }, [isOpen]);
 
   return (
-    <header className="w-full z-50">
+    <header className="w-full z-0">
   <nav className="bg-white border-gray-200 py-2.5 shadow border-b">
     <div className="flex flex-wrap items-center justify-between px-4 container mx-auto">
       <Link href="/dashboard" className="flex items-center">
@@ -48,45 +67,29 @@ const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
           MYAO
         </span>
       </Link>
+
+
+        <SearchComponent />
+
+      
+
+      
+     
       <div className="relative flex items-center text-xl lg:order-2 gap-4"> {/* Added relative here */}
+        
+     
         <div className="relative">
           <a href="/dashboard/settings">
             <BiCog />
           </a>
         </div>
 
+        
         <div className="relative">
-          <button
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-          >
-            <BiBell />
-          </button>
-          {isNotificationsOpen && (
-            <div
-              className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-10 text-sm" 
-              ref={notificationsRef}
-            >
-              <div className="flex flex-col cursor-pointer">
-                <MenuItem label="0 Notifications" onClick={() => {}} />
-                
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="relative">
-          <button onClick={() => setIsMessagesOpen(!isMessagesOpen)}>
+          <Link href={`/dashboard/conversations`}>
             <BiMessage />
-          </button>
-          {isMessagesOpen && (
-            <div
-              className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-10 text-sm" 
-              ref={settingsRef}
-            >
-              <div className="flex flex-col cursor-pointer">
-                <MenuItem label="0 messages" onClick={() => {}} />
-              </div>
-            </div>
-          )}
+          </Link>
+          
         </div>
 
         <div
@@ -109,7 +112,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
             relative
           ">
           <div className="hidden md:block">
-            <Avatar />
+            <Avatar user={user} />
           </div>
           <AiOutlineMenu />
         </div>
@@ -137,3 +140,5 @@ const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
 };
 
 export default UserMenu;
+
+

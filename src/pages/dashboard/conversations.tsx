@@ -237,7 +237,7 @@ const Conversations = ({ safeConversations, session }: any) => {
           >
             <div className="col-span-12 flex justify-between items-center">
               <div className="border-t border-gray-200 h-1 w-full hidden lg:block"></div>
-              <div className="text-center mx-4 text-sm text-gray-500">
+              <div className="lg:w-auto lg:whitespace-nowrap  text-center mx-4 text-sm text-gray-500">
                 We are here to protect you from fraud please do not share your
                 personal information
               </div>

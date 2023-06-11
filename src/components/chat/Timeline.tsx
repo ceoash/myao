@@ -89,7 +89,7 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
           <div className="md:grid md:grid-cols-12 gap-y-2">
             <div className="col-span-12 flex justify-between items-center">
               <div className="border-t border-gray-200 h-1 w-full"></div>
-              <div className="flex-wrap mx-4 text-sm text-gray-500 hidden lg:block">
+              <div className="lg:w-auto lg:whitespace-nowrap text-center mx-4 text-sm text-gray-500 hidden lg:block">
                 We are here to protect you from fraud please do not share your personal information
               </div>
               <div className="border-t border-gray-200 w-full hidden lg:block"></div>

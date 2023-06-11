@@ -57,30 +57,35 @@ const StartConversation = ({}: StartConversationProps) => {
       return;
     }
 
-    await axios
-      .post("/api/searchUserByUsername", data)
-      .then((response) => {
-        const user: User | ErrorResponse = response.data;
-        if ("error" in user) {
-          // User not found
-          setFoundUser(null);
-          setNotFoundUser(data.username);
-        } else {
-          setFoundUser(user);
-        }
+    console.log("data", data);
 
-        reset();
-      })
-      .catch((err) => {
-        toast.error("Something went wrong!");
+    await axios
+    .get(`/api/getUserByUsernameApi?username=${data.username}`)
+    .then((response) => {
+      const user: User | ErrorResponse = response.data;
+      console.log("User found: ", data);
+      if ("error" in user) {
+        // User not found
+        toast.error("User not found!");
         setFoundUser(null);
         setNotFoundUser(data.username);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
- 
+      } else {
+        // User found
+        toast.success("Search completed!");
+        setFoundUser(user);
+      }
+
+      reset();
+    })
+    .catch((err) => {
+      toast.error(`${data.username} not found!}`);
+      setFoundUser(null);
+      setNotFoundUser(data.username);
+    })
+    .finally(() => {
+      setIsLoading(false);
+    });
+};
   const data = {
     userId: session?.user?.id,
     recipientId: foundUser?.id,
@@ -89,7 +94,9 @@ const StartConversation = ({}: StartConversationProps) => {
   const onSendMessage: SubmitHandler<FieldValues> = async (data: any) => {
     data.message = data.message;
     data.userId = session?.user?.id;
+    data.recipientId = data.recipientId;
     data.username = notFoundUser;
+    console.log("data", data);
   
     axios
       .post("/api/newConversation", data)

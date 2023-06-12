@@ -17,6 +17,7 @@ import { useRef } from 'react';
 import ImageTextArea from "@/components/inputs/ImageTextArea";
 import { toast } from "react-hot-toast";
 import MessageComponent from "@/components/chat/Message";
+import getConversationsByUserId from "@/actions/getFriendsByUserId";
 
 
 
@@ -268,49 +269,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const friends = await getFriendsByUserId(user?.id);
 
-  const conversations = await prisma.conversation.findMany({
-    where: {
-      OR: [{ participant1Id: user?.id }, { participant2Id: user?.id }],
-    },
-    include: {
-      directMessages: {
-        include: {
-          user: true,
-        },
-      },
-      participant1: true,
-      participant2: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const safeConversations = conversations?.map((conversation) => ({
-    ...conversation,
-    createdAt: conversation.createdAt.toISOString(),
-    updatedAt: conversation.updatedAt.toISOString(),
-    participant1: {
-      ...conversation.participant1,
-      createdAt: conversation.participant1.createdAt.toISOString(),
-      updatedAt: conversation.participant1.updatedAt.toISOString(),
-    },
-    participant2: {
-      ...conversation.participant2,
-      createdAt: conversation.participant2.createdAt.toISOString(),
-      updatedAt: conversation.participant2.updatedAt.toISOString(),
-    },
-    directMessages: conversation.directMessages.map((message) => ({
-      ...message,
-      createdAt: message.createdAt.toISOString(),
-      updatedAt: message.updatedAt.toISOString(),
-      user: {
-        ...message.user,
-        createdAt: message.user.createdAt.toISOString(),
-        updatedAt: message.user.updatedAt.toISOString(),
-      },
-    })),
-  }));
+  const safeConversations = await getConversationsByUserId(user?.id); 
 
   return {
     props: {

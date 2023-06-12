@@ -15,6 +15,8 @@ export default async function listingsApi(
 
     const { title, description, price, image, sellerId, category, buyerId  } = req.body;
 
+    
+
     try {
       if (buyerId){
       const listing = await prisma.listing.create({

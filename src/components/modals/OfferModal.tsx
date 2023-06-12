@@ -48,6 +48,12 @@ const OfferModal = () => {
   const [formValues, setFormValues] = useState<FieldValues>({
     email: "",
     buyerId: "",
+    title: "",
+    description: "",
+    price: "",
+    category: "",
+    image: "",
+    sellerId: "",
   });
 
   const {
@@ -75,6 +81,8 @@ const OfferModal = () => {
   const updateFormValues = (values: FieldValues) => {
     setFormValues(values);
   };
+
+  console.log("formValues", formValues);
 
   const validateStep = (step: any, data: any) => {
     const validation = {
@@ -132,6 +140,7 @@ const OfferModal = () => {
         const stepValidationResult = validateStep(step, data); // Implement your own validation logic
         if (stepValidationResult.isValid) {
           setStep(step + 1);
+          setFormValues({ ...formValues, ...data });
         }
       } else {
         onSubmit(data);
@@ -192,6 +201,7 @@ const OfferModal = () => {
     setIsLoading(true);
 
     data.buyerId = formValues.buyerId;
+    data.category = selectedCategory;
 
     await axios
       .post("/api/listings", data)
@@ -272,7 +282,7 @@ const OfferModal = () => {
           title="Select a category"
           description="Choose the category that best describes the item."
         />
-         {errors.category && typeof errors.category.message === "string" && (
+        {errors.category && typeof errors.category.message === "string" && (
           <div className="text-red-500 text-sm">{errors.category.message}</div>
         )}
         {!selectedCategory && (
@@ -294,7 +304,6 @@ const OfferModal = () => {
             </div>
           ))}
         </div>
-       
       </div>
     );
   }
@@ -342,7 +351,6 @@ const OfferModal = () => {
             />
           )}
         </div>
-        
       </div>
     );
   }
@@ -350,11 +358,32 @@ const OfferModal = () => {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
-          title="Create your offer"
-          description="Click create to create your offer."
+          title="Finalise Offer"
+          description="If you are happy with the offer, click the button below to create the offer."
         />
         <div>
-          <h3>Review</h3>
+          <h5>Review Details</h5>
+          <div className="flex gap-4">
+            <div className="w-1/5">
+              <img
+                src={`${image ? image : `/images/cat.png` }` }
+                alt="offer"
+                className="object-cover rounded-md"
+              />
+            </div>
+
+            <div className="flex-1">
+              <div className="font-medium">{formValues.title}</div>
+              <div className="flex justify-between">
+                <div className="font-light">{formValues.category}</div>
+                <div className="font-light">Bid: {formValues.price}</div>
+              </div>
+              <div className="font-light mt-4">
+                <div className="font-medium">Description</div>
+                
+                {formValues.description}</div>
+            </div>
+          </div>
         </div>
       </div>
     );

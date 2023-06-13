@@ -27,21 +27,7 @@ interface IParams {
 
 const addFriend = async () => {
   try {
-    const res = await fetch("/api/addFriend", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userAddsId: session.user.id,
-        friendAddsId: user.id,
-      }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error);
-    }
+    console.log("addFriend");
 
     // TODO: Handle success (show a success message, etc.)
     toast.success("Friend request sent!");
@@ -56,21 +42,8 @@ const recipientId = user?.id;
 
 const onRemoveFriendClick = async () => {
   try {
-    const res = await fetch("/api/deleteFriend", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userAddsId: userId,
-        friendAddsId: recipientId,
-      }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error);
-    }
+   console.log("userId", userId);
+   console.log("recipientId", recipientId);
 
     // TODO: Handle success (show a success message, etc.)
     toast.success("Friend removed!");

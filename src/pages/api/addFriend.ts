@@ -11,21 +11,7 @@ export default async function addFriend(req: NextApiRequest, res: NextApiRespons
         }
 
         try {
-            // Check if a friendship already exists between the users
-            const existingFriendship = await prisma.friendship.findFirst({
-                where: {
-                    AND: [
-                        { userAddsId },
-                        { friendAddsId },
-                    ],
-                },
-            });
-
-            if (existingFriendship) {
-                return res.status(400).json({ error: "Friendship already exists." });
-            }
-
-            // Create a new friendship
+         
             const newFriendship = await prisma.friendship.create({
                 data: {
                     userAddsId,

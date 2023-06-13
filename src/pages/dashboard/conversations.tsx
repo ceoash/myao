@@ -92,10 +92,6 @@ const Conversations = ({ safeConversations, session }: any) => {
     setMessages(newConversation?.directMessages || []);
   };
 
-  const handleButtonClick = () => {
-    startConversation.onOpen(setActiveConversation, setUsername);
-  };
-
   useEffect(() => {
     setMessages(activeConversationState?.directMessages || []);
   }, [activeConversationState]);

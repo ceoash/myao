@@ -258,10 +258,14 @@ const OfferModal = () => {
         title="What do they want to buy?"
         description="Name and describe your thing"
       />
+      <div className="mb-4">
+
       <Input id="title" label="Name of thing" type="text" register={register} />
       {errors.title && typeof errors.title.message === "string" && (
         <div className="text-red-500">{errors.title.message}</div>
       )}
+      </div>
+      <div className="mb-4">
 
       <label className="mb-2" htmlFor="description">
         Description
@@ -287,6 +291,8 @@ const OfferModal = () => {
       {errors.description && typeof errors.description.message === "string" && (
         <div className="text-red-500">{errors.description.message}</div>
       )}
+      </div>
+
 
       <Input
         id="price"

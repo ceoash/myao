@@ -231,7 +231,7 @@ const OfferModal = () => {
     setIsLoading(true);
 
     data.category = selectedCategory;
-    data.buyerId = formValues.buyerId;
+    data.buyerId = foundUser?.id;
     data.bidderId = session.user.id;
 
     await axios

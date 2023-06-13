@@ -10,6 +10,7 @@ import { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import getCurrentUser from "@/actions/getCurrentUser";
 import { SafeUser } from "@/types";
+import QuickConnectModal from "@/components/modals/QuickConnectModal";
 
 type IDashProps = {
   meta: ReactNode;
@@ -36,6 +37,7 @@ const Dash = (props: IDashProps) => {
         <OfferModal  />
         <MessageModal  />
         <StartConversation />
+        <QuickConnectModal />
         <SearchModal  />
         <DeleteConfirmation  />
         <UserMenu session={session} />

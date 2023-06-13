@@ -16,7 +16,6 @@ interface MessageProps {
 const Timeline = ({ listing, user, disabled, session }: any) => {
   const [messages, setMessages] = useState<MessageProps[]>([]);
 
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   // Fetch messages when the component mounts and when the listing changes
   useEffect(() => {
     const fetchMessages = async () => {
@@ -44,12 +43,16 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
     },
   });
 
+  const now = new Date();
+  const time = now.getHours() + ":" + now.getMinutes();
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSubmit = async (image: string, text: string) => {
+        
     try {
       // Send the message
       const response = await axios.post("/api/newBidMessage", {
@@ -58,20 +61,22 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
         sellerId: listing.sellerId,
         message: text,
         image: image,
+        userId: session.user.id,
       });
 
-      // Check for successful response
       if (response.status === 200) {
-        // Append new message to existing messages
+        const newMessage = response.data;
         setMessages((oldMessages) => [
           ...oldMessages,
           {
+            ...newMessage,
+            createdAt: new Date(),
             buyerId: user.id,
             listingId: listing.id,
             sellerId: listing.sellerId,
             text: text,
             image: image,
-            id: listing.id,
+            userId: session.user.id,
           },
         ]);
       }
@@ -115,7 +120,7 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
           >
             {messages.map((message, index) => (
               <ChatMessage
-                key={message.id}
+                key={index}
                 message={message}
                 session={session}
                 ref={index === messages.length - 1 ? messagesEndRef : null}
@@ -127,7 +132,6 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
         </div>
       </div>
       <ImageTextArea onSubmit={handleSubmit} />
-          
     </div>
   );
 };

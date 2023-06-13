@@ -8,17 +8,18 @@ import axios from 'axios';
 import Button from '../Button';
 import { ErrorResponse } from '../modals/UserSearchModal';
 import { Listing } from '@prisma/client';
+import { is } from 'date-fns/locale';
 
 interface PriceWidgetProps {
   listingId: string;
   onBidPriceChange: (updatedBidPrice: string | null) => void;
   bid: string | null;
+  isBuyer?: boolean;
 }
 
-const PriceWidget = ({listingId, onBidPriceChange, bid}: PriceWidgetProps) => {
+const PriceWidget = ({listingId, onBidPriceChange, bid, isBuyer}: PriceWidgetProps) => {
 
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [bidPrice, setBidPrice] = useState<string | null>(bid);
@@ -35,12 +36,8 @@ const PriceWidget = ({listingId, onBidPriceChange, bid}: PriceWidgetProps) => {
         },
       });
 
-      
-
       const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
 
-       
-       
         if (status === "authenticated" && session?.user) {
           data.buyerId = session.user.id;
           console.log("User authenticated");
@@ -56,6 +53,7 @@ const PriceWidget = ({listingId, onBidPriceChange, bid}: PriceWidgetProps) => {
         data.id = listingId;
         data.bid = parseFloat(data.price);
         data.status = 'counterOffer';
+        data.bidById = session.user.id;
 
         await axios
       .post("/api/submitBid", data)
@@ -84,11 +82,11 @@ const PriceWidget = ({listingId, onBidPriceChange, bid}: PriceWidgetProps) => {
   };
   return (
     <div>
-      <h5 className='text-sm md:text-md'>COUNTER OFFER</h5>
+      <h5 className='text-sm md:text-md'> {isBuyer === false ? "NEW" : "COUNTER"} OFFER</h5>
       <div className='mb-2'>
       <Input id={'price'} placeholder="£ 0.00" label="" formatPrice required register={register} />
       </div>
-      <Button label='Save bid' onClick={handleSubmit(onSubmit)}  disabled={isSubmitting}  />
+      <Button label='Send bid' onClick={handleSubmit(onSubmit)}  disabled={isSubmitting}  />
     </div>
   )
 }

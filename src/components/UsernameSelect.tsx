@@ -47,11 +47,7 @@ const UserSelect = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  const router = useRouter();
-
-  console.log(foundUser)
-
+  
   const {
     register,
     handleSubmit,
@@ -69,32 +65,19 @@ const UserSelect = ({
   const SearchModal = useSearchModal();
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
-    if (status === "authenticated" && session?.user) {
-      data.buyerId = session.user.id;
-      console.log("User authenticated");
-    } else {
-      // Handle the case when the user is unauthenticated or the session doesn't contain the user object
-      // For example, you can redirect the user to the login page or show an error message
-      console.log("User is not authenticated");
-      return;
-    }
-
     await axios
-      .get(`/api/getUserByUsernameApi?username=${data.username}`)
+      .get(`/api/getUserByUsernameApi?username=${data.username.toLowerCase()}`)
       .then((response) => {
         const user: User | ErrorResponse = response.data;
         console.log("User found: ", data);
         if ("error" in user) {
-          // User not found
           toast.error("User not found!");
           setFoundUser(null);
           setNotFoundUser(data.username);
         } else {
-          // User found
           toast.success("Search completed!");
           setFoundUser(user);
         }
-
         reset();
       })
       .catch((err) => {
@@ -109,14 +92,12 @@ const UserSelect = ({
 
   const handleUserSelect = (user: User) => {
     setSelectedUser(foundUser);
-
     if (create) {
       const updatedFormValues = {
         ...formValues,
         buyerId: foundUser?.id,
         buyerUsername: foundUser?.username,
       };
-
       updateFormValues(updatedFormValues);
       setUserAssigned(true);
     } else {
@@ -141,25 +122,7 @@ const UserSelect = ({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-nowrap gap-2 items-center">
-        {!userAssigned && (
-          <>
-            <Input
-              id="username"
-              label="Search username"
-              type="username"
-              required
-              register={register}
-            />
-            <button
-              className="bg-orange-500 px-2 my-auto rounded-md mr-auto text-sm py-2 text-white flex gap-2 items-center"
-              onClick={handleSubmit(onSubmit)}
-            >
-              Search <BiChevronRight />
-            </button>{" "}
-          </>
-        )}
-      </div>
+      
       {foundUser ? (
         <div className="px-4 py-2 flex rounded border-gray-200 justify-between">
           <div>
@@ -206,8 +169,8 @@ const UserSelect = ({
       ) : (
         <div>
           {notFoundUser !== "" &&
-                <p className="font-bold mt-2">No user found</p>
-        }
+            <p className="font-bold mt-2">No user found</p>
+          }
         </div>
       )}
     </div>

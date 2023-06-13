@@ -13,19 +13,19 @@ import { Dash } from "@/templates/dash";
 import getFriendsByUserId from "@/actions/getFriendsByUserId";
 import useStartConversation from "@/hooks/useStartConversation";
 import axios from "axios";
-import { useRef } from 'react';
+import { useRef } from "react";
 import ImageTextArea from "@/components/inputs/ImageTextArea";
 import { toast } from "react-hot-toast";
 import MessageComponent from "@/components/chat/Message";
-import getConversationsByUserId from "@/actions/getFriendsByUserId";
-
-
+import getConversationsByUserId from "@/actions/getConversationsByUserId";
+import { set } from "date-fns";
 
 interface IDirectMessage {
   id: string;
   text: string | null;
   userId: string;
   conversationId: string;
+  image: string | null;
 }
 
 interface Conversation {
@@ -40,6 +40,8 @@ interface Conversation {
 }
 
 const Conversations = ({ safeConversations, session }: any) => {
+  const [allConversations, setAllConversations] =
+    useState<Conversation[]>(safeConversations);
   const [activeConversationState, setActiveConversationState] =
     useState<Conversation | null>(safeConversations[0]);
 
@@ -47,8 +49,9 @@ const Conversations = ({ safeConversations, session }: any) => {
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant2?.username || ""
       : activeConversationState?.participant1?.username || "";
-      const [isOpen, setIsOpen] = useState(typeof window !== 'undefined' && window.innerWidth > 768);
-
+  const [isOpen, setIsOpen] = useState(
+    typeof window !== "undefined" && window.innerWidth > 768
+  );
 
   const handleSidebarToggle = () => {
     setIsOpen(!isOpen);
@@ -98,7 +101,7 @@ const Conversations = ({ safeConversations, session }: any) => {
   }, [activeConversationState]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSubmit = async (image: string, text: string) => {
@@ -144,16 +147,16 @@ const Conversations = ({ safeConversations, session }: any) => {
           <div
             className={`border-b-2 border-gray-200 py-5 px-4 bg-slate-100 relative`}
           >
-            <button
+            {/* <button
               onClick={handleButtonClick}
               className={`${
                 !isOpen ? "hidden" : "block"
               } rounded-full px-2 py-1 text-sm bg-orange-500 text-white flex items-center gap-2}`}
             >
-             <div className="hidden md:block">Start a conversation</div>
-             <div className="block md:hidden">New</div>
+              <div className="hidden md:block">Start a conversation</div>
+              <div className="block md:hidden">New</div>
               <BiPlus />
-            </button>
+            </button>*/}
             <button
               onClick={handleSidebarToggle}
               className="absolute right-0 top-[50%] bottom-[50%] bg-gray-200 rounded-full px-1 py-1 text-xl text-gray-600 flex items-center gap-2"
@@ -162,7 +165,7 @@ const Conversations = ({ safeConversations, session }: any) => {
             </button>
           </div>
           <div className={`${isOpen ? "block" : "hidden"}`}>
-            {safeConversations.map((conversation: any) => {
+            {allConversations.map((conversation: any) => {
               const setUser =
                 conversation.participant1Id === session?.user?.id
                   ? conversation.participant2?.username
@@ -200,10 +203,15 @@ const Conversations = ({ safeConversations, session }: any) => {
                         : conversation.participant1?.username}
                     </div>
                     <div className="text-gray-400">
-                      {conversation.directMessages[
+                      {conversation.directMessages.length === 0 ||
+                      conversation.directMessages[
                         conversation.directMessages.length - 1
                       ].text === ""
-                        ? "No messages yet"
+                        ? conversation.directMessages[
+                            conversation.directMessages.length - 1
+                          ].image
+                          ? "image.png"
+                          : "No messages yet"
                         : conversation.directMessages[
                             conversation.directMessages.length - 1
                           ].text}
@@ -244,14 +252,19 @@ const Conversations = ({ safeConversations, session }: any) => {
               </div>
               <div className="border-t border-gray-200 w-full  hidden lg:block"></div>
             </div>
-            {messages.map((message, index) => (
-              <MessageComponent
-                key={message.id}
-                message={message}
-                session={session}
-                ref={index === messages.length - 1 ? messagesEndRef : null}
-              />
-            ))}
+            {messages.map((message, index) => {
+              if (message.text == "" && message.image == "") {
+                return null;
+              }
+              return (
+                <MessageComponent
+                  key={message.id}
+                  message={message}
+                  session={session}
+                  ref={index === messages.length - 1 ? messagesEndRef : null}
+                />
+              );
+            })}
           </div>
           <div className="border-t-2 mt-auto border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
             <ImageTextArea onSubmit={handleSubmit} />
@@ -269,7 +282,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const friends = await getFriendsByUserId(user?.id);
 
-  const safeConversations = await getConversationsByUserId(user?.id); 
+  const safeConversations = await getConversationsByUserId(user?.id);
 
   return {
     props: {

@@ -1,7 +1,7 @@
 import removeFriend from "@/pages/api/deleteFriend";
 import { on } from "events";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { BiStar } from "react-icons/bi";
 import { User } from "@/types";
 
@@ -12,12 +12,11 @@ interface UserCardProps {
   messages: number;
   dashboard?: boolean;
   profile?: boolean;
-  public?: boolean;
-  onMessageClick?: () => void; 
-  onAddFriendClick?: () => void; 
+  isPublic?: boolean;
+  onMessageClick?: () => void;
+  onAddFriendClick?: () => void;
   isFriend?: boolean;
   onRemoveFriendClick?: () => void;
-  
 }
 
 const UserCard = ({
@@ -27,12 +26,32 @@ const UserCard = ({
   messages,
   dashboard,
   profile,
-  onMessageClick, 
-  onAddFriendClick, 
+  onMessageClick,
+  onAddFriendClick,
   onRemoveFriendClick,
   isFriend,
+  isPublic
 }: UserCardProps) => {
-  console.log(currentUser);
+  const [friend, setFriend] = useState(isFriend);
+
+  const handleClick = async () => {
+    if (friend) {
+      try {
+        await onRemoveFriendClick?.(); 
+        setFriend(!friend);
+      } catch (error) {
+        console.error("Error removing friend:", error);
+      }
+    } else {
+      try {
+        await onAddFriendClick?.(); 
+        setFriend(!friend);
+      } catch (error) {
+        console.error("Error adding friend:", error);
+      }
+    }
+  };
+  
   return (
     <div
       id="profile-card"
@@ -42,7 +61,9 @@ const UserCard = ({
         <div className="flex w-1/3  md:w-1/5 lg:w-full ">
           <div className=" mx-auto">
             <img
-              src={currentUser?.profile?.image || "/images/placeholders/avatar.png"}
+              src={
+                currentUser?.profile?.image || "/images/placeholders/avatar.png"
+              }
               className="w-full rounded-full border-2 border-gray-200 p-2 max-w-[200px]"
             />
           </div>
@@ -61,28 +82,22 @@ const UserCard = ({
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-3 justify-between">
-        <div className="text-center w-full">
-          <div className="font-bold">Offers</div>
-          <div>{offers}</div>
-        </div>
-        <div className="text-center w-full">
-          <div className="font-bold">Requests</div>
-          <div>{sales}</div>
-        </div>
-        {profile ? (
-        <div className="text-center w-full">
-          <div className="font-bold">Messages</div>
-          <div>{messages}</div>
-        </div>
-
-        ) : (
+      {!isPublic && (
+        <div className="grid grid-cols-3 justify-between">
           <div className="text-center w-full">
-          <div className="font-bold">Completed</div>
-          <div>{messages}</div>
+            <div className="font-bold">Offers</div>
+            <div>{offers}</div>
+          </div>
+          <div className="text-center w-full">
+            <div className="font-bold">Requests</div>
+            <div>{sales}</div>
+          </div>
+          <div className="text-center w-full">
+            <div className="font-bold">Messages</div>
+            <div>{messages}</div>
+          </div>
         </div>
-        )}
-      </div>
+      )}
 
       <div className="mt-5 flex gap-2 text-sm text-center">
         {dashboard ? (
@@ -96,45 +111,37 @@ const UserCard = ({
               </Link>
             ) : (
               <Link
-              href={"/dashboard/profile/" + currentUser?.id}
-              className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
-            >
-              Preview Profile
-            </Link>
-            )}<Link
-                href="/dashboard/settings"
-                className="px-4 py-2 bg-white  w-full text-orange-500 border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500 hover:text-white  mb-2"
+                href={"/dashboard/profile/" + currentUser?.id}
+                className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
               >
-                Edit
+                Preview
               </Link>
+            )}
+            <Link
+              href="/dashboard/settings"
+              className="px-4 py-2 bg-white  w-full text-orange-500 border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500 hover:text-white  mb-2"
+            >
+              Edit
+            </Link>
           </>
         ) : (
           <>
-          {isFriend === false ? (
-             <button
-             onClick={onAddFriendClick}
-             className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
-           >
-             Add User
-           </button>
+            
+              <div
+                onClick={handleClick}
+                onTouchStart={handleClick}
+                className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
+              >
+                {friend === false ? ( "Add User" ) : ( "Remove User" )}
+              </div>
+            
 
-          ) :(
-
-            <button
-            onClick={onRemoveFriendClick}
-            className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
-          >
-            Unfollow
-          </button>
-
-          )}
-         
-          <button
-            onClick={onMessageClick}
-            className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
-          >
-            Message
-          </button>
+            <div
+              onClick={onMessageClick}
+              className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
+            >
+              Message
+            </div>
           </>
         )}
       </div>

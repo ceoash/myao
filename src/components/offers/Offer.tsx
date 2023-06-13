@@ -13,7 +13,7 @@ import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import { useSession } from "next-auth/react";
 import { IoClose } from "react-icons/io5";
 
-const Offer: React.FC<Listing> = ({
+const Offer: React.FC<any> = ({
   id,
   title,
   price,
@@ -21,7 +21,8 @@ const Offer: React.FC<Listing> = ({
   image,
   bid,
   status,
-  sellerId
+  sellerId,
+  bidder
 
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -81,7 +82,7 @@ const Offer: React.FC<Listing> = ({
                 </div>
               </div>
               <div>
-                <div className="text-right text-sm">Current Bid</div>
+                <div className="text-right text-sm">Bid by <span className="underline">{bidder?.username}</span></div>
                 <div className="font-extrabold md:text-2xl text-right">
                   £ {bid ? bid : price}
                 </div>

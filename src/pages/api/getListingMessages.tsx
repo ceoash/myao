@@ -19,6 +19,11 @@ export default async function messagesApi(
             buyer: true,
             seller: true,
             listing: true,
+            user: {
+              include: {
+                profile: true,
+              }
+            },
           },
           orderBy: { createdAt: 'asc' },
         });

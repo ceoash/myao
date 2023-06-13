@@ -11,6 +11,7 @@ interface User {
   };
 }
 
+
 const SearchComponent = () => {
   const [search, setSearch] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -33,7 +34,7 @@ const SearchComponent = () => {
 
   const onSearch = () => {
     axios
-      .get(`/api/getUserByUsernameApi?username=${search}`)
+      .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
         setUser(res.data);
         console.log("search complete");
@@ -48,7 +49,7 @@ const SearchComponent = () => {
       <div className="flex flex-grow flex-nowrap">
         <input
           type="text"
-          placeholder="Search"
+          placeholder="Search user"
           className="border border-gray-200 rounded-lg px-4 py-2 w-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -77,8 +78,6 @@ const SearchComponent = () => {
                   />
                   <div className="text-md">{user.username}</div>
                 </div>
-
-                <div>Not Following</div>
               </div>
             </Link>
           </div>

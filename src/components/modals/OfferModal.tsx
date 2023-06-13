@@ -13,8 +13,10 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getSession, useSession } from "next-auth/react";
-import { BiCheckbox, BiCheckboxChecked } from "react-icons/bi";
+import { BiCheckbox, BiCheckboxChecked, BiChevronRight } from "react-icons/bi";
 import UsernameSelect from "../UsernameSelect";
+import UserSelect from "../UsernameSelect";
+import { User } from "@prisma/client";
 
 enum STEPS {
   DESCRIPTION = 0,
@@ -44,6 +46,18 @@ const OfferModal = () => {
   const [location, setLocation] = useState(true);
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
   const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [foundUser, setFoundUser] = useState<User | null>(null);
+  const [notFoundUser, setNotFoundUser] = useState("");
+  const [invitationSent, setInvitationSent] = useState(false);
+  const [userAssigned, setUserAssigned] = useState(false);
+
+  console.log(foundUser);
 
   const [formValues, setFormValues] = useState<FieldValues>({
     email: "",
@@ -77,12 +91,24 @@ const OfferModal = () => {
     },
   });
 
-  // Callback function to update form values
-  const updateFormValues = (values: FieldValues) => {
-    setFormValues(values);
+  const onSearchUser = () => {
+    axios
+      .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
+      .then((res) => {
+        setFoundUser(res.data);
+        console.log("search complete");
+      })
+      .catch((err) => {
+        console.log("error");
+      })
+      .catch((err) => {
+        toast.error("Something went wrong!");
+        setFoundUser(null);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
-
-  console.log("formValues", formValues);
 
   const validateStep = (step: any, data: any) => {
     const validation = {
@@ -139,8 +165,12 @@ const OfferModal = () => {
       if (step !== STEPS.REVIEW) {
         const stepValidationResult = validateStep(step, data); // Implement your own validation logic
         if (stepValidationResult.isValid) {
+          setTitle(data.title);
+          setDescription(data.description);
+          setPrice(data.price);
+          setCategory(data.category);
+
           setStep(step + 1);
-          setFormValues({ ...formValues, ...data });
         }
       } else {
         onSubmit(data);
@@ -200,8 +230,9 @@ const OfferModal = () => {
 
     setIsLoading(true);
 
-    data.buyerId = formValues.buyerId;
     data.category = selectedCategory;
+    data.buyerId = formValues.buyerId;
+    data.bidderId = session.user.id;
 
     await axios
       .post("/api/listings", data)
@@ -224,10 +255,10 @@ const OfferModal = () => {
   let bodyContent = (
     <div className="flex flex-col">
       <Heading
-        title="Tell us about your offer"
-        description="Enter the title and description of the item."
+        title="What do they want to buy?"
+        description="Name and describe your thing"
       />
-      <Input id="title" label="Title" type="text" register={register} />
+      <Input id="title" label="Name of thing" type="text" register={register} />
       {errors.title && typeof errors.title.message === "string" && (
         <div className="text-red-500">{errors.title.message}</div>
       )}
@@ -242,7 +273,7 @@ const OfferModal = () => {
           peer
           w-full
           p-2
-          font-light
+          
           bg-white
           border-2
           rounded-md
@@ -259,7 +290,7 @@ const OfferModal = () => {
 
       <Input
         id="price"
-        label="Price"
+        label="Starting price (optional)"
         type="number"
         modal
         formatPrice
@@ -332,23 +363,38 @@ const OfferModal = () => {
         />
 
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-          <div
-            className="flex gap-2 items-center cursor-pointer"
-            onClick={() => setBuyer(!buyer)}
-          >
-            {buyer ? (
-              <BiCheckbox className="text-xl" />
-            ) : (
-              <BiCheckboxChecked className="text-xl" />
-            )}
-            <span>I don't know the buyer</span>
-          </div>
-          {buyer && (
-            <UsernameSelect
-              create
-              formValues={formValues}
-              updateFormValues={updateFormValues}
-            />
+          {foundUser ? (
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-bold">Found:</p>
+                <h2 className="-mt-4 font-extrabold text-orange-600 text-4xl">{foundUser.username}</h2>
+              </div>
+              <div>
+                <button onClick={() => setFoundUser(null)} className="rounded-md bg-orange-500 text-white px-2 ">
+                  Change
+                </button>
+              </div>
+            </div>
+            
+          ) : (
+            <div className="flex border-2 border-gray-300 ">
+              <input
+                id="username"
+                type="text"
+                required
+                placeholder="Enter MYAO name"
+                className="rounded-md p-2 flex-1"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                {...register}
+              />
+              <button
+                className="bg-orange-500 px-2 my-auto rounded-r-md mr-auto text-sm py-2 text-white flex gap-2 items-center"
+                onClick={onSearchUser}
+              >
+                Search <BiChevronRight />
+              </button>{" "}
+            </div>
           )}
         </div>
       </div>
@@ -362,26 +408,28 @@ const OfferModal = () => {
           description="If you are happy with the offer, click the button below to create the offer."
         />
         <div>
-          <h5>Review Details</h5>
+          <h5 className="mb-4">Review Details</h5>
           <div className="flex gap-4">
             <div className="w-1/5">
               <img
-                src={`${image ? image : `/images/cat.png` }` }
+                src={`${image ? image : `/images/cat.png`}`}
                 alt="offer"
                 className="object-cover rounded-md"
               />
             </div>
 
             <div className="flex-1">
-              <div className="font-medium">{formValues.title}</div>
+              <div className="font-medium">{title}</div>
               <div className="flex justify-between">
-                <div className="font-light">{formValues.category}</div>
-                <div className="font-light">Bid: {formValues.price}</div>
+                <div className=""><span className="font-medium">Category:</span> {category}</div>
+                <div className=""><span className="font-medium">Bid:</span> £{price}</div>
               </div>
-              <div className="font-light mt-4">
+              <hr className="mt-2 mb-2" />
+              <div className="">
                 <div className="font-medium">Description</div>
+                <p>{description}</p>
                 
-                {formValues.description}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -390,7 +438,7 @@ const OfferModal = () => {
   }
   return (
     <Modal
-      title="Create an offer"
+      title="Show your thing"
       isOpen={offerModal.isOpen}
       onClose={offerModal.onClose}
       onSubmit={handleSubmit(onSubmit)}

@@ -11,7 +11,7 @@ export default async function ConversationsApi(
   res: NextApiResponse<Conversation | ErrorResponse>
 ) {
   if (req.method === "POST") {
-    const { userId, recipientId, text, session, id, image } = req.body;
+    const { userId, recipientId, text, session, id, image, date } = req.body;
 
     
     try {
@@ -20,6 +20,7 @@ export default async function ConversationsApi(
               id: id,
             },
             data: {
+              updatedAt: date,
               directMessages: {
                 create: {
                   userId: userId,

@@ -44,19 +44,10 @@ const MessageModal = ({  }) => {
 
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
-    if (status === "authenticated" && session?.user) {
-      console.log("User authenticated");
-    } else {
-      // Handle the case when the user is unauthenticated or the session doesn't contain the user object
-      // For example, you can redirect the user to the login page or show an error message
-      console.log("User is not authenticated");
-      return;
-    }
-
+   
     data.recipientId = recipientId;
     data.userId = userId;
 
-    console.log("data", data);
 
     await axios
     .post("/api/newConversation", data)

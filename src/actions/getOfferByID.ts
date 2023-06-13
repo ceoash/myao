@@ -12,6 +12,7 @@ export default async function getOfferByID({ offerID }: IParams) {
       },
       include: {
         seller: true,
+        buyer: true,
       },
     });
 

@@ -13,6 +13,7 @@ import { categories } from "@/data/cateories";
 import CategoryInput from "@/components/inputs/CategoryInput";
 import Button from "@/components/Button";
 import ImageUpload from "@/components/inputs/ImageUpload";
+import UsernameSelect from "@/components/UsernameSelect";
 
 enum STEPS {
   DESCRIPTION = 0,
@@ -69,6 +70,22 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
     },
   });
 
+  const [formValues, setFormValues] = useState<FieldValues>({
+    title: title,
+    description: description,
+    price: price,
+    category: category,
+    image: img,
+    buyerId: buyerId,
+    public: isPublic,
+    email: email,
+    sellerId: sellerId,
+  });
+
+  const updateFormValues = (values: FieldValues) => {
+    setFormValues(values);
+  };
+
   const validateStep = (step: any, data: any) => {
     const validation = {
       isValid: true,
@@ -99,9 +116,6 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       case STEPS.IMAGES:
         // Add validation for the image field if required
         break;
-      case STEPS.BUYER:
-        // Add validation for the buyer fields if required
-        break;
       case STEPS.REVIEW:
         // No validation required for the review step
         break;
@@ -117,12 +131,10 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
   };
   const onNext = () => {
     handleSubmit((data, event) => {
-      // Perform form validation
       event?.preventDefault();
       event?.stopPropagation();
-
       if (step !== STEPS.REVIEW) {
-        const stepValidationResult = validateStep(step, data); // Implement your own validation logic
+        const stepValidationResult = validateStep(step, data); 
         if (stepValidationResult.isValid) {
           setStep(step + 1);
         }
@@ -140,8 +152,6 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         return "Next";
       case STEPS.IMAGES:
         return "Next";
-      case STEPS.BUYER:
-        return "Next";
       case STEPS.REVIEW:
         return "Update Offer";
     }
@@ -154,8 +164,6 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       case STEPS.CATEGORY:
         return "Back";
       case STEPS.IMAGES:
-        return "Back";
-      case STEPS.BUYER:
         return "Back";
       case STEPS.REVIEW:
         return "Back";
@@ -181,7 +189,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       .put(`/api/updateListing/${listing.id}`, data)
       .then(() => {
         toast.success("Offer created successfully!");
-        router.push(`/dashboard/offers/${listing.id}`)
+        router.push(`/dashboard/offers/${listing.id}`);
         reset();
         setStep(STEPS.DESCRIPTION);
       })
@@ -267,42 +275,36 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       </div>
     );
   }
-  if (step === STEPS.BUYER) {
-    bodyContent = (
-      <div className="flex flex-col">
-        <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-          <div
-            className="flex gap-2 items-center cursor-pointer"
-            onClick={() => setIsBuyer(!isBuyer)}
-          >
-            {isBuyer ? (
-              <BiCheckbox className="text-xl" />
-            ) : (
-              <BiCheckboxChecked className="text-xl" />
-            )}
-            <span>I don't know the buyer</span>
-          </div>
-          {isBuyer && (
-            <>
-              <Input
-                id="email"
-                label="Email"
-                type="email"
-                register={register}
-              />
-          
-            </>
-          )}
-        </div>
-        
-      </div>
-    );
-  }
+  
   if (step === STEPS.REVIEW) {
     bodyContent = (
       <div className="flex flex-col">
         <div>
-          <h3>Review</h3>
+          <div className="flex gap-4">
+            <div>
+              <img
+                className="w-40 object-cover rounded-md"
+                src={image || "/images/cat.png"}
+                alt={title} />
+
+            </div>
+            <div>
+              <h5>{title}</h5>
+              
+              <p><span className="font-medium">Price:</span> £{price}</p>
+              <p><span className="font-medium">Category:</span> {category}</p>
+             
+              
+              <hr className="my-4" />
+              <h6 className="font-medium">Details</h6>
+              <p>{description}</p>
+            
+
+            </div>
+          </div>
+          
+          
+        
         </div>
       </div>
     );
@@ -310,7 +312,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 
   return (
     <Dash meta={<Meta title="" description="" />}>
-      <div className="container px-4 mx-auto">
+      <div className="container px-4 mx-auto max-w-xl">
         <div className="md:flex md:flex-wrap mt-10 gap-6">
           <div className="flex-1 bg-white border-2 border-gray-200 p-8">
             <div className="flex flex-wrap items-center justify-between -mx-4 mb-8 pb-6 border-b border-gray-400 border-opacity-20">
@@ -320,25 +322,10 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
                 </h4>
                 <p className="text-sm">Edit Your Offer</p>
               </div>
-              <div className="w-full sm:w-auto px-4">
-                <div>
-                  <button
-                    className="inline-block py-2 px-4 mr-3 text-xs text-center font-semibold leading-normal  bg-gray-200 hover:bg-gray-700 rounded-lg transition duration-200"
-                    onClick={() => router.back()}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="inline-block py-2 px-4 text-xs text-center font-semibold leading-normal text-orange-50 bg-orange-500 hover:bg-orange-600 rounded-lg transition duration-200"
-                    onClick={handleSubmit(onSubmit)}
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </div>
+              
             </div>
             {bodyContent}
-            <div className="flex mt-4 gap-x-48">
+            <div className="flex mt-4 gap-4">
               {step > STEPS.DESCRIPTION && (
                 <Button
                   disabled={disabled}

@@ -41,14 +41,24 @@ export default async function newConversation(
 
       if (existingConversation) {
         // If a conversation exists, add a new message to it
-        const newMessage = await prisma.directMessage.create({
+        const updatedConversation = await prisma.conversation.update({
+          where: {
+            id: existingConversation.id,
+          },
           data: {
-            conversationId: existingConversation.id,
-            userId,
-            text: message,
+            directMessages: {
+              create: {
+                userId: userId,
+                text: message,
+              },
+            },
+            updatedAt: new Date(), // Update the updatedAt field of the conversation
+          },
+          include: {
+            directMessages: true, // Include messages
           },
         });
-        res.status(200).json(newMessage);
+        res.status(200).json(updatedConversation);
       } else {
         // If no conversation exists, create a new one
         const newConversation = await prisma.conversation.create({

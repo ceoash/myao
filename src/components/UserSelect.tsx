@@ -78,14 +78,14 @@ const UserSelect = ({
     }
 
     await axios
-      .post("/api/searchUserByEmail", data)
+      .post("/api/searchUserByUsername", data)
       .then((response) => {
         const user: User | ErrorResponse = response.data;
         if ("error" in user) {
           // User not found
           toast.error("User not found!");
           setFoundUser(null);
-          setNotFoundUser(data.email);
+          setNotFoundUser(data.username);
         } else {
           // User found
           toast.success("Search completed!");
@@ -97,7 +97,7 @@ const UserSelect = ({
       .catch((err) => {
         toast.error("Something went wrong!");
         setFoundUser(null);
-        setNotFoundUser(data.email);
+        setNotFoundUser(data.username);
       })
       .finally(() => {
         setIsLoading(false);
@@ -135,43 +135,16 @@ const UserSelect = ({
     }
   };
 
-  const handleEmailSubmit = async () => {
-    if (create) {
-      console.log("user assigned");
-    } else {
-      await axios
-        .post("/api/email/sendUserEmailInvitation", {
-          email: notFoundUser,
-          buyer: buyer,
-          url: url,
-        })
-        .then((response) => {
-          if (response.status === 200) {
-            toast.success("Invitation sent successfully!");
-            console.log("Invitation sent successfully!");
-            setInvitationSent(true);
-          }
-          reset();
-        })
-        .catch((err) => {
-          toast.error("Something went wrong!");
-          console.log("Something went wrong!");
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  };
 
   return (
     <div className="flex flex-col">
       <div className="flex flex-nowrap gap-2 items-center">
-        {!userAssigned && (
+       
           <>
             <Input
-              id="email"
-              label="Enter user email"
-              type="email"
+              id="username"
+              label="Enter user username"
+              type="text"
               required
               register={register}
             />
@@ -182,15 +155,15 @@ const UserSelect = ({
               Search <BiChevronRight />
             </button>{" "}
           </>
-        )}
+    
       </div>
-      {foundUser ? (
+      {foundUser && (
         <div className="px-4 py-2 flex rounded border-gray-200 justify-between">
           <div>
-            {foundUser.name ? (
-              <div className="capitalize">{foundUser.name}</div>
+            {foundUser.username ? (
+              <div className="capitalize">{foundUser.username}</div>
             ) : (
-              foundUser.email
+              foundUser.name
             )}
           </div>
           <div className="flex gap-2">
@@ -227,40 +200,7 @@ const UserSelect = ({
             )}
           </div>
         </div>
-      ) : (
-        <div>
-          {notFoundUser !== "" &&
-            (invitationSent ? (
-              <p className="font-bold mt-2">
-                Invitation sent to {notFoundUser}
-              </p>
-            ) : (
-              <>
-                <p className="font-bold mt-2">No user found</p>
-                <div className="flex justify-between">
-                  <div>
-                    Send an invitation to{" "}
-                    <span className="font-bold">{notFoundUser}</span>
-                  </div>{" "}
-                  <button
-                    className=" 
-                    bg-orange-500 
-                    px-2 rounded-md 
-                    text-sm py-1 
-                    text-white 
-                    flex 
-                    gap-2 
-                    items-center
-                  "
-                    onClick={() => handleEmailSubmit()}
-                  >
-                    Send <BiChevronRight />
-                  </button>
-                </div>
-              </>
-            ))}
-        </div>
-      )}
+      ) }
     </div>
   );
 };

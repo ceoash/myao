@@ -14,37 +14,35 @@ export default async function getListingsByUserId(id: any) {
         buyer: true,
         seller: true,
         messages: true,
+        bidder: true,
       },
     });
 
-    const safeListings = listings?.map((listing) => ({
+    return listings.map(listing => ({
       ...listing,
-      expireAt: listing.createdAt.toISOString(),
       createdAt: listing.createdAt.toISOString(),
       updatedAt: listing.updatedAt.toISOString(),
+      expireAt: listing.expireAt?.toISOString() || null,
       buyer: listing.buyer
-        ? {
-            ...listing.buyer,
-            createdAt: listing.buyer.createdAt
-              ? listing.buyer.createdAt.toISOString()
-              : null,
-            updatedAt: listing.buyer.updatedAt
-              ? listing.buyer.updatedAt.toISOString()
-              : null,
-          }
-        : null,
+          ? {
+              ...listing.buyer,
+              createdAt: listing.buyer.createdAt.toISOString(),
+              updatedAt: listing.buyer.updatedAt.toISOString(),
+            }
+          : null,
       seller: {
         ...listing.seller,
-        createdAt: listing.seller?.createdAt.toISOString(),
+        createdAt: listing.seller.createdAt.toISOString(),
         updatedAt: listing.seller.updatedAt.toISOString(),
       },
-      messages: listing.messages?.map((message) => ({
-        ...message,
-        createdAt: message.createdAt?.toISOString(),
-        updatedAt: message.updatedAt?.toISOString(),
-      })),
-    }));
-    return safeListings;
+      bidder: listing.bidder
+        ? {
+            ...listing.bidder,
+            createdAt: listing.bidder.createdAt.toISOString(),
+            updatedAt: listing.bidder.updatedAt.toISOString(),
+          }
+        : null,
+  }));
   } catch (error: any) {
     throw new Error(error);
   }

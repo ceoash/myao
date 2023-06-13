@@ -7,7 +7,8 @@ type MessageProps = {
   chat?: boolean
 };
 
-const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(({ message, session, chat }, ref) => {
+const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(({ message, session }, ref) => {
+  
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,30 +17,30 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(({ message, session
 
   return (
     <div
+      key={message.id}
       ref={ref}
       className={`flex gap-2 w-1/2 ${
-     
-        message.buyerId === session.user.id || message.sellerId === session.user.id 
-       ? "justify-end ml-auto" 
+        message.userId === session.user.id 
+        ? "justify-end ml-auto" 
         : "justify-start mr-auto"
-      }
+        }
       `}
     >
       <div className="flex items-center justify-end h-10 w-10 rounded-full text-white flex-shrink-0">
         <img
-          src="/images/placeholders/avatar.png"
+          src={message?.user?.profile?.image || "/images/placeholders/avatar.png"}
           className="rounded-full border-2 border-gray-200 p-1"
         />
       </div>
       <div
         className={` py-2 px-4 rounded-lg  ${
-          message.buyerId === session.user.id || message.sellerId === session.user.id
+          message.userId === session.user.id
             ? " bg-orange-200 text-gray-700"
             : " bg-gray-100 text-gray-700"
         }`}
       >
         <div className="font-bold">
-          {message.buyerId === session.user.id || message.sellerId === session.user.id ? "You" : message.user?.name}
+          {message.userId === session.user.id ? "You" : "@"+message.user?.username}
         </div>
         <div>
           {message?.image && (

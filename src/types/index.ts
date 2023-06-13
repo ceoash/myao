@@ -18,6 +18,8 @@ Listing,
 createdAt: string;
 updatedAt: string;
 expireAt: string;
+bidderId?: string;
+bidder?: User; 
 };
 
 

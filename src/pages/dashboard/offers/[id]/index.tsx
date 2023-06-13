@@ -5,13 +5,11 @@ import useSearchModal from "@/hooks/useSearchModal";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";
-import { use, useEffect, useState } from "react";
-import Link from "next/link";
-import { getSession, useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
-import { Listing, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import StatusChecker from "@/utils/status";
 import { useQRCode } from "next-qrcode";
@@ -53,6 +51,8 @@ const Index = ({ listing }: any) => {
   }, [listing]);
 
   const { data: session } = useSession();
+
+  console.log("session", session);
 
   const [bidPrice, setBidPrice] = useState<string | null>(
     listing?.bid ? listing.bid : listing?.price
@@ -127,7 +127,7 @@ const Index = ({ listing }: any) => {
               <span>View more →</span>
             </div>
           )}
-          {status === "pending" && session?.user.id === listing.buyer (
+          {status === "pending" && session?.user.id === listing?.buyerId && (
             <div
               className="col-span-12 flex flex-col md:flex-row md:items-center md:justify-between p-4 mb-8 text-sm font-semibold text-white bg-gray-600 rounded-lg shadow-md focus:outline-none focus:shadow-outline-purple"
               onClick={(e) => {
@@ -179,7 +179,7 @@ const Index = ({ listing }: any) => {
                       </p>
                     </div>
                     <div className="hidden md:block">
-                      <div className="text-right text-sm">Current Bid</div>
+                      <div className="text-right text-sm">Bid by {listing.bidder.username}</div>
                       <div className="font-extrabold text-3xl text-right -mt-2">
                         £ {bidPrice ? bidPrice : listing.bid}
                       </div>
@@ -262,7 +262,7 @@ const Index = ({ listing }: any) => {
                 <div className="w-full xl:w-1/3 xl:full aspect-video mb-4">
                   <img
                     src={
-                      listing?.image ? listing.image : "/images/placeholder.png"
+                      listing?.image ? listing.image : "/images/cat.png"
                     }
                     alt="user"
                     width="100%"
@@ -410,8 +410,8 @@ const Index = ({ listing }: any) => {
                   <div>
                     <h5 className="mb-2 text-sm md:text-md">
                       {listing?.seller?.email === session?.user.email
-                        ? "BUYER"
-                        : "SELLER"}
+                        ? <span className="flex items-center justify-between gap-2">BUYER <img src="/images/cat.png" className="h-6" /></span>
+                        : <span className="flex items-center justify-between gap-2">SELLER <img src="/images/dog.png" className="h-6" /></span>}
                     </h5>
                     {listing?.seller?.id !== session?.user.id ? (
                       <div className="flex flex-col gap-1">
@@ -419,11 +419,11 @@ const Index = ({ listing }: any) => {
                           <div className="flex items-center gap-2">
                             <span className="text-green-500 w-1/5 ">
                               <img
-                                src={`${
+                                src={
                                   listing.seller?.profile?.image
                                     ? listing.seller?.profile?.image
                                     : "/images/placeholders/avatar.png"
-                                }`}
+                                }
                                 alt="user avatar"
                                 className="rounded-full border-2 p-2 border-gray-200"
                               />
@@ -437,8 +437,8 @@ const Index = ({ listing }: any) => {
 
                               <div>
                                 {listing?.seller
-                                  ? listing?.seller.email
-                                  : "No email"}
+                                  ? "@"+listing?.seller.username
+                                  : "No username"}
                               </div>
                             </div>
                           </div>
@@ -468,7 +468,7 @@ const Index = ({ listing }: any) => {
 
                               <div>
                                 {listing?.buyer
-                                  ? listing?.buyer.username
+                                  ? "@"+listing?.buyer.username
                                   : "No username"}
                               </div>
                             </div>
@@ -503,6 +503,7 @@ const Index = ({ listing }: any) => {
                   listingId={listing.id}
                   onBidPriceChange={handleBidPriceChange}
                   bid={bidPrice}
+                  isBuyer={listing.buyer.id === session?.user.id}
                 />
               </div>
             )}

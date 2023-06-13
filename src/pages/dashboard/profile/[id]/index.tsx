@@ -113,6 +113,7 @@ return (
           onAddFriendClick={addFriend}
           isFriend={isFriend}
           onRemoveFriendClick={onRemoveFriendClick} 
+          isPublic={true}
 
         />
 

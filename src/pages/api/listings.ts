@@ -13,9 +13,7 @@ export default async function listingsApi(
 ) {
   if (req.method === "POST") {
 
-    const { title, description, price, image, sellerId, category, buyerId  } = req.body;
-
-    
+    const { title, description, price, image, sellerId, category, buyerId, bidderId  } = req.body;
 
     try {
       if (buyerId){
@@ -29,10 +27,12 @@ export default async function listingsApi(
           sellerId,
           status: "awaiting approval",
           buyerId,
+          bidderId,
         },
         include: {
           seller: true,
           buyer: true,
+          bidder: true,
         },
       });
 
@@ -70,9 +70,12 @@ export default async function listingsApi(
           image,
           sellerId,
           status: "pending",
+          bidderId,
         },
         include: {
           seller: true,
+          buyer: true,
+          bidder: true,
         },
       });
 

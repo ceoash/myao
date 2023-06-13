@@ -11,7 +11,7 @@ export default async function listingsApi(
   res: NextApiResponse<Listing | ErrorResponse>
 ) {
   if (req.method === "POST") {
-    const { message, sellerId, buyerId, listingId } = req.body;
+    const { message, sellerId, buyerId, listingId, image } = req.body;
 
     
     try {
@@ -26,6 +26,8 @@ export default async function listingsApi(
                   buyerId: buyerId,
                   sellerId: sellerId,
                   text: message,
+                  userId: buyerId,
+                  image: image,
                 },
               ],
             },

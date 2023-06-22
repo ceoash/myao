@@ -22,6 +22,7 @@ import getConversationsByUserId from "@/actions/getConversationsByUserId";
 import { formatDistanceToNow } from "date-fns";
 import { Dir } from "fs";
 import {io} from "socket.io-client";
+import { config } from "@/config";
 
 
 interface IConversation { 
@@ -56,7 +57,7 @@ const Index = ({ listings, user, requests, friends, session, conversations }: da
 
   useEffect(() => {
     // Connect to the server (replace 'http://localhost:3000' with your server's URL)
-    const socket = io('http://localhost:3001');
+    const socket = io(config.PORT);
   
     socket.on('listing_created', (newListing) => {
       setRealTimeListings((prevListings) => [...prevListings, newListing]);

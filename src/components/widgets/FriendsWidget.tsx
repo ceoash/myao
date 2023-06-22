@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
-
+import { config } from "@/config";
 interface FriendsWidgetProps {
     session: any;
     friends: any[];

@@ -25,6 +25,7 @@ import { AiFillWarning } from "react-icons/ai";
 import { BiTrash } from "react-icons/bi";
 import Link from "next/link";
 import { io, Socket } from "socket.io-client";
+import { config } from "@/config";
 
 const Index = ({ listing }: any) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -137,7 +138,7 @@ const Index = ({ listing }: any) => {
   };
 
   useEffect(() => {
-    socketRef.current = io('http://localhost:3001');
+    socketRef.current = io(config.PORT);
     socketRef.current.emit('join_room', listing.id);
 
     socketRef.current.on('update_bidPrice', ({ newBidPrice, listingId, updatedBidder }) => {

@@ -7,6 +7,7 @@ import axios from 'axios';
 import Button from '../Button';
 import { ErrorResponse } from '../modals/UserSearchModal';
 import { io, Socket } from 'socket.io-client';
+import { config } from '@/config';
 
 interface PriceWidgetProps {
   listingId: string;
@@ -24,7 +25,7 @@ const PriceWidget = ({ listingId, onBidPriceChange, bid, isBuyer, onBidderChange
   const socketRef = useRef<Socket>();
 
   useEffect(() => {
-    socketRef.current = io('http://localhost:3001');
+    socketRef.current = io(config.PORT);
     socketRef.current.emit('join_room', listingId);
     socketRef.current.on('update_bidPrice', (newBidPrice: string | null) => {
       console.log(`Updating bid price to ${newBidPrice}`);

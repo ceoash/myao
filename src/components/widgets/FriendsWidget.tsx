@@ -1,18 +1,17 @@
-import { Friendship, User } from "@prisma/client";
-import { set } from "date-fns";
-import { da } from "date-fns/locale";
+import { User } from "@prisma/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-
 import { io } from "socket.io-client";
-const socket = io("http://localhost:3001");
 
 interface FriendsWidgetProps {
     session: any;
     friends: any[];
 }
 const FriendsWidget = ({ session, friends}: FriendsWidgetProps) => {
+
+  const port = process.env.PORT || "http://localhost:3001";
+  const socket = io(port);
   const [friendsList, setFriendsList] = useState<User[]>(friends);
   const onRemoveFriendClick = async (friendId: string) => {
     try {

@@ -14,9 +14,6 @@ import { getSession } from "next-auth/react";
 import { Dash } from "@/templates/dash";
 import { FieldValues, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import 'dotenv/config'
-
-
 import {
   BiBlock,
   BiCheck,
@@ -33,6 +30,7 @@ import Link from "next/link";
 import checkBlocked from "@/actions/checkBlocked";
 import { is } from "date-fns/locale";
 import getCurrentUser from "@/actions/getCurrentUser";
+   
 
 interface IDirectMessage {
   id: string;
@@ -83,7 +81,7 @@ interface Conversation {
 }
 
 const Conversations = ({ safeConversations, session, currentUser }: any) => {
-  require('dotenv').config()
+
 
 
 
@@ -94,7 +92,7 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
           ? conversation?.participant2
           : conversation?.participant1;
 
-      // Check if the session user has blocked the other participant
+      
       const hasBlocked = session?.user?.blockedFriends?.some(
         (blockedFriend: any) =>
           blockedFriend.friendBlockedId === otherParticipant.id
@@ -267,10 +265,11 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
     setStatus(activeConversationState?.status || "none")
   }, [activeConversationState]);
 
-  const socketRef = useRef<Socket>();
+  const socketRef = useRef<Socket>(); 
 
   useEffect(() => {
-    socketRef.current = io(process.env.PORT || "http://localhost:3001");
+    const port = process.env.PORT;
+    socketRef.current = io(port || "http://localhost:3000");
     socketRef.current.on("new_message", (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setActiveConversationState((prevState) => {

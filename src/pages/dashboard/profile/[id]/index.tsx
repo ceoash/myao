@@ -17,7 +17,6 @@ import checkFriendship from "@/actions/checkFriendship";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { useEffect, useState } from "react";
-import { is } from "date-fns/locale";
 let socket: any;
 
 
@@ -27,9 +26,9 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
   ));
 
   const [friend, setFriend] = useState(isFriend);
-
+    const port = process.env.PORT || "http://localhost:3001";
   useEffect(() => {
-    socket = io("http://localhost:3001");
+    socket = io(port);
     
     socket.on("friend_added", (friendship: any) => {
       if (friendship.followerId === session.user.id && friendship.followingId === user.id) {

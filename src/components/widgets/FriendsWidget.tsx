@@ -10,7 +10,7 @@ interface FriendsWidgetProps {
 }
 const FriendsWidget = ({ session, friends}: FriendsWidgetProps) => {
 
-  const port = config.PORT || "http://localhost:3001";
+  const port = config.PORT;
   const socket = io(port);
   const [friendsList, setFriendsList] = useState<User[]>(friends);
   const onRemoveFriendClick = async (friendId: string) => {

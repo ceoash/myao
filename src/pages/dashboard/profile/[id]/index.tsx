@@ -27,7 +27,7 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
   ));
 
   const [friend, setFriend] = useState(isFriend);
-    const port = config.PORT || "http://localhost:3001";
+    const port = config.PORT;
   useEffect(() => {
     socket = io(port);
     

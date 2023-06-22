@@ -6,6 +6,7 @@ import ImageTextArea from "../inputs/ImageTextArea";
 import ChatMessage from "./ChatMessage";
 
 import io, { Socket } from "socket.io-client";
+import { config } from "@/config";
 
 
 interface MessageProps {
@@ -51,7 +52,7 @@ const ListingChat = ({ listing, user, disabled, session }: any) => {
   const socketRef = useRef<Socket>();
 
   useEffect(() => {
-    socketRef.current = io('http://localhost:3001');
+    socketRef.current = io(config.PORT);
     socketRef.current.on('new_listing_message', (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });

@@ -17,6 +17,7 @@ import checkFriendship from "@/actions/checkFriendship";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { useEffect, useState } from "react";
+import { config } from "@/config";
 let socket: any;
 
 
@@ -26,7 +27,7 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
   ));
 
   const [friend, setFriend] = useState(isFriend);
-    const port = process.env.PORT || "http://localhost:3001";
+    const port = config.PORT || "http://localhost:3001";
   useEffect(() => {
     socket = io(port);
     

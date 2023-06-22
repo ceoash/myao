@@ -5,7 +5,7 @@ import getFriendsByUserId from "@/actions/getFriendsByUserId";
 
 import MessageComponent from "@/components/chat/Message";
 import ImageTextArea from "@/components/inputs/ImageTextArea";
-
+import { config } from "@/config";
 import { GetServerSideProps } from "next";
 import { useState, useEffect, use } from "react";
 import { useRef } from "react";
@@ -268,8 +268,10 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
   const socketRef = useRef<Socket>(); 
 
   useEffect(() => {
-    const port = process.env.PORT;
-    socketRef.current = io(port || "http://localhost:3000");
+    const port = config.PORT;
+
+    console.log(port);
+    socketRef.current = io(port || "https://myao-add-1fcc5262bac8.herokuapp.com");
     socketRef.current.on("new_message", (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setActiveConversationState((prevState) => {

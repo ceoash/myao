@@ -7,3 +7,8 @@ export const firebaseConfig = {
     messagingSenderId: "887359265547",
     appId: "1:887359265547:web:656298242e43fccccba00e"
 }
+
+export const config = {
+    PORT: "https://myao-add-1fcc5262bac8.herokuapp.com"
+
+}

@@ -56,7 +56,7 @@ const Index = ({ listings, user, requests, friends, session, conversations }: da
 
   useEffect(() => {
     // Connect to the server (replace 'http://localhost:3000' with your server's URL)
-    const socket = io('http://localhost:3000');
+    const socket = io('http://localhost:3001');
   
     socket.on('listing_created', (newListing) => {
       setRealTimeListings((prevListings) => [...prevListings, newListing]);

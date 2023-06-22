@@ -1,94 +1,99 @@
-import React, { useState } from 'react'
-import Input from '../inputs/Input'
+import React, { useEffect, useRef, useState } from 'react';
+import Input from '../inputs/Input';
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
-import useOfferModal from '@/hooks/useOfferModal';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import axios from 'axios';
 import Button from '../Button';
 import { ErrorResponse } from '../modals/UserSearchModal';
-import { Listing } from '@prisma/client';
-import { is } from 'date-fns/locale';
+import { io, Socket } from 'socket.io-client';
 
 interface PriceWidgetProps {
   listingId: string;
   onBidPriceChange: (updatedBidPrice: string | null) => void;
   bid: string | null;
   isBuyer?: boolean;
+  onBidderChange?: (bidder: string) => void;
 }
 
-const PriceWidget = ({listingId, onBidPriceChange, bid, isBuyer}: PriceWidgetProps) => {
-
-  const { data: session, status } = useSession(); // Get the session and status from next-auth/react
+const PriceWidget = ({ listingId, onBidPriceChange, bid, isBuyer, onBidderChange }: PriceWidgetProps) => {
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [bidPrice, setBidPrice] = useState<string | null>(bid);
+  const socketRef = useRef<Socket>();
 
-  const router = useRouter();
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-      } = useForm<FieldValues>({
-        defaultValues: {
-          email: "",  
-        },
-      });
+  useEffect(() => {
+    socketRef.current = io('http://localhost:3001');
+    socketRef.current.emit('join_room', listingId);
+    socketRef.current.on('update_bidPrice', (newBidPrice: string | null) => {
+      console.log(`Updating bid price to ${newBidPrice}`);
+      setBidPrice(newBidPrice);
+    });
+    
+    return () => {
+      socketRef.current?.emit('leave_room', listingId);
+      socketRef.current?.off('update_bidPrice');
+      socketRef.current?.disconnect();
+    };
+  }, [listingId]);
 
-      const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FieldValues>({
+    defaultValues: {
+      email: '',
+    },
+  });
 
-        if (status === "authenticated" && session?.user) {
-          data.buyerId = session.user.id;
-          console.log("User authenticated");
-        
-        } else {
-          // Handle the case when the user is unauthenticated or the session doesn't contain the user object
-          // For example, you can redirect the user to the login page or show an error message
-          console.log("User is not authenticated");
-          return;
+  const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
+    setIsLoading(true);
+
+    data.id = listingId;
+    data.bid = parseFloat(data.price);
+    data.status = 'counterOffer';
+    data.bidById = session?.user.id;
+
+    try {
+      const response = await axios.post("/api/submitBid", data);
+      const updatedListing: any | ErrorResponse = response.data;
+
+      if ('error' in updatedListing) {
+        console.log("Bid not updated:", updatedListing.error);
+       
+      } else {
+        console.log("Bid updated successfully:", updatedListing);
+        onBidPriceChange(updatedListing.bid !== null ? updatedListing.bid.toString() : null);
+        if (onBidderChange) {
+          onBidderChange(updatedListing.bidder);
         }
-        setIsLoading(true);
+  
+        socketRef.current?.emit('update_bidPrice', {
+          newBidPrice: updatedListing.bid !== null ? updatedListing.bid.toString() : null,
+          listingId
+        });
+      }
 
-        data.id = listingId;
-        data.bid = parseFloat(data.price);
-        data.status = 'counterOffer';
-        data.bidById = session.user.id;
-
-        await axios
-      .post("/api/submitBid", data)
-      .then((response) => {
-        const updatedListing: Listing | ErrorResponse = response.data;
-
-        if ("error" in updatedListing) {
-          // Handle error response
-          console.log("Bid not updated:", updatedListing.error);
-        } else {
-          // Handle successful response
-          console.log("Bid updated successfully:", updatedListing);
-
-          // Update the bid price in the parent component using the onBidPriceChange callback
-          onBidPriceChange(updatedListing.bid !== null ? updatedListing.bid.toString() : null);
-        }
-
-        reset();
-      })
-      .catch((err) => {
-        console.log("Something went wrong!");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      reset();
+    } catch (err) {
+      console.log("Something went wrong!");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   return (
     <div>
-      <h5 className='text-sm md:text-md'> {isBuyer === false ? "NEW" : "COUNTER"} OFFER</h5>
+      <h5 className='text-sm md:text-md'>{isBuyer === false ? "NEW" : "COUNTER"} OFFER</h5>
       <div className='mb-2'>
-      <Input id={'price'} placeholder="£ 0.00" label="" formatPrice required register={register} />
+        <Input id='price' placeholder='£ 0.00' label='' formatPrice required register={register} />
       </div>
-      <Button label='Send bid' onClick={handleSubmit(onSubmit)}  disabled={isSubmitting}  />
+      <Button label='Send bid' onClick={handleSubmit(onSubmit)} disabled={isSubmitting} />
     </div>
-  )
-}
+  );
+};
 
-export default PriceWidget
+export default PriceWidget;

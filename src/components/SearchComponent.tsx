@@ -37,7 +37,6 @@ const SearchComponent = () => {
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
         setUser(res.data);
-        console.log("search complete");
       })
       .catch((err) => {
         console.log("error");
@@ -50,7 +49,7 @@ const SearchComponent = () => {
         <input
           type="text"
           placeholder="Search user"
-          className="border border-gray-200 rounded-lg px-4 py-2 w-full"
+          className="border border-gray-200 rounded-l-lg px-4 py-2 w-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

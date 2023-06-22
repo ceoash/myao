@@ -33,10 +33,16 @@ export default async function listingsApi(
             },
           },
           include: {
-            buyer: true, // Include buyer details
-            seller: true, // Include seller details
-            messages: true, // Include messages
+            buyer: true, 
+            seller: true,
+            messages: {
+              include: {
+                buyer: true,
+                seller: true,
+                user: true,
+            }, 
           },
+        }
       });
       await prisma.notification.create({
         data: {

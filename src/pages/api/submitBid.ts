@@ -11,7 +11,7 @@ export default async function submitBid(
   res: NextApiResponse<Listing | ErrorResponse>
 ) {
   if (req.method === "POST") {
-    const { price, id } = req.body;
+    const { price, id, bidById } = req.body;
 
     try {
       const listing = await prisma.listing.update({
@@ -20,9 +20,16 @@ export default async function submitBid(
         },
         data: {
           bid: price,
+          bidderId: bidById,
+        },
+        include: {
+          bidder: {
+            include: {
+              profile: true,
+            },
+          },
         },
       });
-
     
 
       if (listing) {

@@ -11,6 +11,7 @@ import { IoCog, IoLockClosed } from "react-icons/io5";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { set } from "date-fns";
 
 const Settings = ({ user, listings }: any) => {
   const [activeTab, setActiveTab] = useState(
@@ -45,6 +46,8 @@ const Settings = ({ user, listings }: any) => {
     user?.profile?.social?.linkedin || ""
   );
   const [tiktok, setTiktok] = useState(user?.profile?.social?.tiktok || "");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
 
   useEffect(() => {
     setName(user.name);
@@ -91,6 +94,8 @@ const Settings = ({ user, listings }: any) => {
       twitch: twitch,
       linkedin: linkedin,
       tiktok: tiktok,
+      password: "",
+      passwordConfirm: "",  
     },
   });
 
@@ -99,7 +104,6 @@ const Settings = ({ user, listings }: any) => {
       await axios.put(`/api/settings/profile/${user.id}`, data);
 
       toast.success("Profile updated successfully");
-      console.log("Profile updated successfully");
     } catch (error) {
       console.error("Error updating listing:", error);
     }
@@ -114,7 +118,22 @@ const Settings = ({ user, listings }: any) => {
       shouldTouch: true,
     });
   };
+  
+  const onPasswordSubmit: SubmitHandler<FieldValues> = async () => {
+    try {
+      await axios.put(`/api/settings/profile/password`, {
+        id: user.id,
+        password: password,
+      });
 
+      toast.success("Password updated successfully");
+    } catch (error) {
+      console.error("Error updating listing:", error);
+    }
+  };
+
+ 
+  
   return (
     <Dash meta={<Meta title="" description="" />}>
       <div className="container px-4 mx-auto">
@@ -455,7 +474,7 @@ const Settings = ({ user, listings }: any) => {
                   </a>
                   <button
                     className="inline-block py-2 px-4 text-xs text-center font-semibold leading-normal text-orange-50 bg-orange-500 hover:bg-orange-600 rounded-lg transition duration-200"
-                    onClick={handleSubmit(onSubmit)}
+                    onClick={handleSubmit(onPasswordSubmit)}
                   >
                     Save
                   </button>
@@ -477,6 +496,7 @@ const Settings = ({ user, listings }: any) => {
                           type="text"
                           placeholder="*********"
                           {...register("password", { required: true })}
+                          onChange={(e) => {setPassword(e.target.value)}}
                         />
                       </div>
                     </div>
@@ -496,7 +516,8 @@ const Settings = ({ user, listings }: any) => {
                           id="formInput1-1"
                           type="text"
                           placeholder="*********"
-                          {...register("passwordConfirm", { required: true })}
+                          onChange={(e) => setPasswordConfirm(e.target.value)}
+                          
                         />
                       </div>
                     </div>

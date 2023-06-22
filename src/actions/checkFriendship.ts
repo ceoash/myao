@@ -10,8 +10,8 @@ export default async function checkFriendship({ userId1, userId2 }: IParams) {
   const result = await prisma.friendship.findFirst({
     where: {
       OR: [
-        { userAddsId: userId1, friendAddsId: userId2 },
-        { userAddsId: userId2, friendAddsId: userId1 },
+        { followerId: userId1, followingId: userId2 },
+        { followerId: userId2, followingId: userId1 },
       ],
     },
   });

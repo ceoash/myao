@@ -129,7 +129,6 @@ const UserCard = ({
             
               <div
                 onClick={handleClick}
-                onTouchStart={handleClick}
                 className="px-4 py-2 bg-orange-500  w-full text-white border border-orange-500 text-md rounded hover:shadow hover:bg-orange-500  mb-2"
               >
                 {friend === false ? ( "Add User" ) : ( "Remove User" )}

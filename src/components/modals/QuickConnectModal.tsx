@@ -9,6 +9,7 @@ import { User } from "@prisma/client";
 import { BiChevronRight, BiSearch } from "react-icons/bi";
 import useQuickConnect from "@/hooks/useQuickConnect";
 import { useRouter } from "next/router";
+import SearchInput from "../inputs/SearchInput";
 
 export interface ErrorResponse {
   error: string;
@@ -158,18 +159,11 @@ const QuickConnectModal = () => {
           </div>
         </div>
       ) : (
-        <div>
-          <input
-            type="text"
-            className="flex-1"
-            placeholder="Enter MYAO name to connect"
-            value={search.toLowerCase()}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button onClick={onSearch} className="bg-orange-500 p-2 text-white">
-            <BiSearch />
-          </button>
-        </div>
+        <SearchInput 
+          search={search} 
+          setSearch={setSearch} 
+          onSearch={onSearch} 
+          placeholder="Enter MYAO name to connect" />
       )}
     </div>
   );

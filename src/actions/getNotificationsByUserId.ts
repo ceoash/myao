@@ -5,11 +5,10 @@ interface IParams {
 }
 
 export default async function getNotificationsByUserId({ id }: IParams) {
-    console.log(id);
     try {
         const notification = await prisma?.notification.findMany({
             where: {
-                userId: id // filter by the userId
+                userId: id,
             },
         });
 

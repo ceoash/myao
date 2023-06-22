@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import getCurrentUser from "@/actions/getCurrentUser";
 import { SafeUser } from "@/types";
 import QuickConnectModal from "@/components/modals/QuickConnectModal";
+import PendingConversationModal from "@/components/modals/PendingConversationModal";
 
 type IDashProps = {
   meta: ReactNode;
@@ -21,9 +22,11 @@ const Dash = (props: IDashProps) => {
   const router = useRouter();
 
   const { data: session, status } = useSession();
-  if (status === "unauthenticated") {
-    router.push("/login");
-  }
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
   
 
   if (status === "loading") {
@@ -36,6 +39,7 @@ const Dash = (props: IDashProps) => {
         <Toaster />
         <OfferModal  />
         <MessageModal  />
+        <PendingConversationModal />
         <StartConversation />
         <QuickConnectModal />
         <SearchModal  />

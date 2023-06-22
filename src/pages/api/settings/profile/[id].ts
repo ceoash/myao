@@ -12,6 +12,7 @@ export default async function UpdateProfile(
   res: NextApiResponse<User | ErrorResponse>
 ) {
   const id = req.query.id as string;
+  
   const {
     name,
     email,
@@ -97,7 +98,6 @@ export default async function UpdateProfile(
       },
     });
 
-    console.log("Updated user:", user);
     res.status(200).json(user);
   } catch (error) {
     console.error("Error updating profile:", error);

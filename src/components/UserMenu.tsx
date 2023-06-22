@@ -75,7 +75,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
 
       
      
-      <div className="relative flex items-center text-xl lg:order-2 gap-4"> {/* Added relative here */}
+      <div className="relative flex items-center text-xl lg:order-2 gap-4" style={{zIndex: 9999}}> 
         
      
         <div className="relative">
@@ -120,8 +120,9 @@ const UserMenu: React.FC<IUserMenuProps> = ({session}: any) => {
           <div
             className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-14 -mt-1 text-sm"
             ref={dropdownRef}
+            style={{ zIndex: 9999 }}
           >
-            <div className="flex flex-col cursor-pointer">
+            <div className="flex flex-col cursor-pointer z-50">
               <>
                 <MenuItem label="Profile" link url={"/dashboard/my-profile"} />
                 <MenuItem label="Support" onClick={() => {}} />

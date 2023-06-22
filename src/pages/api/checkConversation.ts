@@ -28,7 +28,6 @@ export default async function checkConversation(
 
     const conversationExists = conversation;
 
-    console.log("conversationExists:", conversationExists);
     res.status(200).json(conversationExists);
   } catch (error) {
     console.error("Error checking conversation:", error);

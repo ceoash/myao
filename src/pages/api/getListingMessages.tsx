@@ -9,8 +9,6 @@ export default async function messagesApi(
   ) {
     if (req.method === "GET") {
       const { listingId } = req.query;
-
-      console.log("listingId", listingId);
   
       try {
         const messages = await prisma.message.findMany({

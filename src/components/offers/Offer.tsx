@@ -21,14 +21,14 @@ const Offer: React.FC<any> = ({
   image,
   bid,
   status,
+  seller,
   sellerId,
-  bidder
-
+  bidder,
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isOffer, setIsOffer] = useState(false);
   const DeleteListing = useDeleteConfirmationModal();
-  const {data: session} = useSession();
+  const { data: session } = useSession();
 
   const router = useRouter();
 
@@ -42,7 +42,6 @@ const Offer: React.FC<any> = ({
     router.push(`/dashboard/editListing/${id}`);
   };
 
-
   useEffect(() => {
     if (isOffer) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -55,7 +54,7 @@ const Offer: React.FC<any> = ({
     };
   }, [isOffer]);
   return (
-    <div className=" w-full  bg-white border-b border-gray-200 mb-6 md:mb-0">
+    <div className="w-full mt-4 md:mt-0 bg-white rounded-md border border-gray-200 mb-6 md:mb-0">
       <div className="md:px-6 md:py-4 md:flex gap-4">
         <div className="md:aspect-w-16 md:aspect-h-9 flex justify-center">
           <img
@@ -64,39 +63,37 @@ const Offer: React.FC<any> = ({
             alt="content"
           />
         </div>
-        <div className="w-full px-4 pt-2 pb-2 md:p-0">
-          <div className="md:flex justify-between">
+        <div className="w-full  pt-2 pb-2 md:p-0 flex flex-col">
+          <div className="w-full flex justify-between flex-grow border-b px-4 md:border-none">
             <div>
-              <div className="text-gray-900 text-md md:text-lg mt-1 md:mt-0 title-font font-medium lg:px-0 mb-2 md:m-0">
+              <div className="text-gray-900 text-md md:text-lg mt-1 md:mt-0 title-font font-medium lg:px-0  md:m-0">
                 {title}
               </div>
-              <h2 className="text-sm  mb-0 text-gray-500  lg:px-0 hidden md:block">
-                {category}
+              <h2 className="text-xs mb-0 text-gray-500">
+                {category|| "No category"}
               </h2>
             </div>
-            <div className="flex justify-between md:block border-b border-gray-200 md:border-0 mb-2 pb-2 md:pb-0 md:m-0">
-              <div className="md:hidden">
-                <div className="text-sm">Status</div>
-                <div className="text-sm">
-                  {StatusChecker(status ? status : "Pending")}
-                </div>
-              </div>
+            <div className="flex justify-between md:block mb-2 pb-2 md:pb-0 md:m-0">
+              
               <div>
-                <div className="text-right text-sm">Bid by <span className="underline">{bidder?.username}</span></div>
+                <div className="text-right text-sm">
+                  Bid by <span className="underline">{bidder?.username}</span>
+                </div>
                 <div className="font-extrabold md:text-2xl text-right">
                   £ {bid ? bid : price}
                 </div>
               </div>
             </div>
           </div>
-          <div className=" flex justify-between items-end">
-            <div className="hidden md:block text-sm">
-              <div className="leading-relaxed text-sm">
-                {StatusChecker(status ? status : "Pending")}
+          <div className="flex justify-between flex-grow my-2 px-4">
+            <Link href={`/dashboard/profile/${sellerId}`} className="flex items-center gap-2 leading-relaxed text-sm font-medium">
+              <div className="w-6">
+                <img src={seller?.profile?.image || "/images/placeholders/avatar.png"} className="rounded-full p-[1px] border-2 border-gray-200" />
               </div>
-            </div>
+              <div>{seller?.username || "unknown user"}</div>
+            </Link>
 
-            <div className="leading-relaxed  lg:p-0 flex gap-4 text-sm">
+            <div className="leading-relaxed lg:p-0 flex gap-4 text-sm">
               <Link
                 href={`/dashboard/offers/${id}`}
                 className="flex gap-2 items-center"
@@ -104,68 +101,58 @@ const Offer: React.FC<any> = ({
                 <AiOutlineEye />
                 View
               </Link>
-              { session?.user?.id === sellerId && (
+              {session?.user?.id === sellerId && (
                 <>
-                <button
-                onClick={handleEditListing}
-                className={`
-                w-full
-                focus:ring-4 
-                focus:outline-none 
-                focus:ring-primary-300 
-                font-medium 
-                rounded-lg 
-                text-center
-                flex
-                gap-2
-                items-center
-
+                  <button
+                    onClick={handleEditListing}
+                    className={`
+                  w-full
+                  focus:ring-4 
+                  focus:outline-none 
+                  focus:ring-primary-300 
+                  font-medium 
+                  rounded-lg 
+                  text-center
+                  flex
+                  gap-2
+                  items-center
                 `}
-              >
-                <span>
-                  <BiPencil />
-                </span>
-                Edit
-              </button>
-              <button
-                onClick={() => DeleteListing.onOpen(id)}
-                className={`
-                w-full
-                focus:ring-4 
-                focus:outline-none 
-                focus:ring-primary-300 
-                font-medium 
-                rounded-lg 
-                text-center
-                flex
-                gap-2
-                items-center
-
+                  >
+                    <span>
+                      <BiPencil />
+                    </span>
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => DeleteListing.onOpen(id)}
+                    className={`
+                  w-full
+                  focus:ring-4 
+                  focus:outline-none 
+                  focus:ring-primary-300 
+                  font-medium 
+                  rounded-lg 
+                  text-center
+                  flex
+                  gap-2
+                  items-center
                 `}
-              >
-                <span>
-                  <BiTrash />
-                </span>
-                Delete
-              </button>
-              </>
-              ) 
-              
-                
-              
-              
-              }
-              { session?.user?.id !== sellerId &&
-                status !== "rejected" && 
-                status !== "accepted" &&
-                (
-                <button className="flex gap-1 items-center text-red-500">
-                  <IoClose  />
-                  Reject
-                </button>
-                )
-              }
-              
+                  >
+                    <span>
+                      <BiTrash />
+                    </span>
+                    Delete
+                  </button>
+                </>
+              )}
+              {session?.user?.id !== sellerId &&
+                status !== "rejected" &&
+                status !== "accepted" && (
+                  <button className="flex gap-1 items-center text-red-500">
+                    <IoClose />
+                    Reject
+                  </button>
+                )}
             </div>
           </div>
         </div>

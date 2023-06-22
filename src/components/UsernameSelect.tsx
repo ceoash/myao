@@ -69,13 +69,11 @@ const UserSelect = ({
       .get(`/api/getUserByUsernameApi?username=${data.username.toLowerCase()}`)
       .then((response) => {
         const user: User | ErrorResponse = response.data;
-        console.log("User found: ", data);
         if ("error" in user) {
           toast.error("User not found!");
           setFoundUser(null);
           setNotFoundUser(data.username);
         } else {
-          toast.success("Search completed!");
           setFoundUser(user);
         }
         reset();
@@ -114,7 +112,6 @@ const UserSelect = ({
           }
         })
         .catch((err) => {
-          console.log("Something went wrong!");
           toast.error("Something went wrong!");
         });
     }

@@ -50,28 +50,15 @@ const StartConversation = ({}: StartConversationProps) => {
   const startConversaton = useStartConversation();
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
-    if (status === "authenticated" && session?.user) {
-      data.buyerId = session.user.id;
-    } else {
-      console.log("User is not authenticated");
-      return;
-    }
-
-    console.log("data", data);
 
     await axios
     .get(`/api/getUserByUsernameApi?username=${data.username}`)
     .then((response) => {
       const user: User | ErrorResponse = response.data;
-      console.log("User found: ", data);
       if ("error" in user) {
-        // User not found
-        toast.error("User not found!");
         setFoundUser(null);
         setNotFoundUser(data.username);
       } else {
-        // User found
-        toast.success("Search completed!");
         setFoundUser(user);
       }
 
@@ -96,7 +83,6 @@ const StartConversation = ({}: StartConversationProps) => {
     data.userId = session?.user?.id;
     data.recipientId = data.recipientId;
     data.username = notFoundUser;
-    console.log("data", data);
   
     axios
       .post("/api/newConversation", data)

@@ -11,6 +11,7 @@ import React from "react";
 import { BiStar } from "react-icons/bi";
 
 const profile = ({ user, listings, requests }: any) => {
+  
  const offerList = listings?.map((listing: any) => (
     <Offer key={listing.id} {...listing} />
   ))
@@ -18,11 +19,9 @@ const profile = ({ user, listings, requests }: any) => {
     <Dash meta={<Meta title="" description="" />}>
       <div className="my-10 px-4">
         <h3>My Profile</h3>
-
       </div>
-      <div className="lg:flex no-wrap gap-4">
-        <div className="w-full lg:w-9/12 mb-4">
-
+      <div className="xl:flex no-wrap gap-6">
+        <div className="w-full xl:w-9/12 mb-4">
           <div className="bg-white p-3 border border-gray-200 rounded-sm">
             <div className="">
               <div>
@@ -38,7 +37,7 @@ const profile = ({ user, listings, requests }: any) => {
             </div>
           </div>
         </div>
-        <div className="w-full lg:w-3/12 ">
+        <div className="w-full xl:w-3/12 ">
           <UserCard
             currentUser={user}
             sales={requests?.length}

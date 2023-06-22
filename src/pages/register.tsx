@@ -34,7 +34,6 @@ const Register = () => {
     .then((res) => {
       setIsLoading(false);
       setDisabled(false);
-      console.log(res.data);
       toast.success(res.data.message);
       router.push('/login');
     }).catch((err) => {

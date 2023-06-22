@@ -11,9 +11,9 @@ export default async function ConversationsApi(
   res: NextApiResponse<Conversation | ErrorResponse>
 ) {
   if (req.method === "POST") {
-    const { userId, recipientId, text, session, id, image, date } = req.body;
 
-    
+    const { userId, text, id, image, date } = req.body;
+
     try {
         const newMessage = await prisma.conversation.update({
             where: {
@@ -30,7 +30,15 @@ export default async function ConversationsApi(
               },
             },
             include: {
-              directMessages: true, // Include messages
+              directMessages: {
+                include: {
+                  user: {
+                    include: {
+                      profile: true,
+                    },
+                  },
+                },
+              },
             },
           });
       

@@ -5,6 +5,9 @@ import { useRef } from 'react';
 import ImageTextArea from "../inputs/ImageTextArea";
 import ChatMessage from "./ChatMessage";
 
+import io, { Socket } from "socket.io-client";
+
+
 interface MessageProps {
   buyerId: string;
   sellerId: string; // changed from recipeintId
@@ -13,7 +16,7 @@ interface MessageProps {
   id: string;
 }
 
-const Timeline = ({ listing, user, disabled, session }: any) => {
+const ListingChat = ({ listing, user, disabled, session }: any) => {
   const [messages, setMessages] = useState<MessageProps[]>([]);
 
   // Fetch messages when the component mounts and when the listing changes
@@ -44,7 +47,19 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
   });
 
   const now = new Date();
-  const time = now.getHours() + ":" + now.getMinutes();
+
+  const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+    socketRef.current = io('http://localhost:3001');
+    socketRef.current.on('new_listing_message', (newMessage: any) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+  
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -65,20 +80,10 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
       });
 
       if (response.status === 200) {
-        const newMessage = response.data;
-        setMessages((oldMessages) => [
-          ...oldMessages,
-          {
-            ...newMessage,
-            createdAt: new Date(),
-            buyerId: user.id,
-            listingId: listing.id,
-            sellerId: listing.sellerId,
-            text: text,
-            image: image,
-            userId: session.user.id,
-          },
-        ]);
+        const listing = response.data;
+        const newMessage = listing.messages[listing.messages.length - 1];
+        console.log(newMessage);
+        socketRef.current?.emit('new_listing_message', newMessage);
       }
 
       reset();
@@ -88,8 +93,8 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
   };
 
   return (
-    <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-4 mb-4">
-      <div className="flex flex-col h-full overflow-x-auto mb-4">
+    <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-4">
+      <div className="flex flex-col h-full mb-4">
         <div className="flex flex-col h-full">
           <div className="md:grid md:grid-cols-12 gap-y-2">
             <div className="col-span-12 flex justify-between items-center">
@@ -99,11 +104,7 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
               </div>
               <div className="border-t border-gray-200 w-full hidden lg:block"></div>
             </div>
-            {disabled && (
-              <div className="col-span-12 bg-orange-100 p-4 rounded-md ">
-                Assign a user to start negotiating
-              </div>
-            )}
+            
             {messages.length === 0 && !disabled && (
               <div
                 className={`relative ml-3 text-sm col-span-4 border-2 border-orange-300 rounded-lg p-2 bg-orange-200`}
@@ -136,4 +137,4 @@ const Timeline = ({ listing, user, disabled, session }: any) => {
   );
 };
 
-export default Timeline;
+export default ListingChat;

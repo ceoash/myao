@@ -1,11 +1,11 @@
 import getBidByID from "@/actions/getBidByID";
-import Timeline from "@/components/chat/Timeline";
+import ListingChat from "@/components/chat/ListingChat";
 import PriceWidget from "@/components/widgets/PriceWidget";
 import useSearchModal from "@/hooks/useSearchModal";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import html2canvas from "html2canvas";
@@ -23,6 +23,8 @@ import { AppConfig } from "@/utils/AppConfig";
 import { BsHandThumbsUp } from "react-icons/bs";
 import { AiFillWarning } from "react-icons/ai";
 import { BiTrash } from "react-icons/bi";
+import Link from "next/link";
+import { io, Socket } from "socket.io-client";
 
 const Index = ({ listing }: any) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -50,16 +52,43 @@ const Index = ({ listing }: any) => {
     }
   }, [listing]);
 
+  const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+  socketRef.current = io('http://localhost:3001');
+
+  return () => {
+    socketRef.current?.disconnect();
+  };
+  }, []);
+
   const { data: session } = useSession();
 
-  console.log("session", session);
-
   const [bidPrice, setBidPrice] = useState<string | null>(
-    listing?.bid ? listing.bid : listing?.price
+    listing?.bid ? 
+    listing.bid : 
+    listing?.price
   );
+
+  const [bidder, setBidder] = useState<any>(listing.bidder);
+
+  console.log("new bidder", bidder);
 
   const handleBidPriceChange = (updatedBidPrice: string | null) => {
     setBidPrice(updatedBidPrice);
+
+    setBidder((prevBidder: any) => {
+      const updatedBidderValue = { ...prevBidder, bid: updatedBidPrice };
+      socketRef.current?.emit('update_bidder', updatedBidderValue);
+      return updatedBidderValue;
+    });
+
+    socketRef.current?.emit('update_bidPrice', {
+      newBidPrice: updatedBidPrice,
+      listingId: listing.id,
+      updatedBidder: bidder,
+    });
+    
   };
 
   const handleCopy = () => {
@@ -95,20 +124,60 @@ const Index = ({ listing }: any) => {
         toast.success("Offer created successfully!");
         router.push(`/dashboard/offers/${listing.id}`);
         setStatus(status);
+
+        socketRef.current?.emit('update_status', {
+          newStatus: status,
+          listingId: listing.id,
+        });
       })
       .catch((err) => {
         console.log("Something went wrong!");
       })
-      .finally(() => {
-        // setLoading(false);
-      });
+      .finally(() => {});
   };
 
+  useEffect(() => {
+    socketRef.current = io('http://localhost:3001');
+    socketRef.current.emit('join_room', listing.id);
 
+    socketRef.current.on('update_bidPrice', ({ newBidPrice, listingId, updatedBidder }) => {
+      if (listingId === listing.id) {
+        console.log(`Received bid price update for listing ${listingId}: ${newBidPrice}`);
+        setBidPrice(newBidPrice);
+        setBidder(updatedBidder);
+      }
+    });
+
+    socketRef.current.on('update_bidder', (updatedBidder) => {
+      if (updatedBidder.listingId === listing.id) {
+        console.log(`Received bidder update for listing ${updatedBidder.listingId}: ${updatedBidder}`);
+        setBidder(updatedBidder);
+      }
+    });
+
+    socketRef.current.on('update_status', ({ newStatus, listingId }) => {
+      if (listingId === listing.id) {
+        console.log(`Received status update for listing ${listingId}: ${newStatus}`);
+        setStatus(newStatus);
+      }
+    });
+  
+    return () => {
+      socketRef.current?.emit('leave_room', listing.id);
+      socketRef.current?.off('update_bidPrice');
+      socketRef.current?.off('update_status');
+      socketRef.current?.disconnect();
+    };
+  }, [listing.id]);
+
+  useEffect(() => {
+    setBidder(listing.bidder);
+  }, [listing.bidder]);
+  
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
-        <div className=" px-4 py-10 lg:py-24 mx-auto xl:grid xl:grid-cols-12 gap-6">
+        <div className=" px-4 py-10 lg:py-10 mx-auto xl:grid xl:grid-cols-12 gap-6">
           {status === "complete" && (
             <div className="col-span-12 flex items-center justify-between p-4 mb-8 text-sm font-semibold text-white bg-green-600 rounded-lg shadow-md focus:outline-none focus:shadow-outline-purple">
               <div className="flex items-center  ">
@@ -149,24 +218,24 @@ const Index = ({ listing }: any) => {
             </div>
           )}
 
-          <div className="col-span-12 flex border-b border-gray-200 font-bold font-xl gap-4 uppercase mb-4 md:mb-0">
-            <div className="border-b-4 border-orange-500">Activity</div>
-            <div>Details</div>
+          <div className="col-span-12 flex border-b border-gray-200 font-bold font-xl gap-4 uppercase mb-6 xl:mb-0">
+            {/* <div className="border-b-4 border-orange-500">Activity</div> */}
+            <div className="border-b-4 border-orange-500">Details</div>
           </div>
 
           <div className="w-full col-span-8 xl:col-span-9 ">
             <div className=" mx-auto flex flex-col bg-white border border-gray-200 rounded-t-md">
               <div className="hidden md:flex aspect-w-16 aspect-h-9 = justify-center">
                 <img
-                  alt="ecommerce"
+                  alt="MYAO listing image"
                   className="object-center object-contain lg:object-scale-down w-full h-full max-h-96"
                   src={
-                    listing?.image ? listing.image : "/images/placeholder.png"
+                    listing?.image ? listing.image : "/images/cat.png"
                   }
                 />
               </div>
 
-              <hr className="hidden md:flex border-t border-gray-200" />
+              <hr className="hidden md:flex border-t border-white" />
               <div className=" w-full mt-6 lg:mt-0 ">
                 <div className="hidden md:block px-6 pt-6 bg-gray-100 border-b pb-6 border-gray-200">
                   <div className="md:flex md:justify-between">
@@ -174,12 +243,14 @@ const Index = ({ listing }: any) => {
                       <div className="text-gray-900 text-xl  md:text-2xl  font-medium  px-4 lg:px-0">
                         {listing.title}
                       </div>
-                      <p className="  text-gray-500 px-4 lg:px-0">
+                      <div className="  text-gray-500 px-4 lg:px-0">
                         {listing.category}
-                      </p>
+                      </div>
                     </div>
                     <div className="hidden md:block">
-                      <div className="text-right text-sm">Bid by {listing.bidder.username}</div>
+                      <div className="text-right text-sm">
+                        Bid by <Link href={`/dashboard/profile/${listing.bidder.id}`} className="underline">{listing.bidder.username}</Link> 
+                      </div>
                       <div className="font-extrabold text-3xl text-right -mt-2">
                         £ {bidPrice ? bidPrice : listing.bid}
                       </div>
@@ -192,7 +263,7 @@ const Index = ({ listing }: any) => {
                 </div>
                 <div className="messages">
                   {status === "negotiating" && (
-                    <Timeline
+                    <ListingChat
                       listing={listing}
                       user={session?.user}
                       disabled={disabled}
@@ -202,7 +273,10 @@ const Index = ({ listing }: any) => {
                   {status === "accepted" && (
                     <div className="w-full  p-4 white border-l-4 border-orange-500">
                       <div>
-                        Your offer has been accepted. If you need to contact the {listing.buyerId === session?.user?.id ? "seller" : "buyer"}{" "}
+                        Your offer has been accepted. If you need to contact the{" "}
+                        {listing.buyerId === session?.user?.id
+                          ? "seller"
+                          : "buyer"}{" "}
                         seller{" "}
                         <span className="text-orange-400 underline cursor-pointer">
                           click here
@@ -210,60 +284,55 @@ const Index = ({ listing }: any) => {
                       </div>
                     </div>
                   )}
-                  {status === "awaiting approval" &&   (
+                  {status === "awaiting approval" && (
                     <div className="w-full  p-4 white border-l-4 border-orange-500">
                       {listing.sellerId === session?.user?.id ? (
                         <div>
-                        Your offer has been created. A request has been sent to the buyer.{" "}
-                        
-                      </div>
-
-                      ):(
+                          Your offer has been created. A request has been sent
+                          to the buyer.{" "}
+                        </div>
+                      ) : (
                         <div>
-
-                        You have received a offer. To start negotiating.{" "}
-                        <span className="text-orange-400 underline cursor-pointer" >
-                          click here
-                        </span>
-                      </div>
-
+                          You have received a offer. To start negotiating.{" "}
+                          <span className="text-orange-400 underline cursor-pointer">
+                            click here
+                          </span>
+                        </div>
                       )}
-                      
                     </div>
                   )}
-                  {status === "pending" && session?.user.id === listing?.seller?.id && (
-                    <div
-                      className="w-full  p-4 white border-l-4 border-orange-500"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        SearchModal.onOpen(
-                          listing.id,
-                          setSellerId,
-                          setStatus
-                        );
-                      }}
-                    >
-                      <div>
-                        Your offer has been created. Assign a user to start
-                        negotiating{" "}
-                        <span className="text-orange-400 underline cursor-pointer">
-                          click here
-                        </span>
+                  {status === "pending" &&
+                    session?.user.id === listing?.seller?.id && (
+                      <div
+                        className="w-full  p-4 white border-l-4 border-orange-500"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          SearchModal.onOpen(
+                            listing.id,
+                            setSellerId,
+                            setStatus
+                          );
+                        }}
+                      >
+                        <div>
+                          Your offer has been created. Assign a user to start
+                          negotiating{" "}
+                          <span className="text-orange-400 underline cursor-pointer">
+                            click here
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </div>
             </div>
           </div>
-          <div className="w-full md:col-span-4 xl:col-span-3 flex flex-col gap-4">
-            <div className="border border-gray-200 rounded p-6 bg-white md:flex xl:flex-col gap-2">
+          <div className="w-full md:col-span-4 xl:col-span-3 flex flex-col gap-4 mt-6 lg:mt-0">
+            <div className="border border-gray-200 rounded p-6 bg-white md:flex xl:flex-col gap-6">
               <div className="w-full md:flex md:gap-2  md:w-1/3  xl:w-full">
                 <div className="w-full xl:w-1/3 xl:full aspect-video mb-4">
                   <img
-                    src={
-                      listing?.image ? listing.image : "/images/cat.png"
-                    }
+                    src={listing?.image ? listing.image : "/images/cat.png"}
                     alt="user"
                     width="100%"
                     height="100%"
@@ -272,19 +341,20 @@ const Index = ({ listing }: any) => {
                 </div>
                 <div className="hidden xl:flex flex-col">
                   <p className="font-medium mt-1">{listing.title}</p>
-                  <div className="my-2 text-sm">{StatusChecker(listing.status)}</div>
+                  <div className="my-2 text-sm">
+                    {StatusChecker(listing.status)}
+                  </div>
                 </div>
               </div>
               <div className="w-full">
                 <div className=" xl:hidden">
                   <p className="mb-2 font-medium text-lg">{listing.title}</p>
                   <div className="flex justify-between mb-2">
-                  <p className="font-bold">Status</p>
-                  <div className="">                  
-                  <div className="">{StatusChecker(listing.status)}</div>
+                    <p className="font-bold">Status</p>
+                    <div className="">
+                      <div className="">{StatusChecker(listing.status)}</div>
+                    </div>
                   </div>
-                </div>
-                  
                 </div>
                 <div className="flex justify-between mb-2">
                   <p className="font-bold">Offer Price</p>
@@ -311,35 +381,37 @@ const Index = ({ listing }: any) => {
                         )}
                       </span>
                     </div>
+                    {listing.expireAt && (
+                      <div className="flex justify-between">
+                        <div className="font-bold">Expiry</div>
 
-                    <div className="flex justify-between">
-                      <div className="font-bold">Expiry</div>
-
-                      {session?.user.id === listing.seller.id ? (
-                        listing.expireAt === null ? (
-                          !isDatePickerOpen ? (
-                            <div>
-                              <SetExpiryDate id={listing.id} />
-                            </div>
+                        {session?.user.id === listing.seller.id ? (
+                          listing.expireAt === null ? (
+                            !isDatePickerOpen ? (
+                              <div>
+                                <SetExpiryDate id={listing.id} />
+                              </div>
+                            ) : (
+                              <div
+                                className="text-orange-300 underline"
+                                onClick={() => setIsDatePickerOpen(false)}
+                              >
+                                Set expiry date
+                              </div>
+                            )
                           ) : (
-                            <div
-                              className="text-orange-300 underline"
-                              onClick={() => setIsDatePickerOpen(false)}
-                            >
-                              Set expiry date
+                            <div>
+                              {new Date(listing.expireAt).toLocaleString(
+                                "lookup"
+                              )}
                             </div>
                           )
                         ) : (
-                          <div>
-                            {new Date(listing.expireAt).toLocaleString(
-                              "lookup"
-                            )}
-                          </div>
-                        )
-                      ) : (
-                        "N/A"
-                      )}
-                    </div>
+                          "N/A"
+                        )}
+                      </div>
+                    )}
+
                     {listing.seller.email === session?.user.email && (
                       <div className="flex text-sm gap-2 mt-2">
                         <button
@@ -352,9 +424,10 @@ const Index = ({ listing }: any) => {
                         <button
                           onClick={() => DeleteListing.onOpen(listing.id)}
                           className="flex items-center gap-1 text-white bg-orange-400 border-0 py-1 px-4 focus:outline-none hover:bg-orange-400 rounded "
-                        > <BiTrash />
+                        >
+                          {" "}
+                          <BiTrash />
                           Delete
-                         
                         </button>
                       </div>
                     )}
@@ -400,87 +473,91 @@ const Index = ({ listing }: any) => {
               </div>
             </div>
 
-            
-                <div
-                  className="border border-gray-200 rounded p-4 bg-white cursor-pointer"
-                  onClick={() =>
-                    router.push(`/dashboard/profile/${listing?.buyer?.id !== session?.user.id ? listing?.buyer?.id : listing?.seller.id}`)
-                  }
-                >
-                  <div>
-                    <h5 className="mb-2 text-sm md:text-md">
-                      {listing?.seller?.email === session?.user.email
-                        ? <span className="flex items-center justify-between gap-2">BUYER <img src="/images/cat.png" className="h-6" /></span>
-                        : <span className="flex items-center justify-between gap-2">SELLER <img src="/images/dog.png" className="h-6" /></span>}
-                    </h5>
-                    {listing?.seller?.id !== session?.user.id ? (
-                      <div className="flex flex-col gap-1">
+            <div
+              className="border border-gray-200 rounded p-4 bg-white cursor-pointer"
+              onClick={() =>
+                router.push(
+                  `/dashboard/profile/${
+                    listing?.buyer?.id !== session?.user.id
+                      ? listing?.buyer?.id
+                      : listing?.seller.id
+                  }`
+                )
+              }
+            >
+              <div>
+                <h5 className="mb-2 text-sm md:text-md">
+                  {listing?.seller?.email === session?.user.email ? (
+                    <span className="flex items-center justify-between gap-2">
+                      BUYER <img src="/images/cat.png" className="h-6" />
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-between gap-2">
+                      SELLER <img src="/images/dog.png" className="h-6" />
+                    </span>
+                  )}
+                </h5>
+                {listing?.seller?.id !== session?.user.id ? (
+                  <div className="flex flex-col gap-1">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-500 w-1/5 ">
+                          <img
+                            src={
+                              listing.seller?.profile?.image
+                                ? listing.seller?.profile?.image
+                                : "/images/placeholders/avatar.png"
+                            }
+                            alt="user avatar"
+                            className="rounded-full border-2 p-2 border-gray-200"
+                          />
+                        </span>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-500 w-1/5 ">
-                              <img
-                                src={
-                                  listing.seller?.profile?.image
-                                    ? listing.seller?.profile?.image
-                                    : "/images/placeholders/avatar.png"
-                                }
-                                alt="user avatar"
-                                className="rounded-full border-2 p-2 border-gray-200"
-                              />
-                            </span>
-                            <div>
-                              <div className="capitalize font-bold">
-                                {listing?.seller
-                                  ? listing.seller.name
-                                  : "No name"}
-                              </div>
+                          <div className="capitalize font-bold">
+                            {listing?.seller ? listing.seller.name : "No name"}
+                          </div>
 
-                              <div>
-                                {listing?.seller
-                                  ? "@"+listing?.seller.username
-                                  : "No username"}
-                              </div>
-                            </div>
+                          <div>
+                            {listing?.seller
+                              ? "@" + listing?.seller.username
+                              : "No username"}
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex flex-col gap-1">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-500 w-1/5 ">
-                              <img
-                                src={`${
-                                  listing.buyer?.profile?.image
-                                    ? listing.buyer?.profile?.image
-                                    : "/images/placeholders/avatar.png"
-                                }`}
-                                alt="user avatar"
-                                className="rounded-full border-2 p-2 border-gray-200"
-                              />
-                            </span>
-                            <div>
-                              <div className="capitalize font-bold">
-                                {listing?.buyer
-                                  ? listing.buyer.name
-                                  : "No name"}
-                              </div>
-
-                              <div>
-                                {listing?.buyer
-                                  ? "@"+listing?.buyer.username
-                                  : "No username"}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                    )
-                    }
+                    </div>
                   </div>
-                </div>
-             
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-500 w-1/5 ">
+                          <img
+                            src={`${
+                              listing.buyer?.profile?.image
+                                ? listing.buyer?.profile?.image
+                                : "/images/placeholders/avatar.png"
+                            }`}
+                            alt="user avatar"
+                            className="rounded-full border-2 p-2 border-gray-200"
+                          />
+                        </span>
+                        <div>
+                          <div className="capitalize font-bold">
+                            {listing?.buyer ? listing.buyer.name : "No name"}
+                          </div>
+
+                          <div>
+                            {listing?.buyer
+                              ? "@" + listing?.buyer.username
+                              : "No username"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {status === "pending" && listing.seller.id === session?.user.id && (
               <div className="border border-gray-200 bg-white p-4">
@@ -504,6 +581,7 @@ const Index = ({ listing }: any) => {
                   onBidPriceChange={handleBidPriceChange}
                   bid={bidPrice}
                   isBuyer={listing.buyer.id === session?.user.id}
+                  onBidderChange={setBidder}
                 />
               </div>
             )}

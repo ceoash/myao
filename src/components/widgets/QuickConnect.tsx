@@ -16,7 +16,6 @@ const QuickConnect = ({session}: any) => {
         .then((res) => {
             setUser(res.data);
             connect.onOpen(res.data, session.user.id);
-            console.log(user);
         })
         .catch((err) => {
             console.log("error");

@@ -40,10 +40,8 @@ const OfferModal = () => {
   const offerModal = useOfferModal();
   const [step, setStep] = useState(STEPS.DESCRIPTION);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [buyer, setBuyer] = useState(true);
-  const [location, setLocation] = useState(true);
+
   const { data: session, status } = useSession(); // Get the session and status from next-auth/react
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -53,22 +51,6 @@ const OfferModal = () => {
   const [search, setSearch] = useState("");
 
   const [foundUser, setFoundUser] = useState<User | null>(null);
-  const [notFoundUser, setNotFoundUser] = useState("");
-  const [invitationSent, setInvitationSent] = useState(false);
-  const [userAssigned, setUserAssigned] = useState(false);
-
-  console.log(foundUser);
-
-  const [formValues, setFormValues] = useState<FieldValues>({
-    email: "",
-    buyerId: "",
-    title: "",
-    description: "",
-    price: "",
-    category: "",
-    image: "",
-    sellerId: "",
-  });
 
   const {
     register,
@@ -96,7 +78,6 @@ const OfferModal = () => {
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
         setFoundUser(res.data);
-        console.log("search complete");
       })
       .catch((err) => {
         console.log("error");

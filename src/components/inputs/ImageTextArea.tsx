@@ -7,13 +7,14 @@ import { BiImageAdd, BiPaperclip } from "react-icons/bi";
 
 interface ImageTextAreaProps {
     onSubmit: (image: string, text: string) => void;
+    disabled?: boolean; 
   }
 
 interface FormValues {
   message: string;
 }
 
-const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit }) => {
+const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => {
     const [textValue, setTextValue] = useState("");
     const [imageValue, setImageValue] = useState("");
   
@@ -42,6 +43,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit }) => {
           type="button"
           className="text-2xl text-gray-500 hover:text-gray-700"
           onClick={() => open?.()}
+          disabled={disabled}
         >
           <BiImageAdd />
         </button>
@@ -63,10 +65,12 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit }) => {
           placeholder="Type your message..."
           value={textValue}
           onChange={(e) => setTextValue(e.target.value)}
+          disabled={disabled}
         />
       </div>
       <button
         type="submit"
+        disabled={disabled}
         className="mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
       >
         Send

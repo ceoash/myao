@@ -2,11 +2,7 @@ import prisma from "@/libs/prismadb";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-export async function getSession() {
-    return await getServerSession(authOptions);
-}
 export default async function getCurrentUser(session: any) {
-
     if (!session?.user?.email) {
         console.log('No session found');
         return null;
@@ -22,30 +18,52 @@ export default async function getCurrentUser(session: any) {
                     social: true,
                 },
             },
-            addedBy: true,
-            addedFriends: true,
+            followers: true,
+            followings: true,
+            blockedBy: {
+                include: {
+                    userBlocked: true, // Include the associated User records
+                },
+            },
+            blockedFriends: {
+                include: {
+                    friendBlocked: true, // Include the associated User records
+                },
+            },
         },
     });
 
     if (!currentUser) {
-        console.log('No user found');
         return null;
     }
+
+    // Map the Blocked records to the associated User records
+    const usersBlockedByCurrentUser = currentUser.blockedFriends.map(record => record.friendBlocked);
+    const usersWhoBlockedCurrentUser = currentUser.blockedBy.map(record => record.userBlocked);
 
     return {
       ...currentUser,
       createdAt: currentUser.createdAt.toISOString(),
       updatedAt: currentUser.updatedAt.toISOString(),
-      addedFriends: currentUser.addedFriends.map(friendship => ({
+      followings: currentUser.followings.map(friendship => ({
         ...friendship,
         createdAt: friendship.createdAt.toISOString(),
         updatedAt: friendship.updatedAt.toISOString(),
       })),
-      addedBy: currentUser.addedBy.map(friendship => ({
+      followers: currentUser.followers.map(friendship => ({
         ...friendship,
         createdAt: friendship.createdAt.toISOString(),
         updatedAt: friendship.updatedAt.toISOString(),
+      })),
+      blockedBy: usersWhoBlockedCurrentUser.map(user => ({
+        ...user,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+      })),
+      blockedFriends: usersBlockedByCurrentUser.map(user => ({
+        ...user,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
       })),
     };
 }
-

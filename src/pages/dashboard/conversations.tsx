@@ -1,24 +1,38 @@
-import prisma from "@/libs/prismadb";
-import { GetServerSideProps } from "next";
-import { getSession } from "next-auth/react";
-import { useState, useEffect, use, useCallback } from "react";
-import { DirectMessage, User } from "@prisma/client";
-import {
-  BiChevronLeftCircle,
-  BiChevronRightCircle,
-  BiPlus,
-} from "react-icons/bi";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { Dash } from "@/templates/dash";
-import getFriendsByUserId from "@/actions/getFriendsByUserId";
-import useStartConversation from "@/hooks/useStartConversation";
 import axios from "axios";
-import { useRef } from "react";
-import ImageTextArea from "@/components/inputs/ImageTextArea";
-import { toast } from "react-hot-toast";
-import MessageComponent from "@/components/chat/Message";
+import { DirectMessage, User } from "@prisma/client";
 import getConversationsByUserId from "@/actions/getConversationsByUserId";
-import { set } from "date-fns";
+import getFriendsByUserId from "@/actions/getFriendsByUserId";
+
+import MessageComponent from "@/components/chat/Message";
+import ImageTextArea from "@/components/inputs/ImageTextArea";
+
+import { GetServerSideProps } from "next";
+import { useState, useEffect, use } from "react";
+import { useRef } from "react";
+import io, { Socket } from "socket.io-client";
+import { getSession } from "next-auth/react";
+import { Dash } from "@/templates/dash";
+import { FieldValues, useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import 'dotenv/config'
+
+
+import {
+  BiBlock,
+  BiCheck,
+  BiCheckCircle,
+  BiChevronLeft,
+  BiChevronRight,
+  BiCross,
+  BiUserCheck,
+  BiUserMinus,
+} from "react-icons/bi";
+import { IoThumbsDown, IoThumbsUp } from "react-icons/io5";
+import checkFriendship from "@/actions/checkFriendship";
+import Link from "next/link";
+import checkBlocked from "@/actions/checkBlocked";
+import { is } from "date-fns/locale";
+import getCurrentUser from "@/actions/getCurrentUser";
 
 interface IDirectMessage {
   id: string;
@@ -28,22 +42,115 @@ interface IDirectMessage {
   image: string | null;
 }
 
+interface IBlockedStatus {
+  isBlocked: boolean;
+  hasBlocked: boolean;
+  isBlockedBy: string;
+}
+
+interface IUser {
+  id: string;
+  username: string;
+  email: string;
+  profile: {
+    id: string;
+    image: string;
+    bio: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  directMessages: IDirectMessage[];
+  friends: IUser[];
+  blockedFriends: any[];
+  blockedBy: any[];
+}
+
 interface Conversation {
   id: string;
-  participant1: User;
-  participant2: User;
+  participant1: IUser;
+  participant2: IUser;
   participant1Id: string;
   participant2Id: string;
   createdAt: string;
   updatedAt: string;
   directMessages: DirectMessage[];
+  friendStatus?: boolean;
+  blockedStatus?: IBlockedStatus;
+  status?: string;
 }
 
-const Conversations = ({ safeConversations, session }: any) => {
-  const [allConversations, setAllConversations] =
-    useState<Conversation[]>(safeConversations);
+const Conversations = ({ safeConversations, session, currentUser }: any) => {
+  require('dotenv').config()
+
+
+
+  const filterBlockedConversation = safeConversations.filter(
+    (conversation: any) => {
+      const otherParticipant =
+        conversation?.participant1Id === session?.user?.id
+          ? conversation?.participant2
+          : conversation?.participant1;
+
+      // Check if the session user has blocked the other participant
+      const hasBlocked = session?.user?.blockedFriends?.some(
+        (blockedFriend: any) =>
+          blockedFriend.friendBlockedId === otherParticipant.id
+      );
+
+      const Blocked = otherParticipant?.blockedFriends?.some(
+        (blockedFriend: any) =>
+          blockedFriend.friendBlockedId === session?.user?.id
+      );
+
+      return !(hasBlocked || Blocked);
+    }
+  );
+
   const [activeConversationState, setActiveConversationState] =
-    useState<Conversation | null>(safeConversations[0]);
+    useState<Conversation | null>(filterBlockedConversation[0]);
+
+  const [isFriend, setIsFriend] = useState<boolean | null>(
+    activeConversationState?.friendStatus || null
+  );
+  const [isBlocked, setIsBlocked] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<string | null>()
+  const [disabled, setDisabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (status === "declined") {
+      setDisabled(true);
+    } else {
+      setDisabled(false);
+    }
+  }, [status]);
+
+  let participant =
+    activeConversationState?.participant1Id === session?.user?.id
+      ? activeConversationState?.participant2Id
+      : activeConversationState?.participant1Id;
+  let participantUser =
+    activeConversationState?.participant1Id === session?.user?.id
+      ? activeConversationState?.participant2
+      : activeConversationState?.participant1;
+  let me =
+    activeConversationState?.participant1Id === session?.user?.id
+      ? activeConversationState?.participant1
+      : activeConversationState?.participant2;
+  const blockedChat = me?.blockedFriends?.some(
+    (blockedFriend: any) => blockedFriend.friendBlockedId === participant
+  );
+
+  useEffect(() => {
+    setIsBlocked(blockedChat || false);
+  }, [blockedChat]);
+
+  let participantUsername =
+    activeConversationState?.participant1Id === session?.user?.id
+      ? activeConversationState?.participant2?.username
+      : activeConversationState?.participant1?.username;
 
   const initialUsername =
     activeConversationState?.participant1Id === session?.user?.id
@@ -64,12 +171,7 @@ const Conversations = ({ safeConversations, session }: any) => {
   );
 
   const [username, setUsername] = useState<string>(initialUsername || "");
-  const startConversation = useStartConversation();
-  const {
-    register,
-    formState: { errors },
-    reset,
-  } = useForm<FieldValues>({
+  const { reset } = useForm<FieldValues>({
     defaultValues: {
       message: "",
       id: "",
@@ -77,6 +179,79 @@ const Conversations = ({ safeConversations, session }: any) => {
       image: "",
     },
   });
+
+  const handleFollow = async () => {
+    if (!isFriend) {
+      try {
+        const response = await axios.post("/api/addFriend", {
+          followerId: session?.user?.id,
+          followingId: participant,
+        });
+        toast.success("Friend request sent to " + participantUsername);
+        setIsFriend(!isFriend);
+      } catch (error) {
+        toast.error("failed to follow user");
+      }
+    } else {
+      try {
+        const response = await axios.post("/api/deleteFriend", {
+          followerId: session?.user?.id,
+          followingId: participant,
+        });
+        toast.success("Unfollowed " + participantUsername);
+        setIsFriend(!isFriend);
+      } catch (error) {
+        toast.error("failed to unfollow user");
+      }
+    }
+  };
+
+  const handleAccept = async () => {
+    try {
+      const response = await axios.post("/api/conversations/accept", {
+        conversationId: activeConversationState?.id,
+      });
+      toast.success("accepted");
+    } catch (error) {
+      toast.error("failed to accept conversation");
+    }
+  };
+  const handleDecline = async () => {
+    try {
+      const response = await axios.post("/api/conversations/decline", {
+        conversationId: activeConversationState?.id,
+      });
+      toast.success("accepted");
+    } catch (error) {
+      toast.error("failed to decline conversation");
+    }
+  };
+
+  const handleBlocked = async () => {
+    if (isBlocked === false) {
+      try {
+        const response = await axios.post("/api/blockFriend", {
+          userBlockedId: session?.user?.id,
+          friendBlockedId: participant,
+        });
+        toast.success(participantUsername + " has been blocked");
+        setIsBlocked(!isBlocked);
+      } catch (error) {
+        toast.error("failed to block user");
+      }
+    } else {
+      try {
+        const response = await axios.post("/api/removeBlocked", {
+          userBlockedId: session?.user?.id,
+          friendBlockedId: participant,
+        });
+        toast.success(participantUsername + " has been unblocked");
+        setIsBlocked(!isBlocked);
+      } catch (error) {
+        toast.error("failed to unblock user");
+      }
+    }
+  };
 
   const handleSetActiveConversation = (conversation: Conversation) => {
     setActiveConversationState(conversation);
@@ -87,14 +262,40 @@ const Conversations = ({ safeConversations, session }: any) => {
     setUsername(setUser);
   };
 
-  const setActiveConversation = (newConversation: any) => {
-    setActiveConversationState(newConversation);
-    setMessages(newConversation?.directMessages || []);
-  };
-
   useEffect(() => {
     setMessages(activeConversationState?.directMessages || []);
+    setStatus(activeConversationState?.status || "none")
   }, [activeConversationState]);
+
+  const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+    socketRef.current = io(process.env.PORT || "http://localhost:3001");
+    socketRef.current.on("new_message", (newMessage: any) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setActiveConversationState((prevState) => {
+        if (prevState) {
+          const updatedConversation: any = {
+            ...prevState,
+            directMessages: [...prevState.directMessages, newMessage],
+          };
+          return updatedConversation;
+        } else {
+          return null;
+        }
+      });
+    });
+
+    socketRef.current.on("user_status_update", (updatedUser) => {
+      if (updatedUser.id === participant) {
+        setStatus(updatedUser.status);
+      }
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -110,22 +311,13 @@ const Conversations = ({ safeConversations, session }: any) => {
       });
 
       if (response.status === 200) {
-        const newMessage = response.data;
+        const conversation = response.data;
+        const newMessage =
+          conversation.directMessages[conversation.directMessages.length - 1];
+        console.log(newMessage);
+        socketRef.current?.emit("new_message", newMessage);
         toast.success("Message sent successfully");
-
-        setActiveConversationState((prevState) => {
-          if (prevState) {
-            const updatedConversation: any = {
-              ...prevState,
-              directMessages: [...newMessage?.directMessages],
-            };
-            return updatedConversation;
-          } else {
-            return null;
-          }
-        });
       }
-
       reset();
     } catch (error) {
       console.error("Error sending message:", error);
@@ -135,14 +327,15 @@ const Conversations = ({ safeConversations, session }: any) => {
   return (
     <Dash meta={<title>Conversations</title>}>
       <div className="flex border-r-2 border-gray-200">
+        {
+          filterBlockedConversation.length > 0 ? (
+            <>
         <div
-          className={`lg:w-1/5 border-r-2 border-l-2 border-gray-200 w-auto ${
+          className={`lg:w-1/5 border-r-2 border-l-2 border-gray-200 w-auto relative ${
             isOpen ? "lg:w-1/5 block" : "lg:w-[40px]"
           } border-r-2 border-l-2 border-gray-200 `}
         >
-          <div
-            className={`border-b-2 border-gray-200 py-5 px-4 bg-slate-100 relative`}
-          >
+          <div className={`py-5 px-4 absolute -right-8`}>
             {/* <button
               onClick={handleButtonClick}
               className={`${
@@ -152,47 +345,42 @@ const Conversations = ({ safeConversations, session }: any) => {
               <div className="hidden md:block">Start a conversation</div>
               <div className="block md:hidden">New</div>
               <BiPlus />
-            </button>*/}
+            </button> */}
             <button
               onClick={handleSidebarToggle}
-              className="absolute right-0 top-[50%] bottom-[50%] bg-gray-200 rounded-full px-1 py-1 text-xl text-gray-600 flex items-center gap-2"
+              className="top-[50%] bottom-[50%] mt-1 bg-orange-400 text-white rounded-full px-1 py-1 text-xl flex items-center text-orange-500"
             >
-              {isOpen ? <BiChevronLeftCircle /> : <BiChevronRightCircle />}
+              {isOpen ? <BiChevronLeft /> : <BiChevronRight />}
             </button>
           </div>
           <div className={`${isOpen ? "block" : "hidden"}`}>
-            {allConversations.map((conversation: any) => {
-              const setUser =
-                conversation.participant1Id === session?.user?.id
-                  ? conversation.participant2?.username
-                  : conversation.participant1?.username;
+            {filterBlockedConversation.map((conversation: any) => {
               return (
                 <div
                   key={conversation.id}
-                  className="border-b border-gray-200 p-4 flex gap-4"
+                  className={`border-b border-gray-200 p-4 flex gap-4 ${conversation.id === activeConversationState?.id ? "bg-gray-100 text" : "bg-white"}`}
                   onClick={() => handleSetActiveConversation(conversation)}
                 >
                   <div className="w-[40px] lg:w-1/5">
-                    <img
-                      src="/images/placeholders/avatar.png"
-                      className="rounded-full border-2 border-gray-200 p-1"
-                    />
+                    {conversation.participant1Id === session?.user?.id ? (
+                      <img
+                        src={
+                          conversation?.participant2?.profile?.image ||
+                          "/images/placeholders/avatar.png"
+                        }
+                        className="rounded-full border-2 border-gray-200 p-1"
+                      />
+                    ) : (
+                      <img
+                        src={
+                          conversation?.participant1?.profile?.image ||
+                          "/images/placeholders/avatar.png"
+                        }
+                        className="rounded-full border-2 border-gray-200 p-1"
+                      />
+                    )}
                   </div>
                   <div>
-                    <div>
-                      <button
-                        onClick={handleSidebarToggle}
-                        className={`absolute right-0 top-[50%] bottom-[50%] bg-gray-200 rounded-full px-1 py-1 text-xl text-gray-600 flex items-center gap-2 ${
-                          !isOpen ? "block" : "hidden"
-                        }}`}
-                      >
-                        {isOpen ? (
-                          <BiChevronLeftCircle />
-                        ) : (
-                          <BiChevronRightCircle />
-                        )}
-                      </button>
-                    </div>
                     <div className="font-medium">
                       {conversation.participant1Id === session?.user?.id
                         ? conversation.participant2?.username
@@ -220,7 +408,10 @@ const Conversations = ({ safeConversations, session }: any) => {
         </div>
         <div className="flex-grow flex flex-col">
           <div className="flex sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">
-            <div className="relative flex items-center space-x-4">
+            <Link
+              href={`/dashboard/profile/${participant}`}
+              className="relative flex items-center space-x-4"
+            >
               <div className="relative">
                 <img
                   src="/images/placeholders/avatar.png"
@@ -232,6 +423,53 @@ const Conversations = ({ safeConversations, session }: any) => {
                   <span className="text-gray-700 mr-3">{username}</span>
                 </div>
               </div>
+            </Link>
+            <div className="flex gap-4">
+              {status === "none" && activeConversationState?.participant2Id === session.user.id ? (
+                <>
+                  <button onClick={handleAccept} className="flex gap-1 items-center">
+                    <BiCheck /> Accept
+                  </button>
+                  <button onClick={handleDecline} className="flex gap-1 items-center">
+                    <BiCross /> Decline
+                  </button>
+                </>
+              ) : (
+                <>
+                 
+                  {/* 
+                <button
+                  className="flex gap-1 items-center"
+                  onClick={handleFollow}
+                >
+                  
+                  {!isFriend ? (
+                    <>
+                      <BiUserCheck className="text-xl" /> Add user
+                    </>
+                  ) : (
+                    <>
+                      <BiUserMinus className="text-xl" /> Unfollow user
+                    </>
+                  )}
+                </button>
+                */}
+                </>
+              
+              )}
+              {/* 
+
+              <div
+                className="flex gap-1 items-center text-red-500"
+                onClick={handleBlocked}
+              >
+                <BiBlock />
+                {isBlocked ? "Unblock" : "Block"}{" "}
+              </div>
+              
+              */}
+
+              
             </div>
           </div>
 
@@ -248,13 +486,29 @@ const Conversations = ({ safeConversations, session }: any) => {
               </div>
               <div className="border-t border-gray-200 w-full  hidden lg:block"></div>
             </div>
+            {status === "none" && (
+              <div className="justify-center border border-gray-200 p-4 rounded-md mx-auto bg-red-300">
+                {activeConversationState?.participant1Id === session?.user?.id
+                  ? `Your message is awaiting approval from ${participantUsername}`
+                  : `Accept this message request to start chatting with ${participantUsername} `}
+              </div>
+            )}
+
+            {status === "declined" && (
+              <div className="justify-center border border-gray-200 p-4 rounded-md mx-auto bg-red-300">
+                {activeConversationState?.participant1Id === session?.user?.id
+                  ? `Your message request to ${participantUsername} has been declined`
+                  : `You have declined the message request from ${participantUsername} `}
+              </div>
+            )}
+
             {messages.map((message, index) => {
               if (message.text == "" && message.image == "") {
                 return null;
               }
               return (
                 <MessageComponent
-                  key={message.id}
+                  key={index}
                   message={message}
                   session={session}
                   ref={index === messages.length - 1 ? messagesEndRef : null}
@@ -263,9 +517,14 @@ const Conversations = ({ safeConversations, session }: any) => {
             })}
           </div>
           <div className="border-t-2 mt-auto border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
-            <ImageTextArea onSubmit={handleSubmit} />
+            <ImageTextArea onSubmit={handleSubmit} disabled={disabled} />
           </div>
         </div>
+        </> ) : (
+          <div >
+              No conversations yet
+          </div>
+        )}
       </div>
     </Dash>
   );
@@ -273,18 +532,33 @@ const Conversations = ({ safeConversations, session }: any) => {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
-
   const user = session?.user;
-
+  const currentUser = await getCurrentUser(session)
   const friends = await getFriendsByUserId(user?.id);
-
   const safeConversations = await getConversationsByUserId(user?.id);
+
+  for (let conversation of safeConversations) {
+    const friendUserId =
+      conversation.participant1Id === user?.id
+        ? conversation.participant2?.id
+        : conversation.participant1?.id;
+
+    conversation.friendStatus = await checkFriendship({
+      userId1: session?.user?.id,
+      userId2: friendUserId,
+    });
+    conversation.blockedStatus = await checkBlocked({
+      userId1: session?.user?.id,
+      userId2: friendUserId,
+    });
+  }
 
   return {
     props: {
       safeConversations,
       session,
       friends,
+      currentUser
     },
   };
 };

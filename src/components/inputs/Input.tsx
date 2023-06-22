@@ -34,10 +34,13 @@ const Input: React.FC<InputProps> = ({
   registerOptions,
 }) => {
   return (
-    <div className="w-full relative">
+    <div>
+    <div className="w-full  bg-white
+          border-2
+          rounded-md flex items-center px-2" >
       {formatPrice && (
         <BiPound
-          className={`absolute ${modal ? "top-10" : "top-4"} left-2 text-neutral-700`}
+          className={` ${modal ? "top-10" : "top-4"} left-2 text-neutral-700`}
           size={24}
         />
       )}
@@ -48,18 +51,16 @@ const Input: React.FC<InputProps> = ({
         placeholder={placeholder}
         type={type}
         value={value}
+        style={{ zIndex: 0 }}
         className={`
           peer
           w-full
-          p-2
           font-light
-          bg-white
-          border-2
-          rounded-md
+         
           outline-none
           transition
           disabled:cursor-not-allowed
-          disabled:opacity-50
+          disabled:opacity-50          
           my-2
           ${formatPrice ? "pl-10" : "pl-4"}
           ${errors && errors[id] ? "border-red-500" : "border-gray-200"}
@@ -71,6 +72,7 @@ const Input: React.FC<InputProps> = ({
         })}
       />
       {errors && errors[id] && <div className="absolute top-0 -mt-4">{String(errors[id]?.message)}</div>}
+    </div>
     </div>
   );
 };

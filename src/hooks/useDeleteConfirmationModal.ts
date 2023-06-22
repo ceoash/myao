@@ -12,7 +12,6 @@ interface DeleteConfirmationModal {
     listingId: null,
     onOpen: (id: string) => {
       set({ isOpen: true, listingId: id });
-      console.log("id", id);
       return;  // Ensure the function returns void
     },
     onClose: () => {

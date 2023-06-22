@@ -5,6 +5,8 @@ export interface Profile extends PrismaProfile {}
 
 export interface User extends PrismaUser {
   profile?: Profile;
+  followers?: User[];
+  followings?: User[];
 }
 export type SafeUser = Omit<
 User,

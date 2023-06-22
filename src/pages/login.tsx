@@ -35,8 +35,6 @@ const Login = () => {
     }).then((res) => {
       setIsLoading(false);
       setDisabled(false);
-      console.log('logged in');
-      toast.success("Logged in successfully");
       router.push('/dashboard');
     }
     ).catch((err) => {

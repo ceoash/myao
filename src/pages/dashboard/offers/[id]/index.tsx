@@ -56,7 +56,7 @@ const Index = ({ listing }: any) => {
   const socketRef = useRef<Socket>();
 
   useEffect(() => {
-  socketRef.current = io('http://localhost:3001');
+  socketRef.current = io(config.PORT);
 
   return () => {
     socketRef.current?.disconnect();
@@ -73,7 +73,6 @@ const Index = ({ listing }: any) => {
 
   const [bidder, setBidder] = useState<any>(listing.bidder);
 
-  console.log("new bidder", bidder);
 
   const handleBidPriceChange = (updatedBidPrice: string | null) => {
     setBidPrice(updatedBidPrice);
@@ -249,11 +248,13 @@ const Index = ({ listing }: any) => {
                       </div>
                     </div>
                     <div className="hidden md:block">
+                      {bidPrice && (
                       <div className="text-right text-sm">
                         Bid by <Link href={`/dashboard/profile/${listing.bidder.id}`} className="underline">{listing.bidder.username}</Link> 
                       </div>
+                      )}
                       <div className="font-extrabold text-3xl text-right -mt-2">
-                        £ {bidPrice ? bidPrice : listing.bid}
+                         {bidPrice ? `£ ${bidPrice}` : listing.bid ? `£ ${listing.bid}` : <span className="text-sm border-2 border-gray-200 rounded-md bg-white p-2">Open offer</span>}
                       </div>
                     </div>
                   </div>
@@ -360,15 +361,17 @@ const Index = ({ listing }: any) => {
                 <div className="flex justify-between mb-2">
                   <p className="font-bold">Offer Price</p>
                   <div className="flex items-center gap-1 font-extrabold">
-                    £ {listing.price}
+                     {listing.price ? `£ ${listing.price}` : <span className="text-sm border-2 border-gray-200 rounded-md bg-white p-2">Open offer</span>}
                   </div>
                 </div>
+                {bidPrice && (
                 <div className="flex justify-between mb-2">
                   <p className="font-bold">Current Bid</p>
                   <div className="flex items-center gap-1 font-extrabold">
                     £ {bidPrice ? bidPrice : listing.bid}
                   </div>
                 </div>
+                )}
 
                 <div className="">
                   <div className="flex flex-col gap-2">

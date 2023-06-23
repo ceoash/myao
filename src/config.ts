@@ -10,5 +10,6 @@ export const firebaseConfig = {
 
 export const config = {
     PORT: "https://myao-add-1fcc5262bac8.herokuapp.com"
+    // PORT: "http://localhost:3001",
 
 }

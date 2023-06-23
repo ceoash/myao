@@ -94,7 +94,7 @@ const UserSelect = ({
       const updatedFormValues = {
         ...formValues,
         buyerId: foundUser?.id,
-        buyerUsername: foundUser?.username,
+        buyerUsername: foundUser?.username?.toLowerCase(),
       };
       updateFormValues(updatedFormValues);
       setUserAssigned(true);

@@ -76,11 +76,13 @@ const Offer: React.FC<any> = ({
             <div className="flex justify-between md:block mb-2 pb-2 md:pb-0 md:m-0">
               
               <div>
+                {bid && (
                 <div className="text-right text-sm">
-                  Bid by <span className="underline">{bidder?.username}</span>
+                  Bid by <span className="underline">{bidder?.username || seller?.username}</span>
                 </div>
+                )}
                 <div className="font-extrabold md:text-2xl text-right">
-                  £ {bid ? bid : price}
+                  {bid ? bid : price ? `£ ${price}` : <span className="text-sm border-2 border-gray-200 rounded-md bg-white p-2">Open offer</span>}
                 </div>
               </div>
             </div>

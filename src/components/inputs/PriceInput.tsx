@@ -17,7 +17,6 @@ interface InputProps {
   modal?: boolean;
   register: UseFormRegister<FieldValues>;
   registerOptions?: RegisterOptions;
-  username?: boolean
 }
 
 const Input: React.FC<InputProps> = ({
@@ -33,7 +32,6 @@ const Input: React.FC<InputProps> = ({
   value,
   register,
   registerOptions,
-  username
 }) => {
   return (
     <div>
@@ -65,7 +63,6 @@ const Input: React.FC<InputProps> = ({
           my-2
           rounded-md
           py-2
-          ${username && "lowercase"}
           ${formatPrice ? "pl-10" : "pl-4"}
           ${errors && errors[id] ? "border-red-500" : "border-gray-200"}
           ${errors && errors[id] ? "text-red-500" : "text-gray-700"}

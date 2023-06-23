@@ -62,6 +62,8 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
 
+    data.username = data.username.toLowerCase();
+    
     await axios
       .post("/api/searchUserByUsername", data)
       .then((response) => {
@@ -145,6 +147,7 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
         type="text"
         required
         register={register}
+        username={true}
       />
       {foundUser ? (
         <div className="px-4 py-2 flex rounded border-gray-200 justify-between">

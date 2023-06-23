@@ -270,7 +270,6 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
   useEffect(() => {
     const port = config.PORT;
 
-    console.log(port);
     socketRef.current = io(port || "https://myao-add-1fcc5262bac8.herokuapp.com");
     socketRef.current.on("new_message", (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -315,7 +314,6 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
         const conversation = response.data;
         const newMessage =
           conversation.directMessages[conversation.directMessages.length - 1];
-        console.log(newMessage);
         socketRef.current?.emit("new_message", newMessage);
         toast.success("Message sent successfully");
       }
@@ -522,7 +520,7 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
           </div>
         </div>
         </> ) : (
-          <div >
+          <div className="w-full text-center pt-20" >
               No conversations yet
           </div>
         )}

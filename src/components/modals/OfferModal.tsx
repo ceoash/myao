@@ -107,10 +107,6 @@ const OfferModal = () => {
           validation.isValid = false;
           setError("description", { message: "Description is required" }); // Set the error for the "description" field
         }
-        if (!data.price) {
-          validation.isValid = false;
-          setError("price", { message: "Price is required" }); // Set the error for the "price" field
-        }
         break;
       case STEPS.CATEGORY:
         if (selectedCategory.length === 0) {
@@ -148,7 +144,6 @@ const OfferModal = () => {
         if (stepValidationResult.isValid) {
           setTitle(data.title);
           setDescription(data.description);
-          setPrice(data.price);
           setCategory(data.category);
 
           setStep(step + 1);
@@ -258,7 +253,6 @@ const OfferModal = () => {
           peer
           w-full
           p-2
-          
           bg-white
           border-2
           rounded-md
@@ -370,7 +364,7 @@ const OfferModal = () => {
                 type="text"
                 required
                 placeholder="Enter MYAO name"
-                className="rounded-md p-2 flex-1"
+                className="rounded-md p-2 flex-1 lowercase"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 {...register}
@@ -409,7 +403,7 @@ const OfferModal = () => {
               <div className="font-medium">{title}</div>
               <div className="flex justify-between">
                 <div className=""><span className="font-medium">Category:</span> {category}</div>
-                <div className=""><span className="font-medium">Bid:</span> £{price}</div>
+                <div className=""><span className="font-medium">Bid:</span> {!price ? "Not set" : `£ ${price}`}</div>
               </div>
               <hr className="mt-2 mb-2" />
               <div className="">

@@ -49,7 +49,7 @@ const SearchComponent = () => {
         <input
           type="text"
           placeholder="Search user"
-          className="border border-gray-200 rounded-l-lg px-4 py-2 w-full"
+          className="border border-gray-200 rounded-l-lg px-4 py-2 w-full lowercase"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

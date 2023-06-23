@@ -117,7 +117,7 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
           <Card title={`Public Offers`} icon={<BsPostcard />}>
             <p>No public offers yet</p>
           </Card>
-          <Satisfication />
+          {/* <Satisfication /> */}
           <Card title={`Reviews`} icon={<BiStar />}>
             <p>No reviews yet</p>
           </Card>

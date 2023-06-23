@@ -14,7 +14,7 @@ const SearchInput = ({search, setSearch, onSearch, placeholder}: SearchInputProp
     <div className="flex border-2 border-gray-200 rounded-r-md">
       <input
         type="text"
-        className="flex-1 mx-2"
+        className="flex-1 mx-2 lowercase"
         placeholder={placeholder || "Search..."}
         value={search.toLowerCase()}
         onChange={(e) => setSearch(e.target.value)}

@@ -102,7 +102,7 @@ model Listing {
   sellerId        String            @db.ObjectId
   seller          User              @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
   price           String?
-  bid             String?           @default("0")
+  bid             String?           
   bidderId        String?           @db.ObjectId
   bidder          User?             @relation("bidder", fields: [bidderId], references: [id], onDelete: Cascade)
   messages        Message[]

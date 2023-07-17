@@ -8,6 +8,7 @@ export default async function getConversation(
     res: NextApiResponse<Conversation[] | ErrorResponse>
 ) {
     if (req.method === "GET") {
+
         let { userId } = req.query;
 
         // Ensure userId is a string
@@ -25,7 +26,7 @@ export default async function getConversation(
                     OR: [
                         { participant1Id: userId },
                         { participant2Id: userId },
-                    ],
+                    ]
                 },
                 orderBy: { createdAt: 'asc' },
             });

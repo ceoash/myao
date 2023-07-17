@@ -18,16 +18,21 @@ export default async function getCurrentUser(session: any) {
                     social: true,
                 },
             },
+            inviter: {
+                include: {
+                    profile: true,
+                },
+            },
             followers: true,
             followings: true,
             blockedBy: {
                 include: {
-                    userBlocked: true, // Include the associated User records
+                    userBlocked: true,
                 },
             },
             blockedFriends: {
                 include: {
-                    friendBlocked: true, // Include the associated User records
+                    friendBlocked: true,
                 },
             },
         },
@@ -37,7 +42,6 @@ export default async function getCurrentUser(session: any) {
         return null;
     }
 
-    // Map the Blocked records to the associated User records
     const usersBlockedByCurrentUser = currentUser.blockedFriends.map(record => record.friendBlocked);
     const usersWhoBlockedCurrentUser = currentUser.blockedBy.map(record => record.userBlocked);
 
@@ -65,5 +69,11 @@ export default async function getCurrentUser(session: any) {
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       })),
+      inviter: currentUser.inviter ? {
+            ...currentUser.inviter,
+            createdAt: currentUser.inviter.createdAt.toISOString(),
+            updatedAt: currentUser.inviter.updatedAt.toISOString(),
+            }
+        : null,
     };
 }

@@ -12,21 +12,32 @@ interface ImageUploadProps {
   value?: string;
 }
 import React from "react";
+import { FaUpload } from "react-icons/fa";
+import Button from "../dashboard/Button";
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
+  
+  let images = value ? JSON.parse(value) : [];
+  console.log("images", images);
+
+  
   const handleUpload = useCallback(
     (result: any) => {
-      onChange(result.info.secure_url);
+      images.push(result.info.secure_url);
+      // Call onChange with all uploaded images
+      const imageArray = JSON.stringify(images);
+
+      onChange(imageArray);
     },
-    [onChange]
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+    [onChange, images]
+  );// eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <CldUploadWidget
       onUpload={handleUpload}
       uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
       options={{
-        maxFiles: 1,
+        maxFiles: 5,
       }}
     >
       {({ open }: any) => (
@@ -38,28 +49,35 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
                         items-center
                         justify-center
                         w-full 
-                        border-2
-                        border-neutral-200
+                        border
+                        border-gray-400
                         border-dashed
-                        rounded
+                        rounded-lg
+                        bg-gray-50
                         h-full
                         p-10
                         cursor-pointer
                         relative"
         >
-          <BiImageAdd size={40} className="text-neutral-400" />
-          <p className="text-neutral-400">Upload Image</p>
-          {value && (
-            
-              <div className="absolute inset-0 w-full h-full">
+          <FaUpload size={40} className="text-neutral-400" />
+          <p className="text-neutral-400 mb-6 mt-2">Drag and drop images to upload</p>
+          <Button label="Select Images" />
+          <div className="grid grid-cols-4 gap-4 mt-6 rounded-lg">
+          { images?.map((image: string, i: number) => (
+              <div className="w-full h-full">
                 <Image
-                  src={value}
+                  key={i}
+                  src={image}
                   alt="Upload"
-                  fill={true}
-                  style={{ objectFit: "contain" }}
+                  width={100}
+                  height={100}
+                  className="rounded-lg"  
                 />
               </div>
+            )
           )}
+
+          </div>
         </div>
       )}
     </CldUploadWidget>

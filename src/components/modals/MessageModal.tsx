@@ -17,14 +17,7 @@ export interface ErrorResponse {
 
 const MessageModal = ({  }) => {
 
-  const { data: session, status } = useSession(); // Get the session and status from next-auth/react
-  const [foundUser, setFoundUser] = useState<User | null>(null);
-  const [notFoundUser, setNotFoundUser] = useState("");
-  const [invitationSent, setInvitationSent] = useState(false);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
   const router = useRouter();
 
   const {

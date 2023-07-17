@@ -41,7 +41,7 @@ module.exports = {
       },
       colors: {
         primary:{
-          default: "#FF782D",
+          default: "#fa923b",
           alt: "#FBA628",
         },
         gray: {

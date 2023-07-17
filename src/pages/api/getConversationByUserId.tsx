@@ -22,6 +22,22 @@ export default async function getConversation(
                         { participant2Id: userId },
                     ],
                 },
+                include: {
+                    participant1: {
+                        include: {
+                            profile: true,
+                            buyer: true,
+                            seller: true,
+                        }
+                    },
+                    participant2: {
+                        include: {
+                            profile: true,
+                            buyer: true,
+                            seller: true,
+                        }
+                    },
+                },
                 orderBy: { createdAt: 'asc' },
             });
 

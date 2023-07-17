@@ -12,11 +12,11 @@ interface DeleteConfirmationModal {
     listingId: null,
     onOpen: (id: string) => {
       set({ isOpen: true, listingId: id });
-      return;  // Ensure the function returns void
+      return;  
     },
     onClose: () => {
       set({ isOpen: false, listingId: null });
-      return;  // Ensure the function returns void
+      return;  
     },
   }));
 

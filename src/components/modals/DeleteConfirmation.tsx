@@ -6,8 +6,11 @@ import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import Heading from "./Heading";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { on } from "events";
+import {io } from "socket.io-client";
 import { toast } from "react-hot-toast";
+import { config } from "@/config";
+
+
 
 export interface ErrorResponse {
   error: string;
@@ -18,24 +21,28 @@ interface DeleteConfirmationProps {
 }
 const DeleteConfirmation = () => {
   const { isOpen, listingId, onClose } = useDeleteConfirmationModal();
-
-
+  const port = config.PORT;
+  const socket = io(port);
   const router = useRouter();
 
   const handleDelete = async () => {
     try {
         await axios.post("/api/deleteListing", {
           listingId
+        })
+        .then((response) => {
+            socket.emit('delete_listing', response.data);
+            onClose();
+            router.push("/dashboard");
+            toast.success("Offer deleted successfully");
+          }
+        ).catch((error) => {
+          console.log(error);
         });
-        onClose();
-        router.push("/dashboard");
-        toast.success("Offer deleted successfully");
+        
 
-        // You may want to navigate the user away from the listing page or refresh the page here,
-        // as the listing they are viewing has been deleted.
       } catch (error) {
         console.error("Error deleting listing:", error);
-        // Handle the error. Could be a toast notification, a text message, or however you prefer.
       }
   };
 
@@ -53,6 +60,8 @@ const DeleteConfirmation = () => {
       onClose={onClose}
       onSubmit={() => handleDelete()}
       actionLabel={"Delete"}
+      secondaryAction={() => onClose()}
+      secondaryActionLabel={"Cancel"}
       body={bodyContent}
     />
   );

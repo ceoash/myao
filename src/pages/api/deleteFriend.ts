@@ -28,6 +28,10 @@ export default async function removeFriend(
       where: {
         id: friendship.id,
       },
+      include: {
+        follower: true,
+        following: true,
+      },
     });
 
     res.status(200).json(deletedFriendship);

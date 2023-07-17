@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { FieldErrors, FieldValues, set } from "react-hook-form";
 import { IoClose } from "react-icons/io5"
-import Button from "../Button";
+import Button from "@/components/dashboard/Button";
 
 interface ModalProps {
     isOpen?: boolean;
@@ -19,6 +19,7 @@ interface ModalProps {
     listingId?: string;
     children?: React.ReactNode;
     errors?: FieldErrors<FieldValues> | undefined;
+    isLoading?: boolean;
 
 }
 
@@ -34,7 +35,8 @@ const Modal: React.FC<ModalProps> = ({
     secondaryAction,
     secondaryActionLabel,
     listingId,
-    errors
+    errors,
+    isLoading,
 
 }) => {
     const [showModal, setShowModal] = useState(isOpen);
@@ -101,7 +103,7 @@ const Modal: React.FC<ModalProps> = ({
         overflow-y-auto
         fixed
         inset-0
-        z-10
+        z-50
         outline-none
         focus:outline-none
        ${showModal && 'bg-neutral-800/70'}
@@ -151,15 +153,18 @@ const Modal: React.FC<ModalProps> = ({
                         className="
                             flex
                             items-center
-                            p-6
+                            px-6 py-4
                             rounded-t
                             justify-between
                             relative
-                            border-b-[1px]
+                            border-b
+                            border-gray-200
                         ">
                         <div className="
-                            text-lg
-                            font-semibold
+                            text-md
+                            font-medium
+                            first-letter:uppercase
+                            text-gray-500
                         ">
                             {title}
                         </div>
@@ -170,6 +175,8 @@ const Modal: React.FC<ModalProps> = ({
                             border-0
                             hover:opacity-75
                             transition
+                            text-gray-500
+                            hover:text-orange-400
                             
                         ">
                             <IoClose size={18}  />
@@ -180,17 +187,18 @@ const Modal: React.FC<ModalProps> = ({
                         {body}
                     </div>
                     {/* FOOTER */}
-                    <div className="flex flex-col gap-2 p-6">
-                        <div className="flex flex-row items-center gap-4 w-full">
-                            { secondaryAction && <Button label={secondaryActionLabel || 'Back'} outline onClick={secondaryAction}/> }
-                           <Button disabled={disabled} label={actionLabel || 'Submit'} onClick={handleSubmit}/>
+                    <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                        <div className="flex flex-row items-center gap-4 w-full justify-between">
+                            { secondaryAction && !isLoading && <Button label={secondaryActionLabel || 'Back'}  onClick={secondaryAction} options={{size: "xl"}} /> }
+                            <div className="ml-auto">
+                           <Button disabled={disabled} isLoading={isLoading} label={actionLabel || 'Submit'} onClick={handleSubmit} options={{size: "xl"}} />
+
+                            </div>
                         </div>
                         {footer}
                     </div>
                 </div>
-
             </div>
-
         </div>
     </div>
     </>

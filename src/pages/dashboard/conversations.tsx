@@ -14,6 +14,7 @@ import { getSession } from "next-auth/react";
 import { Dash } from "@/templates/dash";
 import { FieldValues, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
+import { timeSince } from "@/utils/formatTime";
 import {
   BiBlock,
   BiCheck,
@@ -21,16 +22,25 @@ import {
   BiChevronLeft,
   BiChevronRight,
   BiCross,
+  BiDotsVerticalRounded,
+  BiPlus,
   BiUserCheck,
   BiUserMinus,
 } from "react-icons/bi";
-import { IoThumbsDown, IoThumbsUp } from "react-icons/io5";
+import { MdOutlineDoNotDisturb } from "react-icons/md";
 import checkFriendship from "@/actions/checkFriendship";
 import Link from "next/link";
 import checkBlocked from "@/actions/checkBlocked";
-import { is } from "date-fns/locale";
 import getCurrentUser from "@/actions/getCurrentUser";
-   
+import useOfferModal from "@/hooks/useOfferModal";
+import { stat } from "fs";
+import useRejectConversation from "@/hooks/useRejectConversationModal";
+import { fr, sk } from "date-fns/locale";
+import { set } from "date-fns";
+import Sidebar from "@/components/dashboard/conversations/Sidebar";
+import Header from "@/components/dashboard/conversations/Header";
+import Button from "@/components/dashboard/Button";
+import AlertBanner from "@/components/dashboard/AlertBanner";
 
 interface IDirectMessage {
   id: string;
@@ -64,6 +74,8 @@ interface IUser {
   friends: IUser[];
   blockedFriends: any[];
   blockedBy: any[];
+  buyer: any[];
+  seller: any[];
 }
 
 interface Conversation {
@@ -80,10 +92,10 @@ interface Conversation {
   status?: string;
 }
 
-const Conversations = ({ safeConversations, session, currentUser }: any) => {
+const Conversations = ({ safeConversations, session }: any) => {
+  const offerModal = useOfferModal();
 
-
-
+  const [skipIndex, setSkipIndex] = useState<number>(5);
 
   const filterBlockedConversation = safeConversations.filter(
     (conversation: any) => {
@@ -92,7 +104,6 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
           ? conversation?.participant2
           : conversation?.participant1;
 
-      
       const hasBlocked = session?.user?.blockedFriends?.some(
         (blockedFriend: any) =>
           blockedFriend.friendBlockedId === otherParticipant.id
@@ -109,14 +120,15 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
 
   const [activeConversationState, setActiveConversationState] =
     useState<Conversation | null>(filterBlockedConversation[0]);
-
   const [isFriend, setIsFriend] = useState<boolean | null>(
     activeConversationState?.friendStatus || null
   );
   const [isBlocked, setIsBlocked] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<string | null>()
+  const [status, setStatus] = useState<string | null>(
+    activeConversationState?.status || null
+  );
   const [disabled, setDisabled] = useState<boolean>(false);
-
+  const [toggleDropdown, setToggleDropdown] = useState<boolean>(false);
   useEffect(() => {
     if (status === "declined") {
       setDisabled(true);
@@ -125,14 +137,15 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
     }
   }, [status]);
 
+  // console.log("blocked by", activeConversationState?.participant1.blockedBy);
+  // console.log("blocked by", activeConversationState?.participant2.blockedBy);
+  // console.log("blocked friends", activeConversationState?.participant1.blockedFriends);
+  // console.log("blocked friends", activeConversationState?.participant2.blockedFriends);
+
   let participant =
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant2Id
       : activeConversationState?.participant1Id;
-  let participantUser =
-    activeConversationState?.participant1Id === session?.user?.id
-      ? activeConversationState?.participant2
-      : activeConversationState?.participant1;
   let me =
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant1
@@ -154,6 +167,7 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant2?.username || ""
       : activeConversationState?.participant1?.username || "";
+
   const [isOpen, setIsOpen] = useState(
     typeof window !== "undefined" && window.innerWidth > 768
   );
@@ -161,13 +175,13 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
   const handleSidebarToggle = () => {
     setIsOpen(!isOpen);
   };
-
+  const [friends, setFriends] = useState<IUser[]>([]);
+  const reject = useRejectConversation();
+  const messagesStartRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false);
 
-  const [messages, setMessages] = useState<IDirectMessage[]>(
-    activeConversationState?.directMessages || []
-  );
-
+  const [messages, setMessages] = useState<IDirectMessage[]>([]);
   const [username, setUsername] = useState<string>(initialUsername || "");
   const { reset } = useForm<FieldValues>({
     defaultValues: {
@@ -178,6 +192,26 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
     },
   });
 
+  const onLoadMore = async () => {
+    if (messages.length < skipIndex) {
+      setNoMoreMessages(true);
+      return;
+    }
+    try {
+      const response = await axios
+        .post(`/api/conversations/loadMoreConversationMessages`, {
+          skipIndex: skipIndex,
+          conversationId: activeConversationState?.id,
+        })
+        .then((res) => res.data);
+      setSkipIndex((prevSkipIndex) => prevSkipIndex + 5);
+      const reversed = response.messages.reverse();
+      setMessages((prevMessages) => [...reversed, ...prevMessages]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleFollow = async () => {
     if (!isFriend) {
       try {
@@ -186,7 +220,9 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
           followingId: participant,
         });
         toast.success("Friend request sent to " + participantUsername);
-        setIsFriend(!isFriend);
+        socketRef.current?.emit("add_friend", response.data);
+        setIsFriend(true);
+        setFriends((prevFriends) => [...prevFriends, response.data.following]);
       } catch (error) {
         toast.error("failed to follow user");
       }
@@ -197,7 +233,7 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
           followingId: participant,
         });
         toast.success("Unfollowed " + participantUsername);
-        setIsFriend(!isFriend);
+        socketRef.current?.emit("remove_friend", response.data);
       } catch (error) {
         toast.error("failed to unfollow user");
       }
@@ -209,6 +245,7 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
       const response = await axios.post("/api/conversations/accept", {
         conversationId: activeConversationState?.id,
       });
+      socketRef.current?.emit("accept_conversation", response.data);
       toast.success("accepted");
     } catch (error) {
       toast.error("failed to accept conversation");
@@ -219,7 +256,10 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
       const response = await axios.post("/api/conversations/decline", {
         conversationId: activeConversationState?.id,
       });
-      toast.success("accepted");
+      toast.error("declined");
+      setStatus("declined");
+
+      socketRef.current?.emit("decline_conversation", response.data);
     } catch (error) {
       toast.error("failed to decline conversation");
     }
@@ -230,9 +270,13 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
       try {
         const response = await axios.post("/api/blockFriend", {
           userBlockedId: session?.user?.id,
-          friendBlockedId: participant,
+          friendBlockedId:
+            activeConversationState?.participant1Id === session?.user?.id
+              ? activeConversationState?.participant2Id
+              : activeConversationState?.participant1Id,
         });
         toast.success(participantUsername + " has been blocked");
+        socketRef.current?.emit("block_friend", response.data);
         setIsBlocked(!isBlocked);
       } catch (error) {
         toast.error("failed to block user");
@@ -241,9 +285,13 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
       try {
         const response = await axios.post("/api/removeBlocked", {
           userBlockedId: session?.user?.id,
-          friendBlockedId: participant,
+          friendBlockedId:
+            activeConversationState?.participant1Id === session?.user?.id
+              ? activeConversationState?.participant2Id
+              : activeConversationState?.participant1Id,
         });
         toast.success(participantUsername + " has been unblocked");
+        socketRef.current?.emit("unblock_friend", response.data);
         setIsBlocked(!isBlocked);
       } catch (error) {
         toast.error("failed to unblock user");
@@ -258,20 +306,27 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
         ? conversation.participant2?.username || ""
         : conversation.participant1?.username || "";
     setUsername(setUser);
+    setSkipIndex(5);
   };
 
   useEffect(() => {
-    setMessages(activeConversationState?.directMessages || []);
-    setStatus(activeConversationState?.status || "none")
-  }, [activeConversationState]);
+    setMessages([]);
+    if (!activeConversationState) return;
+    setMessages([...activeConversationState.directMessages].reverse() || []);
+  }, [activeConversationState?.id]);
 
-  const socketRef = useRef<Socket>(); 
+  const socketRef = useRef<Socket>();
 
   useEffect(() => {
-    const port = config.PORT;
+    socketRef.current = io(config.PORT);
+    socketRef.current.emit("join_conversation", activeConversationState?.id);
+    socketRef.current.emit("register", session?.user?.id);
+  }, []);
 
-    socketRef.current = io(port || "https://myao-add-1fcc5262bac8.herokuapp.com");
-    socketRef.current.on("new_message", (newMessage: any) => {
+  useEffect(() => {
+    if (!socketRef.current) return;
+    socketRef.current.on("message_sent", (newMessage: any) => {
+      console.log("new message", newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setActiveConversationState((prevState) => {
         if (prevState) {
@@ -286,13 +341,68 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
       });
     });
 
-    socketRef.current.on("user_status_update", (updatedUser) => {
-      if (updatedUser.id === participant) {
-        setStatus(updatedUser.status);
-      }
+    socketRef.current.on("friend_blocked", () => {
+      setIsBlocked(true);
+    });
+
+    socketRef.current.on("friend_unblocked", () => {
+      setIsBlocked(false);
+    });
+
+    socketRef.current.on("friend_added", (friend) => {
+      setFriends((prevFriends) => [...prevFriends, friend]);
+    });
+
+    socketRef.current.on("friend_removed", (friend) => {
+      setIsFriend(false);
+      setFriends((prevFriends) =>
+        prevFriends.filter((f) => f.id !== friend.id)
+      );
+      console.log("friend removed", friend);
+    });
+
+    socketRef.current.on("conversation_accepted", () => {
+      setActiveConversationState((prevState) => {
+        if (prevState) {
+          const updatedConversation: any = {
+            ...prevState,
+            status: "accepted",
+          };
+          return updatedConversation;
+        }
+      });
+      setStatus(() => {
+        return "accepted";
+      });
+    });
+
+    socketRef.current.on("conversation_declined", () => {
+      setActiveConversationState((prevState) => {
+        if (prevState) {
+          const updatedConversation: any = {
+            ...prevState,
+            status: "declined",
+          };
+          return updatedConversation;
+        }
+      });
+      setStatus(() => {
+        return "declined";
+      });
     });
 
     return () => {
+      socketRef.current?.emit(
+        "leave_conversation",
+        activeConversationState?.id
+      );
+      socketRef.current?.off("friend_unblocked");
+      socketRef.current?.off("friend_added");
+      socketRef.current?.off("friend_removed");
+      socketRef.current?.off("friend_blocked");
+      socketRef.current?.off("message_sent");
+      socketRef.current?.off("conversation_declined");
+      socketRef.current?.off("conversation_accepted");
       socketRef.current?.disconnect();
     };
   }, []);
@@ -308,12 +418,15 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
         id: activeConversationState?.id,
         image: image,
         text: text,
+        type: image ? "image" : "text",
       });
 
       if (response.status === 200) {
         const conversation = response.data;
         const newMessage =
-          conversation.directMessages[conversation.directMessages.length - 1];
+          conversation.directMessages.reverse()[
+            conversation.directMessages.reverse().length - 1
+          ];
         socketRef.current?.emit("new_message", newMessage);
         toast.success("Message sent successfully");
       }
@@ -324,205 +437,139 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
   };
 
   return (
-    <Dash meta={<title>Conversations</title>}>
-      <div className="flex border-r-2 border-gray-200">
-        {
-          filterBlockedConversation.length > 0 ? (
-            <>
-        <div
-          className={`lg:w-1/5 border-r-2 border-l-2 border-gray-200 w-auto relative ${
-            isOpen ? "lg:w-1/5 block" : "lg:w-[40px]"
-          } border-r-2 border-l-2 border-gray-200 `}
-        >
-          <div className={`py-5 px-4 absolute -right-8`}>
-            {/* <button
-              onClick={handleButtonClick}
-              className={`${
-                !isOpen ? "hidden" : "block"
-              } rounded-full px-2 py-1 text-sm bg-orange-500 text-white flex items-center gap-2}`}
+    <Dash full={true} meta={<title>Conversations</title>}>
+      <div className="flex border border-gray-200 relative flex-1 flex-grow h-full overscroll-none">
+        {filterBlockedConversation.length > 0 ? (
+          <>
+            <div
+              className={` hidden lg:block border bg-gray-50  border-gray-200 relative ${
+                isOpen
+                  ? "md:w-[200px] lg:w-[260px] xl:w-[380px] xl:min-w-[380px] block"
+                  : "lg:w-[0]"
+              } border  border-gray-200 `}
             >
-              <div className="hidden md:block">Start a conversation</div>
-              <div className="block md:hidden">New</div>
-              <BiPlus />
-            </button> */}
-            <button
-              onClick={handleSidebarToggle}
-              className="top-[50%] bottom-[50%] mt-1 bg-orange-400 text-white rounded-full px-1 py-1 text-xl flex items-center text-orange-500"
+              <Sidebar
+                session={session}
+                isOpen={isOpen}
+                filterBlockedConversation={filterBlockedConversation}
+                activeConversationState={activeConversationState}
+                handleSidebarToggle={handleSidebarToggle}
+                handleSetActiveConversation={handleSetActiveConversation}
+              />
+            </div>
+            <div
+              className={`absolute z-10 lg:hidden   ${
+                isOpen
+                  ? "w-full h-full bg-neutral-800/70"
+                  : "w-0 h-0 bg-transparent"
+              }`}
             >
-              {isOpen ? <BiChevronLeft /> : <BiChevronRight />}
-            </button>
-          </div>
-          <div className={`${isOpen ? "block" : "hidden"}`}>
-            {filterBlockedConversation.map((conversation: any) => {
-              return (
-                <div
-                  key={conversation.id}
-                  className={`border-b border-gray-200 p-4 flex gap-4 ${conversation.id === activeConversationState?.id ? "bg-gray-100 text" : "bg-white"}`}
-                  onClick={() => handleSetActiveConversation(conversation)}
-                >
-                  <div className="w-[40px] lg:w-1/5">
-                    {conversation.participant1Id === session?.user?.id ? (
-                      <img
-                        src={
-                          conversation?.participant2?.profile?.image ||
-                          "/images/placeholders/avatar.png"
-                        }
-                        className="rounded-full border-2 border-gray-200 p-1"
-                      />
-                    ) : (
-                      <img
-                        src={
-                          conversation?.participant1?.profile?.image ||
-                          "/images/placeholders/avatar.png"
-                        }
-                        className="rounded-full border-2 border-gray-200 p-1"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {conversation.participant1Id === session?.user?.id
-                        ? conversation.participant2?.username
-                        : conversation.participant1?.username}
-                    </div>
-                    <div className="text-gray-400">
-                      {conversation.directMessages.length === 0 ||
-                      conversation.directMessages[
-                        conversation.directMessages.length - 1
-                      ].text === ""
-                        ? conversation.directMessages[
-                            conversation.directMessages.length - 1
-                          ].image
-                          ? "image.png"
-                          : "No messages yet"
-                        : conversation.directMessages[
-                            conversation.directMessages.length - 1
-                          ].text}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="flex-grow flex flex-col">
-          <div className="flex sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">
-            <Link
-              href={`/dashboard/profile/${participant}`}
-              className="relative flex items-center space-x-4"
-            >
-              <div className="relative">
-                <img
-                  src="/images/placeholders/avatar.png"
-                  className="rounded-full border-2 border-gray-200 p-1 h-14"
+              <div
+                className={`lg:hidden border bg-gray-50  border-gray-200 w-auto relative ${
+                  isOpen ? "w-full min-w-max" : "w-[0]"
+                } border  border-gray-200 `}
+              >
+                <Sidebar
+                  session={session}
+                  isOpen={isOpen}
+                  filterBlockedConversation={filterBlockedConversation}
+                  activeConversationState={activeConversationState}
+                  handleSidebarToggle={handleSidebarToggle}
+                  handleSetActiveConversation={handleSetActiveConversation}
                 />
               </div>
-              <div className="flex flex-col leading-tight">
-                <div className="text-2xl mt-1 flex items-center">
-                  <span className="text-gray-700 mr-3">{username}</span>
-                </div>
-              </div>
-            </Link>
-            <div className="flex gap-4">
-              {status === "none" && activeConversationState?.participant2Id === session.user.id ? (
-                <>
-                  <button onClick={handleAccept} className="flex gap-1 items-center">
-                    <BiCheck /> Accept
-                  </button>
-                  <button onClick={handleDecline} className="flex gap-1 items-center">
-                    <BiCross /> Decline
-                  </button>
-                </>
-              ) : (
-                <>
-                 
-                  {/* 
-                <button
-                  className="flex gap-1 items-center"
-                  onClick={handleFollow}
-                >
-                  
-                  {!isFriend ? (
-                    <>
-                      <BiUserCheck className="text-xl" /> Add user
-                    </>
-                  ) : (
-                    <>
-                      <BiUserMinus className="text-xl" /> Unfollow user
-                    </>
-                  )}
-                </button>
-                */}
-                </>
-              
-              )}
-              {/* 
+            </div>
+            <div className="flex-grow flex flex-col">
+              <Header
+                participant={participant}
+                username={username}
+                activeConversationState={activeConversationState}
+                handleAccept={handleAccept}
+                session={session}
+                reject={reject}
+                setStatus={() => setStatus}
+                status={status || "pending"}
+                toggleDropdown={toggleDropdown}
+                offerModal={offerModal}
+                setToggleDropdown={() => setToggleDropdown}
+                handleFollow={handleFollow}
+                isFriend={isFriend}
+                handleBlocked={handleBlocked}
+                isBlocked={isBlocked || false}
+              />
 
               <div
-                className="flex gap-1 items-center text-red-500"
-                onClick={handleBlocked}
+                id="messages"
+                className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white"
+                style={{ height: "calc(100vh - 28rem)" }}
               >
-                <BiBlock />
-                {isBlocked ? "Unblock" : "Block"}{" "}
-              </div>
-              
-              */}
+                <div className="col-span-12 flex justify-between items-center">
+                  <div className="border-t border-gray-200 h-1 w-full hidden lg:block"></div>
+                  <div className="lg:w-auto lg:whitespace-nowrap  text-center mx-4 text-sm text-gray-500">
+                    We are here to protect you from fraud please do not share
+                    your personal information
+                  </div>
+                  <div className="border-t border-gray-200 w-full  hidden lg:block"></div>
+                </div>
+                {status === "none" && (
+                  <div className="mx-auto max-w-xl">
+                  <AlertBanner secondary>
+                    {activeConversationState?.participant1Id ===
+                    session?.user?.id
+                      ? `Your message is awaiting approval from ${participantUsername}`
+                      : `Accept this message request to start chatting with ${participantUsername} `}
+                  </AlertBanner></div>
+                )}
 
-              
-            </div>
-          </div>
+                {status === "declined" && (
+                  <div className="max-w-xl mx-auto">
+                    <AlertBanner danger>
+                      {activeConversationState?.participant1Id ===
+                      session?.user?.id
+                        ? `Your message request to ${participantUsername} has been declined`
+                        : `You have declined the message request from ${participantUsername} `}
+                    </AlertBanner>
+                  </div>
+                )}
 
-          <div
-            id="messages"
-            className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white"
-            style={{ height: "calc(100vh - 28rem)" }}
-          >
-            <div className="col-span-12 flex justify-between items-center">
-              <div className="border-t border-gray-200 h-1 w-full hidden lg:block"></div>
-              <div className="lg:w-auto lg:whitespace-nowrap  text-center mx-4 text-sm text-gray-500">
-                We are here to protect you from fraud please do not share your
-                personal information
-              </div>
-              <div className="border-t border-gray-200 w-full  hidden lg:block"></div>
-            </div>
-            {status === "none" && (
-              <div className="justify-center border border-gray-200 p-4 rounded-md mx-auto bg-red-300">
-                {activeConversationState?.participant1Id === session?.user?.id
-                  ? `Your message is awaiting approval from ${participantUsername}`
-                  : `Accept this message request to start chatting with ${participantUsername} `}
-              </div>
-            )}
+                {!noMoreMessages && messages.length > 3 && (
+                  <div ref={messagesStartRef} className="flex justify-center">
+                    <Button
+                      onClick={onLoadMore}
+                      options={{ size: "sx", mute: true }}
+                    >
+                      Load More
+                    </Button>
+                  </div>
+                )}
 
-            {status === "declined" && (
-              <div className="justify-center border border-gray-200 p-4 rounded-md mx-auto bg-red-300">
-                {activeConversationState?.participant1Id === session?.user?.id
-                  ? `Your message request to ${participantUsername} has been declined`
-                  : `You have declined the message request from ${participantUsername} `}
+                {messages.map((message, index) => {
+                  if (message.text == "" && message.image == "") {
+                    return null;
+                  }
+                  return (
+                    <MessageComponent
+                      key={message?.id}
+                      message={message}
+                      session={session}
+                      ref={
+                        index === messages.length - 1 ? messagesEndRef : null
+                      }
+                    />
+                  );
+                })}
               </div>
-            )}
-
-            {messages.map((message, index) => {
-              if (message.text == "" && message.image == "") {
-                return null;
-              }
-              return (
-                <MessageComponent
-                  key={index}
-                  message={message}
-                  session={session}
-                  ref={index === messages.length - 1 ? messagesEndRef : null}
+              <div className="border-t-2 mt-auto bg-gray-50 border-gray-200 px-4 mb-2 sm:mb-0">
+                <ImageTextArea
+                  onSubmit={handleSubmit}
+                  disabled={disabled}
+                  key={activeConversationState?.id}
                 />
-              );
-            })}
-          </div>
-          <div className="border-t-2 mt-auto border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
-            <ImageTextArea onSubmit={handleSubmit} disabled={disabled} />
-          </div>
-        </div>
-        </> ) : (
-          <div className="w-full text-center pt-20" >
-              No conversations yet
-          </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full text-center pt-20">No conversations yet</div>
         )}
       </div>
     </Dash>
@@ -531,8 +578,18 @@ const Conversations = ({ safeConversations, session, currentUser }: any) => {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
+  }
+
   const user = session?.user;
-  const currentUser = await getCurrentUser(session)
+  const currentUser = await getCurrentUser(session);
   const friends = await getFriendsByUserId(user?.id);
   const safeConversations = await getConversationsByUserId(user?.id);
 
@@ -557,7 +614,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       safeConversations,
       session,
       friends,
-      currentUser
+      currentUser,
     },
   };
 };

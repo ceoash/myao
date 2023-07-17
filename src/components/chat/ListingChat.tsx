@@ -1,40 +1,47 @@
 import React, { useEffect, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import axios from "axios";
-import { useRef } from 'react';
+import { useRef } from "react";
 import ImageTextArea from "../inputs/ImageTextArea";
 import ChatMessage from "./ChatMessage";
 
 import io, { Socket } from "socket.io-client";
 import { config } from "@/config";
-
+import { Listing, User } from "@prisma/client";
 
 interface MessageProps {
   buyerId: string;
-  sellerId: string; // changed from recipeintId
+  sellerId: string;
   listingId: string;
   text: string;
   id: string;
 }
 
-const ListingChat = ({ listing, user, disabled, session }: any) => {
+interface SafeListing extends Listing{
+  messages: MessageProps[];
+  buyer: User;
+  seller: User;
+  bidder: User;
+}
+
+interface ListingChatProps {
+  listing: SafeListing;
+  user: any;
+  disabled?: boolean;
+  session: any;
+
+}
+
+const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => {
   const [messages, setMessages] = useState<MessageProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch messages when the component mounts and when the listing changes
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await axios.get(
-          `/api/getListingMessages?listingId=${listing.id}`
-        );
-        setMessages(response.data);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
-    };
+    setMessages([...listing.messages].reverse());
+    setIsLoading(false);
+  }, [listing.messages]);
 
-    fetchMessages();
-  }, [listing]);
+
 
   const {
     register,
@@ -53,10 +60,10 @@ const ListingChat = ({ listing, user, disabled, session }: any) => {
 
   useEffect(() => {
     socketRef.current = io(config.PORT);
-    socketRef.current.on('new_listing_message', (newMessage: any) => {
+    socketRef.current.on("new_listing_message", (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
-  
+
     return () => {
       socketRef.current?.disconnect();
     };
@@ -64,16 +71,15 @@ const ListingChat = ({ listing, user, disabled, session }: any) => {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSubmit = async (image: string, text: string) => {
-        
     try {
-      // Send the message
+      // Send message
       const response = await axios.post("/api/newBidMessage", {
         listingId: listing.id,
-        buyerId: user.id,
+        buyerId: listing.buyerId,
         sellerId: listing.sellerId,
         message: text,
         image: image,
@@ -84,7 +90,7 @@ const ListingChat = ({ listing, user, disabled, session }: any) => {
         const listing = response.data;
         const newMessage = listing.messages[listing.messages.length - 1];
         console.log(newMessage);
-        socketRef.current?.emit('new_listing_message', newMessage);
+        socketRef.current?.emit("new_listing_message", newMessage);
       }
 
       reset();
@@ -94,47 +100,49 @@ const ListingChat = ({ listing, user, disabled, session }: any) => {
   };
 
   return (
-    <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-4">
+    <>
+    <div className="flex flex-col flex-auto flex-shrink-0  bg-white h-full p-4 border-2 border-gray-200 rounded-lg">
       <div className="flex flex-col h-full mb-4">
         <div className="flex flex-col h-full">
           <div className="md:grid md:grid-cols-12 gap-y-2">
-            <div className="col-span-12 flex justify-between items-center">
+            <div className="col-span-12 flex justify-between items-center my-2">
               <div className="border-t border-gray-200 h-1 w-full"></div>
               <div className="lg:w-auto lg:whitespace-nowrap text-center mx-4 text-sm text-gray-500 hidden lg:block">
-                We are here to protect you from fraud please do not share your personal information
+                We are here to protect you from fraud please do not share your
+                personal information
               </div>
               <div className="border-t border-gray-200 w-full hidden lg:block"></div>
             </div>
-            
-            {messages.length === 0 && !disabled && (
+            {messages.length === 0 ? (
+              <div className="col-span-12 flex justify-between items-center">
+                No messages yet
+              </div>
+            ) : (
               <div
-                className={`relative ml-3 text-sm col-span-4 border-2 border-orange-300 rounded-lg p-2 bg-orange-200`}
+                id="messages"
+                className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white col-span-12 rounded-lg"
+                style={{ height: "calc(100vh - 28rem)" }}
               >
-                <div className="mb-1">
-                  Write a message to start your negotiation
-                </div>
+                {messages.map((message, index) => (
+                  <ChatMessage
+                    key={index}
+                    message={message}
+                    session={session}
+                    ref={index === messages.length - 1 ? messagesEndRef : null}
+                    chat
+                  />
+                ))}
               </div>
             )}
-            <div
-            id="messages"
-            className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white col-span-12"
-            style={{ height: "calc(100vh - 28rem)" }}
-          >
-            {messages.map((message, index) => (
-              <ChatMessage
-                key={index}
-                message={message}
-                session={session}
-                ref={index === messages.length - 1 ? messagesEndRef : null}
-                chat
-              />
-            ))}
-          </div>
           </div>
         </div>
       </div>
-      <ImageTextArea onSubmit={handleSubmit} />
     </div>
+      <div className="bg-orange-50">
+
+      <ImageTextArea onSubmit={handleSubmit} />
+      </div>
+      </>
   );
 };
 

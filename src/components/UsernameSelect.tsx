@@ -38,7 +38,7 @@ const UserSelect = ({
 }) => {
   const { isOpen, listingId, onClose } = useSearchModal();
 
-  const { data: session, status } = useSession(); // Get the session and status from next-auth/react
+  const { data: session, status } = useSession();
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [notFoundUser, setNotFoundUser] = useState("");
   const [invitationSent, setInvitationSent] = useState(false);
@@ -134,7 +134,7 @@ const UserSelect = ({
               <button
                 onClick={() => setUserAssigned(false)}
                 className="
-                    bg-orange-500 
+                    bg-orange-400 
                     px-2 rounded-md 
                     text-sm py-1 
                     text-white 
@@ -149,7 +149,7 @@ const UserSelect = ({
               <button
                 onClick={() => handleUserSelect(foundUser)}
                 className="
-                bg-orange-500 
+                bg-orange-400 
                 px-2 rounded-md 
                 text-sm py-1 
                 text-white 

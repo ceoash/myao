@@ -13,7 +13,11 @@ export default async function getUser(
     const user = await prisma.user.findUnique({
       where: { username: username },
       include: {
-        profile: true,
+        profile: {
+          select: {
+            image: true,
+          }
+        },
       }
     });
     res.send(user);

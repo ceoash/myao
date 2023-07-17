@@ -58,7 +58,6 @@ function Intro() {
             },
           }}
       >
-        
           <SwiperSlide>
             <div className="icon">
               <img className="max-w-[42px]" src="/icons/house-solid.png"></img>

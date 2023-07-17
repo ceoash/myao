@@ -18,9 +18,9 @@ export default async function handler(
             status: "awaiting approval"
         },
         include: {
-          buyer: true,      // Include buyer details
-          seller: true,    // Include seller details
-          messages: true     // Include messages
+          buyer: true,      
+          seller: true,   
+          messages: true,
       }
     });
     

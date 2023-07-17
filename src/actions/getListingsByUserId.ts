@@ -1,19 +1,72 @@
 import prisma from "@/libs/prismadb";
 
-export default async function getListingsByUserId(id: any) {
+export default async function getListingsByUserId(id: any,) {
   try {
     const listings = await prisma?.listing.findMany({
       where: {
-        sellerId: id,
+        OR: [
+          {
+            AND: [
+              { buyerId: id },
+              { type: "buyerOffer" },
+              { userId: id },
+            ],
+          },
+          {
+            AND: [
+              { sellerId: id },
+              { type: "sellerOffer" },
+              { userId: id },
+            ],
+          },
+        ],
       },
+      take: 4,
       orderBy: {
         createdAt: "desc",
       },
       include: {
-        buyer: true,
-        seller: true,
+        buyer: {
+          include: {
+            buyer: true,
+            seller: true,
+          }
+        },
+        seller: {
+          include: {
+            buyer: true,
+            seller: true,
+          }
+        },
+        user: {
+          include: {
+            buyer: true,
+            seller: true,
+          }
+        },
         messages: true,
-        bidder: true,
+
+      },
+    });
+
+    const countListings = await prisma?.listing.count({
+      where: {
+        OR: [
+          {
+            AND: [
+              { buyerId: id },
+              { type: "buyerOffer" },
+              { userId: id },
+            ],
+          },
+          {
+            AND: [
+              { sellerId: id },
+              { type: "sellerOffer" },
+              { userId: id },
+            ],
+          },
+        ],
       },
     });
 
@@ -27,12 +80,47 @@ export default async function getListingsByUserId(id: any) {
           ...listing.buyer,
           createdAt: listing.buyer.createdAt.toISOString(),
           updatedAt: listing.buyer.updatedAt.toISOString(),
+          buyer: listing.buyer.buyer.map(buyer => ({
+            ...buyer,
+            createdAt: buyer.createdAt.toISOString(),
+            updatedAt: buyer.updatedAt.toISOString(),
+          })),
+          seller: listing.buyer.seller.map(seller => ({
+            ...seller,
+            createdAt: seller.createdAt.toISOString(),
+            updatedAt: seller.updatedAt.toISOString(),
+          })),
         }
         : null,
       seller: {
         ...listing.seller,
         createdAt: listing.seller.createdAt.toISOString(),
         updatedAt: listing.seller.updatedAt.toISOString(),
+        buyer: listing.seller.buyer.map(buyer => ({
+          ...buyer,
+          createdAt: buyer.createdAt.toISOString(),
+          updatedAt: buyer.updatedAt.toISOString(),
+        })),
+        seller: listing.seller.seller.map(seller => ({
+          ...seller,
+          createdAt: seller.createdAt.toISOString(),
+          updatedAt: seller.updatedAt.toISOString(),
+        })),
+      },
+      user: {
+        ...listing.user,
+        createdAt: listing.user.createdAt.toISOString(),
+        updatedAt: listing.user.updatedAt.toISOString(),
+        buyer: listing.user.buyer.map(buyer => ({
+          ...buyer,
+          createdAt: buyer.createdAt.toISOString(),
+          updatedAt: buyer.updatedAt.toISOString(),
+        })),
+        seller: listing.user.seller.map(item => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+          updatedAt: item.updatedAt.toISOString(),
+        })),
       },
       messages: listing.messages
         ? listing.messages.map(message => ({
@@ -41,13 +129,7 @@ export default async function getListingsByUserId(id: any) {
             updatedAt: message.updatedAt.toISOString(),
           }))
         : [],
-      bidder: listing.bidder
-        ? {
-          ...listing.bidder,
-          createdAt: listing.bidder.createdAt.toISOString(),
-          updatedAt: listing.bidder.updatedAt.toISOString(),
-        }
-        : null,
+      
     }));
   } catch (error: any) {
     throw new Error(error);

@@ -2,179 +2,197 @@ import { User } from "@prisma/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { io } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
+import axios from "axios";
+import { set } from "date-fns";
+import { ImUserMinus, ImUserPlus } from "react-icons/im";
+import { MdDoNotDisturb } from "react-icons/md";
+import { FaCheck, FaTimes } from "react-icons/fa";
 interface FriendsWidgetProps {
-    session: any;
-    friends: any[];
+  session: any;
+  friendsList: User[];
+  setFriendsList: React.Dispatch<React.SetStateAction<User[]>>;
 }
-const FriendsWidget = ({ session, friends}: FriendsWidgetProps) => {
 
-  const port = config.PORT;
-  const socket = io(port);
-  const [friendsList, setFriendsList] = useState<User[]>(friends);
-  const onRemoveFriendClick = async (friendId: string) => {
+const FriendsWidget = ({
+  session,
+  friendsList,
+  setFriendsList,
+}: FriendsWidgetProps) => {
+
+
+  const socket  = io(config.PORT)
+
+  const onRemoveFriendClick = async (userId: string) => {
     try {
-      const res = await fetch("/api/deleteFriend", {
+      axios
+        .post("/api/deleteFriend", {
+          followerId: session.userId,
+          followingId: userId,
+        })
+        .then(
+          (response) => {
+            console.log("friend response", response.data); 
+            if (socket) {
+            socket.emit('remove_friend', response.data);
+            }
+            setFriendsList(friendsList.filter((friend) => friend.id === response.data.id));
+            toast.success("Friend removed!");
+          },
+          (error) => {
+            console.log(error);
+          }
+        );
+    } catch (error) {
+      console.error("Error removing friend:");
+    }
+  };
+      
+
+  const handleAccept = async (friendshipId: string) => {
+    try {
+      const res = await fetch("/api/acceptFriendship", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          followerId: session.user.id,
-          followingId: friendId,
+          friendshipId: friendshipId,
         }),
       });
       const data = await res.json();
 
+      setFriendsList((prevFriendsList) => {
+        return prevFriendsList.map((friend) =>
+          friend.id === data.id ? { ...friend, accepted: true } : friend
+        );
+      });
+
+      
       if (!res.ok) {
         throw new Error(data.error);
       }
 
-      setFriendsList(friendsList.filter((friend) => friend.id !== friendId));
-
-      toast.success("Friend removed!");
-      socket.emit('remove_friend', { followerId: session.user.id, followingId: friendId });
-
-    } catch (error) {
-      console.error("Error removing friend:", error);
-    }
-  };
-  const handleAccept = async (friendshipId: string) => {  
-
-    try {
-        const res = await fetch("/api/acceptFriendship", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            friendshipId: friendshipId,
-          }),
-        });
-        const data = await res.json();
-
-        setFriendsList(prevFriendsList => 
-          prevFriendsList.map(friend =>
-            friend.id === data.follower.id ? { ...friend, accepted: true } : friend
-          )
-        );
-        
-  
-        if (!res.ok) {
-          throw new Error(data.error);
-        }
-
-        toast.success("Friend request accepted!");
-        socket.emit('accept_friend', { friendshipId });
-
-      } catch (error) {
-        console.error("Error accepting friend request:", error);
+      if (data.error) {
+        console.error(data.error);
       }
 
-      
-  }
+      toast.success("Friend request accepted!");
+      if (socket) {
+      socket.emit("accept_friendship", data.responseFriendship);
+      socket.emit("update_activities", data.transactionResult, data.responseFriendship.followerId, data.responseFriendship.followingId);
+      }
+
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+    }
+  };
 
   useEffect(() => {
-    socket.on('friend_added', (data) => {
-      
-      setFriendsList(prevFriendsList => [...prevFriendsList, data.follower]);
+    if (!socket) return;
+
+    socket.emit("register", session.user.id);
+
+    socket.on("friend_added", (data) => {
+      setFriendsList((prevFriendsList) => [...prevFriendsList, data.follower]);
     });
-  
-    socket.on('friend_accepted', (data) => {
-      setFriendsList(prevFriendsList => 
-        prevFriendsList.map(friend => 
-          friend.id === data ? { ...friend, accepted: true } : friend
-        )
-      );
-    });
-  
-    socket.on('friend_removed', (data) => {
-      setFriendsList(prevFriendsList => 
-        prevFriendsList.filter((friend) => 
-          friend.id !== data.followingId && friend.id !== data.followerId
+
+    socket.on("friend_accepted", (data) => {
+      console.log("accepted", data);  
+      setFriendsList((prevFriendsList) => {
+        return prevFriendsList.map((friend) =>
+          friend.id === data.id ? { ...friend, accepted: true } : friend
+        );
+      });
+   });
+
+    socket.on("friend_removed", (data) => {
+      console.log("removed", data);
+      setFriendsList((prevFriendsList) =>
+        prevFriendsList.filter(
+          (friend) => friend.id !== data.id
         )
       );
     });
 
     return () => {
-      socket.off('friend_added');
-      socket.off('friend_accepted');
-      socket.off('friend_removed');
+      socket.off("friend_added");
+      socket.off("friend_accepted");
+      socket.off("friend_removed");
     };
-  }, [friendsList, setFriendsList]);
+  }, []);
 
-  console.log("friendsList", friendsList);
   return (
-    <ul className="flex flex-col pl-0 mb-0 rounded-lg">
-        {friendsList.length > 0 ? (
-            friendsList.map((friend: any) => {
-                return (
-                <li key={friend.id} className="relative flex items-center px-0 mb-2 bg-white border-0 rounded-t-lg text-inherit">
-                    <div className="inline-flex items-center justify-center w-8 h-12 mr-4 text-white transition-all duration-200 text-base ease-soft-in-out rounded-xl">
-                        <Link href={`/dashboard/profile/${friend.id}`}>
-                        <img
-                            src={
-                            friend?.profile?.image ||
-                            "images/placeholders/avatar.png"
-                            }
-                            alt="profile picture"
-                            className="w-full shadow-soft-2xl rounded-full border-2 border-gray-200 p-[1px]"
-                        />
-                        </Link>
-                    </div>
-                    <div className="flex flex-col items-start justify-center">
-                        <h6 className="mb-0 leading-normal text-sm">
-                        {friend.username} 
-                       
-                        </h6>
-                    </div>
-                    {  
-                        friend.relationshipStatus === "following" && 
-                            
-                    (
-                        <button
-                        onClick={() => onRemoveFriendClick(friend.id)}
-                        className="inline-block py-3 pl-0 pr-4 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-0 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
-                    >
-                    {  
-                        !friend.accepted && 
-                        "Requested"
-                        }
-                    
-                    {  
-                        friend.accepted && 
-                        "Unfollow"
-                        }
-                    
-                    </button>
-
+    <ul className="flex flex-col pl-0 rounded-xl flex-grow h-full">
+      {friendsList && friendsList.length > 0 ? (
+        friendsList.map((friend: any) => {
+          return (
+            <li
+              key={friend.id}
+              className="relative flex items-center px-0 mb-2 bg-white border-0 rounded-t-xl text-inherit"
+            >
+              <div className="inline-flex items-center justify-center w-8 h-12 mr-4 text-white transition-all duration-200 text-base ease-soft-in-out rounded-xl">
+                <Link href={`/dashboard/profile/${friend.id}`}>
+                  <img
+                    src={
+                      friend?.profile?.image || "/images/placeholders/avatar.png"
+                    }
+                    alt="profile picture"
+                    className="w-full shadow-soft-2xl rounded-full border-2 border-gray-200 p-[1px]"
+                  />
+                </Link>
+              </div>
+              <div className="flex flex-col items-start justify-center">
+                <h6 className="mb-0 leading-normal text-sm flex gap-2">
+                  <span className="font-bold">{friend.username}</span>
+                  {friend.relationshipStatus === "following" &&
+                    !friend.accepted && (
+                      <span className="italic">{"(pending)"}</span>
                     )}
+                </h6>
+              </div>
+              {friend.relationshipStatus === "following" && (
+                <button
+                  onClick={() => onRemoveFriendClick(friend.id)}
+                  className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                >
+                  Remove
+                </button>
+              )}
 
-                {  friend.relationshipStatus === "follower" &&  !friend.accepted &&  (
-                    
-                    <button
+              {friend.relationshipStatus === "follower" && !friend.accepted && (
+                <div className="flex gap-2 ml-auto items-center">
+                  <button
                     onClick={() => handleAccept(friend.friendshipId)}
-                    className="inline-block py-3 pl-0 pr-4 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-0 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
-                    >
-                 
-                    Accept
-                    </button>
-                    )}
-                {  friend.relationshipStatus === "follower" &&  friend.accepted &&  (
-                    
-                    <button
+                    className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                  >
+                    <FaCheck className="text-md" />
+                  </button>
+                  <button
                     onClick={() => onRemoveFriendClick(friend.id)}
-                    className="inline-block py-3 pl-0 pr-4 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-0 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100">
-                 
-                    Unfollow
-                    </button>
-                    )}
-                </li>
-            )})
-            ) : ( <i>No friends yet</i> )}
+                    className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                  >
+                    <FaTimes className="text-md" />
+                  </button>
+                </div>
+              )}
+              {friend.relationshipStatus === "follower" && friend.accepted && (
+                <button
+                  onClick={() => onRemoveFriendClick(friend.id)}
+                  className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                >
+                  <ImUserMinus className="text-md" />
+                </button>
+              )}
+            </li>
+          );
+        })
+      ) : (
+        <i>No friends yet</i>
+      )}
     </ul>
-  )
-}
+  );
+};
 
-export default FriendsWidget
+export default FriendsWidget;

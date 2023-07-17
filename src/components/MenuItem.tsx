@@ -1,6 +1,7 @@
 "use client";
 
 import { link } from "fs";
+import Link from "next/link";
 
 interface MenuItemProps {
   label: string;
@@ -45,7 +46,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, link, url }) 
     gap-2
     items-center
 ">
-    <a href={url}>{label}</a>
+    <Link href={url || '#'}>{label}</Link>
     </div>
   );
 };

@@ -48,3 +48,27 @@ export const categories = [
         ]
     }
 ];
+
+
+export const itemCategories = [
+    "Electronics",
+    "Appliances",
+    "Furniture",
+    "Clothing and Accessories",
+    "Home and Garden",
+    "Vehicles and Automotive",
+    "Sports and Fitness",
+    "Toys and Games",
+    "Books and Magazines",
+    "Collectibles and Antiques",
+    "Health and Beauty",
+    "Jewelry and Watches",
+    "Musical Instruments",
+    "Art and Crafts",
+    "Baby and Kids",
+    "Pet Supplies",
+    "Tools and Equipment",
+    "Office Supplies",
+    "Services",
+    "Miscellaneous",
+  ];

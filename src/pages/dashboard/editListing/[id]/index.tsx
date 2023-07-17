@@ -7,24 +7,28 @@ import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { BiCheckbox, BiCheckboxChecked } from "react-icons/bi";
 import Input from "@/components/inputs/Input";
-import { categories } from "@/data/cateories";
+import { itemCategories } from "@/data/cateories";
 import CategoryInput from "@/components/inputs/CategoryInput";
-import Button from "@/components/Button";
+import Button from "@/components/dashboard/Button";
 import ImageUpload from "@/components/inputs/ImageUpload";
-import UsernameSelect from "@/components/UsernameSelect";
+import { io } from "socket.io-client";
+import { config } from "@/config";
+import { getSession } from "next-auth/react";
+import PriceInput from "@/components/inputs/PriceInput";
+import TextArea from "@/components/inputs/TextArea";
+import { BiCategory, BiCategoryAlt, BiUserCircle } from "react-icons/bi";
+import { IoPricetagOutline } from "react-icons/io5";
 
 enum STEPS {
   DESCRIPTION = 0,
   CATEGORY = 1,
   IMAGES = 2,
-  BUYER = 3,
-  REVIEW = 4,
+  REVIEW = 3,
 }
 
 interface EditListingProps {
-  listing: any; // Replace with your actual listing type
+  listing: any;
 }
 
 const EditListing: React.FC<EditListingProps> = ({ listing }) => {
@@ -39,6 +43,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
   const [isPublic, setIsPublic] = useState(listing.public);
   const [sellerId, setSellerId] = useState(listing.sellerId);
   const [selectedCategory, setSelectedCategory] = useState(listing.category);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isBuyer, setIsBuyer] = useState(true);
   const [isLocation, setIsLocation] = useState(true);
@@ -48,6 +53,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
   const [disabled, setDisabled] = useState(false);
   const router = useRouter();
 
+  const listingDate = new Date(listing.date).toLocaleDateString;
+
   const {
     register,
     handleSubmit,
@@ -56,6 +63,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
     watch,
     setValue,
     setError,
+    clearErrors,
   } = useForm<FieldValues>({
     defaultValues: {
       title: title,
@@ -96,28 +104,26 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       case STEPS.DESCRIPTION:
         if (!data.title) {
           validation.isValid = false;
-          setError("title", { message: "Title is required" }); // Set the error for the "title" field
+          setError("title", { message: "Title is required" });
         }
         if (!data.description) {
           validation.isValid = false;
-          setError("description", { message: "Description is required" }); // Set the error for the "description" field
+          setError("description", { message: "Description is required" });
         }
         if (!data.price) {
           validation.isValid = false;
-          setError("price", { message: "Price is required" }); // Set the error for the "price" field
+          setError("price", { message: "Price is required" });
         }
         break;
       case STEPS.CATEGORY:
         if (!data.category) {
           validation.isValid = false;
-          setError("category", { message: "Category is required" }); // Set the error for the "category" field
+          setError("category", { message: "Category is required" });
         }
         break;
       case STEPS.IMAGES:
-        // Add validation for the image field if required
         break;
       case STEPS.REVIEW:
-        // No validation required for the review step
         break;
       default:
         break;
@@ -134,7 +140,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       event?.preventDefault();
       event?.stopPropagation();
       if (step !== STEPS.REVIEW) {
-        const stepValidationResult = validateStep(step, data); 
+        const stepValidationResult = validateStep(step, data);
         if (stepValidationResult.isValid) {
           setStep(step + 1);
         }
@@ -172,6 +178,14 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 
   const image = watch("image");
 
+  let im = null;
+
+  if (image) {
+    let arr = new Array(image);
+    im = JSON.parse(image);
+    console.log("image", im);
+  }
+
   const setCustomValue = (id: string, value: any) => {
     setValue(id, value, {
       shouldValidate: true,
@@ -180,6 +194,9 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
     });
   };
 
+  const port = config.PORT;
+  const socket = io(port);
+
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     if (step !== STEPS.REVIEW) {
       return onNext();
@@ -187,11 +204,19 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 
     await axios
       .put(`/api/updateListing/${listing.id}`, data)
-      .then(() => {
-        toast.success("Offer created successfully!");
+      .then((response) => {
+        const data = response.data;
+        toast.success("Offer updated successfully!");
         router.push(`/dashboard/offers/${listing.id}`);
         reset();
         setStep(STEPS.DESCRIPTION);
+        // socket.emit("update_listing", listing);
+        socket.emit(
+          "updated_activities",
+          data.transactionOperations,
+          data.listing.sellerId,
+          data.listing.buyerId
+        );
       })
       .catch((err) => {
         console.log("Something went wrong!");
@@ -206,26 +231,16 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       <label className="mb-2" htmlFor="description">
         Description
       </label>
-      <textarea
+      <TextArea
         id="description"
+        label="Description"
+        errors={errors}
+        disabled={isLoading}
+        register={register}
         rows={5}
-        className={`
-          peer
-          w-full
-          p-2
-          font-light
-          bg-white
-          border-2
-          rounded-md
-          outline-none
-          transition
-          disabled:cursor-not-allowed
-          disabled:opacity-50
-          
-      `}
-        {...register("description")}
+        clearErrors={() => clearErrors("description")}
       />
-      <Input
+      <PriceInput
         id="price"
         label="Price"
         type="number"
@@ -244,20 +259,21 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 
     bodyContent = (
       <div className="flex flex-col">
+        {errors.category && typeof errors.category.message === "string" && (
+          <div className="text-red-500 text-sm">{errors.category.message}</div>
+        )}
+        {!selectedCategory && (
+          <div className="text-red-500 text-sm">Select a category</div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
-          {categories.map((category) => (
-            <div key={category.id}>
-              <div className="font-bold">{category.name}</div>
-              {category.items.map((item) => (
-                <CategoryInput
-                  name={item.name}
-                  key={item.slug}
-                  selected={selectedCategory === item.name}
-                  onClick={updateCategory}
-                  register={register} // Add this
-                />
-              ))}
-            </div>
+          {itemCategories.map((item) => (
+            <CategoryInput
+              name={item}
+              key={item}
+              selected={selectedCategory === item}
+              onClick={updateCategory}
+              register={register}
+            />
           ))}
         </div>
       </div>
@@ -275,36 +291,56 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       </div>
     );
   }
-  
+
   if (step === STEPS.REVIEW) {
     bodyContent = (
       <div className="flex flex-col">
-        <div>
-          <div className="flex gap-4">
-            <div>
-              <img
-                className="w-40 object-cover rounded-md"
-                src={image || "/images/cat.png"}
-                alt={title} />
+        <h5 className="mb-4">Review Details</h5>
+        <div className="flex gap-4">
+          <div className="w-1/5">
+            <img
+              src={`${im && im[0] ? im[0] : "/images/cat.png"}`}
+              alt="offer"
+              className="object-cover rounded-md"
+            />
+          </div>
 
+          <div className="flex-1">
+            <div className="font-medium first-letter:uppercase">{title}</div>
+            <div className="flex justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-medium flex">
+                  <BiCategory />
+                </span>
+                {category}
+              </div>
+              <div className="flex items-center gap-2 capitalize">
+                <span className="font-medium flex">
+                  <BiCategoryAlt />
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium flex">
+                  <BiUserCircle />
+                </span>
+                {listing?.type === "sellerOffer"
+                  ? listing.buyer.username
+                  : listing.seller.username}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  <IoPricetagOutline />
+                </span>
+                {!price ? "Not set" : `£ ${price}`}
+              </div>
             </div>
-            <div>
-              <h5>{title}</h5>
-              
-              <p><span className="font-medium">Price:</span> £{price}</p>
-              <p><span className="font-medium">Category:</span> {category}</p>
-             
-              
-              <hr className="my-4" />
-              <h6 className="font-medium">Details</h6>
+            <hr className="mt-2 mb-2" />
+            <div className="">
+              <div className="font-medium">Description</div>
               <p>{description}</p>
-            
-
             </div>
           </div>
-          
-          
-        
         </div>
       </div>
     );
@@ -312,9 +348,9 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 
   return (
     <Dash meta={<Meta title="" description="" />}>
-      <div className="container px-4 mx-auto max-w-xl">
+      <div className="container px-4 mx-auto max-w-xl bg-oange-50 flex-grow lg:items-end">
         <div className="md:flex md:flex-wrap mt-10 gap-6">
-          <div className="flex-1 bg-white border-2 border-gray-200 p-8">
+          <div className="flex-1 bg-white border-2 border-gray-200 p-8 rounded-lg">
             <div className="flex flex-wrap items-center justify-between -mx-4 mb-8 pb-6 border-b border-gray-400 border-opacity-20">
               <div className="w-full sm:w-auto px-4 mb-6 sm:mb-0">
                 <h4 className="text-2xl font-bold tracking-wide mb-1">
@@ -322,23 +358,23 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
                 </h4>
                 <p className="text-sm">Edit Your Offer</p>
               </div>
-              
             </div>
             {bodyContent}
-            <div className="flex mt-4 gap-4">
+            <div className="flex mt-4 gap-4 justify-between">
               {step > STEPS.DESCRIPTION && (
                 <Button
                   disabled={disabled}
                   label={secondaryActionLabel || "Back"}
-                  outline
                   onClick={step > STEPS.DESCRIPTION ? onBack : undefined}
                 />
               )}
-              <Button
-                disabled={disabled}
-                label={actionLabel || "Submit"}
-                onClick={handleSubmit(onSubmit)}
-              />
+              <div className="ml-auto">
+                <Button
+                  disabled={disabled}
+                  label={actionLabel || "Submit"}
+                  onClick={handleSubmit(onSubmit)}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -347,8 +383,20 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const bidId = params?.id as string; // Update as per your requirements
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const bidId = context?.params?.id as string;
+
+  const session = getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
+  }
+
   try {
     const listing = await getBidByID({ bidId });
     return {
@@ -359,7 +407,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   } catch (error) {
     console.error("Error fetching listing:", error);
     return {
-      notFound: true, // You can customize the error handling
+      notFound: true,
     };
   }
 };

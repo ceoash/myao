@@ -7,7 +7,8 @@ type IMainProps = {
 };
 
 const Main = (props: IMainProps) => (
-  <div className="w-full px-1 text-gray-700 antialiased">
+  <div className="w-full px-1 text-gray-700 antialiased  min-h-screen">
+    
     {props.meta}
     <Toaster />
     <div className="mx-auto max-w-screen-4xl z-50">
@@ -38,7 +39,7 @@ const Main = (props: IMainProps) => (
         </nav>
       </header>
 
-      <main className="content">{props.children}</main>
+      <main className="content flex-grow">{props.children}</main>
 
       <footer className="bg-primary-default ">
         <div className="mx-auto w-full max-w-screen-xl px-4 pt-6 lg:pt-10">

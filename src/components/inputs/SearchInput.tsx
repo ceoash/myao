@@ -11,7 +11,7 @@ interface SearchInputProps {
 const SearchInput = ({search, setSearch, onSearch, placeholder}: SearchInputProps) => {
 
   return (
-    <div className="flex border-2 border-gray-200 rounded-r-md">
+    <div className="flex border border-gray-200 rounded-lg">
       <input
         type="text"
         className="flex-1 mx-2 lowercase"
@@ -21,7 +21,7 @@ const SearchInput = ({search, setSearch, onSearch, placeholder}: SearchInputProp
       />
       <button
         onClick={onSearch}
-        className="bg-orange-500 p-2 text-white rounded-r-md"
+        className="bg-orange-400 p-2 text-white rounded-r-lg"
       >
         <BiSearch />
       </button>

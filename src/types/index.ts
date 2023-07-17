@@ -7,13 +7,16 @@ export interface User extends PrismaUser {
   profile?: Profile;
   followers?: User[];
   followings?: User[];
+  listings?: Listing[];
 }
+
 export type SafeUser = Omit<
 User,
 "createdAt" | "updatedAt" > & {
 createdAt: string;
 updatedAt: string;
 };
+
 export type SafeListing = Omit<
 Listing,
 "createdAt" | "updatedAt" | "expireAt" > & {

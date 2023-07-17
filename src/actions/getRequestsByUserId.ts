@@ -1,16 +1,27 @@
 import prisma from '@/libs/prismadb'
 
-
 export default async function getRequestsByUserId(id: any) {
   try {
     const listings = await prisma?.listing.findMany({
-        where: {
-            buyerId: id // filter by the userId
+      where: {
+        OR: [
+          {
+            AND: [
+              { sellerId: id },
+              { type: "buyerOffer" },
+            ],
+          },
+          {
+            AND: [
+              { buyerId: id },
+              { type: "sellerOffer" },
+            ],
+          },
+        ],
         },
         orderBy: {
             createdAt: 'desc'
         },
-
         include: {
             buyer: true,      
             seller: true,   

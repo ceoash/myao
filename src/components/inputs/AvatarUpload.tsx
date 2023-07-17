@@ -2,7 +2,7 @@
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 import { useCallback } from "react";
-import { BiImageAdd } from "react-icons/bi";
+import { BiImageAdd, BiPlus } from "react-icons/bi";
 
 declare global {
   var cloudinary: any;
@@ -37,7 +37,7 @@ const AvatarUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
                         flex-col
                         items-center
                         justify-center
-                        border-2
+                        border
                         border-neutral-200
                         border-dashed
                         h-full
@@ -47,8 +47,16 @@ const AvatarUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
                         rounded-full
                         "
         >
-          <BiImageAdd size={40} className="text-neutral-400" />
-          <p className="text-neutral-400">Upload Image</p>
+          <BiPlus className="text-xl text-white absolute right-1 top-1 rounded-full bg-orange-500 z-10" />
+          <Image
+                  src={"/images/placeholders/avatar.png"}
+                  alt="Upload"
+                  fill={true}
+                  style={{ objectFit: "cover" }}
+                  className="rounded-full p-1"
+                  
+                />
+
           {value && (
             
               <div className="absolute inset-0 w-full h-full">

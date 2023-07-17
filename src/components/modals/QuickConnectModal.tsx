@@ -16,9 +16,8 @@ export interface ErrorResponse {
 }
 
 const QuickConnectModal = () => {
-  const { isOpen, onClose, foundUser } = useQuickConnect();
+  const { isOpen, onClose, foundUser, setIsLoading, isLoading } = useQuickConnect();
   const [foundUserStore, setFoundUserStore] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = React.useState("");
 
 
@@ -77,8 +76,8 @@ const QuickConnectModal = () => {
       console.log("Error while submitting form:", error);
       toast.error("Something went wrong!");
     } finally {
-      setIsLoading(false);
       router.push("/dashboard/conversations");
+      setIsLoading(false);
     }
   };
 
@@ -89,7 +88,7 @@ const QuickConnectModal = () => {
 
   let bodyContent = (
     <div className="flex flex-col">
-      {foundUserStore ? (
+      {foundUserStore && foundUser?.id ? (
         <div className="px-4 py-2 flex flex-col rounded border-gray-200 justify-between">
           <div className="flex justify-between w-full mb-2">
             <div>
@@ -103,7 +102,7 @@ const QuickConnectModal = () => {
             <button
               onClick={handleUserSelect}
               className="
-                bg-orange-500 
+                bg-orange-400 
                 px-2 rounded-md 
                 text-sm py-1 
                 text-white 
@@ -159,11 +158,18 @@ const QuickConnectModal = () => {
           </div>
         </div>
       ) : (
+        <>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Email address
+          </label>
+        </div>
         <SearchInput 
           search={search} 
           setSearch={setSearch} 
           onSearch={onSearch} 
           placeholder="Enter MYAO name to connect" />
+        </>
       )}
     </div>
   );

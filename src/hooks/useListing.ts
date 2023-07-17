@@ -8,9 +8,8 @@ interface UseListingStore {
     seller: any; 
     onOpen: (id: string) => void;
     onClose: () => void;
-    setListing: (listing: any) => void;  // Add this line
-    setSeller: (seller: any) => void;  // Add this line
-    
+    setListing: (listing: any) => void;  
+    setSeller: (seller: any) => void; 
 }
 
 const useListing = create<UseListingStore>((set) => ({

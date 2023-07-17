@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import MenuItem from "../MenuItem";
-import { BiCross, BiPencil, BiTrash } from "react-icons/bi";
+import {
+  BiCalendar,
+  BiCategory,
+  BiCross,
+  BiPencil,
+  BiTrash,
+  BiUser,
+} from "react-icons/bi";
 import { AiOutlineEye } from "react-icons/ai";
 import { Listing } from "@prisma/client";
 import Link from "next/link";
@@ -12,6 +19,18 @@ import StatusChecker from "@/utils/status";
 import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import { useSession } from "next-auth/react";
 import { IoClose } from "react-icons/io5";
+import {
+  FaEdit,
+  FaEye,
+  FaPencilAlt,
+  FaTimes,
+  FaTrash,
+  FaUser,
+} from "react-icons/fa";
+import { timeInterval } from "@/utils/formatTime";
+import { ImPriceTag, ImUser } from "react-icons/im";
+import Image from "next/image";
+import { toast } from "react-hot-toast";
 
 const Offer: React.FC<any> = ({
   id,
@@ -20,17 +39,67 @@ const Offer: React.FC<any> = ({
   category,
   image,
   bid,
-  status,
   seller,
   sellerId,
+  buyer,
+  buyerId,
   bidder,
+  userId,
+  type,
+  createdAt,
+  socketRef,
+  status,
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isOffer, setIsOffer] = useState(false);
   const DeleteListing = useDeleteConfirmationModal();
   const { data: session } = useSession();
+  const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
+  let img = []
+  if (image){
+    img = JSON.parse(image)
+  }
+
+  useEffect(() => {
+    const created = new Date(createdAt);
+    timeInterval(created, setTimeSinceCreated);
+  }, [createdAt]);
 
   const router = useRouter();
+  const [statusState, setStatusState] = useState("");
+
+  useEffect(() => {
+    setStatusState(status);
+  }, []);
+
+  const handleStatusChange = async (status: string, userId: string) => {
+    await axios
+      .put(`/api/updateListing/status`, {
+        status: status,
+        listingId: id,
+        userId: userId,
+      })
+      .then((response) => {
+        toast.success("Offer" + response.data.listing.status);
+        setStatusState(response.data.listing.status);
+
+        socketRef.current?.emit("update_status", {
+          newStatus: response.data.listing.status,
+          listingId: id,
+        });
+        console.log("response", response.data);
+        socketRef.current?.emit(
+          "update_activities",
+          response.data.transactionResult,
+          response.data.listing.sellerId,
+          response.data.listing.buyerId
+        );
+      })
+      .catch((err) => {
+        console.log("Something went wrong!");
+      })
+      .finally(() => {});
+  };
 
   const handleClickOutside = (e: any) => {
     if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -53,108 +122,172 @@ const Offer: React.FC<any> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOffer]);
+
+  const owner = buyerId === userId ? buyer : seller;
   return (
-    <div className="w-full mt-4 md:mt-0 bg-white rounded-md border border-gray-200 mb-6 md:mb-0">
-      <div className="md:px-6 md:py-4 md:flex gap-4">
-        <div className="md:aspect-w-16 md:aspect-h-9 flex justify-center">
-          <img
-            className="object-cover rounded-t-md md:rounded-md object-center h-42 md:h-24 lg:h-24 w-full md:w-64"
-            src={image || "/images/cat.png"}
-            alt="content"
-          />
-        </div>
+    <div className="w-full md:mt-0 bg-white py-1  border border-t-0  border-gray-200  md:mb-0">
+      
+      <div className="md:py-4 md:flex md:gap-4 xl:gap-6">
+          <Link href={`/dashboard/offers/${id}`} className="w-1/5">
+            <div className="relative w-full h-full ml-4 mr-2">
+              <Image
+                src={img[0] || "/images/cat.png"}
+                alt="content"
+                layout="fill"
+                objectFit="cover"
+                className="rounded-lg"
+              />
+            </div>
+          </Link>
         <div className="w-full  pt-2 pb-2 md:p-0 flex flex-col">
           <div className="w-full flex justify-between flex-grow border-b px-4 md:border-none">
             <div>
-              <div className="text-gray-900 text-md md:text-lg mt-1 md:mt-0 title-font font-medium lg:px-0  md:m-0">
-                {title}
+              <Link
+                href={`/dashboard/offers/${id}`}
+                className=" text-gray-900 text-md md:text-lg lg:text-xl xl:text-xl mt-1 md:mt-0 title-font font-medium lg:px-0  md:m-0 xl:-mt-4"
+              >
+                <div className="mt-2 first-letter:uppercase truncate ... xl:-mt-2">
+                  {title}
+                </div>
+              </Link>
+              <div>
+                <h2 className="text-sm mb-0 text-gray-500">
+                  {category || "No category"}
+                </h2>
               </div>
-              <h2 className="text-xs mb-0 text-gray-500">
-                {category|| "No category"}
-              </h2>
             </div>
             <div className="flex justify-between md:block mb-2 pb-2 md:pb-0 md:m-0">
-              
               <div>
-                
                 <div className="text-right text-sm">
-                  Bid by <span className="underline">{bidder?.username || seller?.username}</span>
+                  Bid by{" "}
+                  <span className="underline">
+                    {bidder?.username || seller?.username}
+                  </span>
                 </div>
 
                 <div className="font-extrabold md:text-2xl text-right">
-                  {bid ? bid : price ? `£ ${price}` : <span className="text-sm border-2 border-gray-200 rounded-md bg-white p-2">Open offer</span>}
+                  {bid ? (
+                    `£ ${bid}`
+                  ) : price ? (
+                    `£ ${price}`
+                  ) : (
+                    <span className="text-sm border border-gray-200 rounded-md bg-white p-2">
+                      Open offer
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex justify-between flex-grow my-2 px-4">
-            <Link href={`/dashboard/profile/${sellerId}`} className="flex items-center gap-2 leading-relaxed text-sm font-medium">
-              <div className="w-6">
-                <img src={seller?.profile?.image || "/images/placeholders/avatar.png"} className="rounded-full p-[1px] border-2 border-gray-200" />
+          <div className="flex flex-grow my-2 px-4 justify-between  items-end">
+            <div className="flex justify-between items-end md:gap-6">
+              <Link
+                href={`/dashboard/profile/${
+                  sellerId === session?.user.id ? buyerId : sellerId
+                } `}
+              >
+                <div className=" gap-2 items-center text-sm hidden md:flex">
+                  <FaUser />
+                  <div>
+                    {seller.id === session?.user.id
+                      ? buyer?.username
+                      : seller?.username || "unknown user"}
+                  </div>
+                </div>
+              </Link>
+              <div className=" items-center gap-2 text-sm hidden md:flex">
+                <ImPriceTag />
+                <span>{type === "sellerOffer" ? "Sale" : "Buy"}</span>
               </div>
-              <div>{seller?.username || "unknown user"}</div>
-            </Link>
-
-            <div className="leading-relaxed lg:p-0 flex gap-4 text-sm">
+              <div className=" items-center gap-2 text-sm hidden lg:flex">
+                <span>{StatusChecker(statusState)}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <BiCalendar />
+                <span>{timeSinceCreated}</span>
+              </div>
+            </div>
+            <div className="leading-relaxed lg:p-0 flex gap-2 text-sm ml-auto">
               <Link
                 href={`/dashboard/offers/${id}`}
-                className="flex gap-2 items-center"
+                className="flex gap-2 items-center text-md border border-gray-400 rounded-md px-2 bg-gray-100"
               >
-                <AiOutlineEye />
-                View
+                <FaEye />
+                <span className="hidden xl:block">View</span>
               </Link>
-              {session?.user?.id === sellerId && (
-                <>
-                  <button
-                    onClick={handleEditListing}
-                    className={`
-                  w-full
-                  focus:ring-4 
-                  focus:outline-none 
-                  focus:ring-primary-300 
-                  font-medium 
-                  rounded-lg 
-                  text-center
-                  flex
-                  gap-2
-                  items-center
-                `}
-                  >
-                    <span>
-                      <BiPencil />
-                    </span>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => DeleteListing.onOpen(id)}
-                    className={`
-                  w-full
-                  focus:ring-4 
-                  focus:outline-none 
-                  focus:ring-primary-300 
-                  font-medium 
-                  rounded-lg 
-                  text-center
-                  flex
-                  gap-2
-                  items-center
-                `}
-                  >
-                    <span>
-                      <BiTrash />
-                    </span>
-                    Delete
-                  </button>
-                </>
-              )}
-              {session?.user?.id !== sellerId &&
-                status !== "rejected" &&
-                status !== "accepted" && (
-                  <button className="flex gap-1 items-center text-red-500">
-                    <IoClose />
-                    Reject
-                  </button>
+              {session?.user?.id === userId &&
+                statusState !== "rejected" &&
+                statusState !== "completed" &&
+                statusState !== "cancelled" && (
+                  <>
+                    <button
+                      onClick={handleEditListing}
+                      className={`
+                      w-full
+                      focus:ring-4 
+                      focus:outline-none 
+                      focus:ring-primary-300 
+                      font-medium 
+                      rounded-lg 
+                      text-center
+                      flex
+                      p-1
+                      gap-2
+                      items-center
+                      text-md border 
+                      border-gray-400
+                      px-2 
+                      bg-gray-100
+                    `}
+                    >
+                      <span>
+                        <FaPencilAlt />
+                      </span>
+                      <span className="hidden xl:block">Edit</span>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleStatusChange("cancelled", session?.user.id)
+                      }
+                      className="
+                    flex
+                    p-1 
+                    gap-1 
+                    items-center 
+                    border
+                    border-red-400 
+                    rounded-md 
+                    px-2 
+                    text-red-500"
+                    >
+                      <FaTimes />
+                      <span className="hidden xl:block">Cancel</span>
+                    </button>
+                  </>
                 )}
+              {(session?.user?.id !== userId &&
+                statusState == "awaiting approval") ||
+                (statusState == "negotiating" && (
+                  <button
+                    onClick={() =>
+                      handleStatusChange("rejected", session?.user.id)
+                    }
+                    className="
+                    flex
+                    p-1 
+                    gap-1 
+                    items-center 
+                    border
+                    border-red-400 
+                    rounded-md 
+                    px-2 
+                    text-red-500"
+                  >
+                    <FaTimes />
+                    <span className="hidden xl:block">Reject</span>
+                  </button>
+                ))}
             </div>
           </div>
         </div>

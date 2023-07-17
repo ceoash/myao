@@ -1,415 +1,539 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import getCurrentUser from "@/actions/getCurrentUser";
-import {  DirectMessage, Listing } from "@prisma/client";
 import { User } from "@/types";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import getListingsByUserId from "@/actions/getListingsByUserId";
 import EmptyState from "@/components/EmptyState";
 import Offer from "@/components/offers/Offer";
-import UserCard from "@/components/widgets/UserCard";
 import useOfferModal from "@/hooks/useOfferModal";
 import usePendingConversationModal from "@/hooks/usePendingConversationModal";
 import getRequestsByUserId from "@/actions/getRequestsByUserId";
 import getFriendsByUserId from "@/actions/getFriendsByUserId";
 import QuickConnect from "@/components/widgets/QuickConnect";
-import FriendsWidget from "@/components/widgets/FriendsWidget";
-import { BiPlus } from "react-icons/bi";
-import { fr } from "date-fns/locale";
 import getConversationsByUserId from "@/actions/getConversationsByUserId";
-import { formatDistanceToNow } from "date-fns";
-import { Dir } from "fs";
-import {io} from "socket.io-client";
+import { formatDistanceToNow, set } from "date-fns";
+import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
+import { useRouter } from "next/router";
+import Spinner from "@/components/Spinner";
+import Stats from "@/components/dashboard/Stats";
+import ActivityWidget from "@/components/dashboard/widgets/ActivityWidget";
+import InviteFriend from "@/components/dashboard/widgets/InviteFriend";
+import { BiFilterAlt } from "react-icons/bi";
+import Button from "@/components/dashboard/Button";
+import Skeleton from "react-loading-skeleton";
+import {
+  Activity,
+  IConversation,
+  ListingsMap,
+  dashboardProps,
+  DashListing,
+  ListingStatus,
+} from "@/interfaces/authenticated";
+import FriendsWidget from "@/components/widgets/FriendsWidget";
+import { Listing } from "@prisma/client";
+import { all } from "axios";
+import { ca } from "date-fns/locale";
+import useQuickConnect from "@/hooks/useQuickConnect";
+import listingsCount from "@/actions/listingsCount";
 
-
-interface IConversation { 
-  id: string;
-  participant1Id: string;
-  participant2Id: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-  participant1: User;
-  participant2: User;
-  directMessages: DirectMessage[]; 
-}
-interface dashboardProps {
-  listings: Listing[];
-  user: User;
-  requests: Listing[];
-  negotiations: Listing[];
-  friends: any[];
-  followings: User[];
-  session: any;
-  conversations: IConversation[];
-}
-
-const Index = ({ listings, user, requests, friends, session, conversations }: dashboardProps) => {
-  const [activeTab, setActiveTab] = useState<"sent" | "received" | "requests">(
-    "sent"
-  );
-
-  const [realTimeListings, setRealTimeListings] = useState<Listing[]>(listings);
-  const [realTimeRequests, setRealTimeRequests] = useState<Listing[]>(requests);
-
-  useEffect(() => {
-    // Connect to the server (replace 'http://localhost:3000' with your server's URL)
-    const socket = io(config.PORT);
-  
-    socket.on('listing_created', (newListing) => {
-      setRealTimeListings((prevListings) => [...prevListings, newListing]);
-    });
-  
-    socket.on('listing_created', (newRequest) => {
-      setRealTimeRequests((prevRequests) => [...prevRequests, newRequest]);
-    });
-  
-    return () => {
-      socket.disconnect();
-    }
-  }, []);
-  
-  
-
+const Index = ({
+  allListings,
+  allRequests,
+  listings,
+  user,
+  requests,
+  friends,
+  session,
+  conversations,
+  activities,
+  listingsCount,
+  requestsCount,
+}: dashboardProps) => {
   const offerModal = useOfferModal();
-  const pendingConversation = usePendingConversationModal()
+  const pendingConversation = usePendingConversationModal();
 
-  const awaitingApproval = realTimeRequests.filter(
-    (item: any) => (
-      item.status === "awaiting approval", item.buyerId === session?.user?.id
-    )
-  );
+  const [activeTab, setActiveTab] = useState<"sent" | "received">("sent");
+  const [category, setCategory] = useState<
+    "all" | "awaiting approval" | "negotiating" | "rejected" | "completed" | "pending"
+  >("all");
 
-  const pendingConversations = conversations.filter( (item: any) => (item.status === "none" && item.participant2Id === session.user.id) )
-  const acceptedConversations = conversations.filter( (item: any) => (item.status === "accepted" ) )
+  const [friendsList, setFriendsList] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [userActivities, setUserActivities] = useState<any>([]);
+  const [realTimeListings, setRealTimeListings] = useState<any>({});
+  const [realTimeRequests, setRealTimeRequests] = useState<any>({});
+  const [initListings, setInitListings] = useState<any>([]);
+  const [initRequests, setInitRequests] = useState<any>([]);
+  const [sentCount, setSentCount] = useState<any>(0);
+  const [receivedCount, setReceivedCount] = useState<any>(0);
+
+  const connect = useQuickConnect()
 
 
-  const received = realTimeRequests.filter(
-    (item: any) => (
-      item.status !== "awaiting approval", item.buyerId === session?.user?.id
-    )
-  );
-
-  const sent = realTimeListings.filter((item: any) => item.sellerId === session?.user?.id);
-
-  const sentListings = sent.length === 0 ? (
-    <div className="p-4 bg-white text-sm italic">
-      No Listings
-    </div>
-  ) : (
-    sent.map((item: Listing) => (
-      <Offer key={item.id} {...item} />
-    ))
-  );
-  const awaitingApprovalListings = awaitingApproval.map((item: Listing) => {
-    if (item.status === "awaiting approval")
-      return <Offer key={item.id} {...item} />;
-  });
-
-  const receivedListings = received.map((item: Listing) => {
-    if (item.status !== "awaiting approval")
-      return <Offer key={item.id} {...item} />;
-  });
-
+  const searchUser = user;
+  searchUser.email = "";
+  searchUser.id = "";
+  searchUser.username = "";
+  searchUser.name = "";
   
+  useEffect(() => {
+    if (!user.activated) {
+      setIsLoading(true);
+      setTimeout(() => {
+        router.push("/dashboard/wizard");
+      }, 0);
+    } else {
+    setFriendsList(friends);
+    setUserActivities(activities);
+    setInitListings(allListings)
+    setInitRequests(allRequests)
+    setIsLoading(false)
+    setSentCount(listingsCount)
+    setReceivedCount(requestsCount)
+    }
+  }, [session.user.id])
 
-  const awaitingApprovalCount = received.filter(
-    (item: any) => item.status === "awaiting approval"
-  ).length;
-  
-  const receivedListingsCount = received.filter(
-    (item: any) => item.status !== "awaiting approval"
-  ).length;
+  const filterAndMapListingsByStatus = (
+    listings: DashListing[]
+  ): ListingsMap => {
+    const validStatuses: ListingStatus[] = [
+      "awaiting approval",
+      "negotiating",
+      "accepted",
+      "rejected",
+    ];
+
+    const filteredListings: DashListing[] = listings.filter((listing) =>
+      validStatuses.includes(listing.status)
+    );
+
+    return filteredListings.reduce((acc: ListingsMap, listing: DashListing) => {
+      if (!acc[listing.status]) {
+        acc[listing.status] = [];
+      }
+      acc[listing.status]?.push(listing);
+      return acc;
+    }, {} as ListingsMap);
+  };
+
+  const flattenListingsMap = (listingsMap: ListingsMap): DashListing[] => {
+    return Object.values(listingsMap).flat();
+  };
 
   useEffect(() => {
-    if (awaitingApprovalCount > 0) {
+    const realTimeListingsByStatus = filterAndMapListingsByStatus(
+      flattenListingsMap(listings)
+    );
+    setRealTimeListings(realTimeListingsByStatus);
+  }, [listings]);
+
+  useEffect(() => {
+    const realTimeRequestsByStatus = filterAndMapListingsByStatus(
+      flattenListingsMap(requests)
+    );
+    setRealTimeRequests(realTimeRequestsByStatus);
+  }, [requests]);
+
+  const router = useRouter();
+
+  const pendingConversations = conversations.filter(
+    (item: any) =>
+      item.status === "none" && item.participant2Id === session.user.id
+  );
+  const acceptedConversations = conversations.filter(
+    (item: any) => item.status === "accepted"
+  );
+
+  useEffect(() => {
+    if (realTimeRequests.length > 0) {
       setActiveTab("received");
     }
-  }, [awaitingApprovalCount]);
+  }, [realTimeRequests]);
+
+  const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+    socketRef.current = io(config.PORT);
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!session.user.id) return;
+    if (!socketRef) return
+    socketRef.current && socketRef?.current.emit("register", session.user.id);
+
+    socketRef.current && socketRef.current.on("updated_activities", (activities: any) => {
+      console.log("updated activities", activities);
+      const copiedActivities = [...(activities.activities as any[])];
+      const reversedActivities = copiedActivities.reverse();
+      const topActivities = reversedActivities.slice(0, 3);
+      setUserActivities(topActivities);
+    });
+
+    socketRef.current && socketRef.current.on("new_listing", (newListing: any) => {
+      console.log("new listing", newListing);
+      setRealTimeListings((prevListings: ListingsMap) => {
+        let updatedListings = { ...prevListings };
+        let newListingStatus: ListingStatus = newListing.status;
+
+        if (!updatedListings[newListingStatus]) {
+          updatedListings[newListingStatus] = [];
+        }
+
+        (updatedListings[newListingStatus] as DashListing[]).push(newListing);
+        setInitListings((prevListings: Listing[]) => {
+          return [newListing, ...prevListings];
+        });
+
+        return updatedListings;
+      });
+    });
+
+    socketRef.current && socketRef.current.on("request_received", (newRequest: any) => {
+      setRealTimeRequests((prevListings: ListingsMap) => {
+        let updatedListings = { ...prevListings };
+        let newListingStatus: ListingStatus = newRequest.status;
+
+        if (!updatedListings[newListingStatus]) {
+          updatedListings[newListingStatus] = [];
+        }
+
+        (updatedListings[newListingStatus] as DashListing[]).push(newRequest);
+        setInitRequests((prevRequests: Listing[]) => {
+          return [newRequest, ...prevRequests];
+        });
+        return updatedListings;
+      });
+    });
+
+    socketRef.current && socketRef.current.on("delete_offer", (deletedListing: DashListing) => {
+      console.log("offer deleted", deletedListing);
+
+      setRealTimeListings((prevListings: ListingsMap) => {
+        let updatedListings = { ...prevListings };
+
+        let deletedListingStatus: ListingStatus = deletedListing.status;
+
+        updatedListings[deletedListingStatus] = (
+          updatedListings[deletedListingStatus] as DashListing[]
+        ).filter((listing) => listing.id !== deletedListing.id);
+
+        setInitListings((prevListings: Listing[]) => {
+          return prevListings.filter(
+            (listing) => listing.id !== deletedListing.id
+          );
+        });
+        return updatedListings;
+      });
+    });
+
+    socketRef.current && socketRef.current.on("delete_request", (deletedListing: DashListing) => {
+      console.log("request deleted", deletedListing);
+
+      setRealTimeRequests((prevListings: ListingsMap) => {
+        let updatedRequests = { ...prevListings };
+
+        let deletedListingStatus: ListingStatus = deletedListing.status;
+
+        updatedRequests[deletedListingStatus] = (
+          updatedRequests[deletedListingStatus] as DashListing[]
+        ).filter((listing) => listing.id !== deletedListing.id);
+
+        setInitRequests((prevRequests: Listing[]) => {
+          return prevRequests.filter(
+            (listing) => listing.id !== deletedListing.id
+          );
+        });
+
+        return updatedRequests;
+      });
+    });
+
+    return () => {
+      socketRef.current && socketRef.current.disconnect();
+    };
+  }, [session.id]);
+
+  const activeListings =
+    category === "all" ? initListings : realTimeListings?.[category] || [];
+
+  const activeRequests =
+    category === "all" ? initRequests : realTimeRequests?.[category] || [];
 
   return (
-    <Dash
-      meta={
-        <Meta
-          title="Make You An Offer You Can't Refuse"
-          description="This is the Make You An Offer Web App"
-        />
-      }
-    >
-      <div className="grid grid-cols-12 mt-10 gap-6">
-        <div className="w-full mx-auto px-4 lg:px-0 xl:col-span-9 col-span-12">
-          <div className="rounded-lg bg-orange-200 border border-gray-200 p-4">
-            <div className="flex  items-center justify-between gap-2">
-              <div className="md:text-xl font-semibold leading-tight">
-                Hello <span className="capitalize">{session?.user?.name}</span>,
-                welcome back!
+  
+      
+        <Dash
+          meta={
+            <Meta
+              title="Make You An Offer You Can't Refuse"
+              description="This is the Make You An Offer Web App"
+            />
+          }
+        >
+          <div className=" p-8 ">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2>Dashboard</h2>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={offerModal.onOpen}
-                  className="
-                    flex 
-                    gap-1
-                    flex-nowrap
-                    bg-orange-500 
-                    hover:bg-orange-600 
-                    text-white 
-                    font-bold 
-                    text-sm 
-                    px-2 
-                    py-1 
-                    md:py-2 
-                    md:px-4 
-                    rounded
-                    items-center
-
-                  " >
-                  Create Offer <BiPlus className="text-xl" />
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* <div>
-            <div className="flex-1 p-6 undefined bg-white">
-              <div className="flex items-center justify-between mb-3">
-                <div className="inline-flex items-center capitalize leading-none text-xs border rounded-full py-1 px-3 bg-emerald-500 border-emerald-500 text-white ">
-                  <span className="inline-flex justify-center items-center w-4 h-4 mr-1">
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="14"
-                      height="14"
-                      className="inline-block"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span>12%</span>
-                </div>
-                <button
-                  className="inline-flex justify-center items-center whitespace-nowrap focus:outline-none transition-colors focus:ring duration-150 border cursor-pointer rounded border-gray-100 dark:border-slate-800 ring-gray-200 dark:ring-gray-500 bg-gray-100 text-black dark:bg-slate-800 dark:text-white hover:bg-gray-200 hover:dark:bg-slate-700  p-1"
+              <div className="flex items-center gap-x-2">
+                {/* <button
+                  onClick={() => connect.onOpen(searchUser, session.user.id, isLoading)}
                   type="button"
+                  className="inline-flex items-center justify-center h-9 px-3 rounded-xl border hover:border-gray-400 text-gray-800 hover:text-gray-900 transition"
                 >
-                  <span className="inline-flex justify-center items-center w-6 h-6 ">
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="16"
-                      height="16"
-                      className="inline-block"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
-                      ></path>
-                    </svg>
-                  </span>
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg leading-tight text-gray-500 dark:text-slate-400">
-                    Clients
-                  </h3>
-                  <h1 className="text-3xl leading-tight font-semibold">
-                    <div>512</div>
-                  </h1>
-                </div>
-                <span className="inline-flex justify-center items-center  h-16 text-emerald-500">
                   <svg
-                    viewBox="0 0 24 24"
-                    width="48"
-                    height="48"
-                    className="inline-block"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="1em"
+                    height="1em"
+                    fill="currentColor"
+                    className="bi bi-chat-fill"
+                    viewBox="0 0 16 16"
                   >
-                    <path
-                      fill="currentColor"
-                      d="M16 17V19H2V17S2 13 9 13 16 17 16 17M12.5 7.5A3.5 3.5 0 1 0 9 11A3.5 3.5 0 0 0 12.5 7.5M15.94 13A5.32 5.32 0 0 1 18 17V19H22V17S22 13.37 15.94 13M15 4A3.39 3.39 0 0 0 13.07 4.59A5 5 0 0 1 13.07 10.41A3.39 3.39 0 0 0 15 11A3.5 3.5 0 0 0 15 4Z"
-                    ></path>
+                    <path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z" />
                   </svg>
-                </span>
+                </button> */}
+                <Button
+                  label="Connect and Create"
+                  onClick={offerModal.onOpen}
+                  icon="/icons/thumbs-up.png"
+                />
               </div>
             </div>
-          </div>
-          */}
-          {realTimeListings.length === 0 && realTimeRequests.length === 0 ? (
-            <div className="hidden xl:block h-full mt-6">
 
-              <EmptyState showReset />
-            </div>
-          ) : (
-            <div>
-              <div className="border-b border-gray-200 w-full flex gap-4 mt-6">
-                <div
-                  className={`uppercase cursor-pointer font-bold ${
-                    activeTab === "sent" && "border-b-4 border-orange-500"
-                  }`}
-                  onClick={() => setActiveTab("sent")}
-                >
-                  Sent
-                </div>
-                <div
-                  className={`uppercase cursor-pointer font-bold items-start flex`}
-                  onClick={() => setActiveTab("received")}
-                >
-                  <span
-                    className={`${
-                      activeTab === "received" && "border-b-4 border-orange-500"
-                    }`}
-                  >
-                    Received
-                  </span>
-                  {awaitingApprovalCount > 0 && (
-                    <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
-                      {awaitingApprovalCount} new
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {activeTab === "sent" && (
-                <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4">
-                  <div className="border border-gray-200 p-4 rounded-md bg-white">
-                    <div className="font-extrabold flex items-center justify-between">
-                      Your Offer Listings
-                      {sent.length > 0 && (
-                        <span className="bg-orange-200 rounded-full px-2 py-1 text-orange-500">
-                          {sent.length}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="min-w-full">
-                    {sentListings}
-                  </div>
-
-                </div>
-              )}
-
-              {activeTab === "received" && (
+            <hr className="my-0 mb-6 mt-4" />
+            {/*`Activities ${userActivities ? userActivities.length : 0}` */}
+            <div className="lg:grid grid-cols-12 gap-x-6 mb-6">
+              {isLoading ? (
                 <>
-                  <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4">
-                    <div className="border border-gray-200 bg-white rounded-md p-4">
-                      <div className="font-extrabold flex items-center justify-between">
-                        Offer Requests{" "}
-                        {awaitingApprovalCount > 0 && (
-                          <span className="bg-orange-200 rounded-full px-2 py-1 text-orange-500">
-                            {awaitingApprovalCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="min-w-full ">
-                      {awaitingApprovalCount > 0 ? (
-                        awaitingApprovalListings
-                      ) : (
-                        <div className="p-4 bg-white text-sm italic">
-                          No new requests
-                        </div>
-                      )}
-                    </div>
+                  <div className="col-span-6">
+                    <Skeleton height={200} />
                   </div>
-                  <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4">
-                    <div className="border border-gray-200 bg-white rounded-md p-4">
-                      <div className="font-extrabold flex items-center justify-between">
-                        Received Offers{" "}
-                        {receivedListingsCount > 0 && (
-                          <span className="bg-orange-200 rounded-full px-2 py-1 text-orange-500">
-                            {receivedListingsCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="min-w-full">
-                      {receivedListings ? (
-                        receivedListings
-                      ) : (
-                        <div className="p-4 bg-white text-sm italic">
-                          No received offers
-                        </div>
-                      )}
-                    </div>
-                    <div>
-
-                    </div>
+                  <div className="col-span-6">
+                    <Skeleton height={200} />
                   </div>
                 </>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="col-span-12 xl:col-span-3 px-4 lg:px-0">
-          <UserCard
-            currentUser={user}
-            sales={realTimeRequests.length}
-            offers={realTimeListings.length}
-            messages={0}
-            dashboard
-          />
-          <div className="w-full  px-6 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
-            <div className="relative flex flex-col h-full min-w-0 break-words bg-white border-0 shadow-soft-xl rounded-2xl bg-clip-border">
-              <QuickConnect session={session} />
-            </div>
-          </div>
-          { pendingConversations.length > 0 && (
-          <div className="w-full  px-6 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
-          <div className="p-4 pb-0 mb-0 bg-white border-b-0 rounded-t-2xl">
-                <h5 className="mb-0">Pending Conversations</h5>
-              </div>
-            <div className="relative flex flex-col h-full min-w-0 break-words bg-white border-0 shadow-soft-xl rounded-2xl bg-clip-border">
-                { pendingConversations.map((conversation) => (
-                  <div className="p-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <img
-                          src={ conversation.participant1?.profile?.image || "/images/placeholders/avatar.png"}
-                          className="w-8 h-8 rounded-full mr-2 border p-[1px] border-gray-200"
-                        />
-                        <div className="flex flex-col">
-                          <div className="font-bold">
-                            {conversation.participant1.username}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {conversation?.directMessages[0].text}
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex gap-4 text-xs text-orange-500 justify-end font-bold">
-                          <button onClick={() => pendingConversation.onOpen(conversation.participant1.id, conversation, session)}>View</button>
-                        </div>
-                      <div className="text-xs text-gray-500 text-right">
-                        {formatDistanceToNow(new Date(conversation.updatedAt), {
-                          addSuffix: true,
-                        })}
-                      </div>
-                      </div>
-                    </div>
-                  </div>)
-                )}
-
+              ) : (
+              <><Stats
+                title="Overview"
+                totalStats={10}
+                startOffer={offerModal.onOpen}
+                sentOffers={sentCount}
+                receivedOffers={receivedCount}
+                friendsCount={friends.length}
+              />
+              <ActivityWidget title={"Activity"} activities={userActivities} />
+              </> )}
               
             </div>
-          </div>
-          )}
-          <div className="w-full  px-4 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
-            <div className="relative flex flex-col h-full min-w-0 break-words bg-white border-0 shadow-soft-xl rounded-2xl bg-clip-border">
-              <div className="p-4 pb-0 mb-0 bg-white border-b-0 rounded-t-2xl">
-                <h5 className="mb-0">Friends</h5>
+
+            <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col overflow-auto">
+              {realTimeListings.length === 0 &&
+              realTimeRequests.length === 0 ? (
+                <div className="hidden xl:flex flex-grow mt-6 flex-col overflow-auto">
+                  <EmptyState showReset />
+                </div>
+              ) : (
+                <div className=" pt-6 mb-8">
+                  <div className="pb-6">
+                    <h3>Recent Offers</h3>
+                  </div>
+                  <div className="h-full  rounded-xl">
+                    <div className="border-b border-gray-200 w-full flex justify-between bg-gray-100 items-center">
+                      <div className="flex gap-4  p-4">
+                        <div
+                          className={`uppercase cursor-pointer font-bold ${
+                            activeTab === "sent" &&
+                            "border-b-4 border-orange-400"
+                          }`}
+                          onClick={() => setActiveTab("sent")}
+                        >
+                          Sent
+                        </div>
+                        <div
+                          className={`uppercase cursor-pointer font-bold items-start flex`}
+                          onClick={() => setActiveTab("received")}
+                        >
+                          <span
+                            className={`${
+                              activeTab === "received" &&
+                              "border-b-4 border-orange-400"
+                            }`}
+                          >
+                            Received
+                          </span>
+                          {realTimeRequests.length > 0 && (
+                            <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
+                              {realTimeRequests.length} new
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="border border-gray-200 rounded-lg bg-gray-100 flex items-center mx-4">
+                        <BiFilterAlt className="text-gray-500 mx-2 border-r border-gray-200" />
+                        <select
+                          key={activeTab}
+                          value={category}
+                          onChange={(e) =>
+                            setCategory(
+                              e.target.value as
+                                | "awaiting approval"
+                                | "all"
+                                | "negotiating"
+                                | "rejected"
+                                | "completed"
+                                | "pending"
+                            )
+                          }
+                          className=" px-2 py-2 rounded-r-lg bg-gray-100"
+                        >
+                          <option value="all">All Offers</option>
+                          <option value="awaiting approval">Awaiting</option>
+                          <option value="negotiating">Negotiating</option>
+                          <option value="completed">Accepted</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+                    </div>
+                    {activeTab === "sent" && (
+                      <>
+                        <div className="">
+                          <div className="min-w-full ">
+                            {activeListings.length > 0 ? (
+                              activeListings.map((item: Listing) => {
+                                return <Offer key={item.id} socketRef={socketRef} {...item} />;
+                              })
+                            ) : (
+                              <div className="flex flex-col items-center justify-center h-full bg-white border-b border-gray-200">
+                                <div className="text-gray-500 text-lg font-bold my-12 mx-4">
+                                  No offers to display
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {activeTab === "received" && (
+                      <>
+                        <div className="h-full">
+                          <div className="min-w-full ">
+                            {activeRequests.length > 0 ? (
+                              activeRequests.map((item: Listing) => {
+                                return <Offer key={item.id} {...item} socketRef={socketRef}  />;
+                              })
+                            ) : (
+                              <div className="flex flex-col items-center justify-center h-full bg-white border-b border-gray-200">
+                                <div className="text-gray-500 text-lg font-bold my-12 mx-4">
+                                  No offers to display
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div></div>
+                  </div>
+                </div>
+              )}
+              <div className="pb-6">
+                <h3>Make Connections</h3>
               </div>
-              <div className="flex-auto p-4">
-                <FriendsWidget friends={friends} session={session} />
+              <div className="lg:grid lg:grid-cols-2 gap-4 items-stretch auto-cols-fr">
+                <InviteFriend user={user} />
+                <div className="rounded-xl bg-orange-200 border border-orange-300 xl:flex-1 mb-6 ">
+                  <QuickConnect
+                    session={session}
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                  />
+                </div>
               </div>
             </div>
+
+            <div className="flex">
+              {friendsList.length > 0 && (
+                <div className="flex-1">
+                  <div className="py-4  mb-0 bg-white border-b-0 rounded-t-2xl">
+                    <h3 className="mb-0">Friends</h3>
+                  </div>
+                  <FriendsWidget
+                    session={session}
+                    friendsList={friendsList}
+                    setFriendsList={setFriendsList}
+                  />
+                </div>
+              )}
+              {pendingConversations.length > 0 && (
+                <div className="px-4 lg:px-0 flex-1">
+                  <div className="w-full  lg:px-6 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
+                    <div className="p-4 pb-0 mb-0 bg-white border-b-0 rounded-t-2xl">
+                      <h3 className="mb-0">Pending Conversations</h3>
+                    </div>
+                    <div className="relative flex flex-col h-full min-w-0 break-words bg-white border-0-soft-xl rounded-2xl bg-clip-border">
+                      {pendingConversations.map((conversation) => (
+                        <div className="p-4 border-b border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <img
+                                src={
+                                  conversation.participant1?.profile?.image ||
+                                  "/images/placeholders/avatar.png"
+                                }
+                                className="w-8 h-8 rounded-full mr-2 border p-[1px] border-gray-200"
+                              />
+                              <div className="flex flex-col">
+                                <div className="font-bold">
+                                  {conversation.participant1.username}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {conversation?.directMessages[0].text}
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex gap-4 text-xs text-orange-500 justify-end font-bold">
+                                <button
+                                  onClick={() =>
+                                    pendingConversation.onOpen(
+                                      conversation.participant1.id,
+                                      conversation,
+                                      session
+                                    )
+                                  }
+                                >
+                                  View
+                                </button>
+                              </div>
+                              <div className="text-xs text-gray-500 text-right">
+                                {formatDistanceToNow(
+                                  new Date(conversation.updatedAt),
+                                  {
+                                    addSuffix: true,
+                                  }
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-    </Dash>
+        </Dash>
+     
+  
   );
 };
 
@@ -422,26 +546,82 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     if (!session) {
       return {
         redirect: {
-          destination: "/login", // redirect to login if no session found
+          destination: "/login",
           permanent: false,
         },
       };
     }
 
     const user = await getCurrentUser(session);
-    const listings = await getListingsByUserId(session.user.id);
-    const requests = await getRequestsByUserId(session.user.id);
-    const friends = await getFriendsByUserId(session.user.id)
+    const friends = await getFriendsByUserId(session.user.id);
     const conversations = await getConversationsByUserId(session.user.id);
-    
+    const listings: any[] = await getListingsByUserId(session.user.id);
+    const {sentListingsCount, receivedListingsCount} = await listingsCount(session.user.id);
+    const sortedListings = listings.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const topListings: { [key: string]: DashListing[] } = {};
+    ["awaiting approval", "negotiating", "accepted", "rejected"].forEach(
+      (status) => {
+        const filtered = sortedListings
+          .filter((listing) => listing.status === status)
+          .slice(0, 5);
+        topListings[status] = filtered.map((listing) => ({
+          ...listing,
+          createdAt: new Date(listing.createdAt).toISOString(),
+          updatedAt: new Date(listing.updatedAt).toISOString(),
+          expireAt: listing?.expireAt
+            ? new Date(listing.expireAt).toISOString()
+            : null,
+        }));
+      }
+    );
+
+    const requests: any[] = await getRequestsByUserId(session.user.id);
+    const sortedRequests = requests.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const topRequests: { [key: string]: DashListing[] } = {};
+    ["awaiting approval", "negotiating", "accepted", "rejected"].forEach(
+      (status) => {
+        const filtered = sortedRequests
+          .filter((request) => request.status === status)
+          .slice(0, 5);
+        topRequests[status] = filtered.map((request) => ({
+          ...request,
+          createdAt: new Date(request.createdAt).toISOString(),
+          updatedAt: new Date(request.updatedAt).toISOString(),
+          expireAt: request?.expireAt
+            ? new Date(request.expireAt).toISOString()
+            : null,
+        }));
+      }
+    );
+
+    const allListings = listings.slice(0, 5);
+    const allRequests = requests.slice(0, 5);
+
+    const copiedActivities = [...(user?.activities as any[])];
+    const reversedActivities = copiedActivities.reverse();
+    const topActivities = reversedActivities.slice(0, 3);
+
+   
+
     return {
       props: {
-        listings,
+        listings: topListings,
         user,
-        requests,
+        requests: topRequests,
         friends,
         session,
         conversations,
+        allListings,
+        allRequests,
+        activities: topActivities,
+        listingsCount: sentListingsCount,
+        requestsCount: receivedListingsCount,
       },
     };
   } catch (error) {
@@ -451,7 +631,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         listings: [],
         requests: [],
         friends: [],
-        conversations: [],  
+        conversations: [],
       },
     };
   }

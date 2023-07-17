@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
   userId            String  @db.ObjectId
@@ -28,10 +29,34 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model Review {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  message   String
+  rating    Int
+  listingId String       @db.ObjectId
+  listing   Listing      @relation("reviews", fields: [listingId], references: [id])
+  userId    String       @db.ObjectId
+  user      User         @relation("reviews", fields: [userId], references: [id])
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+}
+
+model Bid {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  price String
+  previous String
+  listingId String @db.ObjectId
+  listing Listing @relation("bids", fields: [listingId], references: [id])
+  userId String @db.ObjectId
+  user User @relation("bids", fields: [userId], references: [id])
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+}
+
 model User {
   id                     String            @id @default(auto()) @map("_id") @db.ObjectId
   createdAt              DateTime          @default(now())
-  updatedAt              DateTime          @updatedAt
+  updatedAt              DateTime          @updatedAt @default(now())
   email                  String?           @unique
   name                   String?
   username               String?           @unique
@@ -39,6 +64,12 @@ model User {
   emailVerified          DateTime?
   verified               Boolean           @default(false)
   hashedPassword         String?
+  type                   String?
+  activated              Boolean           @default(false)
+  inviter   User?       @relation("UserToUser", fields: [inviterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inviterId String?     @db.ObjectId
+  invitees  User[]      @relation("UserToUser")
+  options               Json?
   profile                Profile?
   accounts               Account[]
   buyer                  Listing[]         @relation("buyer")
@@ -48,15 +79,18 @@ model User {
   participant1Conversations Conversation[] @relation("Participant1")
   participant2Conversations Conversation[] @relation("Participant2")
   directMessages            DirectMessage[]
-  notifications             Notification[]
-  NotificationBuyer         Notification[]    @relation("NotificationBuyer")
   listingActivity           ListingActivity[]
-  followings              Friendship[]      @relation("follower")
-  followers                   Friendship[]      @relation("following")
+  followings                Friendship[]      @relation("follower")
+  followers                 Friendship[]      @relation("following")
   blockedFriends            Blocked[]         @relation("UserBlocked")
   blockedBy                 Blocked[]         @relation("FriendBlocked")
   messages                  Message[]
   bidder                    Listing[]         @relation("bidder")
+  completedBy               Listing[]         @relation("completedBy")
+  bids                      Bid[]             @relation("bids")
+  activities                Json?
+  listings                  Listing[]         @relation("listings")
+  reviews                   Review[]          @relation("reviews")
   @@unique([email, username])
 }
 
@@ -105,8 +139,17 @@ model Listing {
   bid             String?           
   bidderId        String?           @db.ObjectId
   bidder          User?             @relation("bidder", fields: [bidderId], references: [id], onDelete: Cascade)
+  completedById   String?           @db.ObjectId
+  completedBy     User?             @relation("completedBy", fields: [completedById], references: [id], onDelete: Cascade)
   messages        Message[]
   listingActivity ListingActivity[]
+  directMessages  DirectMessage[]
+  bids            Bid[]             @relation("bids")
+  activities      Json?
+  userId          String            @db.ObjectId
+  user            User              @relation("listings", fields: [userId], references: [id], onDelete: Cascade)
+  type            String?
+  reviews         Review[]          @relation("reviews")
 }
 
 model ListingActivity {
@@ -142,6 +185,9 @@ model DirectMessage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   text      String?
+  type      String?
+  listingId String?   @db.ObjectId
+  listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   image     String?
   userId   String   @db.ObjectId
   user     User     @relation( fields: [userId], references: [id], onDelete: Cascade)
@@ -149,6 +195,7 @@ model DirectMessage {
   conversationId String  @db.ObjectId
 
 }
+
 model Conversation {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
   createdAt    DateTime       @default(now())
@@ -159,21 +206,8 @@ model Conversation {
   participant2   User         @relation("Participant2", fields: [participant2Id], references: [id])
   directMessages DirectMessage[]
   status     String?        @default("none")
+  activities Json?  
   @@unique([participant1Id, participant2Id])
-}
-
-
-model Notification {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  message   String
-  read      Boolean  @default(false)
-  url       String
-  userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
-  buyerId   String   @db.ObjectId
-  buyer     User     @relation("NotificationBuyer", fields: [buyerId], references: [id])
 }
 
 model Friendship {
@@ -196,4 +230,12 @@ model Blocked {
   friendBlocked   User     @relation("FriendBlocked", fields: [friendBlockedId], references: [id])
   friendBlockedId String   @db.ObjectId
   @@unique([userBlockedId, friendBlockedId])
+}
+model Invitation {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  token           String   @unique
+  inviterId       String  
+  email           String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

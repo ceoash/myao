@@ -9,7 +9,7 @@ export default async function getUserById({ id }: IParams) {
     try {
         const user = await prisma?.user.findUnique({
             where: {
-                id: id // filter by the userId
+                id: id
             },
             include: {
                 profile: true

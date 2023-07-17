@@ -13,13 +13,13 @@ export default async function accept(
       const { conversationId } = req.body;
 
     try {
-      const listing = await prisma.conversation.update({
+      const conversation = await prisma.conversation.update({
         where: { id: conversationId },
         data: { status: "accepted" },
       });
 
 
-      res.status(200).json(listing);
+      res.status(200).json(conversation);
     } catch (error) {
       console.error("Error updating listing:", error);
       res.status(500).json({ error: "Something went wrong" });

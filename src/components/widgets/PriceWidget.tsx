@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import Input from '../inputs/Input';
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
@@ -8,21 +8,29 @@ import Button from '../Button';
 import { ErrorResponse } from '../modals/UserSearchModal';
 import { io, Socket } from 'socket.io-client';
 import { config } from '@/config';
+import { toast } from 'react-hot-toast';
 
 interface PriceWidgetProps {
   listingId: string;
-  onBidPriceChange: (updatedBidPrice: string | null) => void;
+  onBidPriceChange: (updatedBidPrice: string) => void;
   bid: string | null;
   isBuyer?: boolean;
   onBidderChange?: (bidder: string) => void;
+  currentPrice?: string;
+  bids?: any;
 }
 
-const PriceWidget = ({ listingId, onBidPriceChange, bid, isBuyer, onBidderChange }: PriceWidgetProps) => {
+const PriceWidget = ({ listingId, onBidPriceChange, bid, bids, onBidderChange, currentPrice }: PriceWidgetProps) => {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [bidPrice, setBidPrice] = useState<string | null>(bid);
+  const [bidPrice, setBidPrice] = useState<string | null>(null);
   const socketRef = useRef<Socket>();
+  const [currentBids, setCurrentBids] = useState<any>([]);
+
+  useEffect(() => {
+    setCurrentBids(bids);
+  }, [bids]);
 
   useEffect(() => {
     socketRef.current = io(config.PORT);
@@ -60,7 +68,11 @@ const PriceWidget = ({ listingId, onBidPriceChange, bid, isBuyer, onBidderChange
 
     try {
       const response = await axios.post("/api/submitBid", data);
-      const updatedListing: any | ErrorResponse = response.data;
+      console.log("data", data);
+      const updatedListing: any | ErrorResponse = response.data.listing;
+      const transactions : any | ErrorResponse = response.data.transactionResult;
+      console.log("notifications", transactions);
+      console.log("response", response.data);
 
       if ('error' in updatedListing) {
         console.log("Bid not updated:", updatedListing.error);
@@ -71,11 +83,22 @@ const PriceWidget = ({ listingId, onBidPriceChange, bid, isBuyer, onBidderChange
         if (onBidderChange) {
           onBidderChange(updatedListing.bidder);
         }
-  
+
+        const previousBid = currentBids[currentBids.length - 1].price;
+
         socketRef.current?.emit('update_bidPrice', {
           newBidPrice: updatedListing.bid !== null ? updatedListing.bid.toString() : null,
-          listingId
+          listingId,
+          updatedBidder: updatedListing.bidder,
+          previousPrice: previousBid,
         });
+        socketRef.current?.emit('update_activities', {
+          activities: transactions,
+          participant1Id: updatedListing.sellerId,
+          participant2Id: updatedListing.buyerId,
+        });
+
+        toast.success("Bid submitted!");
       }
 
       reset();
@@ -88,11 +111,10 @@ const PriceWidget = ({ listingId, onBidPriceChange, bid, isBuyer, onBidderChange
 
   return (
     <div>
-      <h5 className='text-sm md:text-md'>{isBuyer === false ? "NEW" : "COUNTER"} OFFER</h5>
       <div className='mb-2'>
-        <Input id='price' placeholder='£ 0.00' label='' formatPrice required register={register} />
+        <Input id='price' placeholder='0.00' label='' formatPrice required register={register} />
       </div>
-      <Button label='Send bid' onClick={handleSubmit(onSubmit)} disabled={isSubmitting} />
+      <Button label='Make your offer' onClick={handleSubmit(onSubmit)} disabled={isSubmitting} />
     </div>
   );
 };

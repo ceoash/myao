@@ -38,10 +38,10 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => 
 >
   {({ open }: any) => (
     <form onSubmit={handleFormSubmit}>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 my-4">
         <button
           type="button"
-          className="text-2xl text-gray-500 hover:text-gray-700"
+          className={`text-2xl text-gray-500 hover:text-gray-700${disabled && "opacity-50 cursor-not-allowed"}`}
           onClick={() => open?.()}
           disabled={disabled}
         >
@@ -61,7 +61,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => 
           </div>
         )}
         <textarea
-          className="w-full h-40 p-2 border border-gray-300 rounded"
+          className="w-full h-40 p-2 border border-gray-300 rounded-lg resize-none"
           placeholder="Type your message..."
           value={textValue}
           onChange={(e) => setTextValue(e.target.value)}
@@ -71,7 +71,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => 
       <button
         type="submit"
         disabled={disabled}
-        className="mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+        className={`mt-4 px-4 py-2 bg-orange-400 text-white rounded hover:bg-orange-400 ${disabled && "opacity-50 cursor-not-allowed"}`}
       >
         Send
       </button>

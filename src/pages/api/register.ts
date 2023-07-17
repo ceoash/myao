@@ -18,6 +18,8 @@ export default async function handler(req: any, res: any) {
         name,
         hashedPassword,
         username: username ? username : email,
+        activated: true,
+        activities: [{ type: "user", message: "Account created", action: "/dashboard/settings", value: "Update your profile"} ]
       },
     });
 

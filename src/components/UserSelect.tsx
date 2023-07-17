@@ -38,7 +38,7 @@ const UserSelect = ({
 }) => {
   const { isOpen, listingId, onClose } = useSearchModal();
 
-  const { data: session, status } = useSession(); // Get the session and status from next-auth/react
+  const { data: session, status } = useSession();
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [notFoundUser, setNotFoundUser] = useState("");
   const [invitationSent, setInvitationSent] = useState(false);
@@ -73,12 +73,10 @@ const UserSelect = ({
       .then((response) => {
         const user: User | ErrorResponse = response.data;
         if ("error" in user) {
-          // User not found
           toast.error("User not found!");
           setFoundUser(null);
           setNotFoundUser(data.email);
         } else {
-          // User found
           toast.success("Search completed!");
           setFoundUser(user);
         }
@@ -162,7 +160,7 @@ const UserSelect = ({
               register={register}
             />
             <button
-              className="bg-orange-500 px-2 my-auto rounded-md mr-auto text-sm py-2 text-white flex gap-2 items-center"
+              className="bg-orange-400 px-2 my-auto rounded-md mr-auto text-sm py-2 text-white flex gap-2 items-center"
               onClick={handleSubmit(onSubmit)}
             >
               Search <BiChevronRight />
@@ -184,7 +182,7 @@ const UserSelect = ({
               <button
                 onClick={() => setUserAssigned(false)}
                 className="
-          bg-orange-500 
+          bg-orange-400 
           px-2 rounded-md 
           text-sm py-1 
           text-white 
@@ -199,7 +197,7 @@ const UserSelect = ({
               <button
                 onClick={() => handleUserSelect(foundUser)}
                 className="
-                bg-orange-500 
+                bg-orange-400 
                 px-2 rounded-md 
                 text-sm py-1 
                 text-white 
@@ -230,7 +228,7 @@ const UserSelect = ({
                   </div>{" "}
                   <button
                     className=" 
-                    bg-orange-500 
+                    bg-orange-400 
                     px-2 rounded-md 
                     text-sm py-1 
                     text-white 

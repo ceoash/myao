@@ -1,4 +1,5 @@
 import axios from "axios";
+import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import { BiSearch } from "react-icons/bi";
@@ -54,7 +55,7 @@ const SearchComponent = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
-          className="bg-orange-500 text-white px-4 py-2 rounded-r-lg"
+          className="bg-orange-400 text-white px-4 py-2 rounded-r-lg"
           onClick={onSearch}
         >
           <BiSearch />
@@ -67,16 +68,19 @@ const SearchComponent = () => {
         >
           <div className="flex flex-col cursor-pointer px-4 py-2">
             <Link href={`/dashboard/profile/${user.id}`}>
-              <div className="flex justify-between">
-                <div className="flex gap-2 h-10">
-                  <img
+              <div className="flex items-center gap-2">
+                <div className="flex gap-2 h-10 w-10 relative">
+                  <Image
+                    alt="profile image"
+                    layout="fill"
+                     objectFit="cover"
                     className="rounded-full"
                     src={
                       user?.profile?.image || `/images/placeholders/avatar.png`
                     }
                   />
-                  <div className="text-md">{user.username}</div>
                 </div>
+                  <div className="text-md">{user.username}</div>
               </div>
             </Link>
           </div>

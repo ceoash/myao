@@ -4,6 +4,17 @@
 @tailwind components;
 @tailwind utilities;
 
+.swiper-thumbs{
+  width: 300px!important;
+}
+
+
+
+input[type='radio'] {
+  accent-color: #ffa500;
+  border: white solid 1px;
+  background: white;
+}
 
 @font-face {
   font-family: "nunitoo";

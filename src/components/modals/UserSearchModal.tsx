@@ -30,7 +30,7 @@ interface searchModalProps {
 const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searchModalProps) => {
   const { isOpen, listingId, onClose } = useSearchModal();
 
-  const { data: session, status } = useSession(); // Get the session and status from next-auth/react
+  const { data: session, status } = useSession();
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [notFoundUser, setNotFoundUser] = useState("");
   const [invitationSent, setInvitationSent] = useState(false);
@@ -69,7 +69,6 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
       .then((response) => {
         const user: User | ErrorResponse = response.data;
         if ("error" in user) {
-          // User not found
           toast.error("User not found!");
           setFoundUser(null);
           setNotFoundUser(data.username);
@@ -93,11 +92,9 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
     if (setSellerId) {
       setSellerId(user.id || null);
     }
-
-    // Make the API call to assign the user to the listing here
     axios
       .post("/api/assignUserToListing", {
-        listingId: listingId, // Assuming you have access to listing id here
+        listingId: listingId, 
         userId: user.id,
       })
       .then((response) => {
@@ -156,7 +153,7 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
             <button
               onClick={() => handleUserSelect(foundUser)}
               className="
-        bg-orange-500 
+        bg-orange-400 
         px-2 rounded-md 
         text-sm py-1 
         text-white 
@@ -184,7 +181,7 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
                 </div>{" "}
                 <button
                   className=" 
-                    bg-orange-500 
+                    bg-orange-400 
                     px-2 rounded-md 
                     text-sm py-1 
                     text-white 

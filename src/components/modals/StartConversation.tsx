@@ -26,16 +26,13 @@ interface StartConversationProps {
   setSellerId?: (newSellerId: string | null) => void; //
 }
 const StartConversation = ({}: StartConversationProps) => {
-  const { data: session, status } = useSession(); // Get the session and status from next-auth/react
+  const { data: session, status } = useSession(); 
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const setActiveConversation = useStartConversation((state) => state.setActiveConversation);
   const setUsername = useStartConversation((state) => state.setUsername);
-
   const [notFoundUser, setNotFoundUser] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -108,8 +105,6 @@ const StartConversation = ({}: StartConversationProps) => {
 
   const handleUserSelect = (user: any) => {
     setSelectedUser(user);
-
-    // Make the API call to assign the user to the listing here
     axios
       .get("/api/checkConversation", {
         params: {       
@@ -171,7 +166,7 @@ const StartConversation = ({}: StartConversationProps) => {
         <>
         <div className="flex mb-4">
         <input type="text" disabled value={notFoundUser} className="border border-gray-200 rounded-md px-4 py-2 w-full"/>
-        <button onClick={() => setNotFoundUser("")} className="bg-orange-500 px-4 py-2 text-white flex-1 rounded-r-md">Change</button>
+        <button onClick={() => setNotFoundUser("")} className="bg-orange-400 px-4 py-2 text-white flex-1 rounded-r-md">Change</button>
             
         </div>
 
@@ -183,7 +178,7 @@ const StartConversation = ({}: StartConversationProps) => {
         <button
         onClick={handleSubmit(onSendMessage)}
           type="button"
-          className="p-2 bg-orange-500 rounded-md text-xs text-white">
+          className="p-2 bg-orange-400 rounded-md text-xs text-white">
             Send message
         </button>
 
@@ -200,7 +195,7 @@ const StartConversation = ({}: StartConversationProps) => {
           {foundUser.username}
           <button
             onClick={() => handleUserSelect(foundUser)}
-            className="p-2 bg-orange-500 rounded-md text-xs text-white"
+            className="p-2 bg-orange-400 rounded-md text-xs text-white"
           >
             Select user
           </button>

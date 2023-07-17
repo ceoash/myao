@@ -19,7 +19,7 @@ interface InputProps {
   registerOptions?: RegisterOptions;
 }
 
-const Input: React.FC<InputProps> = ({
+const PriceInput: React.FC<InputProps> = ({
   id,
   label,
   type,
@@ -38,7 +38,7 @@ const Input: React.FC<InputProps> = ({
     <div className="w-full relative" >
       {formatPrice && (
         <BiPound
-          className={`absolute  ${modal ? "top-10" : "top-4"} left-2 text-neutral-700`}
+          className={`absolute  ${modal ? "top-14" : "top-6"} -mt-3 left-2 text-neutral-700`}
           size={24}
         />
       )}
@@ -78,4 +78,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default PriceInput;

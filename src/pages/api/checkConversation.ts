@@ -1,4 +1,3 @@
-// pages/api/checkConversation.ts
 import prisma from "@/libs/prismadb";
 import type { NextApiRequest, NextApiResponse } from "next";
 

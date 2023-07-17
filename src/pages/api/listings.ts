@@ -1,10 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import { Listing, DirectMessage, User } from ".prisma/client";
-import axios from "axios";
 import { PrismaClient } from "@prisma/client";
 import { createActivityForUser } from "@/prisma";
-import { da } from "date-fns/locale";
 
 interface ErrorResponse {
   error: string;
@@ -16,6 +14,8 @@ interface ListingResponse {
   transactionResult?: User[];
   participantId?: string;
 }
+
+let parsedImg = "";
 
 export default async function listingsApi(
   req: NextApiRequest,
@@ -38,8 +38,14 @@ export default async function listingsApi(
       },
     });
 
-    const participantId = listing.userId === listing.buyerId ? listing.sellerId : listing.buyerId;
+    if(listing?.image) parsedImg = JSON.parse(listing.image) || null
 
+
+    if (!listing) return res.status(400).json({ error: "Unable to create listing" });
+
+    const participantId = listing.userId === listing.buyerId ? listing.sellerId : listing.buyerId;
+    
+    
     const newActivity = {
       type: "New Offer",
       message: "New Offer",
@@ -70,6 +76,8 @@ export default async function listingsApi(
     return updatedListing;
   }
 
+
+
   async function createMessage(
     prisma: PrismaClient,
     listing: any,
@@ -77,8 +85,10 @@ export default async function listingsApi(
     type: string | null
   ) {
     const message = await prisma.directMessage.create({
+
+      
       data: {
-        image: listing.image,
+        image: parsedImg[0],
         text: "New offer created",
         listingId: listing.id,
         conversationId: conversationId,
@@ -205,7 +215,18 @@ export default async function listingsApi(
   } else if (req.method === "PUT") {
     const id = req.query.id as string;
     const { title, description, price, image, buyerId, category, sellerId, type } = req.body;
+    if (!id) {
+      res.status(400).json({ error: "Missing listing id" });
+      return;
+    }
+    let img;
 
+    if (image.isArray){
+      img = image[0]
+    }
+    else {
+      img = image
+    }
     try {
       const listing = await prisma.listing.update({
         where: { id },

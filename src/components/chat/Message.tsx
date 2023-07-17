@@ -147,22 +147,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                                 "unkown user"}
                           </p>
                         </div>
-                        <div className="flex gap-1 text-xs">
-                          {message?.listing?.userId !== session.user.id ? (
-                            <>
-                              <Button onClick={() => console.log("hi")}>
-                                <FaCheck className="text-green-600" />
-                              </Button>
-                              <Button onClick={() => console.log("hi")}>
-                                <FaTimes className="text-red-600" />
-                              </Button>
-                            </>
-                          ) : (
-                            <Button onClick={() => console.log("hi")}>
-                              <FaTrash className="text-red-600" />
-                            </Button>
-                          )}
-                        </div>
+                     
                       </div>
                     </div>
                   </div>

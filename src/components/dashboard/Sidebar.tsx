@@ -128,7 +128,7 @@ const Sidebar = () => {
           <div className="border border-gray-200 rounded-lg mb-4">
 
             <Canvas
-              text={`${AppConfig.siteUrl}/connect/${username}`}
+              text={`$https://myao.vercel.app/connect/${username}`}
               options={{
                 level: "M",
                 margin: 2,

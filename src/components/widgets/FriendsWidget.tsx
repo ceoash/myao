@@ -89,39 +89,6 @@ const FriendsWidget = ({
     }
   };
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.emit("register", session.user.id);
-
-    socket.on("friend_added", (data) => {
-      setFriendsList((prevFriendsList) => [...prevFriendsList, data.follower]);
-    });
-
-    socket.on("friend_accepted", (data) => {
-      console.log("accepted", data);  
-      setFriendsList((prevFriendsList) => {
-        return prevFriendsList.map((friend) =>
-          friend.id === data.id ? { ...friend, accepted: true } : friend
-        );
-      });
-   });
-
-    socket.on("friend_removed", (data) => {
-      console.log("removed", data);
-      setFriendsList((prevFriendsList) =>
-        prevFriendsList.filter(
-          (friend) => friend.id !== data.id
-        )
-      );
-    });
-
-    return () => {
-      socket.off("friend_added");
-      socket.off("friend_accepted");
-      socket.off("friend_removed");
-    };
-  }, []);
 
   return (
     <ul className="flex flex-col pl-0 rounded-xl flex-grow h-full">

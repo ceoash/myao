@@ -39,6 +39,7 @@ import { all } from "axios";
 import { ca } from "date-fns/locale";
 import useQuickConnect from "@/hooks/useQuickConnect";
 import listingsCount from "@/actions/listingsCount";
+import { toast } from "react-hot-toast";
 
 const Index = ({
   allListings,
@@ -75,12 +76,6 @@ const Index = ({
   console.log(username)
 
   const connect = useQuickConnect()
-
-  const searchUser = user;
-  searchUser.email = "";
-  searchUser.id = "";
-  searchUser.username = "";
-  searchUser.name = "";
   
   useEffect(() => {
     if (!user.activated) {
@@ -178,8 +173,33 @@ const Index = ({
       setUserActivities(topActivities);
     });
 
+    socketRef.current && socketRef.current.on("friend_added", (data) => {
+      console.log("added", data);
+      setFriendsList((prevFriendsList) => [...prevFriendsList, data.follower]);
+    });
+
+    socketRef.current && socketRef.current.on("friend_accepted", (data) => {
+      console.log("accepted", data);  
+      setFriendsList((prevFriendsList) => {
+        return prevFriendsList.map((friend) =>
+          friend.id === data.id ? { ...friend, accepted: true } : friend
+        );
+      });
+   });
+
+    socketRef.current && socketRef.current.on("friend_removed", (data) => {
+      console.log("removed", data);
+      setFriendsList((prevFriendsList) =>
+        prevFriendsList.filter(
+          (friend) => friend.id !== data.id
+        )
+      );
+    });
+
+
     socketRef.current && socketRef.current.on("new_listing", (newListing: any) => {
       console.log("new listing", newListing);
+      toast.success("New listing added!");
       setRealTimeListings((prevListings: ListingsMap) => {
         let updatedListings = { ...prevListings };
         let newListingStatus: ListingStatus = newListing.status;
@@ -198,6 +218,8 @@ const Index = ({
     });
 
     socketRef.current && socketRef.current.on("request_received", (newRequest: any) => {
+      toast.success("New listing added!");
+      console.log("new request", newRequest); 
       setRealTimeRequests((prevListings: ListingsMap) => {
         let updatedListings = { ...prevListings };
         let newListingStatus: ListingStatus = newRequest.status;

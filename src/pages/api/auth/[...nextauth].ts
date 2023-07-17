@@ -66,6 +66,7 @@ export const authOptions: AuthOptions = {
             user: {
               ...session.user,
               id: token.sub,
+              email: token.email,
             },
           }),
       },  

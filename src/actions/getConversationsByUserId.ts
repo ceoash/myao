@@ -97,6 +97,7 @@ const transformDirectMessage = (directMessage: any): SafeDirectMessage => {
 
 
 const transformUser = (user: any): SafeUser => {
+  
   return {
     ...user,
     id: user.id,
@@ -123,13 +124,17 @@ const transformUser = (user: any): SafeUser => {
 
 
 export default async function getConversationsByUserId(userId: string): Promise<SafeConversation[]> {
+  
+  if (!userId) {
+    throw new Error('No userId provided');
+  }
+
   const conversations = await prisma.conversation.findMany({
     where: {
       OR: [{ participant1Id: userId }, { participant2Id: userId }],
     },
     include: {
       directMessages: {
-        take: 5, // Fetch top 5 messages
         orderBy: { createdAt: 'desc' },
         include: {
           user: {

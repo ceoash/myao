@@ -255,6 +255,8 @@ const OfferModal = () => {
     data.sellerId = userType === "seller" ? session.user.id : foundUser?.id;
     data.buyerId = userType === "buyer" ? session.user.id : foundUser?.id;
 
+    
+
     await axios
       .post("/api/listings", data)
       .then((response) => {
@@ -262,7 +264,7 @@ const OfferModal = () => {
         reset();
         setStep(STEPS.TYPE);
         offerModal.onClose();
-        socket.emit("new_listing", response.data.listing);
+        socket.emit("new_listing", response.data.listing, response.data.listing.userId, foundUser?.id);
         if (response.data.message) {
           socket.emit("new_message", response.data.message);
         }

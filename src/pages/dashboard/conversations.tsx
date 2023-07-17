@@ -93,6 +93,8 @@ interface Conversation {
 }
 
 const Conversations = ({ safeConversations, session }: any) => {
+
+  console.log("safeConversations", safeConversations);
   const offerModal = useOfferModal();
 
   const [skipIndex, setSkipIndex] = useState<number>(5);

@@ -267,8 +267,7 @@ const Index = ({
     category === "all" ? initRequests : realTimeRequests?.[category] || [];
 
   return (
-  
-      
+
         <Dash
           meta={
             <Meta
@@ -327,6 +326,7 @@ const Index = ({
                 sentOffers={sentCount}
                 receivedOffers={receivedCount}
                 friendsCount={friends.length}
+                user={user}
               />
               <ActivityWidget title={"Activity"} activities={userActivities} />
               </> )}

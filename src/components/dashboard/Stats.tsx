@@ -11,7 +11,7 @@ interface StatsProps {
   friendsCount?: number;
   sentOffers?: number;
   receivedOffers?: number;
-  user: any;
+  username?: string;
 }
 
 const Stats = ({
@@ -21,7 +21,7 @@ const Stats = ({
   friendsCount,
   sentOffers,
   receivedOffers,
-  user,
+  username,
 }: StatsProps) => {
   const categories: (
     | "Staying Safe"
@@ -67,7 +67,7 @@ const Stats = ({
 
       <div className="grid grid-cols-2 gap-4">
         <InfoCard
-          title={`Good day, ${user.username}`}
+          title={`Good day, ${username}`}
           button={{ label: "Create Offer", onClick: startOffer }}
           color={`green`}
           className="bg-green-100"

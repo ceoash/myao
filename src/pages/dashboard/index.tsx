@@ -52,6 +52,7 @@ const Index = ({
   activities,
   listingsCount,
   requestsCount,
+  username,
 }: dashboardProps) => {
   const offerModal = useOfferModal();
   const pendingConversation = usePendingConversationModal();
@@ -71,8 +72,9 @@ const Index = ({
   const [sentCount, setSentCount] = useState<any>(0);
   const [receivedCount, setReceivedCount] = useState<any>(0);
 
-  const connect = useQuickConnect()
+  console.log(username)
 
+  const connect = useQuickConnect()
 
   const searchUser = user;
   searchUser.email = "";
@@ -326,7 +328,7 @@ const Index = ({
                 sentOffers={sentCount}
                 receivedOffers={receivedCount}
                 friendsCount={friends.length}
-                user={user}
+                username={username}
               />
               <ActivityWidget title={"Activity"} activities={userActivities} />
               </> )}
@@ -460,7 +462,7 @@ const Index = ({
             </div>
 
             <div className="flex">
-              {friendsList.length > 0 && (
+             { friendsList.length > 0 && (
                 <div className="flex-1">
                   <div className="py-4  mb-0 bg-white border-b-0 rounded-t-2xl">
                     <h3 className="mb-0">Friends</h3>
@@ -553,6 +555,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     const user = await getCurrentUser(session);
+    console.log("userrrr", user);
     const friends = await getFriendsByUserId(session.user.id);
     const conversations = await getConversationsByUserId(session.user.id);
     const listings: any[] = await getListingsByUserId(session.user.id);
@@ -607,12 +610,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const reversedActivities = copiedActivities.reverse();
     const topActivities = reversedActivities.slice(0, 3);
 
+    const username =  user?.username;
    
-
     return {
       props: {
         listings: topListings,
         user,
+        username: user?.username,
         requests: topRequests,
         friends,
         session,

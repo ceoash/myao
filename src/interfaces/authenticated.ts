@@ -20,6 +20,7 @@ export interface dashboardProps {
   allRequests?: Listing[];
   listingsCount?: number;
   requestsCount?: number;
+  username?: string;
 }
 
 export interface IConversation {

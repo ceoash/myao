@@ -51,7 +51,7 @@ const RejectConversationModal = () => {
   };
 
   useEffect(() => {
-    socketRef.current = io(config.PORT || 'https://myao-add-1fcc5262bac8.herokuapp.com');
+    socketRef.current = io(config.PORT || 'http://localhost:3000');
     return () => {
       socketRef.current?.disconnect();
     };

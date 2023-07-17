@@ -159,11 +159,7 @@ const QuickConnectModal = () => {
         </div>
       ) : (
         <>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Email address
-          </label>
-        </div>
+      
         <SearchInput 
           search={search} 
           setSearch={setSearch} 

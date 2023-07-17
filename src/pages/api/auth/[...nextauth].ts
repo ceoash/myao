@@ -66,7 +66,6 @@ export const authOptions: AuthOptions = {
             user: {
               ...session.user,
               id: token.sub,
-              username: token.username
             },
           }),
       },  
@@ -78,7 +77,7 @@ export const authOptions: AuthOptions = {
         strategy: "jwt",
     },
 
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXT_AUTH_SECRET,
     
 }
 export default NextAuth(authOptions)

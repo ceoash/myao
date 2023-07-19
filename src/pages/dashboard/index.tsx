@@ -49,7 +49,6 @@ const Index = ({
   requests,
   friends,
   session,
-  conversations,
   activities,
   listingsCount,
   requestsCount,
@@ -137,13 +136,13 @@ const Index = ({
 
   const router = useRouter();
 
-  const pendingConversations = conversations.filter(
+  /* const pendingConversations = conversations.filter(
     (item: any) =>
       item.status === "none" && item.participant2Id === session.user.id
   );
   const acceptedConversations = conversations.filter(
     (item: any) => item.status === "accepted"
-  );
+  ); */
 
   useEffect(() => {
     if (receivedCount.length > 0) {
@@ -496,7 +495,7 @@ const Index = ({
                   />
                 </div>
               )}
-              {pendingConversations.length > 0 && (
+              {/* {pendingConversations.length > 0 && (
                 <div className="px-4 lg:px-0 flex-1">
                   <div className="w-full  lg:px-6 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
                     <div className="p-4 pb-0 mb-0 bg-white border-b-0 rounded-t-2xl">
@@ -552,7 +551,7 @@ const Index = ({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </Dash>
@@ -577,8 +576,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     const user = await getCurrentUser(session);
+
+    console.log("user", user);
     const friends = await getFriendsByUserId(session.user.id);
-    const conversations = await getConversationsByUserId(session.user.id);
     const listings: any[] = await getListingsByUserId(session.user.id);
     const { 
       sentListingsCount, 
@@ -644,7 +644,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         requests: topRequests,
         friends,
         session,
-        conversations,
         allListings,
         allRequests,
         activities: topActivities,
@@ -659,7 +658,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         listings: [],
         requests: [],
         friends: [],
-        conversations: [],
       },
     };
   }

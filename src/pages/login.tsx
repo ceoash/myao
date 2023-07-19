@@ -26,7 +26,8 @@ const Login = () => {
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
     setDisabled(true);
-    
+
+    data.email = data.email.toLowerCase();
 
     signIn("credentials", {
       ...data,

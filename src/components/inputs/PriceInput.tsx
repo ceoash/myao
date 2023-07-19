@@ -38,7 +38,7 @@ const PriceInput: React.FC<InputProps> = ({
     <div className="w-full relative" >
       {formatPrice && (
         <BiPound
-          className={`absolute  ${modal ? "top-14" : "top-6"} -mt-3 left-2 text-neutral-700`}
+          className={`absolute  ${modal ? "top-14" : "top-7"} -mt-3 left-2 text-neutral-700`}
           size={24}
         />
       )}

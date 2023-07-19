@@ -1,4 +1,4 @@
-import { Listing } from "@prisma/client";
+import { Bid, Listing } from "@prisma/client";
 import { User as PrismaUser, Profile as PrismaProfile } from "@prisma/client";
 
 export interface Profile extends PrismaProfile {}
@@ -23,8 +23,7 @@ Listing,
 createdAt: string;
 updatedAt: string;
 expireAt: string;
-bidderId?: string;
-bidder?: User; 
+bids?: Bid[];
 };
 
 

@@ -36,7 +36,6 @@ export default async function getCategorizedRequestsByUserId(id: any, pageSize: 
           },
         },
         messages: true,
-        bidder: true,
       },
     });
     
@@ -97,13 +96,7 @@ export default async function getCategorizedRequestsByUserId(id: any, pageSize: 
               updatedAt: message.updatedAt.toISOString(),
             }))
           : [],
-        bidder: listing.bidder
-          ? {
-              ...listing.bidder,
-              createdAt: listing.bidder.createdAt.toISOString(),
-              updatedAt: listing.bidder.updatedAt.toISOString(),
-            }
-          : null,
+        
       };
 
       if (listing.status === "awaiting approval") {
@@ -170,13 +163,7 @@ export default async function getCategorizedRequestsByUserId(id: any, pageSize: 
               updatedAt: message.updatedAt.toISOString(),
             }))
           : [],
-        bidder: listing.bidder
-          ? {
-              ...listing.bidder,
-              createdAt: listing.bidder.createdAt.toISOString(),
-              updatedAt: listing.bidder.updatedAt.toISOString(),
-            }
-          : null,
+        
       }));
 
     return { categorizedRequests, requests: all };

@@ -3,6 +3,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 import { BiImageAdd, BiPaperclip } from "react-icons/bi";
+import Button from "../dashboard/Button";
 
 
 interface ImageTextAreaProps {
@@ -68,13 +69,15 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => 
           disabled={disabled}
         />
       </div>
-      <button
-        type="submit"
+      <div className="mt-2">
+        <Button
         disabled={disabled}
         className={`mt-4 px-4 py-2 bg-orange-400 text-white rounded hover:bg-orange-400 ${disabled && "opacity-50 cursor-not-allowed"}`}
       >
         Send
-      </button>
+      </Button>
+      </div>
+      
     </form>
   )}
 </CldUploadWidget>

@@ -38,17 +38,16 @@ const Offer: React.FC<any> = ({
   price,
   category,
   image,
-  bid,
   seller,
   sellerId,
+  bids,
   buyer,
   buyerId,
-  bidder,
-  userId,
   type,
   createdAt,
   socketRef,
   status,
+  userId
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isOffer, setIsOffer] = useState(false);
@@ -161,13 +160,13 @@ const Offer: React.FC<any> = ({
                 <div className="text-right text-sm">
                   Bid by{" "}
                   <span className="underline">
-                    {bidder?.username || seller?.username}
+                    {bids && bids.length > 0 ? bids[bids.length - 1].userId === sellerId ? seller.username : buyer.username : userId === sellerId ? seller.username : buyer.username}
                   </span>
                 </div>
 
                 <div className="font-extrabold md:text-2xl text-right">
-                  {bid ? (
-                    `£ ${bid}`
+                  {bids && bids.length > 0 ? (
+                    `£ ${bids[0].price}`
                   ) : price ? (
                     `£ ${price}`
                   ) : (

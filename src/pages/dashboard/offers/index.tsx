@@ -40,7 +40,8 @@ const Index = ({ sent, received, session }: IndexProps) => {
   const [allReceived, setAllReceived] = useState<any>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
+  const [completedById, setCompletedById] = useState<string>("");
+
   const [sentListings, setSentListings] = useState<
     Record<string, DashListing[]>
   >({});
@@ -54,75 +55,110 @@ const Index = ({ sent, received, session }: IndexProps) => {
     setAllReceived(received);
   }, []);
 
-const fetchListingsByCategory = async (category: string, userId: string, tab: string, skip = 0, PAGE_SIZE = 5 ) => {
-  const url = `/api/dashboard/${tab === "sent" ? "getListingsByCategory" : "getReceivedListingsByCategory"}`;
-  
-  try {
-    const response = await axios.post(url, { category, userId, skip, PAGE_SIZE });
-    return response.data[tab];
-  } catch (error) {
-    console.error(error);
-  }
-};
+  const fetchListingsByCategory = async (
+    category: string,
+    userId: string,
+    tab: string,
+    skip = 0,
+    PAGE_SIZE = 5
+  ) => {
+    const url = `/api/dashboard/${
+      tab === "sent" ? "getListingsByCategory" : "getReceivedListingsByCategory"
+    }`;
 
-useEffect(() => {
-  if (selectedCategory === "all" && currentPage === 1) {
-    setSentListings((prevListings) => {
-      return { ...prevListings, all: sent };
-    });;
-    setReceivedListings((prevListings) => {
-      return { ...prevListings, all: received };
-    });
-    setIsLoading(false);
-  }
-}, [selectedCategory, sent, received]);
-
-useEffect(() => {
-  const selectCategory = async () => {
-    // check if data exists
-    if ((activeTab === "sent" && sentListings[selectedCategory]) ||
-      (activeTab === "received" && receivedListings[selectedCategory])) {
-      return;
+    try {
+      const response = await axios.post(url, {
+        category,
+        userId,
+        skip,
+        PAGE_SIZE,
+      });
+      return response.data[tab];
+    } catch (error) {
+      console.error(error);
     }
+  };
 
-    const data = await fetchListingsByCategory(selectedCategory, session.user.id, activeTab);
+  useEffect(() => {
+    if (selectedCategory === "all" && currentPage === 1) {
+      setSentListings((prevListings) => {
+        return { ...prevListings, all: sent };
+      });
+      setReceivedListings((prevListings) => {
+        return { ...prevListings, all: received };
+      });
+      setIsLoading(false);
+    }
+  }, [selectedCategory, sent, received]);
 
+  useEffect(() => {
+    const selectCategory = async () => {
+      // check if data exists
+      if (
+        (activeTab === "sent" && sentListings[selectedCategory]) ||
+        (activeTab === "received" && receivedListings[selectedCategory])
+      ) {
+        return;
+      }
+
+      const data = await fetchListingsByCategory(
+        selectedCategory,
+        session.user.id,
+        activeTab
+      );
+
+      if (data) {
+        if (activeTab === "sent") {
+          setSentListings((prevListings) => {
+            return { ...prevListings, [selectedCategory]: data };
+          });
+        } else {
+          setReceivedListings((prevListings) => {
+            return { ...prevListings, [selectedCategory]: data };
+          });
+        }
+      }
+    };
+
+    selectCategory();
+  }, [
+    selectedCategory,
+    activeTab,
+    sentListings,
+    receivedListings,
+    session.user.id,
+  ]);
+
+  const handlePageChange = async (page: number) => {
+    const skip = (page - 1) * 5;
+    setCurrentPage(page);
+    const data = await fetchListingsByCategory(
+      selectedCategory,
+      session.user.id,
+      activeTab,
+      skip,
+      5
+    );
+    console.log(data);
     if (data) {
       if (activeTab === "sent") {
-        setSentListings((prevListings) => {
-          return { ...prevListings, [selectedCategory]: data };
-        });
+        setSentListings((prevListings) => ({
+          ...prevListings,
+          [selectedCategory]: data,
+        }));
       } else {
-        setReceivedListings((prevListings) => {
-          return { ...prevListings, [selectedCategory]: data };
-        });
+        setReceivedListings((prevListings) => ({
+          ...prevListings,
+          [selectedCategory]: data,
+        }));
       }
     }
   };
 
-  selectCategory();
-}, [selectedCategory, activeTab, sentListings, receivedListings, session.user.id]);
-
-const handlePageChange = async (page: number) => {
-  
-  const skip = (page - 1) * 5;
-  setCurrentPage(page);
-  const data = await fetchListingsByCategory(selectedCategory, session.user.id, activeTab, skip, 5);
-  console.log(data);
-  if (data) {
-    if (activeTab === "sent") {
-      setSentListings((prevListings) => ({ ...prevListings, [selectedCategory]: data }));
-    } else {
-      setReceivedListings((prevListings) => ({ ...prevListings, [selectedCategory]: data }));
-
-    }
-  }
-};
-
-const handleCategoryChange = async (category: string) => {
-  setSelectedCategory(category);
-  setCurrentPage(1);
-};
+  const handleCategoryChange = async (category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
 
   return (
     <Dash
@@ -160,8 +196,8 @@ const handleCategoryChange = async (category: string) => {
                         activeTab === "sent" && "border-b-4 border-orange-400"
                       }`}
                       onClick={() => {
-                        setActiveTab("sent")
-                        handleCategoryChange("all")
+                        setActiveTab("sent");
+                        handleCategoryChange("all");
                       }}
                     >
                       Sent
@@ -169,9 +205,9 @@ const handleCategoryChange = async (category: string) => {
                     <div
                       className={`uppercase cursor-pointer font-bold items-start flex`}
                       onClick={() => {
-                        setActiveTab("received")
-                        handleCategoryChange("all")
-                    }}
+                        setActiveTab("received");
+                        handleCategoryChange("all");
+                      }}
                     >
                       <span
                         className={`${
@@ -241,11 +277,19 @@ const handleCategoryChange = async (category: string) => {
                         </div>
                       )}
                     </div>
+                    {sentListings[selectedCategory] && sentListings[selectedCategory].length > 3 && (
+                      <div>
+                        <Button
+                          label="Next"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
                 {activeTab === "received" && (
                   <>
-                  <div className="">
+                    <div className="">
                       {isLoading ? (
                         "loading"
                       ) : (
@@ -266,11 +310,16 @@ const handleCategoryChange = async (category: string) => {
                         </div>
                       )}
                     </div>
+                    {receivedListings[selectedCategory] && receivedListings[selectedCategory].length > 3 && (
+                      <div>
+                        <Button
+                          label="Next"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
-              </div>
-              <div>
-                <Button label="Next" onClick={() => handlePageChange(currentPage + 1)} />
               </div>
             </div>
           </div>

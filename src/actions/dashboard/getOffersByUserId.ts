@@ -44,6 +44,18 @@ export default async function getOffersByUserId(
             },
           },
         },
+        buyer: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            profile: {
+              select: {
+                image: true,
+              },
+            },
+          },
+        },
       },
     });
 

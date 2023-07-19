@@ -21,11 +21,6 @@ export default async function getBidByID({ bidId }: IParams) {
             profile: true,
           },
         },
-        bidder: {
-          include: {
-            profile: true,
-          },
-        },
         bids: {
           include: {
             user: true,
@@ -93,13 +88,7 @@ export default async function getBidByID({ bidId }: IParams) {
             updatedAt: bid.buyer.updatedAt.toISOString(),
           }
         : null,
-      bidder: bid.bidder
-        ? {
-            ...bid.bidder,
-            createdAt: bid.bidder.createdAt.toISOString(),
-            updatedAt: bid.bidder.updatedAt.toISOString(),
-          }
-        : null,
+
       reviews: bid.reviews.map((review) => ({
         ...review,
         createdAt: review.createdAt.toISOString(),

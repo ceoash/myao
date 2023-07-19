@@ -23,7 +23,6 @@ export default async function getListingsPaginatedByUserId(id: any, page: any, p
             },
           },
           messages: true,
-          bidder: true,
         },
       });
       
@@ -71,13 +70,7 @@ export default async function getListingsPaginatedByUserId(id: any, page: any, p
             updatedAt: message.updatedAt.toISOString(),
           }))
         : [],
-      bidder: listing.bidder
-        ? {
-            ...listing.bidder,
-            createdAt: listing.bidder.createdAt.toISOString(),
-            updatedAt: listing.bidder.updatedAt.toISOString(),
-          }
-        : null,
+    
     }));
 
     return {

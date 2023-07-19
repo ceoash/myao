@@ -85,7 +85,6 @@ model User {
   blockedFriends            Blocked[]         @relation("UserBlocked")
   blockedBy                 Blocked[]         @relation("FriendBlocked")
   messages                  Message[]
-  bidder                    Listing[]         @relation("bidder")
   completedBy               Listing[]         @relation("completedBy")
   bids                      Bid[]             @relation("bids")
   activities                Json?
@@ -136,9 +135,6 @@ model Listing {
   sellerId        String            @db.ObjectId
   seller          User              @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
   price           String?
-  bid             String?           
-  bidderId        String?           @db.ObjectId
-  bidder          User?             @relation("bidder", fields: [bidderId], references: [id], onDelete: Cascade)
   completedById   String?           @db.ObjectId
   completedBy     User?             @relation("completedBy", fields: [completedById], references: [id], onDelete: Cascade)
   messages        Message[]

@@ -13,7 +13,6 @@ export default async function getListingsByParticipants(sellerId: string, buyerI
         buyer: true,
         seller: true,
         messages: true,
-        bidder: true,
       },
     });
 
@@ -41,13 +40,7 @@ export default async function getListingsByParticipants(sellerId: string, buyerI
             updatedAt: message.updatedAt.toISOString(),
           }))
         : [],
-      bidder: listing.bidder
-        ? {
-          ...listing.bidder,
-          createdAt: listing.bidder.createdAt.toISOString(),
-          updatedAt: listing.bidder.updatedAt.toISOString(),
-        }
-        : null,
+      
     }));
   } catch (error: any) {
     throw new Error(error);

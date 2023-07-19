@@ -45,6 +45,12 @@ export default async function getListingsByUserId(id: any,) {
           }
         },
         messages: true,
+        bids: {
+          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
+        }
 
       },
     });
@@ -75,6 +81,11 @@ export default async function getListingsByUserId(id: any,) {
       createdAt: listing.createdAt.toISOString(),
       updatedAt: listing.updatedAt.toISOString(),
       expireAt: listing.expireAt?.toISOString() || null,
+      bids: listing.bids.map(bid => ({
+        ...bid,
+        createdAt: bid.createdAt.toISOString(),
+        updatedAt: bid.updatedAt.toISOString(),
+      })),
       buyer: listing.buyer
         ? {
           ...listing.buyer,

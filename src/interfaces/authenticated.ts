@@ -1,4 +1,4 @@
-import { DirectMessage, Listing, Profile, User } from "@prisma/client";
+import { Bid, DirectMessage, Listing, Profile, User } from "@prisma/client";
 
 export interface IUser extends User{
     profile: Profile
@@ -59,10 +59,9 @@ export interface Activity {
       status: ListingStatus | null;
       sellerId: string;
       buyerId: string;
-      bidderId: string;
       seller: User;
       buyer: User;
-      bidder: User;
+      bids: Bid[]
       createdAt: string;
       updatedAt: string;
       expireAt: string | undefined;

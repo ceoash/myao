@@ -1,4 +1,5 @@
 import prisma from "@/libs/prismadb";
+import { orderBy } from "@firebase/firestore";
 import { NextApiRequest, NextApiResponse } from "next";
 
 type QueryObject = {
@@ -60,7 +61,12 @@ export default async function handler(
         type: true,
         image: true,
         category: true,
-        bid: true,
+        bids: {
+          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          }
+        },
         price: true,
         sellerId: true,
         buyerId: true,

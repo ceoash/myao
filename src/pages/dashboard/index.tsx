@@ -146,10 +146,10 @@ const Index = ({
   );
 
   useEffect(() => {
-    if (realTimeRequests.length > 0) {
+    if (receivedCount.length > 0) {
       setActiveTab("received");
     }
-  }, [realTimeRequests]);
+  }, [receivedCount]);
 
   const socketRef = useRef<Socket>();
 
@@ -577,11 +577,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     const user = await getCurrentUser(session);
-    console.log("userrrr", user);
     const friends = await getFriendsByUserId(session.user.id);
     const conversations = await getConversationsByUserId(session.user.id);
     const listings: any[] = await getListingsByUserId(session.user.id);
-    const {sentListingsCount, receivedListingsCount} = await listingsCount(session.user.id);
+    const { 
+      sentListingsCount, 
+      receivedListingsCount 
+    } = await listingsCount(session.user.id);
     const sortedListings = listings.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

@@ -120,8 +120,8 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                       </Link>
                       <div className="md:text-lg lg:text-2xl">
                         £
-                        {message?.listing.bid
-                          ? message.listing.bid
+                        {message?.listing.bids
+                          ? message.listing.bids[ message.listing.bids.length - 1 ].price
                           : message.listing.price}
                       </div>
                     </div>

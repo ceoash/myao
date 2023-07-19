@@ -26,7 +26,6 @@ export default async function getRequestsByUserId(id: any) {
             buyer: true,      
             seller: true,   
             messages: true,
-            bidder: true,
         }
     });
 
@@ -54,13 +53,7 @@ export default async function getRequestsByUserId(id: any) {
             updatedAt: message.updatedAt.toISOString(),
           }))
         : [],
-      bidder: listing.bidder
-        ? {
-          ...listing.bidder,
-          createdAt: listing.bidder.createdAt.toISOString(),
-          updatedAt: listing.bidder.updatedAt.toISOString(),
-        }
-        : null,
+     
     }));
   } catch (error: any) {
     throw new Error(error)

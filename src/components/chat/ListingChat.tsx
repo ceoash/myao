@@ -21,7 +21,6 @@ interface SafeListing extends Listing{
   messages: MessageProps[];
   buyer: User;
   seller: User;
-  bidder: User;
 }
 
 interface ListingChatProps {
@@ -101,7 +100,7 @@ const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => 
 
   return (
     <>
-    <div className="flex flex-col flex-auto flex-shrink-0  bg-white h-full p-4 border-2 border-gray-200 rounded-lg">
+    <div className="flex flex-col flex-auto flex-shrink-0  bg-white h-full p-4 pt-6 border border-gray-200 rounded-lg">
       <div className="flex flex-col h-full mb-4">
         <div className="flex flex-col h-full">
           <div className="md:grid md:grid-cols-12 gap-y-2">
@@ -138,7 +137,7 @@ const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => 
         </div>
       </div>
     </div>
-      <div className="bg-orange-50">
+      <div className="">
 
       <ImageTextArea onSubmit={handleSubmit} />
       </div>

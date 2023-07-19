@@ -42,7 +42,12 @@ export default async function handler(
         type: true,
         image: true,
         category: true,
-        bid: true,
+        bids: {
+          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
         price: true,
         buyer: {
           select: {

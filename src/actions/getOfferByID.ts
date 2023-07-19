@@ -13,6 +13,12 @@ export default async function getOfferByID({ offerID }: IParams) {
       include: {
         seller: true,
         buyer: true,
+        bids: {
+          take: 10,
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
     });
 
@@ -29,6 +35,11 @@ export default async function getOfferByID({ offerID }: IParams) {
         createdAt: bid.seller?.createdAt.toISOString(),
         updatedAt: bid.seller?.updatedAt.toISOString(),
       },
+      bids: bid.bids.map((item) => ({
+        ...bid,
+        createdAt: item.createdAt.toISOString(),
+        updatedAt: item.updatedAt.toISOString(),
+      })),
     };
   } catch (error: any) {
     throw new Error(error);

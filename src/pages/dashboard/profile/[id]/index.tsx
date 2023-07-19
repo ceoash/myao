@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { config } from "@/config";
 import { set } from "date-fns";
 import useFriendship from "@/hooks/useFriendship";
+import Link from "next/link";
 
 const profile = ({ user, listings, requests, session, isFriend }: any) => {
   const offers = listings?.map((listing: any) => (
@@ -87,9 +88,9 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
             <Card title={`Social Links`}>
               {user.profile?.socialLinks?.map((link: any) => (
                 <div className="flex gap-2 items-center">
-                  <a href={link.url} target="_blank" rel="noreferrer">
+                  <Link href={link.url} target="_blank" rel="noreferrer">
                     {link.url}
-                  </a>
+                  </Link>
                 </div>
               ))}
             </Card>

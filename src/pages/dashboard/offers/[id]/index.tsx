@@ -1,12 +1,11 @@
 import axios from "axios";
 import getBidByID from "@/actions/getBidByID";
 import { GetServerSideProps } from "next";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { getSession, useSession } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { config } from "@/config";
-import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import useSearchModal from "@/hooks/useSearchModal";
 
 import { Dash } from "@/templates/dash";
@@ -18,14 +17,11 @@ import OfferDetailsWidget from "@/components/dashboard/offer/OfferDetailsWidget"
 import ReviewForm from "@/components/dashboard/offer/ReviewForm";
 import Spinner from "@/components/Spinner";
 import { toast } from "react-hot-toast";
-import { BsArrowBarUp, BsHandThumbsUp } from "react-icons/bs";
-import { AiFillWarning } from "react-icons/ai";
-import { ImPriceTag } from "react-icons/im";
+
 import { timeInterval, timeSince } from "@/utils/formatTime";
 import { Activity } from "@/interfaces/authenticated";
 import { Bid, Profile, Review, User } from "@prisma/client";
 import ReviewBox from "@/components/dashboard/reviews/ReviewBox";
-import { CgArrowUp } from "react-icons/cg";
 import Bids from "@/components/dashboard/offer/Bids";
 import OfferTypeBadge from "@/components/dashboard/offer/OfferTypeBadge";
 import ImageSlider from "@/components/dashboard/offer/ImageSlider";
@@ -34,6 +30,7 @@ import Image from "next/image";
 import { BiStar } from "react-icons/bi";
 import Badge from "@/components/dashboard/offer/Badge";
 import StatusChecker from "@/utils/status";
+import { tr } from "date-fns/locale";
 
 interface IBid extends Bid {
   user: User;
@@ -50,13 +47,22 @@ const Index = ({ listing }: any) => {
   const [activeSubTab, setActiveSubTab] = useState("description");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [bidPrice, setBidPrice] = useState<string | null>(null);
-  const [bidder, setBidder] = useState<any>();
   const [bids, setBids] = useState<any[]>([]);
+  const [completedBy, setCompletedBy] = useState<string | null>();
+  const [currentBid, setCurrentBid] = useState({
+    currentPrice: "",
+    byUserId: "",
+    byUsername: "",
+    me: {} as Bid,
+    participant: {} as Bid,
+  });
   const [status, setStatus] = useState<string | null>(null);
   const [tab, setTab] = useState("details");
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   const [me, setMe] = useState<ProfileUser>();
+
+  console.log(me);
+
   const [participant, setParticipant] = useState<ProfileUser>();
   const router = useRouter();
   // const DeleteListing = useDeleteConfirmationModal();
@@ -69,32 +75,55 @@ const Index = ({ listing }: any) => {
 
   useEffect(() => {
     socketRef.current = io(config.PORT);
+    socketRef.current && socketRef.current.emit("join_room", listing.id);
     return () => {
+      socketRef.current?.emit("leave_room", listing.id);
+      socketRef.current?.off("join_room");
       socketRef.current?.disconnect();
     };
-  }, []);
+  }, [listing?.id]);
+
+
+  //const reversedBids = [...bids].reverse();
+  const [meBid, setMeBid] = useState<Bid | null>(null);
+  const [participantBid, setParticipantBid] = useState<Bid | null>(null);
 
   useEffect(() => {
+    const reversedBids = [...listing.bids].reverse();
+
+    setBids(listing.bids);
+  
+    setCurrentBid({
+      currentPrice:
+        listing?.bids.length > 0
+          ? listing.bids[listing.bids.length - 1].price
+          : listing?.price,
+      byUserId: session?.user.id,
+      byUsername:
+        listing?.sellerId === session?.user.id
+          ? listing?.seller.username
+          : listing?.buyer.username,
+      me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
+      participant: reversedBids.filter((bid: Bid) => bid.userId === participant?.id)[0],
+    });
+  }, [listing.bids, listing.price, listing.sellerId, listing.seller.username, listing.buyer.username, session?.user.id, me?.id, participant?.id]);
+  
+  useEffect(() => {
+    if(!session) {
+      setIsLoading(true);
+    };
+    
+   
     if (listing.status === "pending") {
       setDisabled(true);
       setStatus(listing?.status);
     }
     if (listing.status === "awaiting approval") {
-      setDisabled(true);
       setStatus(listing?.status);
     }
     if (listing.status === "accepted") {
       setDisabled(true);
     }
-    setStatus(listing?.status);
-    setBidPrice(listing?.bid ? listing.bid : listing?.price);
-    setBidder(listing?.bidder);
-    setActivities([...listing?.activities].reverse());
-    setBids(listing?.bids);
-    const created = new Date(listing?.createdAt);
-    timeInterval(created, setTimeSinceCreated);
-    setIsLoading(false);
-    setDisabled(false);
     setMe(
       session?.user.id === listing.sellerId
         ? { ...listing.seller, isSeller: true }
@@ -105,26 +134,68 @@ const Index = ({ listing }: any) => {
         ? { ...listing.buyer, isBuyer: true }
         : { ...listing.seller, isSeller: true }
     );
-  }, [listing.id]);
 
-  const handleBidPriceChange = (updatedBidPrice: string) => {
-    if (updatedBidPrice === null) {
-      return;
-    }
-    setBidPrice(updatedBidPrice);
+    setStatus(listing?.status);
+    setActivities([...listing?.activities].reverse());
+    const created = new Date(listing?.createdAt);
+    timeInterval(created, setTimeSinceCreated);
+    setIsLoading(false);
+    setDisabled(false);
+  }, []);
 
-    setBidder((prevBidder: any) => {
-      const updatedBidderValue = { ...prevBidder, bid: updatedBidPrice };
-      socketRef.current?.emit("update_bidder", { updatedBidderValue });
-      return updatedBidderValue;
-    });
+  useEffect(() => {
 
-    socketRef.current?.emit("update_bidPrice", {
-      newBidPrice: updatedBidPrice,
-      listingId: listing.id,
-      updatedBidder: bidder,
-    });
-  };
+    socketRef.current &&
+      socketRef.current.on("updated_bid", ({ price, userId, username, listingId}) => {
+        if (listingId === listing.id) {
+          console.log(
+            `Received bid price update for listing ${listingId}: ${price}`
+          );
+          setBids((prevBids) => {
+
+            let temporaryId = (Math.random() + 1).toString(36).substring(7);
+            const newBid = {
+            id: temporaryId,
+            price: price,
+            userId: userId,
+            listingId: listingId,
+            previous: listing?.bids && listing?.bids.length > 0 ? listing.bids[listing.bids.length - 1].price : listing?.price,
+            createdAt: new Date(now),
+            updatedAt: new Date(now),
+          }
+            const updatedBids = [...prevBids, newBid];
+            return updatedBids;
+          });
+
+          setCurrentBid((prev) => {
+            const newBid = {
+            ...prev,
+            currentPrice: price,
+            byUserId: userId || "",
+            byUsername: username || "",
+            me: listing?.bids && listing?.bids.length > 0 ? listing.bids[listing.bids.length - 1] : null,
+            }
+            return newBid;
+          });
+        }
+      });
+
+    socketRef.current &&
+      socketRef.current.on("update_status", ({ newStatus, listingId }) => {
+        if (listingId === listing.id) {
+          console.log(
+            `Received status update for listing ${listingId}: ${newStatus}`
+          );
+          setStatus(newStatus);
+        }
+      });
+
+    return () => {
+      socketRef.current?.off("updated_bid");
+      socketRef.current?.off("update_status");
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   const handleStatusChange = async (status: string, userId: string) => {
     await axios
@@ -132,10 +203,12 @@ const Index = ({ listing }: any) => {
         status: status,
         listingId: listing.id,
         userId: userId,
+        completedById: userId,
       })
       .then((response) => {
         toast.success("Offer " + status);
         setStatus(status);
+        setCompletedBy(userId);
 
         socketRef.current?.emit("update_status", {
           newStatus: status,
@@ -162,225 +235,152 @@ const Index = ({ listing }: any) => {
     listing.reviews.find((item: Review) => item.userId !== session?.user.id) ||
     null;
 
-    const body = <>
-    <div className=" ">
-                      <div className="md:flex md:justify-between">
-                        <div>
-                          <div className="text-gray-900 text-xl  md:text-2xl  font-bold first-letter:uppercase ">
-                            {listing.title}
-                          </div>
-                          <div className="  text-gray-500">
-                            {listing.category}
-                          </div>
-                          <div className="px-4 mt-2"></div>
-                        </div>
-                        <div className="hidden md:block">
-                          {bidPrice && (
-                            <div className="text-right text-sm">
-                              {status === "accepted" ? (
-                                <div>Agreed price</div>
-                              ) : (
-                                <div className="text-right ">
-                                  Bid by
-                                  <Link
-                                    href={`/dashboard/profile/${
-                                      bids.length > 0
-                                        ? bids[bids.length - 1].user.id
-                                        : listing.userId
-                                    }`}
-                                    className="underline ml-[2px]"
-                                  >
-                                    {bids.length > 0
-                                      ? bids[bids.length - 1].user.username
-                                      : listing.user.username}
-                                  </Link>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          <div className="font-extrabold text-3xl text-right -mt-2">
-                            £
-                            {bids.length > 0 && bids[bids.length - 1].price
-                              ? bids[bids.length - 1].price
-                              : listing.price
-                              ? listing.price
-                              : "Open offer"}
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex mb-4 pb-4 border-b border-gray-200">
-                          <div className="flex flex-1 gap-4 font-bold items-start">
-                            <button
-                              className={` ${
-                                activeSubTab === "description" &&
-                                "border-orange-400 border-b-4"
-                              }`}
-                              onClick={() => setActiveSubTab("description")}
-                            >
-                              Description
-                            </button>
-                            <button
-                              onClick={() => setActiveSubTab("photos")}
-                              className={` ${
-                                activeSubTab === "photos" &&
-                                "border-orange-400 border-b-4"
-                              }`}
-                            >
-                              Photos
-                            </button>
-                            <button
-                              className={` ${
-                                activeSubTab === "user" &&
-                                "border-orange-400 border-b-4"
-                              }`}
-                              onClick={() => setActiveSubTab("user")}
-                            >
-                              {listing.sellerId !== session?.user.id
-                                ? "Seller"
-                                : "Buyer"}{" "}
-                              Details
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      {activeSubTab === "description" && (
-                        <p className="leading-relaxed first-letter:uppercase mb-6">
-                          {listing.description}
-                        </p>
-                      )}
-                      {activeSubTab === "photos" && (
-                        <div className=" justify-center z-50 mb-6">
-                          <ImageSlider images={listing.image} />
-                        </div>
-                      )}
-                      {activeSubTab === "user" && (
-                        <div className=" justify-center z-50 mb-6">
-                          {session?.user.id ? (
-                            <div>
-                              {/* {listing.seller.username}
-                                {listing.seller?.profile.bio}
-                                {listing.seller?.profile.website}
-                                {listing.seller.status}
-                                {listing.seller.createdAt} */}
-                              <div className="grid grid-cols-2 auto-cols-fr gap-2">
-                                <div className="flex flex-col p-4 items-center">
-                                  <div className="p-4 w-40 h-40 rounded-full relative">
-                                    <Image
-                                      src={`/images/placeholders/avatar.png`}
-                                      className="border p-1 border-gray-200 rounded-full"
-                                      alt="Avatar"
-                                      fill
-                                      style={{ objectFit: "cover" }}
-                                    />
-                                  </div>
-                                  <div className="p-4 text-center">
-                                    <h4>{participant?.username}</h4>
-                                    <span className="text-xl text-gray-400">
-                                      <BiStar className="inline-block text-orange-500" />
-                                      <BiStar className="inline-block text-orange-500" />
-                                      <BiStar className="inline-block text-orange-500" />
-                                      <BiStar className="inline-block text-orange-500" />
-                                      <BiStar className="inline-block text-orange-500" />
-                                    </span>
-                                    <p>{participant?.profile?.bio}</p>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col p-4">
-                                  <div className="text-center">
-                                    <h1 className="-mb-2">0</h1>
-                                    <p>Offers Completed</p>
-                                  </div>
-                                  <div className="text-center">
-                                    <h1 className="-mb-2">0</h1>
-                                    <p>Offers Rejected</p>
-                                  </div>
-                                  <div className="text-center">
-                                    <h1 className="-mb-2">0</h1>
-                                    <p>Bids Placed</p>
-                                  </div>
-                                  <div className="text-center">
-                                    <h1 className="-mb-2">100%</h1>
-                                    <p>Trust Score</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              {/* {listing.buyer.username}
+  const body = (
+    <>
+      <div className=" ">
+        <div className="md:flex md:justify-between">
+          <div>
+            <div className="text-gray-900 text-xl  md:text-2xl  font-bold first-letter:uppercase ">
+              {listing.title}
+            </div>
+            <div className="  text-gray-500">{listing.category}</div>
+            <div className="px-4 mt-2"></div>
+          </div>
+          <div className="hidden md:block">
+            {currentBid.currentPrice && (
+              <div className="text-right text-sm">
+                {status === "accepted" ? (
+                  <div>Agreed price</div>
+                ) : (
+                  <div className="text-right ">
+                    Bid by
+                    <Link
+                      href={`/dashboard/profile/${currentBid.byUserId}`}
+                      className="underline ml-[2px]"
+                    >
+                      {currentBid.byUsername}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="font-extrabold text-3xl text-right -mt-2">
+              £
+              {currentBid.currentPrice
+                ? currentBid.currentPrice
+                : listing.price || "Open offer"}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="flex mb-4 pb-4 border-b border-gray-200">
+            <div className="flex flex-1 gap-4 font-bold items-start">
+              <button
+                className={` ${
+                  activeSubTab === "description" &&
+                  "border-orange-400 border-b-4"
+                }`}
+                onClick={() => setActiveSubTab("description")}
+              >
+                Description
+              </button>
+              <button
+                onClick={() => setActiveSubTab("photos")}
+                className={` ${
+                  activeSubTab === "photos" && "border-orange-400 border-b-4"
+                }`}
+              >
+                Photos
+              </button>
+              <button
+                className={` ${
+                  activeSubTab === "user" && "border-orange-400 border-b-4"
+                }`}
+                onClick={() => setActiveSubTab("user")}
+              >
+                {listing.sellerId !== session?.user.id ? "Seller" : "Buyer"}{" "}
+                Details
+              </button>
+            </div>
+          </div>
+        </div>
+        {activeSubTab === "description" && (
+          <p className="leading-relaxed first-letter:uppercase mb-6">
+            {listing.description}
+          </p>
+        )}
+        {activeSubTab === "photos" && (
+          <div className=" justify-center z-50 mb-6">
+            <ImageSlider images={listing.image} />
+          </div>
+        )}
+        {activeSubTab === "user" && (
+          <div className=" justify-center z-50 mb-6">
+            {session?.user.id ? (
+              <div>
+                {/* {listing.seller.username}
+                      {listing.seller?.profile.bio}
+                      {listing.seller?.profile.website}
+                      {listing.seller.status}
+                      {listing.seller.createdAt} */}
+                <div className="grid grid-cols-2 auto-cols-fr gap-2">
+                  <div className="flex flex-col p-4 items-center">
+                    <div className="p-4 w-40 h-40 rounded-full relative">
+                      <Image
+                        src={`/images/placeholders/avatar.png`}
+                        className="border p-1 border-gray-200 rounded-full"
+                        alt="Avatar"
+                        fill
+                        style={{ objectFit: "cover" }}
+                      />
+                    </div>
+                    <div className="p-4 text-center">
+                      <h4>{participant?.username}</h4>
+                      <span className="text-xl text-gray-400">
+                        <BiStar className="inline-block text-orange-500" />
+                        <BiStar className="inline-block text-orange-500" />
+                        <BiStar className="inline-block text-orange-500" />
+                        <BiStar className="inline-block text-orange-500" />
+                        <BiStar className="inline-block text-orange-500" />
+                      </span>
+                      <p>{participant?.profile?.bio}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col p-4">
+                    <div className="text-center">
+                      <h1 className="-mb-2">0</h1>
+                      <p>Offers Completed</p>
+                    </div>
+                    <div className="text-center">
+                      <h1 className="-mb-2">0</h1>
+                      <p>Offers Rejected</p>
+                    </div>
+                    <div className="text-center">
+                      <h1 className="-mb-2">0</h1>
+                      <p>Bids Placed</p>
+                    </div>
+                    <div className="text-center">
+                      <h1 className="-mb-2">100%</h1>
+                      <p>Trust Score</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {/* {listing.buyer.username}
                                 {listing.buyer.bio}
                                 {listing.buyer.status}
                                 {listing.buyer.createdAt} */}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div></>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
 
-  useEffect(() => {
-
-    socketRef.current && socketRef.current.emit("join_room", listing.id);
-
-    socketRef.current &&
-      socketRef.current.on(
-        "update_bidPrice",
-        ({ newBidPrice, listingId, updatedBidder, previousPrice }) => {
-          if (listingId === listing.id) {
-            console.log(
-              `Received bid price update for listing ${listingId}: ${newBidPrice}`
-            );
-            const dateFormat = new Date(now);
-            const updatedBidderValue = {
-              id: `${String(now)}`,
-              userId: updatedBidder.id,
-              user: {
-                id: updatedBidder.id,
-                username: updatedBidder.username,
-              },
-              price: newBidPrice,
-              previous: previousPrice,
-              listingId: listing.id,
-              updatedAt: dateFormat,
-              createdAt: dateFormat,
-            };
-
-            setBids((prevBids) => {
-              const updatedBids = [...prevBids, updatedBidderValue];
-              return updatedBids;
-            });
-          }
-        }
-      );
-
-    socketRef.current &&
-      socketRef.current.on("update_bidder", (updatedBidder) => {
-        if (updatedBidder.listingId === listing.id) {
-          console.log(
-            `Received bidder update for listing ${updatedBidder.listingId}: ${updatedBidder}`
-          );
-          setBidder(updatedBidder);
-        }
-      });
-
-    socketRef.current &&
-      socketRef.current.on("update_status", ({ newStatus, listingId }) => {
-        if (listingId === listing.id) {
-          console.log(
-            `Received status update for listing ${listingId}: ${newStatus}`
-          );
-          setStatus(newStatus);
-        }
-      });
-
-    return () => {
-      socketRef.current?.emit("leave_room", listing.id);
-      socketRef.current?.off("update_bidPrice");
-      socketRef.current?.off("update_status");
-      socketRef.current?.off("update_bidder");
-      socketRef.current?.disconnect();
-    };
-  }, [listing.id]);
+  
 
   if (isLoading) {
     return <Spinner />;
@@ -404,7 +404,7 @@ const Index = ({ listing }: any) => {
           )}
           {status === "rejected" && (
             <AlertBanner
-              text="This offer has been rejected"
+              text="Your bid has been rejected. Enter a new bid to continue"
               danger
               button
               buttonText={`Contact ${
@@ -423,7 +423,7 @@ const Index = ({ listing }: any) => {
               >
                 Details
               </div>
-              {status === "awaiting approval" && (
+              {status === "awaiting approval" || status ===  "negotiating" && (
                 <div
                   onClick={() => setTab("chat")}
                   className={`cursor-pointer ${
@@ -456,7 +456,7 @@ const Index = ({ listing }: any) => {
             </div>
 
             {tab === "chat" && (
-              <div className="messages">
+              <div className="messages pt-6">
                 {status === "negotiating" && (
                   <ListingChat
                     listing={listing}
@@ -482,22 +482,7 @@ const Index = ({ listing }: any) => {
                     </div>
                   </div>
                 )}
-                {status === "rejected" && (
-                  <div className="w-full  p-4 white border-l-4 border-red-400">
-                    <div>
-                      {listing.userId === session?.user.id
-                        ? "Your offer was declined"
-                        : "You declined this offer"}
-                      . If you need to contact the{" "}
-                      {listing.buyerId === session?.user?.id
-                        ? "seller "
-                        : "buyer "}
-                      <span className="text-orange-500 underline cursor-pointer">
-                        click here
-                      </span>
-                    </div>
-                  </div>
-                )}
+                
                 {status === "awaiting approval" && (
                   <div className="w-full  p-4 white border-l-4 border-orange-400 flex gap-2 justify-between items-center">
                     {listing.userId === session?.user?.id ? (
@@ -579,30 +564,27 @@ const Index = ({ listing }: any) => {
               ))}
             {tab === "bids" && <Bids bids={bids} />}
           </div>
-          <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4">
-            <OfferDetailsWidget
-              listing={listing}
-              status={status || "pending"}
-              session={session}
-              bidder={
-                bids.length > 0 ? bids[bids.length - 1].user : listing.user
-              }
-              bidPrice={
-                bids.length > 0 ? bids[bids.length - 1].price : listing.price
-              }
-              bids={bids}
-              handleStatusChange={handleStatusChange}
-              handleBidPriceChange={handleBidPriceChange}
-              setBidder={setBidder}
-              timeSinceCreated={timeSinceCreated}
-              me={me}
-              participant={participant}
-            />
-            <div className="group flex text-gray-300">
-              <div className="group-hover:text-yellow-300">Hi</div>
+          {
+            <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4">
+              <OfferDetailsWidget
+                listing={listing}
+                status={status || "pending"}
+                session={session}
+                currentBid={currentBid}
+                setCurrentBid={setCurrentBid}
+                bids={bids}
+                setBids={setBids}
+                handleStatusChange={handleStatusChange}
+                timeSinceCreated={timeSinceCreated}
+                me={me}
+                participant={participant}
+                socketRef={socketRef}
+                setCompletedBy={setCompletedBy}
+                completedBy={completedBy}
+              />
+              <div className="group flex text-gray-300"></div>
             </div>
-          </div>
-         
+          }
         </div>
       </Dash>
     )

@@ -10,6 +10,15 @@ interface BidsProps {
 
 const Bids = ({ bids }: BidsProps) => {
 
+  const [localBids, setLocalbids] = useState<any>([]);
+
+  console.log("bids", bids);
+
+  useEffect(() => {
+    const reversedBids = [...bids].reverse();
+    setLocalbids(reversedBids);
+  }, [bids]);
+
     
   return (
     <>{bids?.map((bid: any) => <BidContainer key={bid.id} bid={bid} />).reverse()}</>

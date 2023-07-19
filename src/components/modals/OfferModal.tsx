@@ -248,7 +248,6 @@ const OfferModal = () => {
     setIsLoading(true);
     data.category = selectedCategory;
     data.participantId = foundUser?.id;
-    data.bidderId = session.user.id;
     data.conversationId = offerModal.conversationId;
     data.type = userType === 'buyer' ? 'buyerOffer' : "sellerOffer";
     data.userId = session.user.id;

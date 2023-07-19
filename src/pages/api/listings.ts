@@ -34,7 +34,12 @@ export default async function listingsApi(
       include: {
         seller: true,
         buyer: true,
-        bidder: true,
+        bids: {
+          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
     });
 
@@ -68,7 +73,12 @@ export default async function listingsApi(
       include: {
         buyer: true,
         seller: true,
-        bidder: true,
+        bids: {
+          take: 1,
+          orderBy: {
+            createdAt: "desc",
+          }
+        },
         user: true,
       },
     });
@@ -130,7 +140,6 @@ export default async function listingsApi(
       sellerId,
       category,
       buyerId,
-      bidderId,
       conversationId,
       type,
       userId,
@@ -149,7 +158,6 @@ export default async function listingsApi(
         sellerId,
         status: "awaiting approval",
         buyerId,
-        bidderId,
         userId,
         type,
       };
@@ -235,6 +243,12 @@ export default async function listingsApi(
           buyer: true,
           seller: true,
           user: true,
+          bids: {
+            take: 1,
+            orderBy: {
+              createdAt: "desc",
+            }
+          },
         },
       });
 

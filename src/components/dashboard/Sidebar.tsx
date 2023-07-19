@@ -17,32 +17,6 @@ const Sidebar = () => {
   const { Canvas } = useQRCode();
   const router = useRouter()
   const { data: session } = useSession();
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  const [username, setUsername] = React.useState<string | null>(null);
-
-  console.log(session?.user.id) 
-
-  useEffect(() => { 
-
-    fetchUsername();
-
-  }, [session?.user.id])
-
-  const fetchUsername = async () => {
-
-    
-    try {
-      const response = await axios.post(`/api/dashboard/getUsername`, {
-        id: session?.user.id,
-      }).then((res) => {
-        setUsername(res.data.username.username)
-        setIsLoading(false)
-      })
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   return (
     <aside className="hidden md:block md:fixed inset-y-0 left-0 bg-white shadow-md max-h-screen lg:w-60">
@@ -131,7 +105,7 @@ const Sidebar = () => {
           <div className="border border-gray-200 rounded-lg mb-4">
 
             <Canvas
-              text={`$https://myao.vercel.app/connect/${isLoading ? "" : username}`}
+              text={`$https://myao.vercel.app/connect/${session?.user.id}`}
               options={{
                 level: "M",
                 margin: 2,

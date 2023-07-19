@@ -31,8 +31,8 @@ interface OfferDetailsWidgetProps {
   me: any;
   participant: any;
   socketRef: React.MutableRefObject<Socket | undefined>;
-  completedBy: string | null;
-  setCompletedBy: Dispatch<SetStateAction<string | null>>;
+  completedBy: string | null | undefined;
+  setCompletedBy: Dispatch<SetStateAction<string | null | undefined>>;
   handleStatusChange: (status: string, userId: string) => void;
   setCurrentBid: Dispatch<
     SetStateAction<{

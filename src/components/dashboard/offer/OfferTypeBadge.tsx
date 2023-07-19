@@ -16,8 +16,8 @@ const OfferTypeBadge = ({ type, noBg }: OfferTypeBadgeProps) => {
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         className="feather feather-arrow-right mr-2"
       >
         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -35,11 +35,12 @@ const OfferTypeBadge = ({ type, noBg }: OfferTypeBadgeProps) => {
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        className="feather feather-activity mr-2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="feather feather-arrow-right mr-2 rotate-180"
       >
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
       </svg>
       Sale
     </div>

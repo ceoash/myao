@@ -36,12 +36,23 @@ export default async function getBidByID({ bidId }: IParams) {
           orderBy: {
             createdAt: "desc",
           },
-          include: {
-            user: true,
+          select: {
+            id: true,
+            text: true,
+            image: true,
+            userId: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+            },},
+            createdAt: true,
+            updatedAt: true,
+            
           },
         },
         reviews: {
-          take: 5,
+          take: 2,
           orderBy: {
             createdAt: "desc",
           },
@@ -103,11 +114,7 @@ export default async function getBidByID({ bidId }: IParams) {
         ...message,
         createdAt: message.createdAt.toISOString(),
         updatedAt: message.updatedAt.toISOString(),
-        user: {
-          ...message.user,
-          createdAt: message.user.createdAt.toISOString(),
-          updatedAt: message.user.updatedAt.toISOString(),
-        },
+
       })),
       bids: bid.bids.map((bid) => ({
         ...bid,

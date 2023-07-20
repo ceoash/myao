@@ -208,10 +208,7 @@ const Index = ({ listing }: any) => {
       .then((response) => {
         toast.success("Offer " + status);
         setStatus(status);
-        if(userId !== undefined){
-          setCompletedBy(userId);
-        }
-        
+        setCompletedBy(userId);
 
         socketRef.current?.emit("update_status", {
           newStatus: status,

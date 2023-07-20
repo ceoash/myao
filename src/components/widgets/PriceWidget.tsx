@@ -13,9 +13,10 @@ import { set } from 'date-fns';
 import { Bid, User } from '@prisma/client';
 import { randomInt } from 'crypto';
 import PriceInput from '../inputs/PriceInput';
+import { da } from 'date-fns/locale';
 
 interface PriceWidgetProps {
-  listingId: string;
+  listing: any;
   isBuyer?: boolean;
   socketRef: React.MutableRefObject<Socket | undefined>;
   setCurrentBid: Dispatch<SetStateAction<{
@@ -31,7 +32,7 @@ interface PriceWidgetProps {
   setBids: Dispatch<SetStateAction<Bid[]>>;
 }
 
-const PriceWidget = ({ listingId, setBids, bids, setCurrentBid, currentBid, me, socketRef }: PriceWidgetProps) => {
+const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, me, socketRef }: PriceWidgetProps) => {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +57,7 @@ const PriceWidget = ({ listingId, setBids, bids, setCurrentBid, currentBid, me, 
 
     console.log("data", data);
 
-    data.id = listingId;
+    data.id = listing.id;
     data.bid = parseFloat(data.price);
     data.status = 'counterOffer';
     data.bidById = session?.user.id;
@@ -65,7 +66,7 @@ const PriceWidget = ({ listingId, setBids, bids, setCurrentBid, currentBid, me, 
     try {
       const response = await axios.post("/api/submitBid", {
         price: data.price,
-        listingId: listingId,
+        id: data.id,
         userId: session?.user.id,
       });
       const updatedListing: any | ErrorResponse = response.data.listing;
@@ -91,23 +92,11 @@ const PriceWidget = ({ listingId, setBids, bids, setCurrentBid, currentBid, me, 
         const now = Date.now();
         let newBid: Bid;
         
-        setBids((prev) => {
-          let temporaryId = (Math.random() + 1).toString(36).substring(7);
-            newBid = {
-            id: temporaryId,
-            price: data.price,
-            userId: session?.user.id,
-            listingId: listingId,
-            previous: prev[prev.length - 1]?.price,
-            createdAt: new Date(now),
-            updatedAt: new Date(now),
-          }
-          const newBids = [ ...prev, newBid];
-          return newBids;
-        });
+        
         const userId = me.id
         const username = me.username
         const price = data.price
+        const listingId = listing.id
 
         socketRef.current?.emit('update_bid', {price, userId, username, listingId});
         socketRef.current?.emit('update_activities', {

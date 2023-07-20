@@ -124,7 +124,7 @@ const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => 
               >
                 {messages.map((message, index) => (
                   <ChatMessage
-                    key={index}
+                    key={message.id}
                     message={message}
                     session={session}
                     ref={index === messages.length - 1 ? messagesEndRef : null}

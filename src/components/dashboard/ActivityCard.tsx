@@ -75,9 +75,6 @@ const ActivityCard = ({ activity, className, tall }: ActivityCardProps) => {
       category = "";
       break;
   }
-
-  console.log(activity);
-
   return (
     <div className="p-4 bg-white border rounded-xl text-gray-800 space-y-2 mb-4">
       <Link href={activity?.action || "#"} className="">

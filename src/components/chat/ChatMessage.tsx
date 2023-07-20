@@ -19,7 +19,6 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(
 
     return (
       <div
-        key={message.id}
         ref={ref}
         className={`flex gap-2 w-1/2 ${
           message.userId === session.user.id

@@ -92,7 +92,6 @@ const OfferDetailsWidget = ({
 
   let parsedImage;
 
-  console.log("current bid", currentBid);
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
   }
@@ -311,7 +310,7 @@ const OfferDetailsWidget = ({
             </div>
             <div className="">
               <PriceWidget
-                listingId={listing.id}
+                listing={listing}
                 currentBid={currentBid}
                 setCurrentBid={setCurrentBid}
                 bids={bids}

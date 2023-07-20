@@ -26,7 +26,6 @@ const InfoCard = ({
   span,
   className,
 }: ICardProps) => {
-  console.log("color", color);
   return (
     <div
       className={`p-4 ${className} rounded-xl text-gray-800 ${

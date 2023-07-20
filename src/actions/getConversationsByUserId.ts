@@ -42,51 +42,13 @@ const transformDirectMessage = (directMessage: any): SafeDirectMessage => {
     ...rest,
     createdAt: formatDate(directMessage.createdAt),
     updatedAt: formatDate(directMessage.updatedAt),
-    user: {
-      ...user,
-      createdAt: formatDate(user.createdAt),
-      updatedAt: formatDate(user.updatedAt),
-      profile: {
-        image: user?.profile?.image || null,
-        createdAt: user?.profile?.createdAt ? formatDate(user.profile.createdAt) : null,
-        updatedAt: user?.profile?.updatedAt ? formatDate(user.profile.updatedAt) : null,
-      },
-      blockedFriends: user?.blockedFriends.map((blockedFriend: any) => ({
-        ...blockedFriend,
-        createdAt: formatDate(blockedFriend.createdAt),
-        updatedAt: formatDate(blockedFriend.updatedAt),
-      })),
-      blockedBy: user?.blockedBy.map((blocked: any) => ({
-        ...blocked,
-        createdAt: formatDate(blocked.createdAt),
-        updatedAt: formatDate(blocked.updatedAt),
-      })),
-    },
+    user: transformUser(directMessage.user),
     listing: directMessage.listing
       ? {
           ...directMessage.listing,
           createdAt: formatDate(directMessage.listing.createdAt),
           updatedAt: formatDate(directMessage.listing.updatedAt),
-          seller: {
-            ...directMessage.listing.seller,
-            createdAt: formatDate(directMessage.listing.seller.createdAt),
-            updatedAt: formatDate(directMessage.listing.seller.updatedAt),
-            profile: {
-              image: directMessage.listing.seller?.profile?.image || null,
-              createdAt: directMessage.listing.seller?.profile?.createdAt ? formatDate(directMessage.listing.seller.profile.createdAt) : null,
-              updatedAt: directMessage.listing.seller?.profile?.updatedAt ? formatDate(directMessage.listing.seller.profile.updatedAt) : null,
-            },
-          },
-          buyer: {
-            ...directMessage.listing.buyer,
-            createdAt: formatDate(directMessage.listing.buyer.createdAt),
-            updatedAt: formatDate(directMessage.listing.buyer.updatedAt),
-            profile: {
-              image: directMessage.listing.buyer?.profile?.image || null,
-              createdAt: directMessage.listing.buyer?.profile?.createdAt ? formatDate(directMessage.listing.buyer.profile.createdAt) : null,
-              updatedAt: directMessage.listing.buyer?.profile?.updatedAt ? formatDate(directMessage.listing.buyer.profile.updatedAt) : null,
-            },
-          },
+          
         }
       : null,
     
@@ -108,16 +70,6 @@ const transformUser = (user: any): SafeUser => {
       createdAt: user?.profile?.createdAt ? formatDate(user.profile.createdAt) : null,
       updatedAt: user?.profile?.updatedAt ? formatDate(user.profile.updatedAt) : null,
     },
-    blockedFriends: user?.blockedFriends.map((blockedFriend: any) => ({
-      ...blockedFriend,
-      createdAt: formatDate(blockedFriend.createdAt),
-      updatedAt: formatDate(blockedFriend.updatedAt),
-    })),
-    blockedBy: user?.blockedBy.map((blocked: any) => ({
-      ...blocked,
-      createdAt: formatDate(blocked.createdAt),
-      updatedAt: formatDate(blocked.updatedAt),
-    })),
   };
 };
 
@@ -137,29 +89,11 @@ export default async function getConversationsByUserId(userId: string): Promise<
       directMessages: {
         orderBy: { createdAt: 'desc' },
         include: {
-          user: {
-            include: {
-              profile: true,
-              blockedBy: true,
-              blockedFriends: true,
-            },
-          },
-          listing: {
-            include: {
-              seller: {
-                include: {
-                  profile: true,
-                },
-              },
-              buyer: {
-                include: {
-                  profile: true,
-                },
-              },
-            },
+          listing: true,
+          user: true
           },
         },
-      },
+    
       participant1: {
         include: {
           profile: true,
@@ -175,10 +109,9 @@ export default async function getConversationsByUserId(userId: string): Promise<
         },
       },
     },
-    orderBy: {
-      updatedAt: 'desc',
-    },
-  });
+  }
+   
+  );
   
 
   const safeConversations: SafeConversation[] = conversations?.map((conversation) => ({

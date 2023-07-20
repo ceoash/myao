@@ -132,8 +132,9 @@ const Offer: React.FC<any> = ({
               <Image
                 src={img[0] || "/images/cat.png"}
                 alt="content"
-                layout="fill"
-                objectFit="cover"
+                layout="responsive"
+                width={500}
+                height={500}
                 className="rounded-lg"
               />
             </div>
@@ -265,28 +266,7 @@ const Offer: React.FC<any> = ({
                     </button>
                   </>
                 )}
-              {(session?.user?.id !== userId &&
-                statusState == "awaiting approval") ||
-                (statusState == "negotiating" && (
-                  <button
-                    onClick={() =>
-                      handleStatusChange("rejected", session?.user.id)
-                    }
-                    className="
-                    flex
-                    p-1 
-                    gap-1 
-                    items-center 
-                    border
-                    border-red-400 
-                    rounded-md 
-                    px-2 
-                    text-red-500"
-                  >
-                    <FaTimes />
-                    <span className="hidden xl:block">Reject</span>
-                  </button>
-                ))}
+              
             </div>
           </div>
         </div>

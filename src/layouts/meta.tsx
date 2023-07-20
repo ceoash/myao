@@ -28,24 +28,24 @@ const Meta = (props: IMetaProps) => {
 
         <link
           rel="apple-touch-icon"
-          href={`${path}/favicon/apple-touch-icon.png`}
+          href={`/favicon/apple-touch-icon.png`}
           key="apple"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href={`${path}/favicon/favicon-32x32.png`}
+          href={`/favicon/favicon-32x32.png`}
           key="icon32"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="16x16"
-          href={`${path}/favicon/favicon-16x16.png`}
+          href={`/favicon/favicon-16x16.png`}
           key="icon16"
         />
-        <link rel="icon" href={`${path}/favicon/favicon.ico`} key="favicon" />
+        <link rel="icon" href={`/favicon/favicon.ico`} key="favicon" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link

@@ -51,12 +51,12 @@ const Bid = ({ bid }: BidProps) => {
           </svg>
         </div>
         <div>
-          <span className="font-extrabold">£{bid.price}</span> by{" "}
+          <span className="font-extrabold">£{bid?.price}</span> by{" "}
           <Link
-            href={`/dashboard/profile/${bid.userId}`}
+            href={`/dashboard/profile/${bid?.userId}`}
             className="underline"
           >
-            {bid.user.username}
+            {bid?.userId}
           </Link>
         </div>{" "}
       </div>

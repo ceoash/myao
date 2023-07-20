@@ -564,7 +564,7 @@ const Conversations = ({ safeConversations, session }: any) => {
               <div className="border-t-2 mt-auto bg-gray-50 border-gray-200 px-4 mb-2 sm:mb-0">
                 <ImageTextArea
                   onSubmit={handleSubmit}
-                  disabled={disabled}
+                  disabled={false}
                   key={activeConversationState?.id}
                 />
               </div>
@@ -592,30 +592,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const user = session?.user;
   const currentUser = await getCurrentUser(session);
-  const friends = await getFriendsByUserId(user?.id);
   const safeConversations = await getConversationsByUserId(user?.id);
 
-  for (let conversation of safeConversations) {
-    const friendUserId =
-      conversation.participant1Id === user?.id
-        ? conversation.participant2?.id
-        : conversation.participant1?.id;
-
-    conversation.friendStatus = await checkFriendship({
-      userId1: session?.user?.id,
-      userId2: friendUserId,
-    });
-    conversation.blockedStatus = await checkBlocked({
-      userId1: session?.user?.id,
-      userId2: friendUserId,
-    });
-  }
+  
 
   return {
     props: {
       safeConversations,
       session,
-      friends,
       currentUser,
     },
   };

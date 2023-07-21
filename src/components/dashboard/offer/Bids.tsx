@@ -6,22 +6,16 @@ import BidContainer from "./Bid";
 
 interface BidsProps {
   bids: Bid[];
+  participant: any;
+  me: any;
 }
 
-const Bids = ({ bids }: BidsProps) => {
+const Bids = ({ bids, participant, me }: BidsProps) => {
 
-  const [localBids, setLocalbids] = useState<any>([]);
-
-  console.log("bids", bids);
-
-  useEffect(() => {
-    const reversedBids = [...bids].reverse();
-    setLocalbids(reversedBids);
-  }, [bids]);
-
+  if (!participant || !me) return null;
     
   return (
-    <>{bids?.map((bid: any) => <BidContainer key={bid.id} bid={bid} />).reverse()}</>
+    <>{bids?.map((bid: any) => <BidContainer key={bid.id} bid={bid} participant={participant} me={me} />).reverse()}</>
   );
 };
 

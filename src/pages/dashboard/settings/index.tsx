@@ -144,8 +144,8 @@ const Settings = ({ user, listings }: any) => {
           </h2>
           <div className=" flex px-6 border-b border-gray-200 pb-6">
             <div
-              className={`px-3.5 cursor-pointer flex gap-2 items-center rounded-full py-1.5 ${
-                activeTab === "profile" && "bg-orange-100 text-orange-400"
+              className={`px-3.5 cursor-pointer flex gap-2 items-center py-1.5 ${
+                activeTab === "profile" && "border-b-4 border-orange-400 text-orange-400"
               }`}
               onClick={() => setActiveTab("profile")}
             >
@@ -153,8 +153,8 @@ const Settings = ({ user, listings }: any) => {
               <span>Profile</span>
             </div>
             <div
-              className={`px-3.5 cursor-pointer flex gap-2 items-center rounded-full py-1.5 ${
-                activeTab === "security" && "bg-orange-100 text-orange-400"
+              className={`px-3.5 cursor-pointer flex gap-2 items-center py-1.5 ${
+                activeTab === "security" && "border-b-4 border-orange-400 text-orange-400"
               }`}
               onClick={() => setActiveTab("security")}
             >
@@ -162,8 +162,8 @@ const Settings = ({ user, listings }: any) => {
               <span>Security</span>
             </div>
             <div
-              className={`px-3.5 cursor-pointer flex gap-2 items-center rounded-full py-1.5 ${
-                activeTab === "preferences" && "bg-orange-100 text-orange-400"
+              className={`px-3.5 cursor-pointer flex gap-2 items-center rou1.5 ${
+                activeTab === "preferences" && "border-b-4 border-orange-400 text-orange-400"
               }`}
               onClick={() => setActiveTab("preferences")}
             >

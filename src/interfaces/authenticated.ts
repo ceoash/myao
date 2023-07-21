@@ -7,17 +7,14 @@ export interface IUser extends User{
 }
 
 export interface dashboardProps {
-  listings: ListingsMap;
   user: IUser;
-  requests: ListingsMap;
-  negotiations: Listing[];
   friends: any[];
   followings: IUser[];
   session: any;
   conversations: IConversation[];
   activities: Activity[];
-  allListings?: Listing[];
-  allRequests?: Listing[];
+  sent?: Listing[];
+  received?: Listing[];
   listingsCount?: number;
   requestsCount?: number;
   username?: string;

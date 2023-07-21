@@ -20,7 +20,9 @@ export default async function submitBid(
 
   if (req.method === "POST") {
 
-    const { price, id, bidById } = req.body;
+    const { price, id, bidById, userId } = req.body;
+
+    console.log("REQUEST",req.body);
     
 
     try {
@@ -49,7 +51,7 @@ export default async function submitBid(
       data: {
         price: price,
         listingId: updateListing.id,
-        userId: updateListing.userId,
+        userId: userId,
         previous: updateListing.bids[updateListing.bids.length - 1]?.price || "0",
       },
     });

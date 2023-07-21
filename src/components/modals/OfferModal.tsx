@@ -79,11 +79,22 @@ const OfferModal = () => {
   });
 
   const onSearchUser = () => {
+    if (!search) {
+      return;
+    }
     axios
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
-        setFoundUser(res.data);
-        clearErrors("userType")
+        console.log(res.data);
+        if (res.data.id  && res.data.id === session?.user?.id) {
+          toast.error("You can't create an offer with yourself");
+          setFoundUser(null);
+          setError("user", { message: "You can't create an offer with yourself" });
+        } else {
+          setFoundUser(res.data);
+          clearErrors("user")
+
+        }
       })
       .catch((err) => {
         console.log("error");
@@ -95,7 +106,7 @@ const OfferModal = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  };
+  }
 
   const validateStep = (step: any, data: any) => {
     const validation = {
@@ -113,8 +124,7 @@ const OfferModal = () => {
       case STEPS.BUYER:
         if (!foundUser) {
           validation.isValid = false;
-          setError("buyer", { message: "Select a user" });
-
+          setError("user", { message: "Select a user" });
         }
         break;
       case STEPS.DESCRIPTION:
@@ -254,8 +264,6 @@ const OfferModal = () => {
     data.sellerId = userType === "seller" ? session.user.id : foundUser?.id;
     data.buyerId = userType === "buyer" ? session.user.id : foundUser?.id;
 
-    
-
     await axios
       .post("/api/listings", data)
       .then((response) => {
@@ -325,6 +333,8 @@ const OfferModal = () => {
       />
     </div>
   );
+
+  
   if (step === STEPS.CATEGORY) {
     const updateCategory = (category: string) => {
       setSelectedCategory(category);
@@ -408,6 +418,7 @@ const OfferModal = () => {
           nounderline
         />
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
+       
           {foundUser ? (
             <>
               <p className="font-bold">Found: {}</p>
@@ -445,7 +456,8 @@ const OfferModal = () => {
               </div>
             </>
           ) : (
-            <div className="flex rounded-lg">
+            <>
+            <div className="flex rounded-lg relative pb-8">
               <input
                 id="username"
                 type="text"
@@ -453,7 +465,7 @@ const OfferModal = () => {
                 placeholder="Enter MYAO name"
                 className="rounded-l-lg border border-gray-200 p-2 flex-1 lowercase focus:border-orange-300 hover:border-orange-300 focus:outline-none"
                 value={search}
-                onChange={(e) => {setSearch(e.target.value); clearErrors("buyer");}}
+                onChange={(e) => {setSearch(e.target.value); clearErrors("user");}}
                 {...register}
               />
               <button
@@ -462,7 +474,14 @@ const OfferModal = () => {
               >
                 Search <BiChevronRight />
               </button>
+              {errors && errors.user && (
+            <div className=" text-sm text-red-500 absolute bottom-0">
+              {String(errors.user?.message)}
             </div>
+          )}
+            </div>
+            
+            </>
           )}
         </div>
       </div>

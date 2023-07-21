@@ -28,11 +28,11 @@ interface PriceWidgetProps {
   }>>;
   currentBid?: any;
   bids?: any;
-  me: any
+  sessionUser: any
   setBids: Dispatch<SetStateAction<Bid[]>>;
 }
 
-const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, me, socketRef }: PriceWidgetProps) => {
+const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessionUser, socketRef }: PriceWidgetProps) => {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +62,8 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, me, so
     data.status = 'counterOffer';
     data.bidById = session?.user.id;
 
+    console.log("data", data);  
+
 
     try {
       const response = await axios.post("/api/submitBid", {
@@ -83,8 +85,8 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, me, so
           const newBid = {
           ...prev,
           currentPrice: updatedListing.bids && updatedListing.bids.length > 0 && updatedListing.bids[0].price || 0,
-          byUserId: me.id,
-          byUsername: me.username || "",
+          byUserId: sessionUser?.id,
+          byUsername: sessionUser?.username || "",
           me: myLastBid,
           }
           return newBid;
@@ -93,8 +95,8 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, me, so
         let newBid: Bid;
         
         
-        const userId = me.id
-        const username = me.username
+        const userId = sessionUser?.id
+        const username = sessionUser?.username
         const price = data.price
         const listingId = listing.id
 

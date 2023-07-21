@@ -65,17 +65,23 @@ const OfferDetailsWidget = ({
   const [mostRecentBid, setMostRecentBid] = useState<any>();
   const [completedBy, setcompletedBy] = useState<string | null>("");
 
+  console.log(meLastBid)
+  console.log(participantLastBid)
+
   useEffect(() => {
+    if (!session || !session.user?.id) {
+      return;
+    }
     const reversedBids = [...bids].reverse();
-    const meLast = reversedBids.filter((bid: Bid) => bid.userId === session?.user.id)[0];
-    const participantLast = reversedBids.filter((bid: Bid) => bid.userId !== session?.user.id)[0];
-    
+    const meLast = reversedBids.filter(
+      (bid: Bid) => bid.userId === session?.user.id
+    )[0];
+    const participantLast = reversedBids.filter(
+      (bid: Bid) => bid.userId !== session?.user.id
+    )[0];
+
     setMeLastBid(meLast);
     setParticipantLastBid(participantLast);
-
-    if(status === "rejected") {
-      setcompletedBy(listing.completedById);
-    }
 
     if (meLast && participantLast) {
       setMostRecentBid(
@@ -88,9 +94,22 @@ const OfferDetailsWidget = ({
     } else if (participantLast) {
       setMostRecentBid(participantLast);
     }
+  }, [bids, session?.user?.id])
+
+  useEffect(() => {
+
+    if (status === "rejected") {
+      setcompletedBy(listing.completedById);
+    }
+
+    
   }, [currentBid]);
 
   let parsedImage;
+
+ const sessionUser  = listing.sellerId === session?.user.id  ? listing.seller : listing.buyer
+ const nonSessionUser  = listing.sellerId === session?.user.id  ? listing.buyer : listing.seller
+
 
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
@@ -114,26 +133,22 @@ const OfferDetailsWidget = ({
     >
       <div className=" p-4 rounded-lg border bg-white  border-white shadow ">
         {
-          <Link href={"/dashboard/profile/" + me.id} className="cursor-pointer">
+          <Link href={"/dashboard/profile/" + session?.user.id} className="cursor-pointer">
             <div className="">
               <div className="flex gap-3">
                 <span className="w-[50px] lg:w-1/5">
                   <img
-                    src={
-                      me?.profile?.image
-                        ? me?.profile?.image
-                        : "/images/placeholders/avatar.png"
-                    }
+                    src={ sessionUser?.profile?.image || "/images/placeholders/avatar.png" }
                     alt="user avatar"
                     className="rounded-full border border-gray-200"
                   />
                 </span>
                 <div className="w-full">
                   <div className="capitalize font-bold text-2xl flex justify-between items-center">
-                    You{" "}
+                  You
                     <img
                       src={
-                        listing.seller.id === me.id
+                        listing.sellerId === session?.user.id
                           ? "/images/dog.png"
                           : "/images/cat.png"
                       }
@@ -142,7 +157,7 @@ const OfferDetailsWidget = ({
                     />
                   </div>
                   <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600">
-                    {listing.userId === me.id && (
+                    {listing.userId === sessionUser?.id && (
                       <div>Start price: £{listing.price}</div>
                     )}
                     <div>
@@ -235,16 +250,16 @@ const OfferDetailsWidget = ({
               £{currentBid.currentPrice || 0}
             </div>
           </div>
-          {listing.status && (
+          {status && (
             <div className="flex justify-center pb-2 rounded-xl mb-2">
-              {StatusChecker(listing.status)}
+              {StatusChecker(status)}
             </div>
           )}
         </div>
-        { status === "negotiating" && (
-          <div>
-            <div className="flex justify-center gap-2 text-sm text-white font-bold mb-6 items-start">
-              {  mostRecentBid?.userId !== session?.user.id &&(
+        <div>
+          <div className="flex justify-center gap-2 text-sm text-white font-bold mb-6 items-start">
+            {mostRecentBid?.userId !== session?.user.id && status === "negotiating" || 
+            listing?.userId === session?.user.id  && status === "awaiting approval" && (
                 <>
                   <div className="flex flex-col justify-center w-1/3">
                     <Button
@@ -264,7 +279,6 @@ const OfferDetailsWidget = ({
                       className="object-cover rounded-xl px-6 pt-4"
                     />
                   </div>
-
                   <div className="flex flex-col justify-center w-1/3">
                     <Button
                       cancel
@@ -285,44 +299,9 @@ const OfferDetailsWidget = ({
                   </div>
                 </>
               )}
-              <div className="flex flex-col justify-center w-1/3">
-                <Button
-                  options={{ primary: true }}
-                  onClick={() =>
-                    handleStatusChange("cancelled", session?.user.id)
-                  }
-                  className="rounded-xl px-3 py-1 text-center bg-red-400 border border-red-500"
-                >
-                  END
-                </Button>
-                <img
-                  src={
-                    listing.userId === session?.user.id
-                      ? "/icons/cat-terminate.png"
-                      : "/icons/dog-terminate.png"
-                  }
-                  alt="user"
-                  width="100%"
-                  height="100%"
-                  className="object-cover rounded-xl px-6 pt-4"
-                />
-              </div>
-            </div>
-            <div className="">
-              <PriceWidget
-                listing={listing}
-                currentBid={currentBid}
-                setCurrentBid={setCurrentBid}
-                bids={bids}
-                setBids={setBids}
-                me={me}
-                socketRef={socketRef}
-              />
-            </div>
-          </div>
-        )}
-
-        {status === "awaiting approval" &&
+            {status !== "rejected" && status !== "cancelled" && (
+                <div className="flex flex-col justify-center w-1/3">
+                  {status === "awaiting approval" &&
           listing.userId !== session?.user?.id && (
             <div className="flex justify-center gap-2 mb-4">
               <Button
@@ -331,20 +310,58 @@ const OfferDetailsWidget = ({
                   handleStatusChange("negotiating", session?.user.id)
                 }
               >
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-2 items-center ">
                   <div>
                     <FaThumbsUp />
                   </div>
                   <div>Let's haggle</div>
                 </div>
               </Button>
-              <Button cancel link={`#`} className="" />
             </div>
           )}
+                  <Button
+                    options={{ primary: true }}
+                    onClick={() =>
+                      handleStatusChange("cancelled", session?.user.id)
+                    }
+                    className="rounded-xl px-3 py-1 text-center bg-red-400 border border-red-500"
+                  >
+                    END
+                  </Button>
+                  <img
+                    src={
+                      listing.userId === session?.user.id
+                        ? "/icons/cat-terminate.png"
+                        : "/icons/dog-terminate.png"
+                    }
+                    alt="user"
+                    width="100%"
+                    height="100%"
+                    className="object-cover rounded-xl px-6 pt-4"
+                  />
+                </div>
+              )}
+          </div>
+          { status === "rejected" && completedBy !== session?.user.id || status === "negotiating" && (
+              <div className="">
+                <PriceWidget
+                  listing={listing}
+                  currentBid={currentBid}
+                  setCurrentBid={setCurrentBid}
+                  bids={bids}
+                  setBids={setBids}
+                  sessionUser={sessionUser}
+                  socketRef={socketRef}
+                />
+              </div>
+            )}
+        </div>
+
+        
       </div>
       <div className="bg-white p-4 mt-4 rounded-lg border border-white shadow">
         <Link
-          href={"/dashboard/profile/" + participant.id}
+          href={"/dashboard/profile/" + nonSessionUser?.id}
           className="cursor-pointer"
         >
           <div className="">
@@ -352,9 +369,8 @@ const OfferDetailsWidget = ({
               <span className="w-[50px] lg:w-1/5">
                 <img
                   src={
-                    participant?.profile?.image
-                      ? participant?.profile?.image
-                      : "/images/placeholders/avatar.png"
+                    nonSessionUser?.profile?.image
+                      || "/images/placeholders/avatar.png"
                   }
                   alt="user avatar"
                   className="rounded-full border border-gray-200"
@@ -362,10 +378,10 @@ const OfferDetailsWidget = ({
               </span>
               <div className="w-full">
                 <div className="capitalize font-bold text-2xl flex justify-between items-center">
-                  {participant.username}
+                  {nonSessionUser?.username}
                   <img
                     src={
-                      listing.seller.id === participant.id
+                      listing?.seller?.id === nonSessionUser?.id
                         ? "/images/dog.png"
                         : "/images/cat.png"
                     }
@@ -374,7 +390,7 @@ const OfferDetailsWidget = ({
                   />
                 </div>
                 <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600 ">
-                  {listing.userId === participant.id && (
+                  {listing?.userId === nonSessionUser?.id && (
                     <div>Start price: £{listing.price}</div>
                   )}
                   <div>

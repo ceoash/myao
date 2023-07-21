@@ -5,48 +5,28 @@ import getCurrentUser from "@/actions/getCurrentUser";
 import { User } from "@/types";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
-import getListingsByUserId from "@/actions/getListingsByUserId";
-import EmptyState from "@/components/EmptyState";
-import Offer from "@/components/offers/Offer";
 import useOfferModal from "@/hooks/useOfferModal";
 import usePendingConversationModal from "@/hooks/usePendingConversationModal";
-import getRequestsByUserId from "@/actions/getRequestsByUserId";
 import getFriendsByUserId from "@/actions/getFriendsByUserId";
 import QuickConnect from "@/components/widgets/QuickConnect";
-import getConversationsByUserId from "@/actions/getConversationsByUserId";
-import { formatDistanceToNow, set } from "date-fns";
 import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
 import { useRouter } from "next/router";
-import Spinner from "@/components/Spinner";
 import Stats from "@/components/dashboard/Stats";
 import ActivityWidget from "@/components/dashboard/widgets/ActivityWidget";
 import InviteFriend from "@/components/dashboard/widgets/InviteFriend";
-import { BiFilterAlt } from "react-icons/bi";
 import Button from "@/components/dashboard/Button";
 import Skeleton from "react-loading-skeleton";
-import {
-  Activity,
-  IConversation,
-  ListingsMap,
-  dashboardProps,
-  DashListing,
-  ListingStatus,
-} from "@/interfaces/authenticated";
+import {dashboardProps,} from "@/interfaces/authenticated";
 import FriendsWidget from "@/components/widgets/FriendsWidget";
-import { Listing } from "@prisma/client";
-import { all } from "axios";
-import { ca } from "date-fns/locale";
 import useQuickConnect from "@/hooks/useQuickConnect";
-import listingsCount from "@/actions/listingsCount";
-import { toast } from "react-hot-toast";
+import getOffersByUserId from "@/actions/dashboard/getOffersByUserId";
+import Offers from "@/components/offers/Offers";
 
 const Index = ({
-  allListings,
-  allRequests,
-  listings,
+  sent,
+  received,
   user,
-  requests,
   friends,
   session,
   activities,
@@ -57,22 +37,15 @@ const Index = ({
   const offerModal = useOfferModal();
   const pendingConversation = usePendingConversationModal();
 
-  const [activeTab, setActiveTab] = useState<"sent" | "received">("sent");
-  const [category, setCategory] = useState<
-    "all" | "awaiting approval" | "negotiating" | "rejected" | "completed" | "pending"
-  >("all");
+  const router = useRouter();
 
   const [friendsList, setFriendsList] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userActivities, setUserActivities] = useState<any>([]);
-  const [realTimeListings, setRealTimeListings] = useState<any>({});
-  const [realTimeRequests, setRealTimeRequests] = useState<any>({});
-  const [initListings, setInitListings] = useState<any>([]);
-  const [initRequests, setInitRequests] = useState<any>([]);
+
+
   const [sentCount, setSentCount] = useState<any>(0);
   const [receivedCount, setReceivedCount] = useState<any>(0);
-
-  console.log(username)
 
   const connect = useQuickConnect()
   
@@ -85,70 +58,14 @@ const Index = ({
     } else {
     setFriendsList(friends);
     setUserActivities(activities);
-    setInitListings(allListings)
-    setInitRequests(allRequests)
+
     setIsLoading(false)
     setSentCount(listingsCount)
     setReceivedCount(requestsCount)
     }
   }, [session.user.id])
 
-  const filterAndMapListingsByStatus = (
-    listings: DashListing[]
-  ): ListingsMap => {
-    const validStatuses: ListingStatus[] = [
-      "awaiting approval",
-      "negotiating",
-      "accepted",
-      "rejected",
-    ];
-
-    const filteredListings: DashListing[] = listings.filter((listing) =>
-      validStatuses.includes(listing.status)
-    );
-
-    return filteredListings.reduce((acc: ListingsMap, listing: DashListing) => {
-      if (!acc[listing.status]) {
-        acc[listing.status] = [];
-      }
-      acc[listing.status]?.push(listing);
-      return acc;
-    }, {} as ListingsMap);
-  };
-
-  const flattenListingsMap = (listingsMap: ListingsMap): DashListing[] => {
-    return Object.values(listingsMap).flat();
-  };
-
-  useEffect(() => {
-    const realTimeListingsByStatus = filterAndMapListingsByStatus(
-      flattenListingsMap(listings)
-    );
-    setRealTimeListings(realTimeListingsByStatus);
-  }, [listings]);
-
-  useEffect(() => {
-    const realTimeRequestsByStatus = filterAndMapListingsByStatus(
-      flattenListingsMap(requests)
-    );
-    setRealTimeRequests(realTimeRequestsByStatus);
-  }, [requests]);
-
-  const router = useRouter();
-
-  /* const pendingConversations = conversations.filter(
-    (item: any) =>
-      item.status === "none" && item.participant2Id === session.user.id
-  );
-  const acceptedConversations = conversations.filter(
-    (item: any) => item.status === "accepted"
-  ); */
-
-  useEffect(() => {
-    if (receivedCount.length > 0) {
-      setActiveTab("received");
-    }
-  }, [receivedCount]);
+  
 
   const socketRef = useRef<Socket>();
 
@@ -196,98 +113,13 @@ const Index = ({
     });
 
 
-    socketRef.current && socketRef.current.on("new_listing", (newListing: any) => {
-      console.log("new listing", newListing);
-      toast.success("New listing added!");
-      setRealTimeListings((prevListings: ListingsMap) => {
-        let updatedListings = { ...prevListings };
-        let newListingStatus: ListingStatus = newListing.status;
-
-        if (!updatedListings[newListingStatus]) {
-          updatedListings[newListingStatus] = [];
-        }
-
-        (updatedListings[newListingStatus] as DashListing[]).push(newListing);
-        setInitListings((prevListings: Listing[]) => {
-          return [newListing, ...prevListings];
-        });
-
-        return updatedListings;
-      });
-    });
-
-    socketRef.current && socketRef.current.on("request_received", (newRequest: any) => {
-      toast.success("New listing added!");
-      console.log("new request", newRequest); 
-      setRealTimeRequests((prevListings: ListingsMap) => {
-        let updatedListings = { ...prevListings };
-        let newListingStatus: ListingStatus = newRequest.status;
-
-        if (!updatedListings[newListingStatus]) {
-          updatedListings[newListingStatus] = [];
-        }
-
-        (updatedListings[newListingStatus] as DashListing[]).push(newRequest);
-        setInitRequests((prevRequests: Listing[]) => {
-          return [newRequest, ...prevRequests];
-        });
-        return updatedListings;
-      });
-    });
-
-    socketRef.current && socketRef.current.on("delete_offer", (deletedListing: DashListing) => {
-      console.log("offer deleted", deletedListing);
-
-      setRealTimeListings((prevListings: ListingsMap) => {
-        let updatedListings = { ...prevListings };
-
-        let deletedListingStatus: ListingStatus = deletedListing.status;
-
-        updatedListings[deletedListingStatus] = (
-          updatedListings[deletedListingStatus] as DashListing[]
-        ).filter((listing) => listing.id !== deletedListing.id);
-
-        setInitListings((prevListings: Listing[]) => {
-          return prevListings.filter(
-            (listing) => listing.id !== deletedListing.id
-          );
-        });
-        return updatedListings;
-      });
-    });
-
-    socketRef.current && socketRef.current.on("delete_request", (deletedListing: DashListing) => {
-      console.log("request deleted", deletedListing);
-
-      setRealTimeRequests((prevListings: ListingsMap) => {
-        let updatedRequests = { ...prevListings };
-
-        let deletedListingStatus: ListingStatus = deletedListing.status;
-
-        updatedRequests[deletedListingStatus] = (
-          updatedRequests[deletedListingStatus] as DashListing[]
-        ).filter((listing) => listing.id !== deletedListing.id);
-
-        setInitRequests((prevRequests: Listing[]) => {
-          return prevRequests.filter(
-            (listing) => listing.id !== deletedListing.id
-          );
-        });
-
-        return updatedRequests;
-      });
-    });
 
     return () => {
       socketRef.current && socketRef.current.disconnect();
     };
   }, [session.id]);
 
-  const activeListings =
-    category === "all" ? initListings : realTimeListings?.[category] || [];
-
-  const activeRequests =
-    category === "all" ? initRequests : realTimeRequests?.[category] || [];
+ 
 
   return (
 
@@ -357,116 +189,16 @@ const Index = ({
             </div>
 
             <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col overflow-auto">
-              {realTimeListings.length === 0 &&
-              realTimeRequests.length === 0 ? (
-                <div className="hidden xl:flex flex-grow mt-6 flex-col overflow-auto">
-                  <EmptyState showReset />
-                </div>
-              ) : (
+           
                 <div className=" pt-6 mb-8">
                   <div className="pb-6">
                     <h3>Recent Offers</h3>
                   </div>
-                  <div className="h-full  rounded-xl">
-                    <div className="border-b border-gray-200 w-full flex justify-between bg-gray-100 items-center">
-                      <div className="flex gap-4  p-4">
-                        <div
-                          className={`uppercase cursor-pointer font-bold ${
-                            activeTab === "sent" &&
-                            "border-b-4 border-orange-400"
-                          }`}
-                          onClick={() => setActiveTab("sent")}
-                        >
-                          Sent
-                        </div>
-                        <div
-                          className={`uppercase cursor-pointer font-bold items-start flex`}
-                          onClick={() => setActiveTab("received")}
-                        >
-                          <span
-                            className={`${
-                              activeTab === "received" &&
-                              "border-b-4 border-orange-400"
-                            }`}
-                          >
-                            Received
-                          </span>
-                          {realTimeRequests.length > 0 && (
-                            <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
-                              {realTimeRequests.length} new
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="border border-gray-200 rounded-lg bg-gray-100 flex items-center mx-4">
-                        <BiFilterAlt className="text-gray-500 mx-2 border-r border-gray-200" />
-                        <select
-                          key={activeTab}
-                          value={category}
-                          onChange={(e) =>
-                            setCategory(
-                              e.target.value as
-                                | "awaiting approval"
-                                | "all"
-                                | "negotiating"
-                                | "rejected"
-                                | "completed"
-                                | "pending"
-                            )
-                          }
-                          className=" px-2 py-2 rounded-r-lg bg-gray-100"
-                        >
-                          <option value="all">All Offers</option>
-                          <option value="awaiting approval">Awaiting</option>
-                          <option value="negotiating">Negotiating</option>
-                          <option value="completed">Accepted</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                      </div>
-                    </div>
-                    {activeTab === "sent" && (
-                      <>
-                        <div className="">
-                          <div className="min-w-full ">
-                            {activeListings.length > 0 ? (
-                              activeListings.map((item: Listing) => {
-                                return <Offer key={item.id} socketRef={socketRef} {...item} />;
-                              })
-                            ) : (
-                              <div className="flex flex-col items-center justify-center h-full bg-white border-b border-gray-200">
-                                <div className="text-gray-500 text-lg font-bold my-12 mx-4">
-                                  No offers to display
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {activeTab === "received" && (
-                      <>
-                        <div className="h-full">
-                          <div className="min-w-full ">
-                            {activeRequests.length > 0 ? (
-                              activeRequests.map((item: Listing) => {
-                                return <Offer key={item.id} {...item} socketRef={socketRef}  />;
-                              })
-                            ) : (
-                              <div className="flex flex-col items-center justify-center h-full bg-white border-b border-gray-200">
-                                <div className="text-gray-500 text-lg font-bold my-12 mx-4">
-                                  No offers to display
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
 
-                    <div></div>
-                  </div>
+                  <Offers sent={sent} received={received} session={session} />
+                  
                 </div>
-              )}
+              
               <div className="pb-6">
                 <h3>Make Connections</h3>
               </div>
@@ -577,58 +309,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const user = await getCurrentUser(session);
 
-    console.log("user", user);
     const friends = await getFriendsByUserId(session.user.id);
-    const listings: any[] = await getListingsByUserId(session.user.id);
-    const { 
-      sentListingsCount, 
-      receivedListingsCount 
-    } = await listingsCount(session.user.id);
-    const sortedListings = listings.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    const topListings: { [key: string]: DashListing[] } = {};
-    ["awaiting approval", "negotiating", "accepted", "rejected"].forEach(
-      (status) => {
-        const filtered = sortedListings
-          .filter((listing) => listing.status === status)
-          .slice(0, 5);
-        topListings[status] = filtered.map((listing) => ({
-          ...listing,
-          createdAt: new Date(listing.createdAt).toISOString(),
-          updatedAt: new Date(listing.updatedAt).toISOString(),
-          expireAt: listing?.expireAt
-            ? new Date(listing.expireAt).toISOString()
-            : null,
-        }));
-      }
-    );
+    const PAGE_SIZE = 5;
 
-    const requests: any[] = await getRequestsByUserId(session.user.id);
-    const sortedRequests = requests.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    const topRequests: { [key: string]: DashListing[] } = {};
-    ["awaiting approval", "negotiating", "accepted", "rejected"].forEach(
-      (status) => {
-        const filtered = sortedRequests
-          .filter((request) => request.status === status)
-          .slice(0, 5);
-        topRequests[status] = filtered.map((request) => ({
-          ...request,
-          createdAt: new Date(request.createdAt).toISOString(),
-          updatedAt: new Date(request.updatedAt).toISOString(),
-          expireAt: request?.expireAt
-            ? new Date(request.expireAt).toISOString()
-            : null,
-        }));
-      }
-    );
+    const listings = await getOffersByUserId(session, PAGE_SIZE);
 
-    const allListings = listings.slice(0, 5);
-    const allRequests = requests.slice(0, 5);
+    if (!listings) return { props: { sent: [], received: [], session } };
+
+    const sent = listings.sent;
+    const received = listings.received;
 
     const copiedActivities = [...(user?.activities as any[])];
     const reversedActivities = copiedActivities.reverse();
@@ -638,17 +327,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
    
     return {
       props: {
-        listings: topListings,
+        sent,
+        received,
         user,
-        username: user?.username,
-        requests: topRequests,
+        username: username,
         friends,
         session,
-        allListings,
-        allRequests,
         activities: topActivities,
-        listingsCount: sentListingsCount,
-        requestsCount: receivedListingsCount,
+       
       },
     };
   } catch (error) {

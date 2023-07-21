@@ -30,7 +30,6 @@ import Image from "next/image";
 import { BiStar } from "react-icons/bi";
 import Badge from "@/components/dashboard/offer/Badge";
 import StatusChecker from "@/utils/status";
-import { tr } from "date-fns/locale";
 
 interface IBid extends Bid {
   user: User;
@@ -61,14 +60,13 @@ const Index = ({ listing }: any) => {
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   const [me, setMe] = useState<ProfileUser>();
 
-  console.log(me);
 
   const [participant, setParticipant] = useState<ProfileUser>();
   const router = useRouter();
   // const DeleteListing = useDeleteConfirmationModal();
   const SearchModal = useSearchModal();
-
   const { data: session } = useSession();
+
   const now = Date.now();
 
   const socketRef = useRef<Socket>();
@@ -84,15 +82,29 @@ const Index = ({ listing }: any) => {
   }, [listing?.id]);
 
 
+
+
   //const reversedBids = [...bids].reverse();
   const [meBid, setMeBid] = useState<Bid | null>(null);
   const [participantBid, setParticipantBid] = useState<Bid | null>(null);
 
   useEffect(() => {
-    const reversedBids = [...listing.bids].reverse();
+    if (!session || !session.user?.id) {
+      return;
+    }
+    if (listing?.sellerId === session?.user?.id) {
+      setMe(listing?.seller);
+      setParticipant(listing?.buyer);
+    } else {
+      setMe(listing?.buyer);
+      setParticipant(listing?.seller);
+    
+    }
+  }, [listing.id, session?.user?.id])
 
+  useEffect(() => {
+    const reversedBids = [...listing.bids].reverse();
     setBids(listing.bids);
-  
     setCurrentBid({
       currentPrice:
         listing?.bids.length > 0
@@ -124,18 +136,9 @@ const Index = ({ listing }: any) => {
     if (listing.status === "accepted") {
       setDisabled(true);
     }
-    setMe(
-      session?.user.id === listing.sellerId
-        ? { ...listing.seller, isSeller: true }
-        : { ...listing.buyer, isBuyer: true }
-    );
-    setParticipant(
-      session?.user.id === listing.sellerId
-        ? { ...listing.buyer, isBuyer: true }
-        : { ...listing.seller, isSeller: true }
-    );
-
+    
     setStatus(listing?.status);
+
     setActivities([...listing?.activities].reverse());
     const created = new Date(listing?.createdAt);
     timeInterval(created, setTimeSinceCreated);
@@ -348,19 +351,19 @@ const Index = ({ listing }: any) => {
                   </div>
                   <div className="flex flex-col p-4">
                     <div className="text-center">
-                      <h1 className="-mb-2">0</h1>
+                      <h2 className="-mb-2">0</h2>
                       <p>Offers Completed</p>
                     </div>
                     <div className="text-center">
-                      <h1 className="-mb-2">0</h1>
+                      <h2 className="-mb-2">0</h2>
                       <p>Offers Rejected</p>
                     </div>
                     <div className="text-center">
-                      <h1 className="-mb-2">0</h1>
+                      <h2 className="-mb-2">0</h2>
                       <p>Bids Placed</p>
                     </div>
                     <div className="text-center">
-                      <h1 className="-mb-2">100%</h1>
+                      <h2 className="-mb-2">100%</h2>
                       <p>Trust Score</p>
                     </div>
                   </div>
@@ -388,8 +391,6 @@ const Index = ({ listing }: any) => {
 
   const parsedImages = JSON.parse(listing?.image);
 
-  console.log("review", listing.reviews);
-
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
@@ -405,6 +406,16 @@ const Index = ({ listing }: any) => {
           {status === "rejected" && (
             <AlertBanner
               text="Your bid has been rejected. Enter a new bid to continue"
+              danger
+              button
+              buttonText={`Contact ${
+                listing.sellerId === session?.user.id ? "Buyer" : "Seller"
+              }`}
+            />
+          )}
+          {status === "cancelled" && (
+            <AlertBanner
+              text="This bid has been terminated."
               danger
               button
               buttonText={`Contact ${
@@ -562,7 +573,7 @@ const Index = ({ listing }: any) => {
                   </div>
                 </div>
               ))}
-            {tab === "bids" && <Bids bids={bids} />}
+            {tab === "bids" && <Bids bids={bids} participant={participant} me={me} />}
           </div>
           {
             <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4">

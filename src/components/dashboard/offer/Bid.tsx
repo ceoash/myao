@@ -4,9 +4,14 @@ import React, { useEffect, useState } from "react";
 
 interface BidProps {
   bid: any;
+  participant: any;
+  me: any;
 }
 
-const Bid = ({ bid }: BidProps) => {
+const Bid = ({ bid, participant, me }: BidProps) => {
+
+  if (!participant || !me) return null;
+  console.log(me)
   
     const [timeSinceCreated, setTimeSinceCreated] = useState<string>("");
   
@@ -53,10 +58,10 @@ const Bid = ({ bid }: BidProps) => {
         <div>
           <span className="font-extrabold">£{bid?.price}</span> by{" "}
           <Link
-            href={`/dashboard/profile/${bid?.userId}`}
+            href={`/dashboard/profile/${participant && me ? bid.userId === me.id ? me.id : participant.id : bid?.userId }`}
             className="underline"
           >
-            {bid?.userId}
+            {participant && me ? bid.userId === me.id ? 'You' : participant.username : bid?.userId}
           </Link>
         </div>{" "}
       </div>

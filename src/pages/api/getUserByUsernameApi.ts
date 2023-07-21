@@ -1,8 +1,4 @@
-import { getSession } from "next-auth/react";
 import prisma from "@/libs/prismadb";
-import { User } from "@prisma/client";
-import { ErrorResponse } from "@/components/UsernameSelect";
-import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function getUser(
     req: any,
@@ -10,6 +6,7 @@ export default async function getUser(
 ) {
     if (req.method === "GET") {
     let { username } = req.query;
+    console.log(username);
     const user = await prisma.user.findUnique({
       where: { username: username },
       include: {
@@ -20,6 +17,7 @@ export default async function getUser(
         },
       }
     });
+    console.log(user);
     res.send(user);
   } else {
     // Not signed in

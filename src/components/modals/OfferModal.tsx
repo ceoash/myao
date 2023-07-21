@@ -47,7 +47,7 @@ const OfferModal = () => {
   const [search, setSearch] = useState("");
   const [userType, setUserType] = useState("sellerOffer");
   const [foundUser, setFoundUser] = useState<any | null>(offerModal?.participant || null);
-
+console.log("foundUser", foundUser);
   const port = config.PORT;
   const socket = io(port);
 
@@ -77,11 +77,12 @@ const OfferModal = () => {
       userType: "",
     },
   });
-
+  console.log(session);
   const onSearchUser = () => {
     if (!search) {
       return;
     }
+    console.log(search);
     axios
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
@@ -465,7 +466,7 @@ const OfferModal = () => {
                 placeholder="Enter MYAO name"
                 className="rounded-l-lg border border-gray-200 p-2 flex-1 lowercase focus:border-orange-300 hover:border-orange-300 focus:outline-none"
                 value={search}
-                onChange={(e) => {setSearch(e.target.value); clearErrors("user");}}
+                onChange={(e) => {setSearch(e.target.value);}}
                 {...register}
               />
               <button

@@ -37,7 +37,7 @@ const Stats = ({
   const sent = sentOffers;
   const received = receivedOffers
 
-  const [randomAdvice, setRandomAdvice] = useState({ key: "", value: { advice: "Loading..." } });
+  const [randomAdvice, setRandomAdvice] = useState({ key: "", value: { id: 0, advice: "Loading..." } });
 
   function getRandomAdvice() {
     function getRandomItem(array: any[]) {
@@ -51,7 +51,7 @@ const Stats = ({
 
     const randomCategoryKey = getRandomItem(categories);
     const randomAdvice = adviceArray[randomCategoryKey] ? getRandomItem(adviceArray[randomCategoryKey]) : null;
-    return {key: randomCategoryKey, value: randomAdvice};
+    return {key: randomCategoryKey, value: randomAdvice, id: randomAdvice?.id};
   }
 
   useEffect(() => {
@@ -97,6 +97,7 @@ const Stats = ({
           className="bg-orange-100"
         />
         <InfoCard
+          key={randomAdvice.key + Math.floor(Math.random() * 1000)}
           title={randomAdvice.key}
           text={randomAdvice?.value?.advice || "Loading..."}
           color={`purple`}

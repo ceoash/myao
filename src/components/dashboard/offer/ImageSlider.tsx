@@ -11,6 +11,7 @@ import "swiper/css/thumbs";
 
 // import required modules
 import SwiperCore, { Pagination, Thumbs, Navigation, FreeMode } from "swiper";
+import { el } from "date-fns/locale";
 
 interface ImageSliderProps {
   images: string;
@@ -19,11 +20,17 @@ interface ImageSliderProps {
 const ImageSlider = ({ images }: ImageSliderProps) => {
   const thumbsSwiperRef = useRef<SwiperCore | null>(null);
   const [imagesStore, setImagesStore] = useState([]);
-
   
   useEffect(() => {
     setImagesStore(() => {
-      const newImages = JSON.parse(images)
+      let newImages;
+      if (images) {
+         newImages = JSON.parse(images)
+      }
+      else {
+        newImages = [];
+      }
+     
       return newImages
     });
     

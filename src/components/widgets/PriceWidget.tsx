@@ -106,8 +106,9 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
         const username = sessionUser?.username
         const price = data.price
         const listingId = listing.id
+        const previous = currentBid.currentPrice
 
-        socketRef.current?.emit('update_bid', {price, userId, username, listingId});
+        socketRef.current?.emit('update_bid', {price, userId, username, listingId, previous});
         socketRef.current?.emit('update_activities', {
           activities: transactions,
           participant1Id: updatedListing.sellerId,

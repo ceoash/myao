@@ -45,7 +45,7 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(
           <div className="font-bold">
             {message.userId === session.user.id
               ? "You"
-              : "@" + message.user?.username}
+              : message.user?.username}
           </div>
           <div>
             {message?.image && (

@@ -8,6 +8,7 @@ import ChatMessage from "./ChatMessage";
 import io, { Socket } from "socket.io-client";
 import { config } from "@/config";
 import { Listing, User } from "@prisma/client";
+import { is } from "date-fns/locale";
 
 interface MessageProps {
   buyerId: string;
@@ -28,19 +29,15 @@ interface ListingChatProps {
   user: any;
   disabled?: boolean;
   session: any;
+  messages: MessageProps[];
+  setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
+  socketRef: React.MutableRefObject<Socket | undefined>;
 
 }
 
-const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => {
-  const [messages, setMessages] = useState<MessageProps[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setMessages([...listing.messages].reverse());
-    setIsLoading(false);
-  }, [listing.messages]);
-
-
+const ListingChat = ({ listing, user, disabled, session, messages, setMessages, socketRef }: ListingChatProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const now = new Date();
 
   const {
     register,
@@ -52,21 +49,6 @@ const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => 
       image: "",
     },
   });
-
-  const now = new Date();
-
-  const socketRef = useRef<Socket>();
-
-  useEffect(() => {
-    socketRef.current = io(config.PORT);
-    socketRef.current.on("new_listing_message", (newMessage: any) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -112,7 +94,7 @@ const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => 
               </div>
               <div className="border-t border-gray-200 w-full hidden lg:block"></div>
             </div>
-            {!messages ? (
+            {isLoading ? <div className="col-span-12 flex justify-between items-center"> Loading... </div> : !messages ? (
               <div className="col-span-12 flex justify-between items-center">
                 No messages yet
               </div>

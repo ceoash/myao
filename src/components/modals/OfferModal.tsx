@@ -47,8 +47,8 @@ const OfferModal = () => {
   const [search, setSearch] = useState("");
   const [userType, setUserType] = useState("sellerOffer");
   const [foundUser, setFoundUser] = useState<any | null>(offerModal?.participant || null);
-console.log("foundUser", foundUser);
-console.log("session", session);
+// console.log("foundUser", foundUser);
+// console.log("session", session);
   const port = config.PORT;
   const socket = io(port);
 
@@ -78,7 +78,6 @@ console.log("session", session);
       userType: "",
     },
   });
-  console.log(session);
   const onSearchUser = () => {
     if (!search) {
       return;
@@ -86,7 +85,6 @@ console.log("session", session);
     axios
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
-        console.log(res.data);
         if (res.data.id  && res.data.id === session?.user?.id) {
           toast.error("You can't create an offer with yourself");
           setFoundUser(null);
@@ -227,7 +225,6 @@ console.log("session", session);
   if (image) {
       let arr = new Array(image);
  im = JSON.parse(image)
-  console.log("image", im);
   }
   
 
@@ -241,7 +238,6 @@ console.log("session", session);
   };
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
-    console.log("data", data);
     if (step !== STEPS.REVIEW) {
       return onNext();
     }

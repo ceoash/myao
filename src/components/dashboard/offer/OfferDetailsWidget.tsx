@@ -85,6 +85,8 @@ const OfferDetailsWidget = ({
 
   const myCondition = noBids || rejectedByMe || inNegotiation;
 
+  console.log("currentBid", currentBid);
+
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -172,7 +174,7 @@ const OfferDetailsWidget = ({
                   </div>
                   <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600">
                     {listing.userId === sessionUser?.id && (
-                      <div>Start price: £{listing.price}</div>
+                      <div className="xl:hidden 2xl:block">Start price: £{listing.price}</div>
                     )}
                     <div>
                       Last bid:{" "}
@@ -212,8 +214,8 @@ const OfferDetailsWidget = ({
                   <div className="ml-4 flex flex-1 flex-col">
                     <div>
                       <div className="flex justify-between text-base font-medium text-gray-900">
-                        <h3>
-                          <div className="first-letter:uppercase">
+                        <h3 className="xl:w-[120px] 2xl:w-[250px]">
+                          <div className="first-letter:uppercase text-left truncate md:text-md lg:text-lg xl:text-xl">
                             {listing.title}
                           </div>
                         </h3>
@@ -261,7 +263,7 @@ const OfferDetailsWidget = ({
                 status === "rejected" && "text-red-500 line-through"
               }`}
             >
-              £{currentBid.currentPrice || 0}
+              £{currentBid.currentPrice || "Open offer"}
             </div>
           </div>
           {status && (
@@ -272,7 +274,7 @@ const OfferDetailsWidget = ({
         </div>
         <div>
           <div className=" gap-2 text-sm text-white font-bold mb-6 items-start">
-            {currentBid.byUserId !== session?.user?.id &&
+            {currentBid.byUserId !== session?.user?.id  &&
               status === "negotiating" && (
                 <div className="w-2/3 flex gap-2 mx-auto justify-center">
                   <div className="flex flex-col justify-center  items-center gap-4">

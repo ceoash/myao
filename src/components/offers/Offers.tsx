@@ -41,15 +41,17 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
   >({});
   const [activeTab, setActiveTab] = useState("sent");
 
-  // console.log("sent", allSent);
-  //console.log("received", allReceived);
-  //console.log("sentListings", sentListings);
-  //console.log("receivedListings", receivedListings);
+  console.log("sent", allSent);
+  console.log("received", allReceived);
+  console.log("sentListings", sentListings);
+  console.log("receivedListings", receivedListings);
 
 
   useEffect(() => {
-    setAllSent(sent);
-    setAllReceived(received);
+    if(sent || received){
+      setAllSent(sent);
+      setAllReceived(received);
+    }
   }, [sent, received]);
 
   const fetchListingsByCategory = async (
@@ -176,39 +178,23 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
     socketRef.current &&
       socketRef.current.on("new_listing", (listing: any, ownerId, participantId) => {
         console.log("new listing", listing);
-        toast.success("New listing added!");
-        if (session.user.id !== listing.userId) {
-          console.log("PARTICIPANT", participantId);
-          setReceivedListings((prevListings) => {
-            return {
-              ...prevListings,
-              "all": [ listing, ...prevListings.all],
-            };
-          });
-          console.log("receivedListings", receivedListings);
+        if (session?.user.id !== listing.userId) {
           setAllReceived((prevListings: any) => {
             return [listing, ...prevListings];
           });
-          if (setReceivedCount)
-          {
-            setReceivedCount(countSent + 1);
-
-          }
-        } 
-        if (session.user.id === listing.userId) {
-          console.log("ownerId", ownerId);
-          setSentListings((prevListings) => {
-            return {
-              ...prevListings,
-              "all": [listing, ...prevListings.all],
-            };
+          setReceivedListings((prevListings) => {
+            return { ...prevListings, all: [listing, ...prevListings?.all] };
           });
-          console.log("sentListings", sentListings);
+          if (setReceivedCount) setReceivedCount(countReceived + 1);
+        } 
+        if (session?.user.id === listing.userId) {
           setAllSent((prevListings: any) => {
             return [listing, ...prevListings];
           });
-          if (setSentCount)
-          setSentCount(countSent + 1);
+          setSentListings((prevListings) => {
+            return { ...prevListings, all: [listing, ...prevListings?.all] };
+          });
+          if (setSentCount) setSentCount(countSent + 1);
         }
       });
 
@@ -307,7 +293,7 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
                 </div>
               ) : (
                 <div className="min-w-full transition">
-                  {countSent > 0 && sentListings[selectedCategory] ? (
+                  {sentListings.all && sentListings.all.length > 0 && sentListings[selectedCategory] ? (
                     sentListings[selectedCategory].map((item: Listing) => {
                       return <Offer key={item.id} {...item} socketRef={socketRef} />;
                     })
@@ -352,7 +338,7 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
                 <Skeleton height={200} count={5} />
               ) : (
                 <div className="min-w-full transition">
-                  { countReceived > 0 &&
+                  { receivedListings.all && receivedListings.all.length > 0 &&
                     receivedListings[selectedCategory] ? (
                       receivedListings[selectedCategory].map(
                         (item: Listing) => {

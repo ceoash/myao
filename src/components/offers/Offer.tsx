@@ -109,7 +109,7 @@ const Offer: React.FC<any> = ({
           newStatus: response.data.listing.status,
           listingId: id,
         });
-        console.log("response", response.data);
+        // console.log("response", response.data);
         socketRef.current?.emit(
           "update_activities",
           response.data.transactionResult,
@@ -183,19 +183,19 @@ const Offer: React.FC<any> = ({
             <div className="flex justify-between md:block mb-2 pb-2 md:pb-0 md:m-0">
               <div>
                 <div className="text-right text-sm">
-                  Bid by{" "}
+                  {bids && bids.length > 0 ? "Bid by " : price !== "0" ? "Starting price by " : "Offer by "}
                   <span className="underline">
-                    {bids && bids.length > 0 ? bids[bids.length - 1].userId === sellerId ? seller?.username : buyer?.username : userId === sellerId ? seller?.username : buyer?.username || ""}
+                    {bids && bids.length > 0 && bids[bids.length - 1].userId === sellerId ? seller?.username : userId === sellerId ? seller?.username : buyer?.username }
                   </span>
                 </div>
 
                 <div className="font-extrabold md:text-2xl text-right">
                   {bids && bids.length > 0 ? (
                     `£ ${bids[0].price}`
-                  ) : price ? (
+                  ) : price &&  price !== "0"  ? (
                     `£ ${price}`
                   ) : (
-                    <span className="text-sm border border-gray-200 rounded-md bg-white p-2">
+                    <span className="text-sm ">
                       Open offer
                     </span>
                   )}

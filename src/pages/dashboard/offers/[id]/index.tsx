@@ -42,6 +42,14 @@ interface ProfileUser extends User {
   bids?: IBid[];
 }
 
+interface MessageProps {
+  buyerId: string;
+  sellerId: string;
+  listingId: string;
+  text: string;
+  id: string;
+}
+
 const Index = ({ listing, session }: any) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("description");
@@ -61,6 +69,11 @@ const Index = ({ listing, session }: any) => {
   const [tab, setTab] = useState("details");
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   const [me, setMe] = useState<ProfileUser>();
+  const [messages, setMessages] = useState<MessageProps[]>([]);
+
+  console.log("bids", bids)
+
+
 
 
   const [participant, setParticipant] = useState<ProfileUser>();
@@ -94,6 +107,8 @@ const Index = ({ listing, session }: any) => {
       setMe(listing?.buyer);
       setParticipant(listing?.seller);
     }
+    setMessages([...listing.messages].reverse());
+
     setCompletedBy(listing?.completedById);
   }, [listing.id, session?.user?.id])
 
@@ -110,8 +125,8 @@ const Index = ({ listing, session }: any) => {
         listing?.bids.length > 0
           ? listing.bids[listing.bids.length - 1].price
           : listing?.price,
-      byUserId: listing.bids[listing.bids.length - 1]?.userId,
-      byUsername: listing.bids[listing.bids.length - 1]?.user?.username,
+      byUserId: listing.bids[listing.bids.length - 1]?.userId || listing.userId,
+      byUsername: listing.bids[listing.bids.length - 1]?.user?.username || listing.sellerId === listing.userId ? listing.seller.username : listing.buyer.username,
       me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
       participant: reversedBids.filter((bid: Bid) => bid.userId === participant?.id)[0],
     });
@@ -147,9 +162,15 @@ const Index = ({ listing, session }: any) => {
   }, []);
 
   useEffect(() => {
+    socketRef.current &&
+    socketRef.current.on("new_listing_message", (newMessage: any) => {
+      console.log("Received new message: ", newMessage);
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+     
+    });
 
     socketRef.current &&
-      socketRef.current.on("updated_bid", ({ price, userId, username, listingId}) => {
+      socketRef.current.on("updated_bid", ({ price, userId, username, listingId, previous}) => {
         if (listingId === listing.id) {
           console.log(
             `Received bid price update for listing ${listingId}: ${price}`
@@ -162,7 +183,7 @@ const Index = ({ listing, session }: any) => {
             price: price,
             userId: userId,
             listingId: listingId,
-            previous: listing?.bids && listing?.bids.length > 0 ? listing.bids[listing.bids.length - 1].price : listing?.price,
+            previous: previous,
             createdAt: new Date(now),
             updatedAt: new Date(now),
           }
@@ -249,7 +270,7 @@ const Index = ({ listing, session }: any) => {
 
   const body = (
     <>
-      <div className=" ">
+      <div className="">
         <div className="md:flex md:justify-between">
           <div>
             <div className="text-gray-900 text-xl  md:text-2xl  font-bold first-letter:uppercase ">
@@ -398,12 +419,10 @@ const Index = ({ listing, session }: any) => {
     return <Spinner />;
   }
 
-  const parsedImages = JSON.parse(listing?.image);
-
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
-        <div className=" md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
+        <div className="mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
           {status === "accepted" && (
             <AlertBanner
               text="This offer has been accepted"
@@ -470,13 +489,16 @@ const Index = ({ listing, session }: any) => {
             </div>
 
             {tab === "chat" && (
-              <div className="messages pt-6">
+              <div className="messages pt-6 mb-6">
                 {status === "negotiating" && (
                   <ListingChat
                     listing={listing}
                     user={session?.user}
                     disabled={disabled}
                     session={session}
+                    messages={messages}
+                    setMessages={setMessages}
+                    socketRef={socketRef}
                   />
                 )}
                 {status === "accepted" && (
@@ -551,7 +573,7 @@ const Index = ({ listing, session }: any) => {
               activities?.map((activity: any, i: number) => (
                 <div
                   key={i}
-                  className="flex gap-4 justify-between py-2 mb-2 border-b border-gray-200"
+                  className="flex gap-4 justify-between py-2 border-b border-gray-200 mb-6"
                 >
                   <div>{activity.message}</div>
                   <div className="text-gray-500 text-sm italic">
@@ -559,7 +581,7 @@ const Index = ({ listing, session }: any) => {
                   </div>
                 </div>
               ))}
-            {tab === "bids" && <Bids bids={bids} participant={participant} me={me} />}
+            {tab === "bids" &&<div className="mb-6"> <Bids bids={bids} participant={participant} me={me} /></div>}
           </div>
           {
             <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4">

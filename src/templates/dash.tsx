@@ -8,17 +8,13 @@ import StartConversation from "@/components/modals/StartConversation";
 import { useSession } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import getCurrentUser from "@/actions/getCurrentUser";
-import { SafeUser } from "@/types";
 import QuickConnectModal from "@/components/modals/QuickConnectModal";
 import PendingConversationModal from "@/components/modals/PendingConversationModal";
 import RejectConversationModal from "@/components/modals/RejectConversationModal";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Stats from "@/components/dashboard/Stats";
-import ActivityWidget from "@/components/dashboard/widgets/ActivityWidget";
-import Spinner from "@/components/Spinner";
+
 import { Router } from "next/router";
-import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import QRModal from "@/components/modals/QRModal";
@@ -135,7 +131,7 @@ const Dash = (props: IDashProps) => {
                 props.full ? "" : "md:ml-20 lg:ml-60"
               } overflow-y-auto flex-grow`}
             >
-              <div className="w-full mx-auto bg-white sm:mt-1 min-h-screen">
+              <div className="w-full mx-auto bg-white sm:mt-1 min-h-screen px-4 md:px-0">
                 {props.children}
               </div>
             </div>

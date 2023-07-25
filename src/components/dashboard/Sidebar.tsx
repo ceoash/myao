@@ -100,7 +100,6 @@ const Sidebar = () => {
           
             className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0`}
           >
-            <BsQrCode className="text-xl" />
           </span>
       </div>
         <div className="p-6 border-t border-gray-200 bg-gray-50 hidden lg:block">

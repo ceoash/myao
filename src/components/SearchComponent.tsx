@@ -13,7 +13,7 @@ interface User {
 }
 
 
-const SearchComponent = () => {
+const SearchComponent = ({navbar}: any) => {
   const [search, setSearch] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -45,7 +45,7 @@ const SearchComponent = () => {
   };
 
   return (
-    <div className="relative flex-1 mx-20 hidden md:block">
+    <div className={`relative hidden flex-1  md:block ${navbar ? 'mx-20' : ""}`}>
       <div className="flex flex-grow flex-nowrap">
         <input
           type="text"

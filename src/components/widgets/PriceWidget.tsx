@@ -4,7 +4,7 @@ import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import Button from '../Button';
+import Button from '../dashboard/Button';
 import { ErrorResponse } from '../modals/UserSearchModal';
 import { io, Socket } from 'socket.io-client';
 import { config } from '@/config';
@@ -30,12 +30,14 @@ interface PriceWidgetProps {
   bids?: any;
   sessionUser: any
   setBids: Dispatch<SetStateAction<Bid[]>>;
+  setStatus: Dispatch<SetStateAction<string>>;
+  status: string;
 }
 
-const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessionUser, socketRef }: PriceWidgetProps) => {
+const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessionUser, socketRef, status, setStatus }: PriceWidgetProps) => {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [bidPrice, setBidPrice] = useState<string | null>(null);
   const [currentBids, setCurrentBids] = useState<any>([]);
 
@@ -62,7 +64,11 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
     data.status = 'counterOffer';
     data.bidById = session?.user.id;
 
-    console.log("data", data);  
+    if(data.price == currentPrice) {
+      toast.error("You can't bid the same price as the current bid!");
+      setIsLoading(false);
+      return;
+    }
 
 
     try {
@@ -81,6 +87,7 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
         const myLastBid = updatedListing.bids.find(
           (bid: any) => bid.userId === session?.user.id
         );
+
         setCurrentBid((prev) => {
           const newBid = {
           ...prev,
@@ -119,10 +126,13 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
 
   return (
     <div>
-      <div className='mb-2'>
+      <div className='mb-4'>
         <PriceInput id='price' placeholder={"0.00"} label='' formatPrice required register={register} />
       </div>
-      <Button label='Make your offer' onClick={handleSubmit(onSubmit)} disabled={isSubmitting} />
+      <div className='flex justify-center'>
+
+      <Button primary options={{ size: "lg"}} isLoading={isLoading} label={currentBid.byUserId === session?.user.id ? "UPADTE BID" : "BID"} onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className='flex'  />
+      </div>
     </div>
   );
 };

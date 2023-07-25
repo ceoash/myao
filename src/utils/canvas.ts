@@ -4,9 +4,9 @@ import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 
 
-export const handleCopy = () => {
+export const handleCopy = (userId: string) => {
     navigator.clipboard.writeText(
-      `${AppConfig.siteUrl || "myao.vercel.app"}/connect/}`
+      `${AppConfig.siteUrl || "myao.vercel.app"}/connect/${userId}`
     );
     toast.success("Link copied to clipboard");
   };

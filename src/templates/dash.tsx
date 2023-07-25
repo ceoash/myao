@@ -20,6 +20,8 @@ import Spinner from "@/components/Spinner";
 import { Router } from "next/router";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import QRModal from "@/components/modals/QRModal";
 
 type IDashProps = {
   meta: ReactNode;
@@ -117,9 +119,11 @@ const Dash = (props: IDashProps) => {
       <PendingConversationModal />
       <StartConversation />
       <QuickConnectModal />
+      <ConfirmationModal />
       <SearchModal />
       <DeleteConfirmation />
       <RejectConversationModal />
+      <QRModal />
       <UserMenu session={session} />
       <SkeletonTheme highlightColor="#edf2f7">
         <main className="content flex flex-col flex-grow">

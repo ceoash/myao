@@ -44,18 +44,6 @@ export default async function getOffersByUserId(
             },
           },
         },
-        buyer: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            profile: {
-              select: {
-                image: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -108,6 +96,84 @@ export default async function getOffersByUserId(
       },
     });
 
+    const countSent = await prisma?.listing.count({
+      where: {
+        OR: [
+          {
+            AND: [
+              { buyerId: id },
+              { type: "buyerOffer" },
+            ],
+          },
+          {
+            AND: [
+              { sellerId: id },
+              { type: "sellerOffer" },
+            ],
+          },
+        ],
+      },
+    });
+    const countPendingSent = await prisma?.listing.count({
+      where: {
+        OR: [
+          {
+            AND: [
+              { buyerId: id },
+              { type: "buyerOffer" },
+              { status: "awaiting approval" },
+            ],
+          },
+          {
+            AND: [
+              { sellerId: id },
+              { type: "sellerOffer" },
+              { status: "awaiting approval" },
+            ],
+          },
+        ],
+      },
+    });
+    const countReceived = await prisma?.listing.count({
+      where: {
+        OR: [
+          {
+            AND: [
+              { buyerId: id },
+              { type: "sellerOffer" },
+            ],
+          },
+          {
+            AND: [
+              { sellerId: id },
+              { type: "buyerOffer" },
+
+            ],
+          },
+        ],
+      },
+    });
+    const countPendingReceived = await prisma?.listing.count({
+      where: {
+        OR: [
+          {
+            AND: [
+              { buyerId: id },
+              { type: "sellerOffer" },
+              { status: "awaiting approval" },
+            ],
+          },
+          {
+            AND: [
+              { sellerId: id },
+              { type: "buyerOffer" },
+              { status: "awaiting approval" },
+            ],
+          },
+        ],
+      },
+    });
+
     const received = recentListingsReceived.map((listing) => ({
       ...listing,
       createdAt: listing.createdAt.toISOString(),
@@ -131,7 +197,7 @@ export default async function getOffersByUserId(
       })),
     }));
 
-    return { received, sent };
+    return { received, sent, countSent, countPendingSent, countReceived, countPendingReceived };
   } catch (error: any) {
     throw new Error(error);
   }

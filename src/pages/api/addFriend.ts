@@ -59,7 +59,7 @@ export default async function addFriend(
       const followerActivity = {
         type: "FriendAdded",
         message: `You sent a friend request`,
-        action: "/dashboard/profile/" + newFriendship.id,
+        action: "/dashboard/profile/" + newFriendship.followingId,
         modelId: newFriendship.id,
         value: newFriendship.following.username,
         userId: newFriendship.followerId,
@@ -68,7 +68,7 @@ export default async function addFriend(
       const followingActivity = {
         type: "FriendRequest",
         message: `${
-          newFriendship.follower.username + " wants to be your friend"
+          newFriendship.follower.username + " " + "wants to be your friend"
         }`,
         value: newFriendship.follower.username,
         action: "/dashboard/profile/" + newFriendship.followerId,

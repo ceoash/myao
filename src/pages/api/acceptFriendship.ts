@@ -46,7 +46,7 @@ export default async function acceptFriendship(req: NextApiRequest, res: NextApi
 
       const followerActivity = {
         type: "FriendAdded",
-        message: `You sent a friend request`,
+        message: `You and ${updatedFriendship.following.username} are now friends!`,
         action: "/dashboard/offers/" + updatedFriendship.id,
         modelId: updatedFriendship.id,
         value: updatedFriendship.following.username,
@@ -55,9 +55,7 @@ export default async function acceptFriendship(req: NextApiRequest, res: NextApi
       };
       const followingActivity = {
         type: "FriendRequest",
-        message: `${
-          updatedFriendship.follower.username + "wants to be your friend"
-        }`,
+        message: `You and ${updatedFriendship.follower.username} are now friends!`,
         value: updatedFriendship.follower.username,
         action: "/dashboard/profile/" + updatedFriendship.followerId,
         modelId: updatedFriendship?.id,

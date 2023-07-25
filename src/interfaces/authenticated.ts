@@ -18,6 +18,10 @@ export interface dashboardProps {
   listingsCount?: number;
   requestsCount?: number;
   username?: string;
+  countSent: number;
+  countReceived: number;
+  countPendingSent: number;
+  countPendingReceived: number;
 }
 
 export interface IConversation {

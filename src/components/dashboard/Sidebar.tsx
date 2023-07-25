@@ -12,11 +12,14 @@ import { MdLocalOffer, MdOutlineTimeline } from "react-icons/md";
 import { BiCog } from "react-icons/bi";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import useQRModal from "@/hooks/useQRModal";
 
 const Sidebar = () => {
   const { Canvas } = useQRCode();
   const router = useRouter()
   const { data: session } = useSession();
+
+  const qr = useQRModal();
 
   return (
     <aside className="hidden md:block md:fixed inset-y-0 left-0 bg-white shadow-md max-h-screen lg:w-60">
@@ -87,18 +90,18 @@ const Sidebar = () => {
           </span>
         </Link>
       </li>
+     
       
     </ul>
           </div>
         </div>
-        <div className="flex justify-center mb-4 lg:hidden ">
-        <Link href="/dashboard/friends">
+        <div onClick={qr.onOpen} className="flex justify-center mb-4 lg:hidden hover:cursor-pointer ">
           <span
+          
             className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0`}
           >
             <BsQrCode className="text-xl" />
           </span>
-        </Link>
       </div>
         <div className="p-6 border-t border-gray-200 bg-gray-50 hidden lg:block">
           <h5 className="mb-4">Share QR Code</h5>
@@ -126,7 +129,7 @@ const Sidebar = () => {
               Download
             </Button>
             <Button
-              onClick={handleCopy}
+              onClick={() => handleCopy(session?.user.id)}
             >
               Copy
             </Button>

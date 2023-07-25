@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";
@@ -8,6 +8,8 @@ import { DashListing } from "@/interfaces/authenticated";
 
 import getOffersByUserId from "@/actions/dashboard/getOffersByUserId";
 import Offers from "@/components/offers/Offers";
+import { Socket, io } from "socket.io-client";
+import { config } from "@/config";
 
 interface ListingType extends Listing {
   buyer: User;
@@ -17,9 +19,31 @@ interface IndexProps {
   session: any;
   sent: DashListing[];
   received: DashListing[];
+  countSent: number;
+  countReceived: number;
+  countPendingSent: number;
+  countPendingReceived: number;
 }
 
-const Index = ({ sent, received, session }: IndexProps) => {
+const Index = ({
+  sent,
+  received,
+  session,
+  countSent,
+  countReceived,
+  countPendingSent,
+  countPendingReceived,
+}: IndexProps) => {
+
+  const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+    socketRef.current = io(config.PORT);
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
   return (
     <Dash
       meta={
@@ -41,6 +65,10 @@ const Index = ({ sent, received, session }: IndexProps) => {
               sent={sent}
               received={received}
               session={session}
+              countSent={countSent}
+              countReceived={countReceived}
+              countPendingSent={countPendingSent}
+              countPendingReceived={countPendingReceived}
               multipage
             />
           </div>
@@ -70,14 +98,24 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
 
     if (!listings) return { props: { sent: [], received: [], session } };
 
-    const sent = listings.sent;
-    const received = listings.received;
+    const {
+      sent,
+      received,
+      countSent,
+      countReceived,
+      countPendingSent,
+      countPendingReceived,
+    } = listings;
 
     return {
       props: {
         sent,
         received,
         session,
+        countSent,
+        countReceived,
+        countPendingSent,
+        countPendingReceived,
       },
     };
   } catch (error) {

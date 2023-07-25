@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import { AiOutlineMenu } from "react-icons/ai";
-import { BiCog, BiMessage, BiSearch, BiTrash } from "react-icons/bi";
+import { BiCog, BiMessage, BiQr, BiSearch, BiTrash } from "react-icons/bi";
 import Avatar from "./Avatar";
 import Link from "next/link";
 import MenuItem from "./MenuItem";
@@ -9,6 +9,7 @@ import { User } from "@prisma/client";
 import { SafeUser } from "@/types";
 import axios from "axios";
 import SearchComponent from "./SearchComponent";
+import useQRModal from "@/hooks/useQRModal";
 
 interface IUserMenuProps {
   currentUser?: SafeUser | null;
@@ -17,9 +18,13 @@ interface IUserMenuProps {
 
 const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const qr = useQRModal();
 
   const handleClickOutside = (e: any) => {
     if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -68,16 +73,32 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
             </span>
           </Link>
 
-          <SearchComponent />
+          <SearchComponent navbar />
 
           <div
             className="relative flex items-center text-xl lg:order-2 gap-4"
             style={{ zIndex: 9999 }}
           >
+            <div className="md:hidden">
+              <div onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                <BiSearch />
+              </div>
+            </div>
+             {isSearchOpen && (
+              <div
+                className=" md:hidden absolute mt-10 rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-20  text-sm"
+                ref={searchRef}
+                style={{ zIndex: 9999 }}
+              >
+                          <SearchComponent />
+
+              </div>
+            )}
+            
             <div className="relative">
-              <a href="/dashboard/settings">
-                <BiCog />
-              </a>
+              <div onClick={qr.onOpen}>
+                <BiQr />
+              </div>
             </div>
 
             <div className="relative">
@@ -86,6 +107,11 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
               </Link>
             </div>
 
+            <div className="relative">
+              <Link href="/dashboard/settings">
+                <BiCog />
+              </Link>
+            </div>
             <div
               onClick={() => setIsOpen(!isOpen)}
               className="
@@ -113,11 +139,35 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
             </div>
             {isOpen && (
               <div
-                className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-14 -mt-1 text-sm"
+                className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm"
                 ref={dropdownRef}
                 style={{ zIndex: 9999 }}
               >
                 <div className="flex flex-col cursor-pointer z-50">
+
+                  <div className="flex flex-col md:hidden">
+                  <MenuItem
+                      label="Offers"
+                      link
+                      url={"/dashboard/offers"}
+                    />
+                  <MenuItem
+                      label="Friends"
+                      link
+                      url={"/dashboard/friends"}
+                    />
+                  <MenuItem
+                      label="Activity"
+                      link
+                      url={"/dashboard/activity"}
+                    />
+                  <MenuItem
+                      label="Settings"
+                      link
+                      url={"/dashboard/settings"}
+                    />
+
+                  </div>
                   <>
                     <MenuItem
                       label="Profile"
@@ -132,7 +182,9 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
               </div>
             )}
           </div>
+          
         </div>
+       
       </nav>
     </header>
   );

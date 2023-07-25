@@ -1,25 +1,28 @@
+import Button from "@/components/Button";
 import { Conversation, Listing } from "@prisma/client";
 import Link from "next/link";
-import React from "react";
+import React, { use, useEffect, useState } from "react";
 import { BiDotsVerticalRounded } from "react-icons/bi";
+import { BsSignDoNotEnterFill } from "react-icons/bs";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import { MdDoNotDisturbAlt } from "react-icons/md";
 
 interface HeaderProps {
-    participant: any;
-    username: string;
-    activeConversationState: any;
-    handleAccept: () => void;
-    session: any;
-    reject: any;
-    setStatus: () => void;
-    toggleDropdown: any;
-    offerModal: any;
-    setToggleDropdown: () => void;
-    handleFollow: () => void;
-    isFriend: any;
-    handleBlocked: () => void;
-    isBlocked: boolean;
-    status: string;
+  participant: any;
+  username: string;
+  activeConversationState: any;
+  handleAccept: () => void;
+  session: any;
+  reject: any;
+  setStatus: () => void;
+  toggleDropdown: any;
+  offerModal: any;
+  setToggleDropdown: () => void;
+  handleFollow: () => void;
+  isFriend: any;
+  handleBlocked: () => void;
+  isBlocked: boolean;
+  status: string;
 }
 
 const Header = ({
@@ -37,8 +40,14 @@ const Header = ({
   isFriend,
   handleBlocked,
   isBlocked,
-  status,   
+  status,
 }: HeaderProps) => {
+  const [statusState, setStatusState] = useState("");
+
+  useEffect(() => {
+    setStatusState(activeConversationState?.status);
+  }, [activeConversationState?.status]);
+
   return (
     <div className="flex sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4 bg-gray-50">
       <div className="flex items-center">
@@ -52,10 +61,14 @@ const Header = ({
               className="rounded-full border border-gray-200 p-1 h-[38px] my-2 ml-2"
             />
           </div>
-          <div className="flex flex-col leading-tight">
+          <div className="flex leading-tight">
             <div className="text-xl font-medium flex items-center">
               <span className="text-gray-700 mr-3">{username}</span>
             </div>
+            {/* 
+            <button onClick={handleBlocked} className="border-2 border-gray-200 p-[2px] rounded-lg bg-white">
+                    <MdDoNotDisturbAlt className="text-lg text-red-500" />
+                  </button> */}
           </div>
         </Link>
       </div>
@@ -63,17 +76,16 @@ const Header = ({
         <div className="flex gap-2 relative">
           {status !== "declined" && (
             <>
-              {status === "none" &&
+              {statusState === "none" &&
               activeConversationState?.participant2Id === session.user.id ? (
                 <>
-                  <button
+                  <Button
                     onClick={handleAccept}
-                    className="flex gap-1 items-center border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
                   >
-                    <FaCheck /> Accept
-                  </button>
+                    <FaCheck className="mr-2"/> Accept
+                  </Button>
                   {activeConversationState && (
-                    <button
+                    <Button
                       onClick={() =>
                         reject.onOpen(
                           activeConversationState?.id,
@@ -85,15 +97,14 @@ const Header = ({
                           setStatus
                         )
                       }
-                      className="flex gap-1 items-center border border-gray-200 rounded-md px-2 py-2 text-md text-red-500 bg-white"
                     >
-                      <FaTimes /> Decline
-                    </button>
+                      <FaTimes className="mr-2" /> Decline
+                    </Button>
                   )}
                 </>
               ) : (
                 <>
-                  <button
+                  <Button
                     onClick={() =>
                       offerModal.onOpen(
                         activeConversationState?.participant1Id ===
@@ -107,10 +118,10 @@ const Header = ({
                         activeConversationState?.id
                       )
                     }
-                    className="bg-orange-400 text-white rounded-md px-2 py-1 text-sm"
                   >
                     Create offer
-                  </button>
+                  </Button>
+
                   {/* 
                           <button
                             className="flex gap-1 items-center"

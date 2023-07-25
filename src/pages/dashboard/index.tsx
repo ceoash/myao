@@ -17,7 +17,7 @@ import ActivityWidget from "@/components/dashboard/widgets/ActivityWidget";
 import InviteFriend from "@/components/dashboard/widgets/InviteFriend";
 import Button from "@/components/dashboard/Button";
 import Skeleton from "react-loading-skeleton";
-import {dashboardProps,} from "@/interfaces/authenticated";
+import { dashboardProps } from "@/interfaces/authenticated";
 import FriendsWidget from "@/components/widgets/FriendsWidget";
 import useQuickConnect from "@/hooks/useQuickConnect";
 import getOffersByUserId from "@/actions/dashboard/getOffersByUserId";
@@ -30,8 +30,10 @@ const Index = ({
   friends,
   session,
   activities,
-  listingsCount,
-  requestsCount,
+  countSent,
+  countReceived,
+  countPendingSent,
+  countPendingReceived,
   username,
 }: dashboardProps) => {
   const offerModal = useOfferModal();
@@ -43,12 +45,15 @@ const Index = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userActivities, setUserActivities] = useState<any>([]);
 
-
   const [sentCount, setSentCount] = useState<any>(0);
   const [receivedCount, setReceivedCount] = useState<any>(0);
+  const [sentPendingCount, setSentPendingCount] = useState<any>(0);
+  const [receivedPendingCount, setReceivedPendingCount] = useState<any>(0);
+  const [sentOffers, setSentOffers] = useState<any>([]);
+  const [receivedOffers, setReceivedOffers] = useState<any>([]);
 
-  const connect = useQuickConnect()
-  
+  const connect = useQuickConnect();
+
   useEffect(() => {
     if (!user.activated) {
       setIsLoading(true);
@@ -56,16 +61,18 @@ const Index = ({
         router.push("/dashboard/wizard");
       }, 0);
     } else {
-    setFriendsList(friends);
-    setUserActivities(activities);
+      setFriendsList(friends);
+      setUserActivities(activities);
 
-    setIsLoading(false)
-    setSentCount(listingsCount)
-    setReceivedCount(requestsCount)
+      setSentCount(countSent);
+      setReceivedCount(countReceived);
+      setSentPendingCount(countPendingSent);
+      setReceivedPendingCount(countPendingReceived);
+      setSentOffers(sent);
+      setReceivedOffers(received);
+      setIsLoading(false);
     }
-  }, [session.user.id])
-
-  
+  }, [session.user.id, countSent, countReceived, countPendingSent, countPendingReceived, friends, activities, sent, received]);
 
   const socketRef = useRef<Socket>();
 
@@ -78,66 +85,67 @@ const Index = ({
 
   useEffect(() => {
     if (!session.user.id) return;
-    if (!socketRef) return
+    if (!socketRef) return;
+
     socketRef.current && socketRef?.current.emit("register", session.user.id);
 
-    socketRef.current && socketRef.current.on("updated_activities", (activities: any) => {
-      console.log("updated activities", activities);
-      const copiedActivities = [...(activities.activities as any[])];
-      const reversedActivities = copiedActivities.reverse();
-      const topActivities = reversedActivities.slice(0, 3);
-      setUserActivities(topActivities);
-    });
+    socketRef.current &&
+      socketRef.current.on("updated_activities", (activities: any) => {
+        console.log("updated activities", activities);
+        const copiedActivities = [...(activities.activities as any[])];
+        const reversedActivities = copiedActivities.reverse();
+        const topActivities = reversedActivities.slice(0, 3);
+        setUserActivities(topActivities);
+      });
 
-    socketRef.current && socketRef.current.on("friend_added", (data) => {
-      console.log("added", data);
-      setFriendsList((prevFriendsList) => [...prevFriendsList, data.follower]);
-    });
+    socketRef.current &&
+      socketRef.current.on("friend_added", (data) => {
+        console.log("added", data);
+        setFriendsList((prevFriendsList) => [
+          ...prevFriendsList,
+          data.follower,
+        ]);
+      });
 
-    socketRef.current && socketRef.current.on("friend_accepted", (data) => {
-      console.log("accepted", data);  
-      setFriendsList((prevFriendsList) => {
-        return prevFriendsList.map((friend) =>
-          friend.id === data.id ? { ...friend, accepted: true } : friend
+    socketRef.current &&
+      socketRef.current.on("friend_accepted", (data) => {
+        console.log("accepted", data);
+        setFriendsList((prevFriendsList) => {
+          return prevFriendsList.map((friend) =>
+            friend.id === data.id ? { ...friend, accepted: true } : friend
+          );
+        });
+      });
+
+    socketRef.current &&
+      socketRef.current.on("friend_removed", (data) => {
+        console.log("removed", data);
+        setFriendsList((prevFriendsList) =>
+          prevFriendsList.filter((friend) => friend.id !== data.id)
         );
       });
-   });
-
-    socketRef.current && socketRef.current.on("friend_removed", (data) => {
-      console.log("removed", data);
-      setFriendsList((prevFriendsList) =>
-        prevFriendsList.filter(
-          (friend) => friend.id !== data.id
-        )
-      );
-    });
-
-
 
     return () => {
       socketRef.current && socketRef.current.disconnect();
     };
   }, [session.id]);
 
- 
-
   return (
-
-        <Dash
-          meta={
-            <Meta
-              title="Make You An Offer You Can't Refuse"
-              description="This is the Make You An Offer Web App"
-            />
-          }
-        >
-          <div className=" p-8 ">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2>Dashboard</h2>
-              </div>
-              <div className="flex items-center gap-x-2">
-                {/* <button
+    <Dash
+      meta={
+        <Meta
+          title="Make You An Offer You Can't Refuse"
+          description="This is the Make You An Offer Web App"
+        />
+      }
+    >
+      <div className=" p-8 ">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2>Dashboard</h2>
+          </div>
+          <div className="flex items-center gap-x-2">
+            {/* <button
                   onClick={() => connect.onOpen(searchUser, session.user.id, isLoading)}
                   type="button"
                   className="inline-flex items-center justify-center h-9 px-3 rounded-xl border hover:border-gray-400 text-gray-800 hover:text-gray-900 transition"
@@ -153,81 +161,82 @@ const Index = ({
                     <path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z" />
                   </svg>
                 </button> */}
-                <Button
-                  label="Connect and Create"
-                  onClick={offerModal.onOpen}
-                  icon="/icons/thumbs-up.png"
-                />
-              </div>
-            </div>
+            <Button
+              label="Connect and Create"
+              onClick={offerModal.onOpen}
+              icon="/icons/thumbs-up.png"
+            />
+          </div>
+        </div>
 
-            <hr className="my-0 mb-6 mt-4" />
-            {/*`Activities ${userActivities ? userActivities.length : 0}` */}
-            <div className="lg:grid grid-cols-12 gap-x-6 mb-6">
-              {isLoading ? (
-                <>
-                  <div className="col-span-6">
-                    <Skeleton height={200} />
-                  </div>
-                  <div className="col-span-6">
-                    <Skeleton height={200} />
-                  </div>
-                </>
-              ) : (
-              <><Stats
+        <hr className="my-0 mb-6 mt-4" />
+        {/*`Activities ${userActivities ? userActivities.length : 0}` */}
+        <div className="lg:grid grid-cols-12 gap-x-6 mb-6">
+          {isLoading ? (
+            <>
+              <div className="col-span-6">
+                <Skeleton height={200} />
+              </div>
+              <div className="col-span-6">
+                <Skeleton height={200} />
+              </div>
+            </>
+          ) : (
+            <>
+              <Stats
                 title="Overview"
                 totalStats={10}
                 startOffer={offerModal.onOpen}
                 sentOffers={sentCount}
                 receivedOffers={receivedCount}
+                sentPendingOffers={sentPendingCount}
+                receivedPendingOffers={receivedPendingCount}
                 friendsCount={friends.length}
                 username={username}
               />
               <ActivityWidget title={"Activity"} activities={userActivities} />
-              </> )}
-              
-            </div>
+            </>
+          )}
+        </div>
 
-            <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col overflow-auto">
-           
-                <div className=" pt-6 mb-8">
-                  <div className="pb-6">
-                    <h3>Recent Offers</h3>
-                  </div>
-
-                  <Offers sent={sent} received={received} session={session} />
-                  
-                </div>
-              
+        <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col overflow-auto">
+            <div className=" pt-6 mb-8">
               <div className="pb-6">
-                <h3>Make Connections</h3>
+                <h3>Recent Offers</h3>
               </div>
-              <div className="lg:grid lg:grid-cols-2 gap-4 items-stretch auto-cols-fr">
-                <InviteFriend user={user} />
-                <div className="rounded-xl bg-orange-200 border border-orange-300 xl:flex-1 mb-6 ">
-                  <QuickConnect
-                    session={session}
-                    isLoading={isLoading}
-                    setIsLoading={setIsLoading}
-                  />
-                </div>
-              </div>
+
+              <Offers sent={sent} received={received} countSent={countSent} countReceived={countReceived} session={session} countPendingReceived={countPendingReceived} countPendingSent={countPendingSent} setSentCount={setSentCount} setReceivedCount={setReceivedCount}  />
             </div>
 
-            <div className="flex">
-             { friendsList.length > 0 && (
-                <div className="flex-1">
-                  <div className="py-4  mb-0 bg-white border-b-0 rounded-t-2xl">
-                    <h3 className="mb-0">Friends</h3>
-                  </div>
-                  <FriendsWidget
-                    session={session}
-                    friendsList={friendsList}
-                    setFriendsList={setFriendsList}
-                  />
-                </div>
-              )}
-              {/* {pendingConversations.length > 0 && (
+          <div className="pb-6">
+            <h3>Make Connections</h3>
+          </div>
+          <div className="lg:grid lg:grid-cols-2 gap-4 items-stretch auto-cols-fr">
+            <InviteFriend user={user} />
+            <div className="rounded-xl bg-orange-200 border border-orange-300 xl:flex-1 mb-6 ">
+              <QuickConnect
+                session={session}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex">
+          {friendsList.length > 0 && (
+            <div className="flex-1">
+              <div className="py-4  mb-0 bg-white border-b-0 rounded-t-2xl">
+                <h3 className="mb-0">Friends</h3>
+              </div>
+              <FriendsWidget
+                session={session}
+                friendsList={friendsList}
+                setFriendsList={setFriendsList}
+              />
+            </div>
+          )}
+          {/* {pendingConversations.length > 0 && (
                 <div className="px-4 lg:px-0 flex-1">
                   <div className="w-full  lg:px-6 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
                     <div className="p-4 pb-0 mb-0 bg-white border-b-0 rounded-t-2xl">
@@ -284,11 +293,9 @@ const Index = ({
                   </div>
                 </div>
               )} */}
-            </div>
-          </div>
-        </Dash>
-     
-  
+        </div>
+      </div>
+    </Dash>
   );
 };
 
@@ -316,25 +323,34 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     if (!listings) return { props: { sent: [], received: [], session } };
 
-    const sent = listings.sent;
-    const received = listings.received;
+    const {
+      sent,
+      received,
+      countSent,
+      countReceived,
+      countPendingSent,
+      countPendingReceived,
+    } = listings;
 
     const copiedActivities = [...(user?.activities as any[])];
     const reversedActivities = copiedActivities.reverse();
-    const topActivities = reversedActivities.slice(0, 3);
+    const topActivities = reversedActivities.slice(0, 4);
 
-    const username =  user?.username;
-   
+    const username = user?.username;
+
     return {
       props: {
         sent,
         received,
+        countSent,
+        countReceived,
+        countPendingSent,
+        countPendingReceived,
         user,
         username: username,
         friends,
         session,
         activities: topActivities,
-       
       },
     };
   } catch (error) {

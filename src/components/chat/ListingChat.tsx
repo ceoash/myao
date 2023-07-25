@@ -112,7 +112,7 @@ const ListingChat = ({ listing, user, disabled, session }: ListingChatProps) => 
               </div>
               <div className="border-t border-gray-200 w-full hidden lg:block"></div>
             </div>
-            {messages.length === 0 ? (
+            {!messages ? (
               <div className="col-span-12 flex justify-between items-center">
                 No messages yet
               </div>

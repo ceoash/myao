@@ -3,6 +3,7 @@ import InfoCard from "./InfoCard";
 import Link from "next/link";
 import { Listing } from "@prisma/client";
 import { adviceArray } from "@/data/adviceData";
+import { set } from "date-fns";
 
 interface StatsProps {
   title: string;
@@ -11,6 +12,8 @@ interface StatsProps {
   friendsCount?: number;
   sentOffers?: number;
   receivedOffers?: number;
+  sentPendingOffers?: number;
+  receivedPendingOffers?: number;
   username?: string;
 }
 
@@ -21,6 +24,8 @@ const Stats = ({
   friendsCount,
   sentOffers,
   receivedOffers,
+  sentPendingOffers,
+  receivedPendingOffers,
   username,
 }: StatsProps) => {
   const categories: (
@@ -42,6 +47,7 @@ const Stats = ({
       const randomIndex = Math.floor(Math.random() * array.length);
       return array[randomIndex];
     }
+
 
     const randomCategoryKey = getRandomItem(categories);
     const randomAdvice = adviceArray[randomCategoryKey] ? getRandomItem(adviceArray[randomCategoryKey]) : null;
@@ -76,7 +82,7 @@ const Stats = ({
           title={`Offers sent`}
           number={sent}
           icon={`/icons/cat-accept.png`}
-          badge={`0 completed`}
+          badge={sentPendingOffers ? `${sentPendingOffers} new` : "0 new"}
           color={`orange`}
           span={`col-span-1`}
           className="bg-orange-100"
@@ -85,7 +91,7 @@ const Stats = ({
           title={`Offers Received`}
           number={received}
           icon={`/icons/dog-accept.png`}
-          badge={`0 completed`}
+          badge={receivedPendingOffers ? `${receivedPendingOffers} new` : "0 new"}
           color={`orange`}
           span={`col-span-1`}
           className="bg-orange-100"
@@ -95,7 +101,7 @@ const Stats = ({
           text={randomAdvice?.value?.advice || "Loading..."}
           color={`purple`}
           className="bg-purple-100"
-          button={{label: "Learn More", onClick: () => {}}}
+          button={{label: "Learn More", onClick: () => {setRandomAdvice(getRandomAdvice())}}}
         />
       </div>
     </div>

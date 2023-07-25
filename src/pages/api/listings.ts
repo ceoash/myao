@@ -258,6 +258,7 @@ export default async function listingsApi(
       }
 
       const ownerId = listing?.type === 'sale' ? listing?.buyerId : listing?.sellerId;
+      
 
       const buyerActivity = {
         type: "Offer",

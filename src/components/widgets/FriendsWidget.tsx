@@ -37,7 +37,9 @@ const FriendsWidget = ({
             if (socket) {
             socket.emit('remove_friend', response.data);
             }
-            setFriendsList(friendsList.filter((friend) => friend.id === response.data.id));
+            setFriendsList((prev) => {
+              return prev.filter((friend) => friend.id === response.data.id)
+            });
             toast.success("Friend removed!");
           },
           (error) => {

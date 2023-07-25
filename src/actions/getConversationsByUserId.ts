@@ -23,6 +23,9 @@ interface SafeUser {
     createdAt: string | null;
     updatedAt: string | null;
   };
+  blockedBy: {
+    friendBlockedId: string;
+  }[];
 
 }
 
@@ -97,15 +100,29 @@ export default async function getConversationsByUserId(userId: string): Promise<
       participant1: {
         include: {
           profile: true,
-          blockedBy: true,
-          blockedFriends: true,
+          blockedBy: {
+            select: {
+              friendBlockedId: true,            }
+          },
+          blockedFriends: {
+            select: {
+              friendBlockedId: true,
+            }
+          },
         },
       },
       participant2: {
         include: {
           profile: true,
-          blockedBy: true,
-          blockedFriends: true,
+          blockedBy: {
+            select: {
+              id: true,            }
+          },
+          blockedFriends: {
+            select: {
+              id: true,
+            }
+          },
         },
       },
     },
@@ -124,6 +141,17 @@ export default async function getConversationsByUserId(userId: string): Promise<
 
   }))
 
-  return safeConversations;
+  const filteredConversations = safeConversations.filter((conversation) => {
+    if (conversation.participant1Id === userId) {
+      const blockedFriendsIds = conversation.participant1?.blockedBy.map((blocked) => blocked.friendBlockedId);
+      return !blockedFriendsIds.includes(conversation.participant2Id);
+    } else if (conversation.participant2Id === userId) {
+      const blockedFriendsIds = conversation.participant2?.blockedBy.map((blocked) => blocked.friendBlockedId);
+      return !blockedFriendsIds.includes(conversation.participant1Id);
+    }
+    return safeConversations;
+  });
+
+  return filteredConversations;
 }
 

@@ -48,6 +48,7 @@ const OfferModal = () => {
   const [userType, setUserType] = useState("sellerOffer");
   const [foundUser, setFoundUser] = useState<any | null>(offerModal?.participant || null);
 console.log("foundUser", foundUser);
+console.log("session", session);
   const port = config.PORT;
   const socket = io(port);
 
@@ -82,7 +83,6 @@ console.log("foundUser", foundUser);
     if (!search) {
       return;
     }
-    console.log(search);
     axios
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
@@ -241,6 +241,7 @@ console.log("foundUser", foundUser);
   };
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
+    console.log("data", data);
     if (step !== STEPS.REVIEW) {
       return onNext();
     }

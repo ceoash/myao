@@ -49,7 +49,7 @@ const Index = ({ session, activities }: any) => {
               </h2>
             </div>
             <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4  mb-20">
-              {displayedActivities.map((activity) => <ActivityCard activity={activity} />)}
+              {displayedActivities.map((activity, i) => <ActivityCard key={i} activity={activity} />)}
               {displayedActivities.length < allActivities.length && (
                 <Button onClick={loadMore}>Load more activities</Button>
               )}
@@ -74,8 +74,6 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
     }
 
     const activities = await getUserActivity(session);
-
-    
 
     return {
       props: {

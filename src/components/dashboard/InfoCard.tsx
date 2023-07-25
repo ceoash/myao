@@ -62,9 +62,8 @@ const InfoCard = ({
           </div>
           <div className="mt-2">{text ? text : !button && title}</div>
           {button && (
-            <div className="mt-5">
+            <div className="mt-5 mr-auto">
             <Button label={button.label} onClick={button.onClick} options={{
-                
             }} />
               
             </div>

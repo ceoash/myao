@@ -94,55 +94,27 @@ interface Conversation {
 
 const Conversations = ({ safeConversations, session }: any) => {
 
-  console.log("safeConversations", safeConversations);
   const offerModal = useOfferModal();
 
   const [skipIndex, setSkipIndex] = useState<number>(5);
 
-  const filterBlockedConversation = safeConversations.filter(
-    (conversation: any) => {
-      const otherParticipant =
-        conversation?.participant1Id === session?.user?.id
-          ? conversation?.participant2
-          : conversation?.participant1;
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationState, setActiveConversationState] = useState<Conversation | null>(null);
+ 
 
-      const hasBlocked = session?.user?.blockedFriends?.some(
-        (blockedFriend: any) =>
-          blockedFriend.friendBlockedId === otherParticipant.id
-      );
-
-      const Blocked = otherParticipant?.blockedFriends?.some(
-        (blockedFriend: any) =>
-          blockedFriend.friendBlockedId === session?.user?.id
-      );
-
-      return !(hasBlocked || Blocked);
-    }
-  );
-
-  const [activeConversationState, setActiveConversationState] =
-    useState<Conversation | null>(filterBlockedConversation[0]);
-  const [isFriend, setIsFriend] = useState<boolean | null>(
-    activeConversationState?.friendStatus || null
-  );
+  const [isFriend, setIsFriend] = useState<boolean | null>(activeConversationState?.friendStatus || null);
   const [isBlocked, setIsBlocked] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<string | null>(
-    activeConversationState?.status || null
-  );
+  const [status, setStatus] = useState<string | null>("") || null
+
   const [disabled, setDisabled] = useState<boolean>(false);
   const [toggleDropdown, setToggleDropdown] = useState<boolean>(false);
-  useEffect(() => {
-    if (status === "declined") {
-      setDisabled(true);
-    } else {
-      setDisabled(false);
-    }
-  }, [status]);
+  const [friends, setFriends] = useState<IUser[]>([]);
+  const reject = useRejectConversation();
+  const messagesStartRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false);
 
-  // console.log("blocked by", activeConversationState?.participant1.blockedBy);
-  // console.log("blocked by", activeConversationState?.participant2.blockedBy);
-  // console.log("blocked friends", activeConversationState?.participant1.blockedFriends);
-  // console.log("blocked friends", activeConversationState?.participant2.blockedFriends);
+  const [messages, setMessages] = useState<IDirectMessage[]>([]);
 
   let participant =
     activeConversationState?.participant1Id === session?.user?.id
@@ -156,35 +128,14 @@ const Conversations = ({ safeConversations, session }: any) => {
     (blockedFriend: any) => blockedFriend.friendBlockedId === participant
   );
 
-  useEffect(() => {
-    setIsBlocked(blockedChat || false);
-  }, [blockedChat]);
-
   let participantUsername =
-    activeConversationState?.participant1Id === session?.user?.id
-      ? activeConversationState?.participant2?.username
-      : activeConversationState?.participant1?.username;
+  activeConversationState?.participant1Id === session?.user?.id
+    ? activeConversationState?.participant2?.username
+    : activeConversationState?.participant1?.username;
 
-  const initialUsername =
-    activeConversationState?.participant1Id === session?.user?.id
-      ? activeConversationState?.participant2?.username || ""
-      : activeConversationState?.participant1?.username || "";
 
-  const [isOpen, setIsOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth > 768
-  );
 
-  const handleSidebarToggle = () => {
-    setIsOpen(!isOpen);
-  };
-  const [friends, setFriends] = useState<IUser[]>([]);
-  const reject = useRejectConversation();
-  const messagesStartRef = useRef<HTMLDivElement | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false);
-
-  const [messages, setMessages] = useState<IDirectMessage[]>([]);
-  const [username, setUsername] = useState<string>(initialUsername || "");
+  const [username, setUsername] = useState<string>("");
   const { reset } = useForm<FieldValues>({
     defaultValues: {
       message: "",
@@ -194,6 +145,39 @@ const Conversations = ({ safeConversations, session }: any) => {
     },
   });
 
+
+  useEffect(() => {
+    const reverseConversations = [ ...safeConversations] .reverse();
+    setConversations(reverseConversations);
+    setActiveConversationState(reverseConversations[0]);
+    setStatus(reverseConversations[0]?.status);
+    setUsername(reverseConversations[0]?.participant1Id === session?.user?.id ? reverseConversations[0]?.participant2?.username : reverseConversations[0]?.participant1?.username);
+   },[safeConversations, session?.user?.id]);
+
+  useEffect(() => {
+    if (status === "declined") {
+      setDisabled(true);
+    } else {
+      setDisabled(false);
+    }
+  }, [status]);
+
+  // console.log("blocked by", activeConversationState?.participant1.blockedBy);
+  // console.log("blocked by", activeConversationState?.participant2.blockedBy);
+  // console.log("blocked friends", activeConversationState?.participant1.blockedFriends);
+  // console.log("blocked friends", activeConversationState?.participant2.blockedFriends);
+
+
+  console.log("isBlocked", activeConversationState);
+ 
+  const [isOpen, setIsOpen] = useState(
+    typeof window !== "undefined" && window.innerWidth > 768
+  );
+
+  const handleSidebarToggle = () => {
+    setIsOpen(!isOpen);
+  };
+ 
   const onLoadMore = async () => {
     if (messages.length < skipIndex) {
       setNoMoreMessages(true);
@@ -440,8 +424,8 @@ const Conversations = ({ safeConversations, session }: any) => {
 
   return (
     <Dash full={true} meta={<title>Conversations</title>}>
-      <div className="flex border border-gray-200 relative flex-1 flex-grow h-full overscroll-none">
-        {filterBlockedConversation.length > 0 ? (
+      <div className="flex border border-gray-200 relative flex-1 flex-grow h-screen overscroll-none">
+        {conversations.length > 0 ? (
           <>
             <div
               className={` hidden lg:block border bg-gray-50  border-gray-200 relative ${
@@ -453,7 +437,7 @@ const Conversations = ({ safeConversations, session }: any) => {
               <Sidebar
                 session={session}
                 isOpen={isOpen}
-                filterBlockedConversation={filterBlockedConversation}
+                filterBlockedConversation={conversations}
                 activeConversationState={activeConversationState}
                 handleSidebarToggle={handleSidebarToggle}
                 handleSetActiveConversation={handleSetActiveConversation}
@@ -474,7 +458,7 @@ const Conversations = ({ safeConversations, session }: any) => {
                 <Sidebar
                   session={session}
                   isOpen={isOpen}
-                  filterBlockedConversation={filterBlockedConversation}
+                  filterBlockedConversation={conversations}
                   activeConversationState={activeConversationState}
                   handleSidebarToggle={handleSidebarToggle}
                   handleSetActiveConversation={handleSetActiveConversation}
@@ -501,6 +485,7 @@ const Conversations = ({ safeConversations, session }: any) => {
               />
 
               <div
+                key={activeConversationState?.id}
                 id="messages"
                 className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white"
                 style={{ height: "calc(100vh - 28rem)" }}
@@ -564,7 +549,7 @@ const Conversations = ({ safeConversations, session }: any) => {
               <div className="border-t-2 mt-auto bg-gray-50 border-gray-200 px-4 mb-2 sm:mb-0">
                 <ImageTextArea
                   onSubmit={handleSubmit}
-                  disabled={false}
+                  disabled={activeConversationState?.status === "declined"}
                   key={activeConversationState?.id}
                 />
               </div>
@@ -593,8 +578,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const user = session?.user;
   const currentUser = await getCurrentUser(session);
   const safeConversations = await getConversationsByUserId(user?.id);
-
-  
 
   return {
     props: {

@@ -78,7 +78,7 @@ export default async function listingsApi(
       };
       const sellerActivity = {
         type: "Offer",
-        message: userId === listing?.seller?.id ? `You ${status !== "negotiating" ? status : "are negotiating"} your offer` : `${status === "negotiating" && 'You and '}` + listing?.buyer?.username + `${status !== "negotiating" ? status + " the offer" : " are negotiating"}`,
+        message: userId === listing?.seller?.id ? `You ${status !== "negotiating" ? status : "are negotiating"} your offer` : `${status === "negotiating" ? 'You and ' + listing?.buyer?.username + ' ':  listing?.buyer?.username} `  + `${status !== "negotiating" ? status + " the offer" : " are negotiating"}`,
         action: "/dashboard/offers/" + listing.id,
         modelId: listing?.id,
         createdAt: now,

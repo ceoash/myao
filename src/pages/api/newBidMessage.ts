@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import { Listing } from ".prisma/client";
 import { Activity } from "@/interfaces/authenticated";
+import StatusChecker from "@/utils/status";
 
 interface ErrorResponse {
   error: string;
@@ -25,6 +26,8 @@ export default async function listingsApi(
         res.status(404).json({ error: "listing not found" });
         return;
       }
+
+      const status = StatusChecker(listing.status || "");
 
       const newBuyerActivity = {
         type: "ListingMessage",

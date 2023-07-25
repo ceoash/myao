@@ -60,7 +60,8 @@ export default async function submitBid(
           id: updateListing.id,
         },
         data: {
-          
+          status: "negotiating",
+          updatedAt: new Date(now),
           activities: [
             ...(Array.isArray(updateListing?.activities)
               ? updateListing.activities
@@ -71,6 +72,7 @@ export default async function submitBid(
               type: "newBid",
               action: "/dashboard/offers/" + updateListing?.id,
               createdAt: now,
+              status: "negotiating"
             },
           ],
         },

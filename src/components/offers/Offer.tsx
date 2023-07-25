@@ -31,6 +31,7 @@ import { timeInterval } from "@/utils/formatTime";
 import { ImPriceTag, ImUser } from "react-icons/im";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
+import useConfirmationModal from "@/hooks/useConfirmationModal";
 
 const Offer: React.FC<any> = ({
   id,
@@ -71,15 +72,37 @@ const Offer: React.FC<any> = ({
     setStatusState(status);
   }, []);
 
+  const confirmation = useConfirmationModal()
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "carry on";
+      case "accepted":
+        return "accept";
+      case "rejected":
+        return "reject";
+      case "cancelled":
+        return "cancel";
+      case "completed":
+        return "accept";
+      default:
+        return "pending";
+    }
+  };
+
+  const formattedStatus = statusState;
+
   const handleStatusChange = async (status: string, userId: string) => {
-    await axios
+    confirmation.onOpen(`Are you sure you want to ${formatStatus(status)} this offer?`,async () => {
+      await axios
       .put(`/api/updateListing/status`, {
         status: status,
         listingId: id,
         userId: userId,
       })
       .then((response) => {
-        toast.success("Offer" + response.data.listing.status);
+        toast.success("Offer" + " " + response.data.listing.status);
         setStatusState(response.data.listing.status);
 
         socketRef.current?.emit("update_status", {
@@ -98,6 +121,7 @@ const Offer: React.FC<any> = ({
         console.log("Something went wrong!");
       })
       .finally(() => {});
+    })
   };
 
   const handleClickOutside = (e: any) => {
@@ -161,7 +185,7 @@ const Offer: React.FC<any> = ({
                 <div className="text-right text-sm">
                   Bid by{" "}
                   <span className="underline">
-                    {bids && bids.length > 0 ? bids[bids.length - 1].userId === sellerId ? seller.username : buyer.username : userId === sellerId ? seller.username : buyer.username}
+                    {bids && bids.length > 0 ? bids[bids.length - 1].userId === sellerId ? seller?.username : buyer?.username : userId === sellerId ? seller?.username : buyer?.username || ""}
                   </span>
                 </div>
 

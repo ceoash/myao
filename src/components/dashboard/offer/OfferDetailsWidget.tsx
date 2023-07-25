@@ -8,6 +8,16 @@ import { color } from "html2canvas/dist/types/css/types/color";
 import { FaThumbsUp } from "react-icons/fa";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
+import cat from "@/images/cat-neutral.png";
+import dog from "@/images/dog-neutral.png";
+import dogAccept from "@/images/dog-accept.png";
+import dogReject from "@/images/dog-reject.png";
+import dogTerminate from "@/images/dog-terminate.png";
+import catAccept from "@/images/cat-accept.png";
+import catReject from "@/images/cat-reject.png";
+import catTerminate from "@/images/cat-terminate.png";
+import avatar from "@/images/avatar.png";
+import Image from "next/image";
 
 interface SafeUser extends User {
   profile: Profile;
@@ -32,8 +42,10 @@ interface OfferDetailsWidgetProps {
   participant: any;
   socketRef: React.MutableRefObject<Socket | undefined>;
   completedBy: string | null | undefined;
+  isLoading?: boolean;
   setCompletedBy: Dispatch<SetStateAction<string | null | undefined>>;
   handleStatusChange: (status: string, userId: string) => void;
+  setStatus: Dispatch<SetStateAction<string>>;
   setCurrentBid: Dispatch<
     SetStateAction<{
       currentPrice: string;
@@ -55,6 +67,8 @@ const OfferDetailsWidget = ({
   currentBid,
   setCurrentBid,
   setBids,
+  setStatus,
+  isLoading,
   me,
   participant,
   bids,
@@ -65,11 +79,14 @@ const OfferDetailsWidget = ({
   const [mostRecentBid, setMostRecentBid] = useState<any>();
   const [completedBy, setcompletedBy] = useState<string | null>("");
 
-  console.log(meLastBid)
-  console.log(participantLastBid)
+  const noBids = !meLastBid && !participantLastBid && status === "negotiating";
+  const rejectedByMe = status === "rejected" && session.user.id !== completedBy;
+  const inNegotiation = status === "negotiating";
+
+  const myCondition = noBids || rejectedByMe || inNegotiation;
 
   useEffect(() => {
-    if (!session || !session.user?.id) {
+    if (!session || !session?.user?.id) {
       return;
     }
     const reversedBids = [...bids].reverse();
@@ -94,22 +111,20 @@ const OfferDetailsWidget = ({
     } else if (participantLast) {
       setMostRecentBid(participantLast);
     }
-  }, [bids, session?.user?.id])
+  }, [bids, session?.user?.id]);
 
   useEffect(() => {
-
     if (status === "rejected") {
       setcompletedBy(listing.completedById);
     }
-
-    
   }, [currentBid]);
 
   let parsedImage;
 
- const sessionUser  = listing.sellerId === session?.user.id  ? listing.seller : listing.buyer
- const nonSessionUser  = listing.sellerId === session?.user.id  ? listing.buyer : listing.seller
-
+  const sessionUser =
+    listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
+  const nonSessionUser =
+    listing.sellerId === session?.user.id ? listing.buyer : listing.seller;
 
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
@@ -133,27 +148,26 @@ const OfferDetailsWidget = ({
     >
       <div className=" p-4 rounded-lg border bg-white  border-white shadow ">
         {
-          <Link href={"/dashboard/profile/" + session?.user.id} className="cursor-pointer">
+          <Link
+            href={"/dashboard/profile/" + session?.user.id}
+            className="cursor-pointer"
+          >
             <div className="">
               <div className="flex gap-3">
-                <span className="w-[50px] lg:w-1/5">
-                  <img
-                    src={ sessionUser?.profile?.image || "/images/placeholders/avatar.png" }
+                <span className="w-[60px] xl:w-1/5">
+                  <Image
+                    src={sessionUser?.profile?.image || avatar}
                     alt="user avatar"
-                    className="rounded-full border border-gray-200"
+                    className="rounded-full border border-gray-200 max-w-8"
                   />
                 </span>
                 <div className="w-full">
                   <div className="capitalize font-bold text-2xl flex justify-between items-center">
-                  You
-                    <img
-                      src={
-                        listing.sellerId === session?.user.id
-                          ? "/images/dog.png"
-                          : "/images/cat.png"
-                      }
+                    You
+                    <Image
+                      src={listing.sellerId === session?.user.id ? dog : cat}
                       alt=""
-                      className="h-6 "
+                      className="h-8 w-10"
                     />
                   </div>
                   <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600">
@@ -257,29 +271,27 @@ const OfferDetailsWidget = ({
           )}
         </div>
         <div>
-          <div className="flex justify-center gap-2 text-sm text-white font-bold mb-6 items-start">
-            {mostRecentBid?.userId !== session?.user.id && status === "negotiating" || 
-            listing?.userId === session?.user.id  && status === "awaiting approval" && (
-                <>
-                  <div className="flex flex-col justify-center w-1/3">
+          <div className=" gap-2 text-sm text-white font-bold mb-6 items-start">
+            {currentBid.byUserId !== session?.user?.id &&
+              status === "negotiating" && (
+                <div className="w-2/3 flex gap-2 mx-auto justify-center">
+                  <div className="flex flex-col justify-center  items-center gap-4">
                     <Button
                       accept
                       onClick={() =>
                         handleStatusChange("accepted", session?.user.id)
                       }
-                      className="rounded-xl px-3 py-1 text-center"
+                      className="rounded-xl px-3 py-1 text-center w-10"
                     >
                       YES
                     </Button>
-                    <img
-                      src={"/icons/cat-accept.png"}
+                    <Image
+                      src={catAccept}
                       alt="user"
-                      width="100%"
-                      height="100%"
-                      className="object-cover rounded-xl px-6 pt-4"
+                      className="rounded-xl px-6"
                     />
                   </div>
-                  <div className="flex flex-col justify-center w-1/3">
+                  <div className="flex flex-col justify-center items-center  gap-4">
                     <Button
                       cancel
                       onClick={() =>
@@ -289,75 +301,65 @@ const OfferDetailsWidget = ({
                     >
                       NO
                     </Button>
-                    <img
-                      src={"/icons/cat-reject.png"}
+                    <Image
+                      src={catReject}
                       alt="user"
-                      width="100%"
-                      height="100%"
-                      className="object-cover rounded-xl px-6 pt-4"
+                      className=" rounded-xl px-6"
                     />
                   </div>
-                </>
-              )}
-            {status !== "rejected" && status !== "cancelled" && (
-                <div className="flex flex-col justify-center w-1/3">
-                  {status === "awaiting approval" &&
-          listing.userId !== session?.user?.id && (
-            <div className="flex justify-center gap-2 mb-4">
-              <Button
-                options={{ primary: true }}
-                onClick={() =>
-                  handleStatusChange("negotiating", session?.user.id)
-                }
-              >
-                <div className="flex gap-2 items-center ">
-                  <div>
-                    <FaThumbsUp />
-                  </div>
-                  <div>Let's haggle</div>
                 </div>
-              </Button>
-            </div>
-          )}
+              )}
+
+            {status === "awaiting approval" &&
+              listing.userId !== session?.user?.id && (
+                <div className="flex justify-center gap-2 mb-4 w-full">
                   <Button
-                    options={{ primary: true }}
+                    options={{ primary: true, size: "lg" }}
                     onClick={() =>
-                      handleStatusChange("cancelled", session?.user.id)
+                      handleStatusChange("negotiating", session?.user.id)
                     }
-                    className="rounded-xl px-3 py-1 text-center bg-red-400 border border-red-500"
                   >
-                    END
+                    <div className="flex gap-2 items-center ">
+                      <div>
+                        <FaThumbsUp />
+                      </div>
+                      <div>Let's haggle</div>
+                    </div>
                   </Button>
-                  <img
-                    src={
-                      listing.userId === session?.user.id
-                        ? "/icons/cat-terminate.png"
-                        : "/icons/dog-terminate.png"
-                    }
-                    alt="user"
-                    width="100%"
-                    height="100%"
-                    className="object-cover rounded-xl px-6 pt-4"
-                  />
                 </div>
               )}
           </div>
-          { status === "rejected" && completedBy !== session?.user.id || status === "negotiating" && (
-              <div className="">
-                <PriceWidget
-                  listing={listing}
-                  currentBid={currentBid}
-                  setCurrentBid={setCurrentBid}
-                  bids={bids}
-                  setBids={setBids}
-                  sessionUser={sessionUser}
-                  socketRef={socketRef}
-                />
-              </div>
-            )}
+          {myCondition && (
+            <div className="">
+              <PriceWidget
+                listing={listing}
+                currentBid={currentBid}
+                setCurrentBid={setCurrentBid}
+                bids={bids}
+                setBids={setBids}
+                sessionUser={sessionUser}
+                socketRef={socketRef}
+                status={status}
+                setStatus={setStatus}
+              />
+            </div>
+          )}
+          {status !== "cancelled" && status !== "completed" && (
+            <div className="flex flex-col items-center gap-4 mt-4 w-full">
+              <Button
+                cancel
+                outline
+                options={{ color: "danger", size: "lg" }}
+                isLoading={isLoading}
+                onClick={() =>
+                  handleStatusChange("cancelled", session?.user.id)
+                }
+              >
+                TERMINATE
+              </Button>
+            </div>
+          )}
         </div>
-
-        
       </div>
       <div className="bg-white p-4 mt-4 rounded-lg border border-white shadow">
         <Link
@@ -366,12 +368,9 @@ const OfferDetailsWidget = ({
         >
           <div className="">
             <div className="flex gap-3">
-              <span className="w-[50px] lg:w-1/5">
-                <img
-                  src={
-                    nonSessionUser?.profile?.image
-                      || "/images/placeholders/avatar.png"
-                  }
+              <span className="w-[60px] xl:w-1/5">
+                <Image
+                  src={nonSessionUser?.profile?.image || avatar}
                   alt="user avatar"
                   className="rounded-full border border-gray-200"
                 />
@@ -379,17 +378,13 @@ const OfferDetailsWidget = ({
               <div className="w-full">
                 <div className="capitalize font-bold text-2xl flex justify-between items-center">
                   {nonSessionUser?.username}
-                  <img
-                    src={
-                      listing?.seller?.id === nonSessionUser?.id
-                        ? "/images/dog.png"
-                        : "/images/cat.png"
-                    }
+                  <Image
+                    src={listing.sellerId === nonSessionUser.id ? dog : cat}
                     alt=""
-                    className="h-6 "
+                    className="h-8 w-10"
                   />
                 </div>
-                <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600 ">
+                <div className="flex gap-2 text-[12px]  text-gray-600 xl:text-[14px]">
                   {listing?.userId === nonSessionUser?.id && (
                     <div>Start price: £{listing.price}</div>
                   )}

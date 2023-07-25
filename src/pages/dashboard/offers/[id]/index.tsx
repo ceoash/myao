@@ -30,6 +30,8 @@ import Image from "next/image";
 import { BiStar } from "react-icons/bi";
 import Badge from "@/components/dashboard/offer/Badge";
 import StatusChecker from "@/utils/status";
+import { set } from "date-fns";
+import useConfirmationModal from "@/hooks/useConfirmationModal";
 
 interface IBid extends Bid {
   user: User;
@@ -40,12 +42,12 @@ interface ProfileUser extends User {
   bids?: IBid[];
 }
 
-const Index = ({ listing }: any) => {
+const Index = ({ listing, session }: any) => {
   const [disabled, setDisabled] = useState(false);
-  const [sellerId, setSellerId] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState("description");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [statusIsLoading, setStatusIsLoading] = useState(false);
   const [bids, setBids] = useState<any[]>([]);
   const [completedBy, setCompletedBy] = useState<string | null>();
   const [currentBid, setCurrentBid] = useState({
@@ -55,7 +57,7 @@ const Index = ({ listing }: any) => {
     me: {} as Bid,
     participant: {} as Bid,
   });
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>("");
   const [tab, setTab] = useState("details");
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   const [me, setMe] = useState<ProfileUser>();
@@ -65,7 +67,6 @@ const Index = ({ listing }: any) => {
   const router = useRouter();
   // const DeleteListing = useDeleteConfirmationModal();
   const SearchModal = useSearchModal();
-  const { data: session } = useSession();
 
   const now = Date.now();
 
@@ -82,12 +83,6 @@ const Index = ({ listing }: any) => {
   }, [listing?.id]);
 
 
-
-
-  //const reversedBids = [...bids].reverse();
-  const [meBid, setMeBid] = useState<Bid | null>(null);
-  const [participantBid, setParticipantBid] = useState<Bid | null>(null);
-
   useEffect(() => {
     if (!session || !session.user?.id) {
       return;
@@ -98,26 +93,31 @@ const Index = ({ listing }: any) => {
     } else {
       setMe(listing?.buyer);
       setParticipant(listing?.seller);
-    
     }
+    setCompletedBy(listing?.completedById);
   }, [listing.id, session?.user?.id])
 
   useEffect(() => {
+    setIsLoading(true);
+    if (!session || !session.user?.id || !listing?.bids) {
+      return;
+    }
     const reversedBids = [...listing.bids].reverse();
     setBids(listing.bids);
+    
     setCurrentBid({
       currentPrice:
         listing?.bids.length > 0
           ? listing.bids[listing.bids.length - 1].price
           : listing?.price,
-      byUserId: session?.user.id,
-      byUsername:
-        listing?.sellerId === session?.user.id
-          ? listing?.seller.username
-          : listing?.buyer.username,
+      byUserId: listing.bids[listing.bids.length - 1]?.userId,
+      byUsername: listing.bids[listing.bids.length - 1]?.user?.username,
       me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
       participant: reversedBids.filter((bid: Bid) => bid.userId === participant?.id)[0],
     });
+    
+    setIsLoading(false);
+
   }, [listing.bids, listing.price, listing.sellerId, listing.seller.username, listing.buyer.username, session?.user.id, me?.id, participant?.id]);
   
   useEffect(() => {
@@ -180,6 +180,9 @@ const Index = ({ listing }: any) => {
             }
             return newBid;
           });
+          setStatus("negotiating");
+
+          
         }
       });
 
@@ -200,7 +203,11 @@ const Index = ({ listing }: any) => {
     };
   }, []);
 
+  const confirmationModal = useConfirmationModal();
+
   const handleStatusChange = async (status: string, userId: string) => {
+    confirmationModal.onOpen("Are you sure you want to " + status + "?", async () =>{
+    setStatusIsLoading(true);
     await axios
       .put(`/api/updateListing/status`, {
         status: status,
@@ -217,7 +224,6 @@ const Index = ({ listing }: any) => {
           newStatus: status,
           listingId: listing.id,
         });
-        console.log("response", response.data);
         socketRef.current?.emit(
           "update_activities",
           response.data.transactionResult,
@@ -228,7 +234,10 @@ const Index = ({ listing }: any) => {
       .catch((err) => {
         console.log("Something went wrong!");
       })
-      .finally(() => {});
+      .finally(() => {
+        setStatusIsLoading(false);
+      });
+    });
   };
 
   const userReview =
@@ -405,25 +414,19 @@ const Index = ({ listing }: any) => {
           )}
           {status === "rejected" && (
             <AlertBanner
-              text="Your bid has been rejected. Enter a new bid to continue"
+              text={completedBy && session?.user.id && completedBy === session?.user.id ? "You rejected the latest bid. Awaiting repsonse from " + participant?.username : "Your bid has been rejected. Submit a new bid to continue " }
               danger
               button
-              buttonText={`Contact ${
-                listing.sellerId === session?.user.id ? "Buyer" : "Seller"
-              }`}
             />
           )}
           {status === "cancelled" && (
             <AlertBanner
-              text="This bid has been terminated."
+              text={completedBy === session?.user.id ? "You terminated the offer." : "This offer has been terminated"}
               danger
               button
-              buttonText={`Contact ${
-                listing.sellerId === session?.user.id ? "Buyer" : "Seller"
-              }`}
+              buttonText={`Contact ${listing.sellerId === session?.user.id ? "Buyer" : "Seller"}`}
             />
           )}
-
           <div className="w-full col-span-6 xl:col-span-8">
             <div className="col-span-12 pb-4 flex font-bold font-md  md:font-xl gap-4 uppercase border-b border-gray-200 mb-4">
               <div
@@ -518,24 +521,7 @@ const Index = ({ listing }: any) => {
                     )}
                   </div>
                 )}
-                {status === "pending" &&
-                  session?.user.id === listing?.userId && (
-                    <div
-                      className="w-full  p-4 white border-l-4 border-orange-400"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        SearchModal.onOpen(listing.id, setSellerId, setStatus);
-                      }}
-                    >
-                      <div>
-                        Your offer has been created. Assign a user to start
-                        negotiating{" "}
-                        <span className="text-orange-500 underline cursor-pointer">
-                          click here
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                
               </div>
             )}
             {tab === "details" && (
@@ -586,12 +572,14 @@ const Index = ({ listing }: any) => {
                 bids={bids}
                 setBids={setBids}
                 handleStatusChange={handleStatusChange}
+                isLoading={statusIsLoading}
                 timeSinceCreated={timeSinceCreated}
                 me={me}
                 participant={participant}
                 socketRef={socketRef}
                 setCompletedBy={setCompletedBy}
                 completedBy={completedBy}
+                setStatus={setStatus}
               />
               <div className="group flex text-gray-300"></div>
             </div>
@@ -603,7 +591,7 @@ const Index = ({ listing }: any) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = getSession(context);
+  const session = await getSession(context);
 
   if (!session) {
     return {
@@ -621,6 +609,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         listing,
+        session,
       },
     };
   } catch (error) {

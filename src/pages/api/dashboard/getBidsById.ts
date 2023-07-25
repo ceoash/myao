@@ -1,5 +1,4 @@
 import prisma from "@/libs/prismadb";
-import { orderBy } from "@firebase/firestore";
 import { NextApiRequest, NextApiResponse } from "next";
 
 

@@ -35,14 +35,17 @@ const PriceInput: React.FC<InputProps> = ({
 }) => {
   return (
     <div>
-    <div className="w-full relative" >
-      {formatPrice && (
+      <label htmlFor={id}>{label}</label>
+    <div className="flex items-center text-center border-2 border-gray-200 rounded-lg" >
+      <div className=" flex border-r-2 border-gray-200 p-3 bg-gray-50">
+         {formatPrice && (
         <BiPound
-          className={`absolute  ${modal ? "top-14" : "top-7"} -mt-3 left-2 text-neutral-700`}
+          className={` left-2 text-gray-500`}
           size={24}
         />
       )}
-      <label htmlFor={id}>{label}</label>
+      </div>
+     
       <input
         id={id}
         disabled={disabled}
@@ -54,15 +57,13 @@ const PriceInput: React.FC<InputProps> = ({
           peer
           w-full
           font-light
-          border-2
-         border-gray-200
           outline-none
           transition
           disabled:cursor-not-allowed
           disabled:opacity-50          
-          my-2
+          
           rounded-md
-          py-2
+          py-3
           ${formatPrice ? "pl-10" : "pl-4"}
           ${errors && errors[id] ? "border-red-500" : "border-gray-200"}
           ${errors && errors[id] ? "text-red-500" : "text-gray-700"}

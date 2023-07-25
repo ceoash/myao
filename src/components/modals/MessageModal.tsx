@@ -47,16 +47,16 @@ const MessageModal = ({  }) => {
       .then((response) => {
        
         reset();
+        setIsLoading(true);
+
       })
       .catch((err) => {
         toast.error("Something went wrong!");
    
       })
       .finally(() => {
-        setIsLoading(false);
-        onClose();
         router.push("/dashboard/conversations");
-        
+        onClose();
       });
   };
   
@@ -96,6 +96,7 @@ const MessageModal = ({  }) => {
       onSubmit={handleSubmit(onSubmit)}
       actionLabel={"Send"}
       body={bodyContent}
+      isLoading={isLoading}
     />
   );
 };

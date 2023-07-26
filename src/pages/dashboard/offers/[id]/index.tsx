@@ -223,34 +223,28 @@ const Index = ({ listing, session }: any) => {
 
   const confirmationModal = useConfirmationModal();
 
-  let statusFormatter: string | null = null;
-switch (status) {
-  case "pending":
-    statusFormatter = "Pending";
-    break;
-  case "awaiting approval":
-    statusFormatter = "Awaiting Approval";
-    break;
-  case "accepted":
-    statusFormatter = "accept this offer for " + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
-    break;
-  case "rejected":
-    statusFormatter = "rejected the current bid for " + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
-    break;
-  case "negotiating":
-    statusFormatter = "start negotiating";
-    break;
-  case "completed":
-    statusFormatter = "accept this offer for " + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
-    break;
-  case "cancelled":
-    statusFormatter = "terminate this offer";
-    break;
-}
+  const getStatusMessage = (status: string, bids: any[], currentBid: any, listing: any): string | null => {
+    const messages: {[key: string]: string} = {
+      "pending": "Pending",
+      "awaiting approval": "Awaiting Approval",
+      "accepted": getBidMessage(bids, currentBid, listing, "accept this offer for "),
+      "rejected": getBidMessage(bids, currentBid, listing, "rejected the current bid for "),
+      "negotiating": "start negotiating",
+      "completed": getBidMessage(bids, currentBid, listing, "accept this offer for "),
+      "cancelled": "terminate this offer",
+    };
+  
+    return messages[status] || null;
+  }
+  
+  const getBidMessage = (bids: any[], currentBid: any, listing: any, baseMessage: string): string => {
+    return baseMessage + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
+  }
 
 
   const handleStatusChange = async (status: string, userId: string) => {
-    confirmationModal.onOpen("Are you sure you want to " + statusFormatter + "?", async () =>{
+    const statusMessage = getStatusMessage(status, bids, currentBid, listing);
+  confirmationModal.onOpen("Are you sure you want to " + statusMessage + "?", async () => {
     setStatusIsLoading(true);
     await axios
       .put(`/api/updateListing/status`, {

@@ -8,7 +8,7 @@ export default async function getUser(
     let { username } = req.query;
     console.log(username);
     const user = await prisma.user.findUnique({
-      where: { username: username },
+      where: { username: username.toLowerCase() },
       include: {
         profile: {
           select: {

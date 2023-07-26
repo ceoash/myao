@@ -58,7 +58,7 @@ export default async function UpdateProfile(
       data: {
         hashedPassword: hashedPassword,
         name: name,
-        username: username,
+        username: username.toLowerCase(),
         activated: activated,
         type: userType,
         updatedAt: new Date(now),

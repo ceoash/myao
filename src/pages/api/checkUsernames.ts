@@ -25,7 +25,7 @@ export default async function checkUsernames(
           try {
             const user = await prisma.user.findUnique({
               where: {
-                username: username,
+                username: username.toLowerCase(),
               },
             });
             

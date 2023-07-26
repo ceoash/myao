@@ -158,7 +158,7 @@ const Register = () => {
     setIsLoading(true);
     setDisabled(true);
 
-    const validation = {
+    /* const validation = {
       isValid: true,
       errors: {} as Record<string, { message: string }>,
     };
@@ -218,7 +218,7 @@ const Register = () => {
       setError("username", {
         message: "Username is not available",
       });
-    }
+    } */
     data.username = data.username.toLowerCase();
  
     if (data.password !== data.confirmPassword) {
@@ -307,7 +307,7 @@ const Register = () => {
                         <input
                           type="text"
                           id="username"
-                          className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none ${
+                          className={`lowercase bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none ${
                             usernameIsAvailable
                               ? "focus:border-green-500 focus:ring-green-600"
                               : "focus:border-red-500 focus:ring-red-600"

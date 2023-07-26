@@ -17,7 +17,7 @@ export default async function searchUserByUsername(
       const users = await prisma.user.findMany({
         where: {
           username: {
-            contains: username,
+            contains: username.toLowerCase(),
           },
         },
       });

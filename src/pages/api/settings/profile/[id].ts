@@ -44,7 +44,7 @@ export default async function UpdateProfile(
       data: {
         name: name,
         email: email,
-        username: username,
+        username: username.toLowerCase(),
         updatedAt: new Date(now),
         profile: {
           upsert: {

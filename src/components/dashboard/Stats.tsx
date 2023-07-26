@@ -3,7 +3,8 @@ import InfoCard from "./InfoCard";
 import Link from "next/link";
 import { Listing } from "@prisma/client";
 import { adviceArray } from "@/data/adviceData";
-import { set } from "date-fns";
+import { getTime, set } from "date-fns";
+import { getTimeOfDay } from "@/utils/formatTime";
 
 interface StatsProps {
   title: string;
@@ -38,6 +39,8 @@ const Stats = ({
   const received = receivedOffers
 
   const [randomAdvice, setRandomAdvice] = useState({ key: "", value: { id: 0, advice: "Loading..." } });
+  const [timeOfDay, setTimeOfDay] = useState<string | null>(null);
+
 
   function getRandomAdvice() {
     function getRandomItem(array: any[]) {
@@ -55,13 +58,18 @@ const Stats = ({
   }
 
   useEffect(() => {
+    setTimeOfDay(getTimeOfDay())
+  },[])
+
+  useEffect(() => {
     const advice = getRandomAdvice();
     if (advice.value) {
       setRandomAdvice(advice);
     }
   }, [adviceArray]) 
 
-  
+  getTimeOfDay();
+
   return (
     <div className="col-span-8">
       <div className="flex justify-between gap-2 items-start">
@@ -73,7 +81,7 @@ const Stats = ({
 
       <div className="grid grid-cols-2 gap-4">
         <InfoCard
-          title={`Good day, ${username}`}
+          title={`${timeOfDay ? timeOfDay : "Welcome to your dashboard"}, ${username}`}
           button={{ label: "Create Offer", onClick: startOffer }}
           color={`green`}
           className="bg-green-100"

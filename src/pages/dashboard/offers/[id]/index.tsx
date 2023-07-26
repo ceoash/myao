@@ -224,23 +224,30 @@ const Index = ({ listing, session }: any) => {
   const confirmationModal = useConfirmationModal();
 
   let statusFormatter: string | null = null;
-    switch (status) {
-      case "pending":
-        statusFormatter = "Pending";
-      case "awaiting approval":
-        statusFormatter = "Awaiting Approval";
-      case "accepted":
-        statusFormatter = "accept this offer for " + bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price;
-      case "rejected":
-        statusFormatter = "rejected the current bid for " + bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price;
-      case "negotiating":
-        statusFormatter = "start negotiating";
-      case "completed":
-        statusFormatter = "accept this offer for " + bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price;
-      case "cancelled":
-        statusFormatter = "terminate this offer" ;
-    }
-  
+switch (status) {
+  case "pending":
+    statusFormatter = "Pending";
+    break;
+  case "awaiting approval":
+    statusFormatter = "Awaiting Approval";
+    break;
+  case "accepted":
+    statusFormatter = "accept this offer for " + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
+    break;
+  case "rejected":
+    statusFormatter = "rejected the current bid for " + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
+    break;
+  case "negotiating":
+    statusFormatter = "start negotiating";
+    break;
+  case "completed":
+    statusFormatter = "accept this offer for " + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
+    break;
+  case "cancelled":
+    statusFormatter = "terminate this offer";
+    break;
+}
+
 
   const handleStatusChange = async (status: string, userId: string) => {
     confirmationModal.onOpen("Are you sure you want to " + statusFormatter + "?", async () =>{

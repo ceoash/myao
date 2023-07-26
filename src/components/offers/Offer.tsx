@@ -78,16 +78,22 @@ const Offer: React.FC<any> = ({
     switch (status) {
       case "pending":
         return "carry on";
+        break
       case "accepted":
         return "accept";
+        break;
       case "rejected":
         return "reject";
+        break;
       case "cancelled":
         return "cancel";
+        break;
       case "completed":
         return "accept";
+        break;
       default:
         return "pending";
+        break
     }
   };
 

@@ -12,7 +12,7 @@ export default async function handler(req: any, res: any) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const formattedUsername = username.toLowerCase().replace(/\s/g, '');
-
+    const now = Date.now();
     const user = await prisma.user.create({
       data: {
         email,
@@ -20,7 +20,7 @@ export default async function handler(req: any, res: any) {
         hashedPassword,
         username: formattedUsername,
         activated: true,
-        activities: [{ type: "user", message: "Account created", action: "/dashboard/settings", value: "Update your profile"} ]
+        activities: [{ type: "user", message: "Account created", action: "/dashboard/settings", value: "Update your profile", createdAt: now} ]
       },
     });
 

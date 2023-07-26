@@ -61,16 +61,24 @@ const Header = ({
               className="rounded-full border border-gray-200 p-1 h-[38px] my-2 ml-2"
             />
           </div>
-          <div className="flex leading-tight">
-            <div className="text-xl font-medium flex items-center">
-              <span className="text-gray-700 mr-3">{username}</span>
-            </div>
-            {/* 
-            <button onClick={handleBlocked} className="border-2 border-gray-200 p-[2px] rounded-lg bg-white">
-                    <MdDoNotDisturbAlt className="text-lg text-red-500" />
-                  </button> */}
-          </div>
         </Link>
+        <div className="flex leading-tight">
+          <div className="text-xl font-medium flex items-center">
+            <Link
+              href={`/dashboard/profile/${participant}`}
+              className="relative flex items-center space-x-2"
+            >
+              <span className="text-gray-700 mr-3">{username}</span>
+            </Link>
+          </div>
+
+          {/* <button
+            onClick={handleBlocked}
+            className="border-2 border-gray-200 p-[2px] rounded-lg bg-white"
+          >
+            <MdDoNotDisturbAlt className="text-lg text-red-500" />
+          </button> */}
+        </div>
       </div>
       <div className="flex items-center gap-2 relative">
         <div className="flex gap-2 relative">
@@ -79,10 +87,8 @@ const Header = ({
               {statusState === "none" &&
               activeConversationState?.participant2Id === session.user.id ? (
                 <>
-                  <Button
-                    onClick={handleAccept}
-                  >
-                    <FaCheck className="mr-2"/> Accept
+                  <Button onClick={handleAccept}>
+                    <FaCheck className="mr-2" /> Accept
                   </Button>
                   {activeConversationState && (
                     <Button

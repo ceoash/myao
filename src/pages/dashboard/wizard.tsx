@@ -1,16 +1,14 @@
 import getCurrentUser from "@/actions/getCurrentUser";
 import Inviter from "@/components/Inviter";
-import Spinner from "@/components/Spinner";
+import Loading from "@/components/LoadingScreen";
 import AvatarUpload from "@/components/inputs/AvatarUpload";
 import UserType from "@/components/wizard/UserType";
-import { Meta } from "@/layouts/meta";
-import { Dash } from "@/templates/dash";
+
 import axios from "axios";
-import { set } from "date-fns";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Controller,
   FieldValues,
@@ -18,7 +16,7 @@ import {
   useForm,
 } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { BiCheck, BiCheckCircle } from "react-icons/bi";
+import { BiCheckCircle } from "react-icons/bi";
 
 enum STEPS {
   PASSWORD = 0,
@@ -54,7 +52,6 @@ async function checkUsernameAvailability(
       return validUsernames;
     });
 }
-
 
 async function getUsernameSuggestions(username: string): Promise<string[]> {
   function getSuggestion(prefix: string, numSuggestions: number) {
@@ -333,7 +330,7 @@ const wizard = ({ session, user }: any) => {
       });
   };
   return isLoading ? (
-    <Spinner />
+    <Loading />
   ) : (
     <div className="flex flex-col items-center w-full h-full p-4">
       <div className="flex flex-col w-full md:w-9/12  lg:w-1/2 lg:mt-12 border-2 border-gray-200 shadow bg-white rounded-md">

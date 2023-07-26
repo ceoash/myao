@@ -20,6 +20,8 @@ interface ModalProps {
     children?: React.ReactNode;
     errors?: FieldErrors<FieldValues> | undefined;
     isLoading?: boolean;
+    auto?: boolean;
+    confirmation?: boolean;
 
 }
 
@@ -37,6 +39,8 @@ const Modal: React.FC<ModalProps> = ({
     listingId,
     errors,
     isLoading,
+    auto,
+    confirmation
 
 }) => {
     const [showModal, setShowModal] = useState(isOpen);
@@ -110,18 +114,15 @@ const Modal: React.FC<ModalProps> = ({
         `}
     >
         <div 
-            className="
+            className={`
             relative
-            w-full
-            md:w-4/6
-            lg:w-3/6
-            xl:w-2/5
+            ${auto ? 'w-full md:w-auto' : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
             my-6
             mx-auto
             h-full  
             lg:h-auto
             md:h-auto        
-        ">
+    `}>
             {/* CONTENT */}
             <div
             className={`
@@ -188,10 +189,12 @@ const Modal: React.FC<ModalProps> = ({
                     </div>
                     {/* FOOTER */}
                     <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                        <div className="flex flex-row items-center gap-4 w-full justify-between">
-                            { secondaryAction && !isLoading && <Button label={secondaryActionLabel || 'Back'}  onClick={secondaryAction} options={{size: "xl"}} /> }
-                            <div className="ml-auto">
-                           <Button disabled={disabled} isLoading={isLoading} label={actionLabel || 'Submit'} onClick={handleSubmit} options={{size: "xl"}} />
+                        <div className={`flex flex-row items-center gap-2 w-full ${!auto && 'justify-between'}`}>
+                            <div className={`${auto && 'ml-auto'}`}>
+                            { secondaryAction && !isLoading && <Button label={secondaryActionLabel || 'Back'}  onClick={secondaryAction} options={{size: "xl"}}  /> }
+                            </div>
+                            <div className={`${!auto && 'ml-auto'}`}>
+                           <Button disabled={disabled} isLoading={isLoading} label={actionLabel || 'Submit'} onClick={handleSubmit} options={{size: "xl"}} cancel={confirmation} />
 
                             </div>
                         </div>

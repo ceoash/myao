@@ -11,7 +11,7 @@ export default async function accept(
   res: NextApiResponse<any | ErrorResponse>
 ) {
       const { user: userBlockedId, user2: friendBlockedId, conversationId } = req.body;
-
+      const now = Date.now()
       if (!userBlockedId || !friendBlockedId) {
           return res.status(400).json({ error: "Missing necessary parameters." });
       }
@@ -19,7 +19,7 @@ export default async function accept(
     try {
       const conversation = await prisma.conversation.update({
         where: { id: conversationId },
-        data: { status: "declined" },
+        data: { status: "declined", updatedAt: new Date(now) },
       });
 
       const newFriendshipBlock = await prisma.blocked.upsert({

@@ -55,8 +55,8 @@ const Input: React.FC<InputProps> = ({
             size={22}
           />
         )}
-        <label htmlFor={id}>{label}</label>
-        <div className="relative">
+        <label className="mb-4" htmlFor={id}>{label}</label>
+        <div className="relative pt-3">
           <input
             id={id}
             disabled={disabled}

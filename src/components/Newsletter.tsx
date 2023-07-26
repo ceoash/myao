@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 function Newsletter() {
@@ -20,7 +21,7 @@ function Newsletter() {
                       <button type="submit" className="py-3 px-5 w-full text-sm font-medium text-center text-white rounded-lg border cursor-pointer bg-primary-default border-primary-default sm:rounded-none sm:rounded-r-lg hover:bg-orange-800 focus:ring-4 focus:ring-orange-300">Subscribe</button>
                   </div>
               </div>
-              <div className="mx-auto max-w-screen-sm text-sm text-left newsletter-form-footer text-gray-800">We care about the protection of your data. <a href="#" className="font-medium text-orange-600 dark:text-orange-500 hover:underline">Read our Privacy Policy</a>.</div>
+              <div className="mx-auto max-w-screen-sm text-sm text-left newsletter-form-footer text-gray-800">We care about the protection of your data. <Link href="#" className="font-medium text-orange-600 dark:text-orange-500 hover:underline">Read our Privacy Policy</Link>.</div>
           </form>
       </div>
   </div>

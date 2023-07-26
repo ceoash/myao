@@ -12,7 +12,8 @@ import {
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { BiCheckCircle } from "react-icons/bi";
-import Spinner from "@/components/Spinner";
+import Loading from "@/components/LoadingScreen";
+import Link from "next/link";
 
 async function checkUsernameAvailability(
   usernames: string[]
@@ -156,6 +157,70 @@ const Register = () => {
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
     setDisabled(true);
+
+    const validation = {
+      isValid: true,
+      errors: {} as Record<string, { message: string }>,
+    };
+
+    if (!data.password) {
+      validation.isValid = false;
+      setError("password", { message: "Password is required" });
+    }
+    if (data.password.length < 8) {
+      validation.isValid = false;
+      setError("password", {
+        message: "Password must be at least 8 characters",
+      }); 
+    }
+    if (data.password.length > 20) {
+      validation.isValid = false;
+      setError("password", {
+        message: "Password must be less than 20 characters",
+      }); 
+    }
+    if (data.password) {
+      validation.isValid = false; // isValidPassword(data.password);
+      setError("password", {
+        message:
+          "Invalid password. Password should contain at least one digit, one special character, one lower-case letter, one upper-case letter, and should be at least eight characters long.",
+      });
+    }
+    if (!data.confirmPassword) {
+      validation.isValid = false;
+      setError("confirmPassword", {
+        message: "Confirm Password is required",
+      });
+    }
+
+    if (data.password !== data.confirmPassword) {
+      validation.isValid = false;
+      setError("passwordNotConfirmed", {
+        message: "Passwords do not match",
+      });
+    }
+
+    if (!data.name) {
+      validation.isValid = false;
+      setError("name", { message: "Your name is required" });
+    }
+    if (!data.username) {
+      validation.isValid = false;
+      setError("username", { message: "Username is required" });
+    } else if (!/^[a-zA-Z][a-zA-Z0-9]{2,11}$/.test(data.username)) {
+      validation.isValid = false;
+      setError("username", {
+        message:
+          "Username must start with a letter and can only contain letters and numbers",
+      });
+    } else if (!usernameIsAvailable) {
+      validation.isValid = false;
+      setError("username", {
+        message: "Username is not available",
+      });
+    }
+    data.username = data.username.toLowerCase();
+ 
     if (data.password !== data.confirmPassword) {
       toast.error("Passwords do not match");
       setIsLoading(false);
@@ -180,13 +245,13 @@ const Register = () => {
     }
 
     if (isLoading) {
-      return <Spinner />;
+      return <Loading />;
     }
 
     return (
       <div className="bg-gray-50">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-          <a
+          <Link
             href="/"
             className="flex items-center mb-6 text-2xl font-semibold text-gray-900 "
           >
@@ -194,7 +259,7 @@ const Register = () => {
             <span className="self-center text-xl font-semibold whitespace-nowrap">
               MYAO
             </span>
-          </a>
+          </Link>
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
@@ -379,12 +444,12 @@ const Register = () => {
                       className="font-light text-gray-500 dark:text-gray-300"
                     >
                       I accept the{" "}
-                      <a
+                      <Link
                         className="font-medium text-primary-600 hover:underline dark:text-primary-500"
                         href="#"
                       >
                         Terms and Conditions
-                      </a>
+                      </Link>
                     </label>
                   </div>
                 </div>
@@ -392,12 +457,12 @@ const Register = () => {
                 <Button label={`Register`} disabled={disabled} type="submit" />
                 <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                   Already have an account?{" "}
-                  <a
+                  <Link
                     href="/login"
                     className="font-medium text-primary-600 hover:underline text-primary-alt"
                   >
                     Login
-                  </a>
+                  </Link>
                 </p>
               </form>
             </div>

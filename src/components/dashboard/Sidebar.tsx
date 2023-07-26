@@ -1,24 +1,24 @@
+import React from "react";
+import Button from "./Button";
+import Link from "next/link";
+
 import { AppConfig } from "@/utils/AppConfig";
 import { handleCopy, handleDownloadQR } from "@/utils/canvas";
 import { useQRCode } from "next-qrcode";
-import React, { use, useEffect } from "react";
-import Button from "./Button";
 import { FaUserFriends } from "react-icons/fa";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { AiFillHome } from "react-icons/ai";
-import { BsQrCode } from "react-icons/bs";
 import { MdLocalOffer, MdOutlineTimeline } from "react-icons/md";
 import { BiCog } from "react-icons/bi";
-import axios from "axios";
 import { useSession } from "next-auth/react";
+
 import useQRModal from "@/hooks/useQRModal";
+import { BsQrCode } from "react-icons/bs";
 
 const Sidebar = () => {
   const { Canvas } = useQRCode();
-  const router = useRouter()
   const { data: session } = useSession();
-
+  const router = useRouter();
   const qr = useQRModal();
 
   return (
@@ -29,85 +29,93 @@ const Sidebar = () => {
             <img src="/images/cat.png" className="w-12 pb-3 mx-auto" />
           </div>
           <div className="p-4">
-          <ul className="space-y-1">
-      <li>
-        <Link href="/dashboard">
-          <span
-            className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0 ${
-              router.pathname === '/dashboard' ? 'text-orange-400' : ''
-            }`}
-          >
-            <AiFillHome className="text-xl lg:mr-4" />
-            <span className="hidden lg:block">Dashboard </span>
-          </span>
-        </Link>
-      </li>
-      <li>
-        <Link href="/dashboard/offers">
-          <span
-            className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
-              router.pathname === '/dashboard/offers' ? 'text-orange-400' : ''
-            }`}
-          >
-            <MdLocalOffer className="text-xl lg:mr-4" />
-            <span className="hidden lg:block">Offers</span>
-          </span>
-        </Link>
-      </li>
-      <li>
-        <Link href="/dashboard/friends">
-          <span
-            className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
-              router.pathname === '/dashboard/friends' ? 'text-orange-400' : ''
-            }`}
-          >
-            <FaUserFriends className="text-xl lg:mr-4" />
-            <span className="hidden lg:block">Friends</span>
-          </span>
-        </Link>
-      </li>
-      <li>
-        <Link href="/dashboard/activity">
-          <span
-            className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
-              router.pathname === '/dashboard/activity' ? 'text-orange-400' : ''
-            }`}
-          >
-            <MdOutlineTimeline className="text-xl lg:mr-4" />
-            <span className="hidden lg:block">Activity</span>
-          </span>
-        </Link>
-      </li>
-      <li>
-        <Link href="/dashboard/settings">
-          <span
-            className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
-              router.pathname === '/dashboard/settings' ? 'text-orange-400' : ''
-            }`}
-          >
-            <BiCog className="text-xl lg:mr-4" />
-            <span className="hidden lg:block">Settings</span>
-          </span>
-        </Link>
-      </li>
-     
-      
-    </ul>
+            <ul className="space-y-1">
+              <li>
+                <Link href="/dashboard">
+                  <span
+                    className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0 ${
+                      router.pathname === "/dashboard" ? "text-orange-400" : ""
+                    }`}
+                  >
+                    <AiFillHome className="text-xl lg:mr-4" />
+                    <span className="hidden lg:block">Dashboard </span>
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/offers">
+                  <span
+                    className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
+                      router.pathname === "/dashboard/offers"
+                        ? "text-orange-400"
+                        : ""
+                    }`}
+                  >
+                    <MdLocalOffer className="text-xl lg:mr-4" />
+                    <span className="hidden lg:block">Offers</span>
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/friends">
+                  <span
+                    className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
+                      router.pathname === "/dashboard/friends"
+                        ? "text-orange-400"
+                        : ""
+                    }`}
+                  >
+                    <FaUserFriends className="text-xl lg:mr-4" />
+                    <span className="hidden lg:block">Friends</span>
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/activity">
+                  <span
+                    className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
+                      router.pathname === "/dashboard/activity"
+                        ? "text-orange-400"
+                        : ""
+                    }`}
+                  >
+                    <MdOutlineTimeline className="text-xl lg:mr-4" />
+                    <span className="hidden lg:block">Activity</span>
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/settings">
+                  <span
+                    className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0 ${
+                      router.pathname === "/dashboard/settings"
+                        ? "text-orange-400"
+                        : ""
+                    }`}
+                  >
+                    <BiCog className="text-xl lg:mr-4" />
+                    <span className="hidden lg:block">Settings</span>
+                  </span>
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
-        <div onClick={qr.onOpen} className="flex justify-center mb-4 lg:hidden hover:cursor-pointer ">
+        <div
+          onClick={qr.onOpen}
+          className="flex justify-center mb-4 lg:hidden hover:cursor-pointer "
+        >
           <span
-          
             className={`flex items-center rounded-xl font-bold text-md text-gray-900 py-3 px-4 lg:pr-0`}
           >
+            <BsQrCode className="text-xl" />
           </span>
-      </div>
+        </div>
         <div className="p-6 border-t border-gray-200 bg-gray-50 hidden lg:block">
           <h5 className="mb-4">Share QR Code</h5>
           <div className="border border-gray-200 rounded-lg mb-4">
-
             <Canvas
-              text={`$https://myao.vercel.app/connect/${session?.user.id}`}
+              text={`${AppConfig.siteUrl}/connect/${session?.user.id}`}
               options={{
                 level: "M",
                 margin: 2,
@@ -122,16 +130,8 @@ const Sidebar = () => {
           </div>
 
           <div className="flex gap-2 text-md justify-start">
-            <Button
-              onClick={ handleDownloadQR}
-            >
-              Download
-            </Button>
-            <Button
-              onClick={() => handleCopy(session?.user.id)}
-            >
-              Copy
-            </Button>
+            <Button onClick={handleDownloadQR}>Download</Button>
+            <Button onClick={() => handleCopy(session?.user.id)}>Copy</Button>
           </div>
         </div>
       </div>

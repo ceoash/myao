@@ -1,4 +1,5 @@
 import { Profile, Review, User } from "@prisma/client";
+import Link from "next/link";
 import React from "react";
 
 interface IUser extends User {
@@ -50,12 +51,12 @@ const ReviewBox = ({ review }: ReviewProps) => {
 
       <p className="mb-2 text-gray-500 dark:text-gray-400">{review.message}</p>
 
-      <a
+      <Link
         href="#"
         className="block mb-5 text-sm font-medium text-orange-300 hover:underline "
       >
         Read more
-      </a>
+      </Link>
      
     </article>
   );

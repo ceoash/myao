@@ -33,6 +33,8 @@ const ConfirmationModal = () => {
         secondaryAction={() => onClose()}
         secondaryActionLabel={"No"}
         body={bodyContent}
+        auto
+        confirmation
       />
     );
   };

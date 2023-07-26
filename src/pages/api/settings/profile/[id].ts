@@ -12,6 +12,7 @@ export default async function UpdateProfile(
   res: NextApiResponse<User | ErrorResponse>
 ) {
   const id = req.query.id as string;
+  const now = Date.now()
   
   const {
     name,
@@ -44,6 +45,7 @@ export default async function UpdateProfile(
         name: name,
         email: email,
         username: username,
+        updatedAt: new Date(now),
         profile: {
           upsert: {
             create: {
@@ -53,6 +55,7 @@ export default async function UpdateProfile(
               image: image,
               website: website,
               bio: bio,
+              
               social: {
                 create: {
                   instagram: instagram,
@@ -88,6 +91,7 @@ export default async function UpdateProfile(
             },
           },
         },
+        
       },
       include: {
         profile: {

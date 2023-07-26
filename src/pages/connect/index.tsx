@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { signIn } from 'next-auth/react';
-import Spinner from '@/components/Spinner';
+import Loading from '@/components/LoadingScreen';
 
 const Connect = ({}) => {
     useEffect(() => {
@@ -34,7 +34,7 @@ const Connect = ({}) => {
         }
       }, []);
 
-      return <Spinner />
+      return <Loading />
   
 }
 

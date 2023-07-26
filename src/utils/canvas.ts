@@ -6,7 +6,7 @@ import { saveAs } from "file-saver";
 
 export const handleCopy = (userId: string) => {
     navigator.clipboard.writeText(
-      `${AppConfig.siteUrl || "myao.vercel.app"}/connect/${userId}`
+      `${AppConfig.siteUrl || "http://localhost:3000"}/connect/${userId}`
     );
     toast.success("Link copied to clipboard");
   };

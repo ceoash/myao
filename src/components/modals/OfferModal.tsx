@@ -24,6 +24,7 @@ import Button from "../dashboard/Button";
 import TextArea from "../inputs/TextArea";
 import { IoPricetagOutline } from "react-icons/io5";
 import UserType from "../wizard/UserType";
+import { set } from "date-fns";
 
 enum STEPS {
   TYPE = 0,
@@ -155,8 +156,23 @@ const OfferModal = () => {
   };
 
   const onClose = () => {
+    reset({
+      title: "",
+      description: "",
+      price: "0",
+      category: "",
+      image: "",
+      buyerId: "",
+      sellerId: "",
+      public: false,
+      userType: "",
+    });
+    setFoundUser(null);
+    setSearch("");
+    setSelectedCategory("");
+    setUserType("");
+    setPrice("0");
     offerModal.onClose();
-    reset();
     setStep(STEPS.TYPE);
   };
 
@@ -380,6 +396,7 @@ const OfferModal = () => {
             setUserType={setUserType}
             userType={userType}
             notrade 
+            clearErrors={clearErrors}
           />
           {errors.userType && (
             <span className="text-red-500">

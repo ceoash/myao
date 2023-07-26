@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import { AiOutlineMenu } from "react-icons/ai";
-import { BiCog, BiMessage, BiQr, BiSearch, BiTrash } from "react-icons/bi";
+import { BiCog, BiMessage, BiSearch } from "react-icons/bi";
 import Avatar from "./Avatar";
 import Link from "next/link";
 import MenuItem from "./MenuItem";
@@ -10,6 +10,7 @@ import { SafeUser } from "@/types";
 import axios from "axios";
 import SearchComponent from "./SearchComponent";
 import useQRModal from "@/hooks/useQRModal";
+import { BsQrCode } from "react-icons/bs";
 
 interface IUserMenuProps {
   currentUser?: SafeUser | null;
@@ -97,7 +98,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
             
             <div className="relative">
               <div onClick={qr.onOpen}>
-                <BiQr />
+              <BsQrCode className="h-4 cursor-pointer" />
               </div>
             </div>
 

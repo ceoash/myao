@@ -27,10 +27,10 @@ export default async function UpdateProfile(
     website,
   } = req.body;
 
-  console.log(req.body);
-
   let connectTo = {};
   let newConversation = {};
+
+  const now = Date.now()
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -61,6 +61,7 @@ export default async function UpdateProfile(
         username: username,
         activated: activated,
         type: userType,
+        updatedAt: new Date(now),
         profile: {
           upsert: {
             create: {

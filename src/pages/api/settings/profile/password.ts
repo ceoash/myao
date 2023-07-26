@@ -18,12 +18,14 @@ export default async function UpdateProfile(
   } = req.body;
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  const now = Date.now()
   
   try {
     const user = await prisma.user.update({
       where: { id: id },
       data: {
         hashedPassword: hashedPassword,
+        updatedAt: new Date(now),
         },
     });
 

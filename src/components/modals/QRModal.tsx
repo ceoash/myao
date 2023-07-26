@@ -1,12 +1,11 @@
 "use client";
-
 import React from "react";
 import Modal from "./Modal";
 import useQRModal from "@/hooks/useQRModal";
 import { handleCopy, handleDownloadQR } from "@/utils/canvas";
 import { useQRCode } from "next-qrcode";
 import { useSession } from "next-auth/react";
-import Button from "../dashboard/Button";
+import { AppConfig } from "@/utils/AppConfig";
 
 export interface ErrorResponse {
   error: string;
@@ -20,12 +19,12 @@ const QRModal = () => {
   let bodyContent = (
     <div className="border border-gray-200 rounded-lg mb-4 flex justify-center">
       <Canvas
-        text={`$https://myao.vercel.app/connect/${session?.user.id}`}
+      text={`${AppConfig.siteUrl || "http://localhost:3000"}/connect/${session?.user.id}`}
         options={{
           level: "M",
           margin: 2,
           scale: 4,
-          width: 180,
+          width: 240,
           color: {
             dark: "#000000",
             light: "#FFFFFF",
@@ -45,6 +44,7 @@ const QRModal = () => {
       secondaryAction={() => handleCopy(session?.user.id)}
       secondaryActionLabel={"Copy"}
       body={bodyContent}
+      auto
     />
   );
 };

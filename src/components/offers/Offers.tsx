@@ -22,16 +22,31 @@ interface OffersProps {
   countPendingReceived: number;
   setSentCount?: (count: number) => void;
   setReceivedCount?: (count: number) => void;
+  setSentPendingCount?: (count: number) => void;
+  setReceivedPendingCount?: (count: number) => void;
 }
 
-const Offers = ({ sent, received, session, multipage, countSent, countReceived, countPendingReceived, countPendingSent, setSentCount, setReceivedCount }: OffersProps) => {
+const Offers = ({
+  sent,
+  received,
+  session,
+  multipage,
+  countSent,
+  countReceived,
+  countPendingReceived,
+  countPendingSent,
+  setSentCount,
+  setReceivedCount,
+  setSentPendingCount,
+  setReceivedPendingCount 
+}: OffersProps) => {
+
   const [isLoading, setIsLoading] = useState(true);
   const [allSent, setAllSent] = useState<any>([]);
   const [allReceived, setAllReceived] = useState<any>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [completedById, setCompletedById] = useState<string>("");
-
 
   const [sentListings, setSentListings] = useState<
     Record<string, DashListing[]>
@@ -41,11 +56,10 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
   >({});
   const [activeTab, setActiveTab] = useState("sent");
 
-  console.log("sent", allSent);
-  console.log("received", allReceived);
-  console.log("sentListings", sentListings);
-  console.log("receivedListings", receivedListings);
-
+  // console.log("sent", allSent);
+  // console.log("received", allReceived);
+  // console.log("sentListings", sentListings);
+  // console.log("receivedListings", receivedListings);
 
   useEffect(() => {
     if(sent || received){
@@ -186,6 +200,7 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
             return { ...prevListings, all: [listing, ...prevListings?.all] };
           });
           if (setReceivedCount) setReceivedCount(countReceived + 1);
+          if(setReceivedPendingCount) setReceivedPendingCount(countPendingReceived + 1);
         } 
         if (session?.user.id === listing.userId) {
           setAllSent((prevListings: any) => {
@@ -195,6 +210,7 @@ const Offers = ({ sent, received, session, multipage, countSent, countReceived, 
             return { ...prevListings, all: [listing, ...prevListings?.all] };
           });
           if (setSentCount) setSentCount(countSent + 1);
+          if(setSentPendingCount) setSentPendingCount(countPendingSent + 1);
         }
       });
 

@@ -102,8 +102,8 @@ const Conversations = ({ safeConversations, session }: any) => {
   const [activeConversationState, setActiveConversationState] = useState<Conversation | null>(null);
  
 
-  const [isFriend, setIsFriend] = useState<boolean | null>(activeConversationState?.friendStatus || null);
-  const [isBlocked, setIsBlocked] = useState<boolean | null>(null);
+  const [isFriend, setIsFriend] = useState<boolean | null>(false);
+  const [isBlocked, setIsBlocked] = useState<boolean | null>(false);
   const [status, setStatus] = useState<string | null>("") || null
 
   const [disabled, setDisabled] = useState<boolean>(false);
@@ -144,6 +144,12 @@ const Conversations = ({ safeConversations, session }: any) => {
       image: "",
     },
   });
+
+  const some = activeConversationState?.participant1.blockedFriends?.some(
+    (blockedFriend: any) => blockedFriend.friendBlockedId === participant
+  );
+
+  console.log("some", some);
 
 
   useEffect(() => {

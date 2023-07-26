@@ -5,11 +5,13 @@ interface UserTypeProps {
   setUserType: (value: string) => void;
   userType: string;
   notrade?: boolean;
+  clearErrors?: (id: string) => void;
 }
 
 const UserType = ({
   setValue,
   setUserType,
+  clearErrors,
   userType,
   notrade,
 }: UserTypeProps) => {
@@ -25,7 +27,7 @@ const UserType = ({
       } auto-cols-fr gap-2`}
     >
       <div
-        onClick={() => handleSelect("buyer")}
+        onClick={() => (handleSelect("buyer"), clearErrors && clearErrors("userType"))}
         className={`${
           userType === "buyer" && "bg-gray-100"
         } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}
@@ -38,7 +40,7 @@ const UserType = ({
         </div>
       </div>
       <div
-        onClick={() => handleSelect("seller")}
+        onClick={() => (handleSelect("seller"), clearErrors && clearErrors("userType"))}
         className={`${
           userType === "seller" && "bg-gray-100"
         } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}

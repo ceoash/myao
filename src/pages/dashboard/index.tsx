@@ -205,7 +205,7 @@ const Index = ({
                 <h3>Recent Offers</h3>
               </div>
 
-              <Offers sent={sent} received={received} countSent={countSent} countReceived={countReceived} session={session} countPendingReceived={countPendingReceived} countPendingSent={countPendingSent} setSentCount={setSentCount} setReceivedCount={setReceivedCount}  />
+              <Offers sent={sent} received={received} countSent={countSent} countReceived={countReceived} session={session} countPendingReceived={countPendingReceived} countPendingSent={countPendingSent} setSentPendingCount={setSentPendingCount} setReceivedPendingCount={setReceivedPendingCount}  setSentCount={setSentCount} setReceivedCount={setReceivedCount}  />
             </div>
 
           <div className="pb-6">

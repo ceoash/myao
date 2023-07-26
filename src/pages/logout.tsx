@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Spinner from '@/components/Spinner';
+import Loading from '@/components/LoadingScreen';
 import { signOut, useSession } from 'next-auth/react';
 
 const Logout = () => {
@@ -15,7 +15,7 @@ const Logout = () => {
 
   return (
     <div>
-      <Spinner />
+      <Loading />
     </div>
   );
 };

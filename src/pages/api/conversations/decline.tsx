@@ -12,10 +12,12 @@ export default async function accept(
 ) {
       const { conversationId } = req.body;
 
+      const now = Date.now()
+
     try {
       const listing = await prisma.conversation.update({
         where: { id: conversationId },
-        data: { status: "declined" },
+        data: { status: "declined", updatedAt: new Date(now) },
       });
 
 

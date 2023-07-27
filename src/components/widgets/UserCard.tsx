@@ -37,6 +37,9 @@ const UserCard = ({
   session,
 }: UserCardProps) => {
 
+  console.log("session", session)
+  console.log("session", currentUser)
+
   const [friend, setFriend] = useState(false)
 
   useEffect(() => {

@@ -132,7 +132,7 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
       </div>
       <div className='flex justify-center'>
 
-      <Button primary options={{ size: "lg"}} isLoading={isLoading} label={currentBid.byUserId === session?.user.id ? "UPADTE BID" : "BID"} onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className='flex'  />
+      <Button primary options={{ size: "lg"}} isLoading={isLoading} label={currentBid.byUserId === session?.user.id ? "UPDATE BID" : "BID"} onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className='flex'  />
       </div>
     </div>
   );

@@ -66,7 +66,7 @@ interface Conversation {
   updatedAt: string;
   directMessages: DirectMessage[];
   friendStatus?: boolean;
-  blockedStatus?: IBlockedStatus;
+  blockedStatus?: boolean;
   status?: string;
   currentUser?: any
 }
@@ -74,7 +74,6 @@ interface Conversation {
 const Conversations = ({ safeConversations, session, conversationId, currentUser }: any) => {
 
   const offerModal = useOfferModal();
-  console.log("user", currentUser)
   const [skipIndex, setSkipIndex] = useState<number>(5);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -91,8 +90,12 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false);
 
+  // console.log('currentUser', currentUser)
+  // console.log('session', session)
+  // console.log('safeConversations', safeConversations)
+   console.log('conversations', conversations)
+
   const [messages, setMessages] = useState<IDirectMessage[]>([]);
-  console.log("active", activeConversationState)
   let participant =
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant2Id
@@ -172,6 +175,32 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
     }
   };
 
+  const conversationAction = (participantId: string, action: string) => {
+    const conversationAction = conversations.find((conversation) => 
+      (conversation.participant1Id === session?.user.id && conversation.participant2Id === participantId) || 
+      (conversation.participant2Id === session?.user.id && conversation.participant1Id === participantId)); 
+
+      if(conversationAction){
+        setConversations(prev => {
+          return prev.map(conversation => {
+            if (conversation.id === conversationAction.id) {
+              return {...conversation, friendStatus: action === "add" ? true : action === "remove" ? false : conversation.friendStatus, blockedStatus: action === "block" ? true : action === "unblock" ? false : conversation.blockedStatus};
+            } else {
+              return conversation;
+            }
+          });
+        });
+
+        if(conversationAction.id === activeConversationState?.id){
+        setActiveConversationState((prev) => { 
+          if(!prev) return null
+          const newActiveConversation = {...prev, friendStatus: false }
+         return newActiveConversation
+        }) 
+      }   
+      }
+  }
+
   const handleFollow = async () => {
     if (!activeConversationState?.friendStatus) {
       try {
@@ -180,19 +209,31 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
           followingId: participant,
         });
 
+        console.log("response", response.data.responseFriendship);
         toast.success("Friend request sent to " + participantUsername);
         socketRef.current?.emit("add_friend", response.data.responseFriendship);
-        if(response.data.responseFriendship.participant1Id === session?.user?.id){
-          setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant2]);
-          const convo = conversations.find((convo) => convo.id === response.data.responseFriendship.id)
+
+          if(response.data.responseFriendship.participant1Id === session?.user?.id){
+            setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant2]);
+          } else if (response.data.responseFriendship.participant2Id === session?.user?.id){
+            setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant1]);
+          }
+          const convo = conversations.find((convo) => 
+            (convo.participant1Id === response.data.responseFriendship.followingId && convo.participant2Id === response.data.responseFriendship.followerId) 
+            || 
+            (convo.participant2Id === response.data.responseFriendship.followingId && convo.participant1Id === response.data.responseFriendship.followerId)
+          );          
+
           if(convo){
-            setConversations((prev) => {
-              const newConvos = [...prev, {
-                ...convo,
-                friendStatus: true
-              }]
-              return newConvos
-            })
+            setConversations(prev => {
+              return prev.map(conversation => {
+                if (conversation.id === convo.id) {
+                  return {...conversation, friendStatus: true};
+                } else {
+                  return conversation;
+                }
+              });
+            });
             if(convo.id === activeConversationState?.id){
               setActiveConversationState((prev) => {
                 if (prev && prev.id) {
@@ -206,38 +247,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
               });
             }
           }
-        }
-        else {
-          const convo = conversations.find((convo) => convo.id === response.data.responseFriendship.id)
-          if(convo){
-            setConversations((prev) => {
-              const newConvos = [...prev, {
-                ...convo,
-                friendStatus: false,
-              }]
-              return newConvos
-            })
-            if(convo.id === activeConversationState?.id){
-              setActiveConversationState((prev) => {
-                if (prev && prev.id) {
-                  return {
-                    ...prev,
-                    friendStatus: false,
-                  }
-                } else {
-                  return null;
-                }
-              });
-            }
-          }
-        }
-        setActiveConversationState((prev) => { 
-          if(prev) {
-            return {...prev, friendStatus: true}
-          } else {
-            return null;
-          }
-        })        
+    
       } catch (error) {
         toast.error("failed to follow user");
       }
@@ -249,19 +259,45 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
         });
         toast.success("Unfollowed " + participantUsername);
         const data = response.data
-        console.log(data)
         setFriends((prevFriendsList) =>
         prevFriendsList.filter((friend) => friend.id !== data.id)
       );
        
-        setActiveConversationState((prev) => { 
-          if(prev) {
-            return {...prev, friendStatus: false}
-          } else {
-            return null;
-          }
-        })     
         socketRef.current?.emit("remove_friend", response.data);
+        if(response.data.responseFriendship.participant1Id === session?.user?.id){
+          setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant2]);
+        } else if (response.data.responseFriendship.participant2Id === session?.user?.id){
+          setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant1]);
+        }
+        const convo = conversations.find((convo) => 
+          (convo.participant1Id === response.data.responseFriendship.followingId && convo.participant2Id === response.data.responseFriendship.followerId) 
+          || 
+          (convo.participant2Id === response.data.responseFriendship.followingId && convo.participant1Id === response.data.responseFriendship.followerId)
+        );          
+
+        if(convo){
+          setConversations(prev => {
+            return prev.map(conversation => {
+              if (conversation.id === convo.id) {
+                return {...conversation, friendStatus: false};
+              } else {
+                return conversation;
+              }
+            });
+          });
+          if(convo.id === activeConversationState?.id){
+            setActiveConversationState((prev) => {
+              if (prev && prev.id) {
+                return {
+                  ...prev,
+                  friendStatus: false
+                }
+              } else {
+                return null;
+              }
+            });
+          }
+        }
       } catch (error) {
         toast.error("failed to unfollow user");
       }
@@ -294,18 +330,20 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
   };
 
   const handleBlocked = async () => {
-    if (isBlocked === false) {
+    const participantId = 
+      activeConversationState?.participant1Id === 
+      session?.user?.id ? activeConversationState?.participant2Id : 
+      activeConversationState?.participant1Id;
+
+    if (!activeConversationState?.blockedStatus) {
       try {
         const response = await axios.post("/api/blockFriend", {
           userBlockedId: session?.user?.id,
-          friendBlockedId:
-            activeConversationState?.participant1Id === session?.user?.id
-              ? activeConversationState?.participant2Id
-              : activeConversationState?.participant1Id,
+          friendBlockedId: participantId,
         });
         toast.success(participantUsername + " has been blocked");
-        socketRef.current?.emit("block_friend", response.data);
-        setIsBlocked(!isBlocked);
+        if(participantId) conversationAction(participantId, "block")
+    
       } catch (error) {
         toast.error("failed to block user");
       }
@@ -313,14 +351,11 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
       try {
         const response = await axios.post("/api/removeBlocked", {
           userBlockedId: session?.user?.id,
-          friendBlockedId:
-            activeConversationState?.participant1Id === session?.user?.id
-              ? activeConversationState?.participant2Id
-              : activeConversationState?.participant1Id,
+          friendBlockedId: participantId,
         });
         toast.success(participantUsername + " has been unblocked");
-        socketRef.current?.emit("unblock_friend", response.data);
-        setIsBlocked(!isBlocked);
+        if(participantId) conversationAction(participantId, "unblock")
+      
       } catch (error) {
         toast.error("failed to unblock user");
       }
@@ -354,7 +389,6 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
   useEffect(() => {
     if (!socketRef.current) return;
     socketRef.current.on("message_sent", (newMessage: any) => {
-      console.log("new message", newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setActiveConversationState((prevState) => {
         if (prevState) {
@@ -369,67 +403,8 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
       });
     });
 
-    socketRef.current.on("friend_blocked", () => {
-      setIsBlocked(true);
-    });
-
-    socketRef.current.on("friend_unblocked", () => {
-      setIsBlocked(false);
-    });
-
-    socketRef.current.on("friend_added", (friend) => {
-      console.log("friend added socket")
-      console.log(friend)
-      const conversation = conversations.find((conversation) => {
-        return (conversation.participant1Id === session?.user?.id && conversation.participant2Id === friend.id)
-            ||
-           (conversation.participant2Id === session?.user?.id && conversation.participant1Id === friend.id)
-    });
-          if(conversation){
-            setConversations((prev) => {
-              const newConversations = [...prev, {
-                ...conversation,
-                friendStatus: true
-              }]
-              return newConversations
-            })
-           
-              setActiveConversationState((prev) => {
-                if (prev && prev.id) {
-                  return {
-                    ...prev,
-                    friendStatus: true
-                  }
-                } else {
-                  return null;
-                }
-              });
-            
-          }
-    });
-
-    socketRef.current.on("friend_removed", (friend) => {
-      console.log("friend deleted socket")
-      const conversation = conversations.find((conversation) => {
-        conversation.participant1Id === session?.user?.id && conversation.participant2Id === friend.id 
-        ||
-        conversation.participant2Id === session?.user?.id && conversation.participant1Id === friend.id 
-      })
-      if(conversation){
-        setConversations((prev) => {
-          const newConversations = [...prev, {
-            ...conversation,
-            friendStatus: false
-          }]
-          return newConversations
-        })
-      }
-      setActiveConversationState((prev) => { 
-        if(!prev) return null
-        const newActiveConversation = {...prev, friendStatus: false}
-       return newActiveConversation
-      })     
-    });
+    socketRef.current.on("friend_added", (friend) => { if(friend.id) conversationAction(friend.id, "add") });
+    socketRef.current.on("friend_removed", (friend) => { if(friend.id) conversationAction(friend.id, "remove") });
 
     socketRef.current.on("conversation_accepted", () => {
       setActiveConversationState((prevState) => {

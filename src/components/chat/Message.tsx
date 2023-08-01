@@ -19,7 +19,6 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
       null
     );
 
-    console.log(message);
 
     useEffect(() => {
       const createdAt = new Date(message.createdAt);

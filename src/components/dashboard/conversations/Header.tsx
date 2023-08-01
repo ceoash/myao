@@ -90,9 +90,9 @@ const Header = ({
           </button> 
           <button
             onClick={handleBlocked}
-            className={` border  rounded-lg  px-2 py-1 ${isBlocked ? 'bg-red-100 border-red-200 text-red-500' : 'bg-white border-gray-200'}`}
+            className={` border  rounded-lg  px-2 py-1 ${activeConversationState?.blockedStatus ? 'bg-red-100 border-red-200 text-red-500' : 'bg-white border-gray-200'}`}
           >
-            { isBlocked ? (
+            { activeConversationState?.blockedStatus ? (
               <div className="flex gap-1 items-center">
               <FaUserTimes className=" " /> 
               <div className={`hidden md:block text-sm`}>Blocked</div>
@@ -205,7 +205,7 @@ const Header = ({
               {isFriend ? "Unfollow" : "Follow"}
             </li>
             <li onClick={handleBlocked} className="px-2 py-2 cursor-pointer">
-              {isBlocked ? "Unblock" : "Block"}
+              {activeConversationState?.blockedStatus ? "Unblock" : "Block"}
             </li>
           </ul>
         </div>

@@ -45,7 +45,7 @@ const Input: React.FC<InputProps> = ({
   btnText,
 }) => {
   return (
-    <div className="flex">
+    <div className={`flex ${!inline && 'pt-3'}`}>
       <div className="w-full relative">
         {formatPrice && (
           <BiPound
@@ -56,7 +56,7 @@ const Input: React.FC<InputProps> = ({
           />
         )}
         <label className="mb-4" htmlFor={id}>{label}</label>
-        <div className="relative pt-3">
+        <div className="relative ">
           <input
             id={id}
             disabled={disabled}

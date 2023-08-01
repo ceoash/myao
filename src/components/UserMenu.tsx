@@ -24,6 +24,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchBox, setSearchBox] = useState(false);
 
   const qr = useQRModal();
 
@@ -65,50 +66,41 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
 
   return (
     <header className="w-full z-40 antialiased fixed">
-      <nav className="bg-white border-gray-200 py-2.5 shadow border-b">
+      <nav className="bg-white border-gray-200 py-2.5 shadow border-b relative">
         <div className="flex flex-wrap items-center justify-between px-4">
-          <Link href="/dashboard" className="flex items-center">
-            <img src="/images/cat.png" className="h-[30px] mr-2 px-2" />
-            <span className="self-center text-xl font-semibold whitespace-nowrap">
-              MYAO
-            </span>
-          </Link>
-
+          <div className="w-40 lg:w-60">
+            <Link href="/dashboard" className="flex items-center">
+              <img src="/images/cat.png" className="h-[30px] mr-2 px-2" />
+              <span className="self-center text-xl font-semibold whitespace-nowrap">
+                MYAO
+              </span>
+            </Link>
+          </div>
           <SearchComponent navbar />
 
           <div
             className="relative flex items-center text-xl lg:order-2 gap-4"
             style={{ zIndex: 9999 }}
           >
-            <div className="md:hidden">
+            <div className="md:hidden cursor-pointer">
               <div onClick={() => setIsSearchOpen(!isSearchOpen)}>
                 <BiSearch />
               </div>
             </div>
-             {isSearchOpen && (
-              <div
-                className=" md:hidden absolute mt-10 rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-20  text-sm"
-                ref={searchRef}
-                style={{ zIndex: 9999 }}
-              >
-                          <SearchComponent />
 
-              </div>
-            )}
-            
-            <div className="relative">
+            <div className="relative cursor-pointer">
               <div onClick={qr.onOpen}>
-              <BsQrCode className="h-4 cursor-pointer" />
+                <BsQrCode className="h-4 cursor-pointer" />
               </div>
             </div>
 
-            <div className="relative">
+            <div className="relative cursor-pointer">
               <Link href={`/dashboard/conversations`}>
                 <BiMessage />
               </Link>
             </div>
 
-            <div className="relative">
+            <div className="hidden md:block relative cursor-pointer">
               <Link href="/dashboard/settings">
                 <BiCog />
               </Link>
@@ -145,29 +137,19 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
                 style={{ zIndex: 9999 }}
               >
                 <div className="flex flex-col cursor-pointer z-50">
-
                   <div className="flex flex-col md:hidden">
-                  <MenuItem
-                      label="Offers"
-                      link
-                      url={"/dashboard/offers"}
-                    />
-                  <MenuItem
-                      label="Friends"
-                      link
-                      url={"/dashboard/friends"}
-                    />
-                  <MenuItem
+                    <MenuItem label="Offers" link url={"/dashboard/offers"} />
+                    <MenuItem label="Friends" link url={"/dashboard/friends"} />
+                    <MenuItem
                       label="Activity"
                       link
                       url={"/dashboard/activity"}
                     />
-                  <MenuItem
+                    <MenuItem
                       label="Settings"
                       link
                       url={"/dashboard/settings"}
                     />
-
                   </div>
                   <>
                     <MenuItem
@@ -183,10 +165,17 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
               </div>
             )}
           </div>
-          
         </div>
-       
       </nav>
+        {isSearchOpen && (
+          <div
+            className=" rouned-xl shadow-md bg-white overflow-hidden right-0 w-full bottom-0 mt-10 text-sm"
+            ref={searchRef}
+            style={{ zIndex: 9999 }}
+          >
+            <SearchComponent />
+          </div>
+        )}
     </header>
   );
 };

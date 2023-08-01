@@ -45,7 +45,7 @@ const SearchComponent = ({navbar}: any) => {
   };
 
   return (
-    <div className={`relative hidden flex-1  md:block ${navbar ? 'mx-20' : ""}`}>
+    <div className={`relative hidden w-1/2 xl:w-2/3  md:block ${navbar ? 'mr-auto' : ""}`}>
       <div className="flex flex-grow flex-nowrap">
         <input
           type="text"

@@ -7,6 +7,7 @@ import Spinner from "../Spinner";
 interface ButtonProps {
   label?: string;
   onClick?: () => void;
+  submit?: boolean;
   icon?: string;
   disabled?: boolean;
   children?: React.ReactNode;
@@ -38,6 +39,7 @@ const Button = ({
   onClick,
   options,
   disabled,
+  submit,
   icon,
   children,
   link,
@@ -119,7 +121,7 @@ const Button = ({
   return (
     <button
       onClick={onClick}
-      type="button"
+      type={submit ? "submit" : "button"}
       className={`
             inline-flex 
             items-center

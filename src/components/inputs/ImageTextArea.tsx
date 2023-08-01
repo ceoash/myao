@@ -62,7 +62,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => 
           </div>
         )}
         <textarea
-          className="w-full h-40 p-2 border border-gray-300 rounded-lg resize-none mb-4"
+          className="w-full h-40 p-2 border border-gray-300 rounded-lg resize-none"
           placeholder="Type your message..."
           value={textValue}
           onChange={(e) => setTextValue(e.target.value)}
@@ -70,6 +70,8 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled }) => 
         />
       </div>
       <Button
+        submit
+        className={`mt-4 px-4 py-2 bg-orange-400 text-white rounded hover:bg-orange-400 ${disabled && "opacity-50 cursor-not-allowed"}`}
       >
         Send
       </Button>

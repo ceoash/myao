@@ -4,7 +4,6 @@ import Button from "../Button";
 import PriceWidget from "@/components/widgets/PriceWidget";
 import StatusChecker from "@/utils/status";
 import { BiCalendar, BiCategoryAlt } from "react-icons/bi";
-import { color } from "html2canvas/dist/types/css/types/color";
 import { FaThumbsUp } from "react-icons/fa";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
@@ -15,11 +14,9 @@ import dogReject from "@/images/dog-reject.png";
 import dogTerminate from "@/images/dog-terminate.png";
 import catAccept from "@/images/cat-accept.png";
 import catReject from "@/images/cat-reject.png";
-import catTerminate from "@/images/cat-terminate.png";
 import avatar from "@/images/avatar.png";
 import Image from "next/image";
 import axios from "axios";
-import { response } from "express";
 import { useRouter } from "next/navigation";
 
 interface SafeUser extends User {

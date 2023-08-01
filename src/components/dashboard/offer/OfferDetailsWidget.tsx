@@ -18,6 +18,9 @@ import catReject from "@/images/cat-reject.png";
 import catTerminate from "@/images/cat-terminate.png";
 import avatar from "@/images/avatar.png";
 import Image from "next/image";
+import axios from "axios";
+import { response } from "express";
+import { useRouter } from "next/navigation";
 
 interface SafeUser extends User {
   profile: Profile;
@@ -69,24 +72,34 @@ const OfferDetailsWidget = ({
   setBids,
   setStatus,
   isLoading,
+  completedBy,
+  setCompletedBy,
   me,
   participant,
   bids,
   socketRef,
 }: OfferDetailsWidgetProps) => {
-  const [meLastBid, setMeLastBid] = useState<any>();
-  const [participantLastBid, setParticipantLastBid] = useState<any>();
-  const [mostRecentBid, setMostRecentBid] = useState<any>();
-  const [completedBy, setcompletedBy] = useState<string | null>("");
+  const [ meLastBid, setMeLastBid ] = useState<any>();
+  const [ participantLastBid, setParticipantLastBid ] = useState<any>();
+  const [ mostRecentBid, setMostRecentBid ] = useState<any>();
+  const [ buttonClicked, setButtonClicked ] = useState("")
 
   const noBids = !meLastBid && !participantLastBid && status === "negotiating";
   const rejectedByMe = status === "rejected" && session.user.id !== completedBy;
   const inNegotiation = status === "negotiating";
 
-  const myCondition = noBids || rejectedByMe || inNegotiation;
+  const [ loadingState, setLoadingState ] = useState({
+    cancelled: false,
+    yes: false,
+    no: false,
+    accepted: false,
+    completed: false,
+    contact: false
+  })
 
-  console.log("currentBid", currentBid);
 
+  const statusController = noBids || rejectedByMe || inNegotiation;
+  const router = useRouter()
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -117,9 +130,25 @@ const OfferDetailsWidget = ({
 
   useEffect(() => {
     if (status === "rejected") {
-      setcompletedBy(listing.completedById);
+      setCompletedBy(listing.completedById);
     }
   }, [currentBid]);
+
+  useEffect(() => {
+    if(isLoading === false){
+      setLoadingState((prev) => {
+       return  {
+        ...prev, 
+        yes: false, 
+        no: false, 
+        cancelled: false, 
+        accepted: false, 
+        completed: false,
+        contact: false,
+      }
+      })
+    }
+  },[isLoading])
 
   let parsedImage;
 
@@ -131,6 +160,20 @@ const OfferDetailsWidget = ({
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
   }
+
+  const handleFinalise = async (userId: any, participantId: any) => {
+
+    if(!userId || !participantId) return console.log("Invalid entries")
+    try {
+      const url = '/api/getConversationIdByParticipantIds'
+      const response = await axios.post(url, {
+        userId: userId,
+        participantId: participantId
+      })
+      const conversationId = response.data
+      router.push(`/dashboard/conversations?conversationId=${conversationId.id}`)
+    } catch (error) { console.log(error) }
+  }
   return (
     <div
       className={`
@@ -140,6 +183,7 @@ const OfferDetailsWidget = ({
     p-4
     rounded-lg
     ${status === "accepted" && "bg-orange-100 border-orange-200"}
+    ${status === "completed" && "bg-orange-50 border-orange-200"}
     ${status === "rejected" && "bg-red-50 border-red-100"}
     ${status === "cancelled" && "bg-red-100 border-red-200"}
     ${status === "negotiating" && "bg-orange-400 border-orange-200"}
@@ -279,9 +323,14 @@ const OfferDetailsWidget = ({
                 <div className="w-2/3 flex gap-2 mx-auto justify-center">
                   <div className="flex flex-col justify-center  items-center gap-4">
                     <Button
+                    isLoading={loadingState.yes}
                       accept
                       onClick={() =>
-                        handleStatusChange("accepted", session?.user.id)
+                        (handleStatusChange("accepted", session?.user.id), 
+                        setLoadingState((prev) => {
+                          return {...prev, yes: true}
+                        })
+                        )
                       }
                       className="rounded-xl px-3 py-1 text-center w-10"
                     >
@@ -296,8 +345,13 @@ const OfferDetailsWidget = ({
                   <div className="flex flex-col justify-center items-center  gap-4">
                     <Button
                       cancel
+                      isLoading={loadingState.no}
                       onClick={() =>
-                        handleStatusChange("rejected", session?.user.id)
+                        (handleStatusChange("rejected", session?.user.id),
+                        setLoadingState((prev) => {
+                          return {...prev, no: true}
+                        })
+                        )
                       }
                       className="rounded-xl px-3 py-1 text-center bg-orange-400 border border-orange-500"
                     >
@@ -331,7 +385,7 @@ const OfferDetailsWidget = ({
                 </div>
               )}
           </div>
-          {myCondition && (
+          {statusController && (
             <div className="">
               <PriceWidget
                 listing={listing}
@@ -346,21 +400,70 @@ const OfferDetailsWidget = ({
               />
             </div>
           )}
-          {status !== "cancelled" && status !== "completed" && (
+          {status !== "cancelled" && status !== "accepted" && status !== "completed" && (
             <div className="flex flex-col items-center gap-4 mt-4 w-full">
               <Button
                 cancel
                 outline
                 options={{ color: "danger", size: "lg" }}
-                isLoading={isLoading}
-                onClick={() =>
-                  handleStatusChange("cancelled", session?.user.id)
+                isLoading={loadingState.cancelled}
+                onClick={() => (
+                  handleStatusChange("cancelled", session?.user.id),
+                  setLoadingState((prev) => {
+                    return {...prev, cancelled: true}
+                  }))
                 }
               >
                 TERMINATE
               </Button>
             </div>
           )}
+          {status === "accepted"  && (
+            <div className="flex flex-col items-center gap-4 mt-4 w-full">
+              <Button
+                secondary
+                outline
+                options={{ color: "primary", size: "lg" }}
+                isLoading={isLoading}
+                onClick={() => handleFinalise(session?.user.id, participant.id)
+                }
+              >
+                Arrange to {completedBy === session.user.id && listing.type === "sellerOffer" ? "get paid" : "get your item"}
+              </Button>
+              {completedBy === session.user.id && status === "accepted" &&(
+              <Button
+              accept
+              options={{ size: "lg" }}
+                isLoading={loadingState.completed}
+                onClick={() => (handleStatusChange("completed", session?.user.id), setLoadingState((prev) => {
+                  return {...prev, completed: true}
+                }))
+                }
+              >
+                Complete offer
+              </Button>
+              )}
+            </div>
+          )}
+          { status === "completed" &&(
+              <Button
+              primary
+              options={{ size: "lg" }}
+                isLoading={loadingState.contact}
+                onClick={() => (
+                  handleFinalise(session?.user.id, participant.id), 
+                  setLoadingState((prev) => {
+                  return {
+                    ...prev,
+                    contact: true
+                  }
+                })
+                )
+              }
+              >
+                Contact {session.user.id === listing.sellerId ? "Buyer" : "Seller"}
+              </Button>
+              )}
         </div>
       </div>
       <div className="bg-white p-4 mt-4 rounded-lg border border-white shadow">

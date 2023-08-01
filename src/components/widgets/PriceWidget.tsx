@@ -50,7 +50,7 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
     reset,
   } = useForm<FieldValues>({
     defaultValues: {
-      price: '0',
+      price: '',
     },
   });
 
@@ -66,6 +66,11 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
 
     if(data.price == currentPrice) {
       toast.error("You can't bid the same price as the current bid!");
+      setIsLoading(false);
+      return;
+    }
+    if(data.price == "") {
+      toast.error("Enter a bid price");
       setIsLoading(false);
       return;
     }
@@ -128,7 +133,7 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
   return (
     <div>
       <div className='mb-4'>
-        <PriceInput id='price' placeholder={"0.00"} label='' formatPrice required register={register} />
+        <PriceInput id='price' placeholder={"0.00"} label='' formatPrice register={register} />
       </div>
       <div className='flex justify-center'>
 

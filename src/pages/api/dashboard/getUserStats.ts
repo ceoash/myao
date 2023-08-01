@@ -1,5 +1,6 @@
 import prisma from "@/libs/prismadb";
 import { NextApiRequest, NextApiResponse } from "next";
+import { msToTime } from "@/utils/formatTime"
 
 
 export default async function handler(
@@ -13,7 +14,115 @@ export default async function handler(
   }
   
   try {
-    const sent = await prisma?.listing.count({
+
+    let totalListingMessageResponseTime = 0;
+    let totalListingMessageResponses = 0;
+    let totalDirectMessageResponseTime = 0;
+    let totalDirectMessageResponses = 0;
+    let startMessageTime = 0;
+    let startDirectMessage = 0;
+
+    let completionResponseTime = 0;
+    let completionResponses = 0;
+
+    const conversations = await prisma.conversation.findMany({
+      where: { id: userId },
+      select: { id: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    const listings = await prisma.listing.findMany({
+      where: { 
+        OR: [
+          { sellerId: userId },
+          { buyerId: userId }
+        ] 
+      },
+      select: {
+        id: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    const completed = await prisma.listing.findMany({
+      where: { 
+        OR: [
+          { sellerId: userId, status: "accepted" },
+          { buyerId: userId, status: "accepted" }
+        ] 
+      },
+      select: {
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+    
+    for(let listing of completed){
+      const diff = listing.updatedAt.getTime() - listing.createdAt.getTime();
+      completionResponseTime += diff;
+      completionResponses++;
+    }
+    
+  
+    if(listings){
+      for (const listing of listings) {
+        const listingMessages = await prisma.message.findMany({
+          where: { listingId: listing.id },
+          select: { createdAt: true, userId: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        });
+
+        for (let i = 0; i < listingMessages.length; i++) {
+          const message = listingMessages[i];
+          if (message.userId !== userId) {
+            startMessageTime = message.createdAt.getTime();
+          } else if (startMessageTime !== 0) {
+            const responseTime = startMessageTime - message.createdAt.getTime();
+            totalListingMessageResponseTime += responseTime;
+            totalListingMessageResponses++;
+            startMessageTime = 0; 
+          }
+        }
+      }
+    }
+
+    if(conversations){
+      for (const conversation of conversations) {
+         const conversationMessages = await prisma.directMessage.findMany({
+          where: { conversationId: conversation.id },
+          select: { userId: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        });
+    
+        for (let i = 0; i < conversationMessages.length; i++) {
+          const message = conversationMessages[i];
+          if (message.userId !== userId) {
+            startDirectMessage = message.createdAt.getTime();
+          } else if (startDirectMessage !== 0) {
+            const responseTime = startDirectMessage - message.createdAt.getTime();
+            totalDirectMessageResponseTime += responseTime;
+            totalDirectMessageResponses++;
+            startDirectMessage = 0; 
+          }
+        }
+      }
+    }
+
+    const completionCalc = completionResponseTime / completionResponses || 0;
+    const averageDirectMessageResponseTime = totalDirectMessageResponseTime / totalDirectMessageResponses || 0;
+    const averageListingMessageResponseTime = totalListingMessageResponseTime / totalListingMessageResponses || 0;
+    const averageTimestamp = averageDirectMessageResponseTime + averageListingMessageResponseTime / 2;
+    
+    const averageResponseTime = msToTime(Math.trunc(averageTimestamp)); // calculated average response time based on message replies
+    const averageCompletionTime = msToTime(Math.trunc(completionCalc)); // calculated average completion time
+    
+    const sentCount = await prisma?.listing.count({
         where: {
           OR: [
             { sellerId: userId as string, type: "sellerOffer" },
@@ -21,7 +130,26 @@ export default async function handler(
           ],
         },
       });
-    const received = await prisma?.listing.count({
+    
+      const completedSentCount = await prisma?.listing.count({
+        where: {
+          OR: [
+            { sellerId: userId as string, type: "sellerOffer", status: "accepted" },
+            { buyerId: userId as string, type: "buyerOffer", status: "accepted" },
+          ],
+        },
+      });
+
+    const cancelledSentCount = await prisma?.listing.count({
+        where: {
+          OR: [
+            { sellerId: userId as string, type: "sellerOffer", status: "cancelled" },
+            { buyerId: userId as string, type: "buyerOffer", status: "cancelled" },
+          ],
+        },
+      });
+    
+    const receivedCount = await prisma?.listing.count({
         where: {
           OR: [
             { buyerId: userId as string, type: "sellerOffer" },
@@ -29,15 +157,15 @@ export default async function handler(
           ],
         },
       });
-    const completed = await prisma?.listing.count({
+    const completedReceivedCount = await prisma?.listing.count({
         where: {
           OR: [
-            { buyerId: userId as string, type: "sellerOffer", status: "completed" },
-            { sellerId: userId as string, type: "buyerOffer", status: "completed" },
+            { buyerId: userId as string, type: "sellerOffer", status: "accepted" },
+            { sellerId: userId as string, type: "buyerOffer", status: "accepted" },
           ],
         },
       });
-    const cancelled = await prisma?.listing.count({
+    const cancelledReceivedCount = await prisma?.listing.count({
         where: {
           OR: [
             { buyerId: userId as string, type: "sellerOffer", status: "cancelled" },
@@ -45,8 +173,13 @@ export default async function handler(
           ],
         },
       });
+    const bidsCount = await prisma?.bid.count({
+        where: {
+          userId
+        },
+      });
 
-    return res.status(200).json({ sent });
+    return res.status(200).json({ sentCount, completedSentCount, cancelledSentCount, receivedCount, completedReceivedCount, cancelledReceivedCount, averageResponseTime, averageCompletionTime, bidsCount  });
       
       
   } catch (error) {

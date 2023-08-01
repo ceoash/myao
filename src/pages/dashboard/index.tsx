@@ -35,9 +35,14 @@ const Index = ({
   countPendingSent,
   countPendingReceived,
   username,
+  
 }: dashboardProps) => {
   const offerModal = useOfferModal();
   const pendingConversation = usePendingConversationModal();
+
+  console.log("user", user)
+
+  console.log("friends", friends)
 
   const router = useRouter();
 
@@ -83,6 +88,8 @@ const Index = ({
     };
   }, []);
 
+  console.log(socketRef)
+
   useEffect(() => {
     if (!session.user.id) return;
     if (!socketRef) return;
@@ -103,7 +110,7 @@ const Index = ({
         console.log("added", data);
         setFriendsList((prevFriendsList) => [
           ...prevFriendsList,
-          data.follower,
+          data,
         ]);
       });
 
@@ -319,7 +326,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const friends = await getFriendsByUserId(session.user.id);
     const PAGE_SIZE = 5;
 
-    const listings = await getOffersByUserId(session, PAGE_SIZE);
+    const blocked = user?.blockedFriends
+
+    const listings = await getOffersByUserId(session, PAGE_SIZE, blocked);
 
     if (!listings) return { props: { sent: [], received: [], session } };
 
@@ -337,6 +346,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const topActivities = reversedActivities.slice(0, 4);
 
     const username = user?.username;
+
 
     return {
       props: {

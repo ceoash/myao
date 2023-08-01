@@ -2,7 +2,8 @@ import prisma from "@/libs/prismadb";
 
 export default async function getOffersByUserId(
   session: any,
-  PAGE_SIZE: number
+  PAGE_SIZE: number,
+  blocked?: {id: string}[] | undefined
 ) {
   if (!session?.user?.email) {
     console.log("No session found");

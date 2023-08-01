@@ -1,10 +1,10 @@
-import Button from "@/components/Button";
+import Button from "@/components/dashboard/Button";
 import { Conversation, Listing } from "@prisma/client";
 import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
-import { BiDotsVerticalRounded } from "react-icons/bi";
+import { BiCheck, BiDotsVerticalRounded, BiUserCheck, BiUserMinus, BiUserPlus, BiUserX } from "react-icons/bi";
 import { BsSignDoNotEnterFill } from "react-icons/bs";
-import { FaCheck, FaTimes } from "react-icons/fa";
+import { FaCheck, FaPlus, FaTimes, FaUserCheck, FaUserPlus, FaUserTimes } from "react-icons/fa";
 import { MdDoNotDisturbAlt } from "react-icons/md";
 
 interface HeaderProps {
@@ -62,29 +62,56 @@ const Header = ({
             />
           </div>
         </Link>
-        <div className="flex leading-tight">
+        <div className="flex leading-tight gap-2">
           <div className="text-xl font-medium flex items-center">
             <Link
               href={`/dashboard/profile/${participant}`}
-              className="relative flex items-center space-x-2"
+              className="relative flex items-center space-x-2 ml-2"
             >
               <span className="text-gray-700 mr-3">{username}</span>
             </Link>
           </div>
-
-          {/* <button
-            onClick={handleBlocked}
-            className="border-2 border-gray-200 p-[2px] rounded-lg bg-white"
+          <button
+            onClick={handleFollow}
+            className={` border  rounded-lg  px-2 py-1 ${isFriend ? 'bg-orange-100 border-orange-200' : 'bg-white border-gray-200'}`}
           >
-            <MdDoNotDisturbAlt className="text-lg text-red-500" />
-          </button> */}
+            { isFriend ? (
+              <div className="flex gap-1 items-center">
+              <FaUserCheck className=" text-orange-500" /> 
+              <div className="hidden md:block text-orange-500 text-sm">Following</div>
+              </div>
+            ) : (
+              <div className="flex gap-1 items-center">
+              <FaUserPlus className="" /> 
+              <div className="hidden md:block text-sm">Add</div>
+              </div>
+              
+            ) }
+          </button> 
+          <button
+            onClick={handleBlocked}
+            className={` border  rounded-lg  px-2 py-1 ${isBlocked ? 'bg-red-100 border-red-200 text-red-500' : 'bg-white border-gray-200'}`}
+          >
+            { isBlocked ? (
+              <div className="flex gap-1 items-center">
+              <FaUserTimes className=" " /> 
+              <div className={`hidden md:block text-sm`}>Blocked</div>
+              </div>
+            ) : (
+              <div className="flex gap-1 items-center">
+              <FaUserTimes className="" /> 
+              <div className={`hidden md:block text-sm`}>Block</div>
+              </div>
+            )}
+          </button> 
+          
         </div>
       </div>
       <div className="flex items-center gap-2 relative">
         <div className="flex gap-2 relative">
           {status !== "declined" && (
             <>
-              {statusState === "none" &&
+              {activeConversationState.status === "none" &&
               activeConversationState?.participant2Id === session.user.id ? (
                 <>
                   <Button onClick={handleAccept}>
@@ -111,6 +138,7 @@ const Header = ({
               ) : (
                 <>
                   <Button
+                  
                     onClick={() =>
                       offerModal.onOpen(
                         activeConversationState?.participant1Id ===

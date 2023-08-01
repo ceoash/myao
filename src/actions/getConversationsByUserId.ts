@@ -1,5 +1,6 @@
 import prisma from "@/libs/prismadb";
 import { SafeListing } from "@/types";
+import { User } from "@prisma/client";
 
 interface SafeConversation {
   createdAt: string;
@@ -10,8 +11,7 @@ interface SafeConversation {
   participant2: SafeUser;
   directMessages: SafeDirectMessage[];
   friendStatus?: boolean;
-  blockedStatus?: {isBlocked: boolean, hasBlocked: boolean};
-  listing?: SafeListing;
+  blockedStatus?: boolean;
 }
 
 interface SafeUser {
@@ -36,7 +36,7 @@ interface SafeDirectMessage {
 }
 
 const formatDate = (date: Date): string => {
-  return date.toISOString();
+  return date ? date.toISOString() : "";
 };
 
 const transformDirectMessage = (directMessage: any): SafeDirectMessage => {
@@ -51,11 +51,8 @@ const transformDirectMessage = (directMessage: any): SafeDirectMessage => {
           ...directMessage.listing,
           createdAt: formatDate(directMessage.listing.createdAt),
           updatedAt: formatDate(directMessage.listing.updatedAt),
-          
         }
       : null,
-    
-
   };
 };
 
@@ -76,6 +73,39 @@ const transformUser = (user: any): SafeUser => {
   };
 };
 
+const transformConversation = (conversation: any, userId: string): any => {
+  
+  const participantId = conversation.participant1Id ===  userId ? conversation.participant2Id : conversation.participant1Id;
+
+  let friends: string[] = [];
+  let blocked: string[] = [];
+  
+  if(conversation.participant1Id === userId) {
+    conversation.participant1.followers.map((follower: {followerId: string}) => friends.push(follower.followerId));
+    conversation.participant1.followings.map((following: {followingId: string}) => friends.push(following.followingId));
+    conversation.participant1.blockedFriends.map((blocker: { friendBlockedId: string}) => blocked.push(blocker.friendBlockedId));
+  }
+
+  if(conversation.participant2Id === userId) {
+    conversation.participant2.followers.map((follower: {followerId: string}) => friends.push(follower.followerId));
+    conversation.participant2.followings.map((following: {followingId: string}) => friends.push(following.followingId));
+    conversation.participant2.blockedFriends.map((blocker: { friendBlockedId: string}) => blocked.push(blocker.friendBlockedId));
+  }
+    
+  return {
+    ...conversation,
+    id: conversation.id,
+    participant1Id: conversation.participant1Id,
+    participant2Id: conversation.participant2Id,
+    participant1: transformUser(conversation.participant1),
+    participant2: transformUser(conversation.participant2),
+    createdAt: formatDate(conversation.createdAt),
+    updatedAt: formatDate(conversation.updatedAt),
+    friendStatus: friends.includes(participantId),
+    blockedStatus: blocked.includes(participantId),
+    directMessages: conversation.directMessages.map(transformDirectMessage),
+  };
+};
 
 
 export default async function getConversationsByUserId(userId: string): Promise<SafeConversation[]> {
@@ -91,67 +121,80 @@ export default async function getConversationsByUserId(userId: string): Promise<
     include: {
       directMessages: {
         orderBy: { createdAt: 'desc' },
+        take: 8,
         include: {
           listing: true,
           user: true
           },
         },
-    
       participant1: {
-        include: {
-          profile: true,
+        select: {
+          id: true,
+          username: true,
+          profile: {
+            select: {
+              image: true
+            }
+          },
+          followers: {
+              select: {
+                followerId: true,
+              }
+          },
+          followings: {
+              select: {
+                followingId: true,
+              }
+          },
           blockedBy: {
             select: {
-              friendBlockedId: true,            }
+              userBlockedId: true,            
+            }
           },
           blockedFriends: {
             select: {
               friendBlockedId: true,
             }
           },
-        },
+        }
       },
       participant2: {
-        include: {
-          profile: true,
-          blockedBy: {
+        select: {
+          id: true,
+          username: true,
+          profile: {
             select: {
-              id: true,            }
-          },
-          blockedFriends: {
-            select: {
-              id: true,
+              image: true
             }
           },
+          followers: {
+            select: {
+              followerId: true,
+            }
         },
+        followings: {
+            select: {
+              followingId: true,
+            }
+        },
+        blockedBy: {
+          select: {
+            userBlockedId: true,            
+          }
+        },
+        blockedFriends: {
+          select: {
+            friendBlockedId: true,
+          }
+        },
+        }
       },
     },
   }
    
   );
-  
 
-  const safeConversations: SafeConversation[] = conversations?.map((conversation) => ({
-    ...conversation,
-    createdAt: conversation.createdAt.toISOString(),
-    updatedAt: conversation.updatedAt.toISOString(),
-    participant1: transformUser(conversation.participant1),
-    participant2: transformUser(conversation.participant2),
-    directMessages: conversation.directMessages.map(transformDirectMessage),
-
-  }))
-
-  const filteredConversations = safeConversations.filter((conversation) => {
-    if (conversation.participant1Id === userId) {
-      const blockedFriendsIds = conversation.participant1?.blockedBy.map((blocked) => blocked.friendBlockedId);
-      return !blockedFriendsIds.includes(conversation.participant2Id);
-    } else if (conversation.participant2Id === userId) {
-      const blockedFriendsIds = conversation.participant2?.blockedBy.map((blocked) => blocked.friendBlockedId);
-      return !blockedFriendsIds.includes(conversation.participant1Id);
-    }
-    return safeConversations;
-  });
-
-  return filteredConversations;
+  if(!conversations) return []
+  return conversations.map((conversation) => transformConversation(conversation, userId));
 }
 

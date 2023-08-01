@@ -103,3 +103,14 @@ export function getTimeOfDay() {
     return "Good evening";
   }
 }
+
+export function msToTime(ms: number) {
+  let seconds = (ms / 1000).toFixed(1);
+  let minutes = (ms / (1000 * 60)).toFixed(1);
+  let hours = (ms / (1000 * 60 * 60)).toFixed(1);
+  let days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
+  if (Number(seconds) < 60) return String(Math.trunc(Number(seconds))) + " Sec";
+  else if (Number(minutes) < 60) return String(Math.trunc(Number(minutes))) + " Min";
+  else if (Number(hours) < 24) return String(Math.trunc(Number(hours))) + " Hrs";
+  else return String(Math.trunc(Number(days))) + " Days"
+}

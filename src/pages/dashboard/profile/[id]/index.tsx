@@ -5,7 +5,6 @@ import getListingsByUserId from "@/actions/getListingsByUserId";
 import getUserById from "@/actions/getUserById";
 import Offer from "@/components/offers/Offer";
 import UserCard from "@/components/widgets/UserCard";
-import Satisfication from "@/components/widgets/Satisfication";
 import { BiUser } from "react-icons/bi";
 import { BsFillStarFill, BsPostcard } from "react-icons/bs";
 import Card from "@/components/dashboard/Card";
@@ -15,23 +14,108 @@ import useMessageModal from "@/hooks/useMessageModal";
 import { toast } from "react-hot-toast";
 import checkFriendship from "@/actions/checkFriendship";
 import axios from "axios";
-import { io } from "socket.io-client";
-import { useEffect, useState } from "react";
+import { Socket, io } from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
-import { set } from "date-fns";
-import useFriendship from "@/hooks/useFriendship";
 import Link from "next/link";
 
 const profile = ({ user, listings, requests, session, isFriend }: any) => {
+  
+  const [friend, setFriend] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+
   const offers = listings?.map((listing: any) => (
     <Offer key={listing.id} {...listing} />
   ));
   const userId = session?.user.id;
   const recipientId = user?.id;
+  const socketRef = useRef<Socket>();
 
-  const { friend, addFriend, removeFriend } = useFriendship(userId, recipientId, config, isFriend);
+  useEffect(() => {
+    socketRef.current = io(config.PORT);
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
-  console.log(friend)
+  console.log(socketRef)
+
+
+  useEffect(() => {
+    setFriend(isFriend)
+  },[isFriend])
+
+
+  const handleFollow = async () => {
+    if (!friend) {
+      try {
+        const response = await axios.post("/api/addFriend", {
+          followerId: session?.user?.id,
+          followingId: user.id,
+        });
+
+        toast.success("Friend request sent to ");
+        socketRef.current?.emit("add_friend", response.data.responseFriendship);
+         socketRef.current?.emit(
+          "update_activities",
+          response.data.transactionResult,
+          response.data.responseFriendship.followerId,
+          response.data.responseFriendship.followingId,
+        );
+        setFriend(true)
+        
+
+      } catch (error) {
+        toast.error("failed to follow user");
+      }
+    } else {
+      try {
+        const response = await axios.post("/api/deleteFriend", {
+          followerId: session?.user?.id,
+          followingId: user.id,
+        });
+        toast.success("Unfollowed " );
+        if(response.data) {
+          socketRef.current?.emit("remove_friend", response.data);
+          setFriend(false)  
+          console.log("res", response.data)
+
+        }
+      } catch (error) {
+        toast.error("failed to unfollow user");
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!session.user.id) return;
+    if (!socketRef) return;
+
+    socketRef.current && socketRef.current.emit("register", session?.user?.id)
+    socketRef.current && socketRef.current.on("friend_blocked", () => {
+      setIsBlocked(true);
+    });
+
+    socketRef.current && socketRef.current.on("friend_unblocked", () => {
+      setIsBlocked(false);
+    });
+
+    socketRef.current && socketRef.current.on("friend_added", (friend) => {
+      console.log("added", friend)
+      setFriend(true);
+    });
+
+    socketRef.current && socketRef.current.on("friend_removed", (friend) => {
+      console.log("added", friend)
+      setFriend(false);
+     
+      console.log("friend removed", friend);
+    });
+    return () => {
+      socketRef.current && socketRef.current.disconnect()
+    };
+  }, [session.user.id]);
+
   const messageModal = useMessageModal();
   return (
     <Dash meta={<Meta title="" description="" />}>
@@ -42,10 +126,10 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
           sales={listings.length}
           offers={listings.length}
           friendsCount={0}
-          onMessageClick={() => messageModal.onOpen(userId, recipientId)}
-          onAddFriendClick={addFriend}
+          onMessageClick={() => messageModal.onOpen(user.id, recipientId)}
+          onAddFriendClick={handleFollow}
           isFriend={friend}
-          onRemoveFriendClick={removeFriend}
+          onRemoveFriendClick={handleFollow}
           isPublic={true}
         />
       </div>
@@ -66,10 +150,10 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
             sales={listings.length}
             offers={listings.length}
             friendsCount={0}
-            onMessageClick={() => messageModal.onOpen(userId, recipientId)}
-            onAddFriendClick={addFriend}
+            onMessageClick={() => messageModal.onOpen(user.id, recipientId)}
+            onAddFriendClick={handleFollow}
             isFriend={friend}
-            onRemoveFriendClick={removeFriend}
+            onRemoveFriendClick={handleFollow}
             isPublic={true}
           />
           <Card title={`Contact`}>

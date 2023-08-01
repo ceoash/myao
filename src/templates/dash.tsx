@@ -131,7 +131,7 @@ const Dash = (props: IDashProps) => {
                 props.full ? "" : "md:ml-20 lg:ml-60"
               } overflow-y-auto flex-grow`}
             >
-              <div className="w-full mx-auto bg-white sm:mt-1 min-h-screen px-4 md:px-0">
+              <div className="w-full mx-auto bg-white sm:mt-1 min-h-screen md:px-0">
                 {props.children}
               </div>
             </div>

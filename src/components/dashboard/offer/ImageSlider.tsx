@@ -11,7 +11,6 @@ import "swiper/css/thumbs";
 
 // import required modules
 import SwiperCore, { Pagination, Thumbs, Navigation, FreeMode } from "swiper";
-import { el } from "date-fns/locale";
 
 interface ImageSliderProps {
   images: string;
@@ -44,8 +43,8 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
         modules={[FreeMode, Navigation, Thumbs]}
         className=" mySwiper2 flex justify-center z-10 "
       >
-        {imagesStore.map((image) => (
-          <SwiperSlide>
+        {imagesStore.map((image, i) => (
+          <SwiperSlide key={i}>
             <img src={image} className="rounded-md"/>
           </SwiperSlide>
         ))}
@@ -63,8 +62,8 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
         modules={[FreeMode, Navigation, Thumbs]}
         className="mx-2"
       >
-        {imagesStore.map((image) => (
-          <SwiperSlide className="bg-white rounded-md" >
+        {imagesStore.map((image, i) => (
+          <SwiperSlide key={i} className="bg-white rounded-md" >
             <img src={image} className="" />
           </SwiperSlide>
         ))}

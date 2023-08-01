@@ -26,13 +26,13 @@ export default async function getCurrentUser(session: any) {
             followers: true,
             followings: true,
             blockedBy: {
-                include: {
-                    userBlocked: true,
+                select: {
+                    id: true,
                 },
             },
             blockedFriends: {
-                include: {
-                    friendBlocked: true,
+                select: {
+                    id: true,
                 },
             },
         },
@@ -41,9 +41,6 @@ export default async function getCurrentUser(session: any) {
     if (!currentUser) {
         return null;
     }
-
-    const usersBlockedByCurrentUser = currentUser.blockedFriends.map(record => record.friendBlocked);
-    const usersWhoBlockedCurrentUser = currentUser.blockedBy.map(record => record.userBlocked);
 
     return {
       ...currentUser,
@@ -58,16 +55,6 @@ export default async function getCurrentUser(session: any) {
         ...friendship,
         createdAt: friendship.createdAt.toISOString(),
         updatedAt: friendship.updatedAt.toISOString(),
-      })),
-      blockedBy: usersWhoBlockedCurrentUser.map(user => ({
-        ...user,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-      })),
-      blockedFriends: usersBlockedByCurrentUser.map(user => ({
-        ...user,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
       })),
       inviter: currentUser.inviter ? {
             ...currentUser.inviter,

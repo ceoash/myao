@@ -1,4 +1,5 @@
 import { timeSince } from "@/utils/formatTime";
+import Image from "next/image";
 import React from "react";
 import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
 
@@ -28,7 +29,7 @@ const Sidebar = ({
                     top-[50%] 
                     bottom-[50%] 
                     mt-1 
-                    bg-orange-400 
+                    bg-orange-300 
                     text-white 
                     rounded-full 
                     px-1 
@@ -50,26 +51,29 @@ const Sidebar = ({
               key={conversation.id}
               className={`border-b border-gray-200 p-4 flex gap-4 ${
                 conversation.id === activeConversationState?.id
-                  ? "bg-orange-100"
+                  ? "bg-orange-50"
                   : "bg-white"
               }`}
               onClick={() => handleSetActiveConversation(conversation)}
             >
-              <div className="">
+              <div className="w-10">
                 {conversation.participant1Id === session?.user?.id ? (
-                  <img
+                  <Image
                     src={
                       conversation?.participant2?.profile?.image ||
                       "/images/placeholders/avatar.png"
                     }
-                    className={`rounded-full h-10 w-10  ${
+                    className={`rounded-full  ${
                       conversation.id === activeConversationState?.id
                         ? "border border-orange-200"
                         : `border border-gray-200`
                     } `}
+                    width={100}
+                    height={100}
+                    alt=""
                   />
                 ) : (
-                  <img
+                  <Image
                     src={
                       conversation?.participant1?.profile?.image ||
                       "/images/placeholders/avatar.png"
@@ -79,6 +83,9 @@ const Sidebar = ({
                         ? "border border-orange-200"
                         : `border border-gray-200`
                     } `}
+                    height={100}
+                    width={100}
+                    alt={``}
                   />
                 )}
               </div>
@@ -100,7 +107,7 @@ const Sidebar = ({
                   ].text === ""
                     ? conversation.directMessages[
                         conversation.directMessages.length - 1
-                      ].image
+                      ]?.image
                       ? "image uploaded"
                       : "No messages yet"
                     : conversation.directMessages[

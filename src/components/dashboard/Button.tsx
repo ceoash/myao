@@ -74,7 +74,7 @@ const Button = ({
             transition
             hover:shadow
             ${ cancel && " border-red-500 !bg-red-400 text-white hover:bg-white hover:text-red-100  "}
-            ${ accept && `text-white !bg-green-400 border-green-500  hover:bg-green-400`}
+            ${ accept && `text-white !bg-green-50 border-green-500  hover:bg-green-50`}
             ${ cancel === false && options?.outline
               ? options?.color
                   ? options.color
@@ -132,7 +132,7 @@ const Button = ({
             transition
             ${
               accept &&
-              `!bg-green-400 border-green-500 text-white hover:bg-green-400 hover:text-green-100 w-full`
+              `!bg-green-50 border-green-400 text-green-500  hover:!bg-green-400 hover:text-white w-full`
             }
             ${
               cancel === false && options?.outline

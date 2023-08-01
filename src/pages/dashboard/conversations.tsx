@@ -1,11 +1,5 @@
 import axios from "axios";
-import { DirectMessage, User } from "@prisma/client";
-import getConversationsByUserId from "@/actions/getConversationsByUserId";
-import getFriendsByUserId from "@/actions/getFriendsByUserId";
-
-import MessageComponent from "@/components/chat/Message";
-import ImageTextArea from "@/components/inputs/ImageTextArea";
-import { config } from "@/config";
+import { DirectMessage } from "@prisma/client";
 import { GetServerSideProps } from "next";
 import { useState, useEffect, use } from "react";
 import { useRef } from "react";
@@ -14,29 +8,13 @@ import { getSession } from "next-auth/react";
 import { Dash } from "@/templates/dash";
 import { FieldValues, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { timeSince } from "@/utils/formatTime";
-import {
-  BiBlock,
-  BiCheck,
-  BiCheckCircle,
-  BiChevronLeft,
-  BiChevronRight,
-  BiCross,
-  BiDotsVerticalRounded,
-  BiPlus,
-  BiUserCheck,
-  BiUserMinus,
-} from "react-icons/bi";
-import { MdOutlineDoNotDisturb } from "react-icons/md";
-import checkFriendship from "@/actions/checkFriendship";
-import Link from "next/link";
-import checkBlocked from "@/actions/checkBlocked";
+import { config } from "@/config";
+import getConversationsByUserId from "@/actions/getConversationsByUserId";
+import MessageComponent from "@/components/chat/Message";
+import ImageTextArea from "@/components/inputs/ImageTextArea";
 import getCurrentUser from "@/actions/getCurrentUser";
 import useOfferModal from "@/hooks/useOfferModal";
-import { stat } from "fs";
 import useRejectConversation from "@/hooks/useRejectConversationModal";
-import { fr, sk } from "date-fns/locale";
-import { set } from "date-fns";
 import Sidebar from "@/components/dashboard/conversations/Sidebar";
 import Header from "@/components/dashboard/conversations/Header";
 import Button from "@/components/dashboard/Button";
@@ -90,18 +68,17 @@ interface Conversation {
   friendStatus?: boolean;
   blockedStatus?: IBlockedStatus;
   status?: string;
+  currentUser?: any
 }
 
-const Conversations = ({ safeConversations, session }: any) => {
+const Conversations = ({ safeConversations, session, conversationId, currentUser }: any) => {
 
   const offerModal = useOfferModal();
-
+  console.log("user", currentUser)
   const [skipIndex, setSkipIndex] = useState<number>(5);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationState, setActiveConversationState] = useState<Conversation | null>(null);
- 
-
   const [isFriend, setIsFriend] = useState<boolean | null>(false);
   const [isBlocked, setIsBlocked] = useState<boolean | null>(false);
   const [status, setStatus] = useState<string | null>("") || null
@@ -115,7 +92,7 @@ const Conversations = ({ safeConversations, session }: any) => {
   const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false);
 
   const [messages, setMessages] = useState<IDirectMessage[]>([]);
-
+  console.log("active", activeConversationState)
   let participant =
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant2Id
@@ -124,16 +101,11 @@ const Conversations = ({ safeConversations, session }: any) => {
     activeConversationState?.participant1Id === session?.user?.id
       ? activeConversationState?.participant1
       : activeConversationState?.participant2;
-  const blockedChat = me?.blockedFriends?.some(
-    (blockedFriend: any) => blockedFriend.friendBlockedId === participant
-  );
 
   let participantUsername =
   activeConversationState?.participant1Id === session?.user?.id
     ? activeConversationState?.participant2?.username
     : activeConversationState?.participant1?.username;
-
-
 
   const [username, setUsername] = useState<string>("");
   const { reset } = useForm<FieldValues>({
@@ -145,17 +117,21 @@ const Conversations = ({ safeConversations, session }: any) => {
     },
   });
 
-  const some = activeConversationState?.participant1.blockedFriends?.some(
-    (blockedFriend: any) => blockedFriend.friendBlockedId === participant
-  );
-
-  console.log("some", some);
-
-
   useEffect(() => {
     const reverseConversations = [ ...safeConversations] .reverse();
+    const participant = activeConversationState?.participant1Id === session.user?.id
     setConversations(reverseConversations);
-    setActiveConversationState(reverseConversations[0]);
+    if(conversationId) {
+      const activeConversation = reverseConversations.find(conversation => conversation.id === conversationId);
+      setActiveConversationState( activeConversation ? activeConversation : reverseConversations[0] );
+      setIsFriend( activeConversation ? activeConversation?.friendStatus : reverseConversations[0]?.friendStatus )
+      setIsBlocked( activeConversation ? activeConversation?.friendStatus : reverseConversations[0]?.friendStatus )
+    } else {
+      setActiveConversationState( reverseConversations[0] );
+      setIsFriend( reverseConversations[0].friendStatus )
+      setIsBlocked( reverseConversations[0].blockedStatus )
+    }
+   
     setStatus(reverseConversations[0]?.status);
     setUsername(reverseConversations[0]?.participant1Id === session?.user?.id ? reverseConversations[0]?.participant2?.username : reverseConversations[0]?.participant1?.username);
    },[safeConversations, session?.user?.id]);
@@ -168,14 +144,6 @@ const Conversations = ({ safeConversations, session }: any) => {
     }
   }, [status]);
 
-  // console.log("blocked by", activeConversationState?.participant1.blockedBy);
-  // console.log("blocked by", activeConversationState?.participant2.blockedBy);
-  // console.log("blocked friends", activeConversationState?.participant1.blockedFriends);
-  // console.log("blocked friends", activeConversationState?.participant2.blockedFriends);
-
-
-  console.log("isBlocked", activeConversationState);
- 
   const [isOpen, setIsOpen] = useState(
     typeof window !== "undefined" && window.innerWidth > 768
   );
@@ -205,16 +173,71 @@ const Conversations = ({ safeConversations, session }: any) => {
   };
 
   const handleFollow = async () => {
-    if (!isFriend) {
+    if (!activeConversationState?.friendStatus) {
       try {
         const response = await axios.post("/api/addFriend", {
           followerId: session?.user?.id,
           followingId: participant,
         });
+
         toast.success("Friend request sent to " + participantUsername);
-        socketRef.current?.emit("add_friend", response.data);
-        setIsFriend(true);
-        setFriends((prevFriends) => [...prevFriends, response.data.following]);
+        socketRef.current?.emit("add_friend", response.data.responseFriendship);
+        if(response.data.responseFriendship.participant1Id === session?.user?.id){
+          setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant2]);
+          const convo = conversations.find((convo) => convo.id === response.data.responseFriendship.id)
+          if(convo){
+            setConversations((prev) => {
+              const newConvos = [...prev, {
+                ...convo,
+                friendStatus: true
+              }]
+              return newConvos
+            })
+            if(convo.id === activeConversationState?.id){
+              setActiveConversationState((prev) => {
+                if (prev && prev.id) {
+                  return {
+                    ...prev,
+                    friendStatus: true
+                  }
+                } else {
+                  return null;
+                }
+              });
+            }
+          }
+        }
+        else {
+          const convo = conversations.find((convo) => convo.id === response.data.responseFriendship.id)
+          if(convo){
+            setConversations((prev) => {
+              const newConvos = [...prev, {
+                ...convo,
+                friendStatus: false,
+              }]
+              return newConvos
+            })
+            if(convo.id === activeConversationState?.id){
+              setActiveConversationState((prev) => {
+                if (prev && prev.id) {
+                  return {
+                    ...prev,
+                    friendStatus: false,
+                  }
+                } else {
+                  return null;
+                }
+              });
+            }
+          }
+        }
+        setActiveConversationState((prev) => { 
+          if(prev) {
+            return {...prev, friendStatus: true}
+          } else {
+            return null;
+          }
+        })        
       } catch (error) {
         toast.error("failed to follow user");
       }
@@ -225,6 +248,19 @@ const Conversations = ({ safeConversations, session }: any) => {
           followingId: participant,
         });
         toast.success("Unfollowed " + participantUsername);
+        const data = response.data
+        console.log(data)
+        setFriends((prevFriendsList) =>
+        prevFriendsList.filter((friend) => friend.id !== data.id)
+      );
+       
+        setActiveConversationState((prev) => { 
+          if(prev) {
+            return {...prev, friendStatus: false}
+          } else {
+            return null;
+          }
+        })     
         socketRef.current?.emit("remove_friend", response.data);
       } catch (error) {
         toast.error("failed to unfollow user");
@@ -342,15 +378,57 @@ const Conversations = ({ safeConversations, session }: any) => {
     });
 
     socketRef.current.on("friend_added", (friend) => {
-      setFriends((prevFriends) => [...prevFriends, friend]);
+      console.log("friend added socket")
+      console.log(friend)
+      const conversation = conversations.find((conversation) => {
+        return (conversation.participant1Id === session?.user?.id && conversation.participant2Id === friend.id)
+            ||
+           (conversation.participant2Id === session?.user?.id && conversation.participant1Id === friend.id)
+    });
+          if(conversation){
+            setConversations((prev) => {
+              const newConversations = [...prev, {
+                ...conversation,
+                friendStatus: true
+              }]
+              return newConversations
+            })
+           
+              setActiveConversationState((prev) => {
+                if (prev && prev.id) {
+                  return {
+                    ...prev,
+                    friendStatus: true
+                  }
+                } else {
+                  return null;
+                }
+              });
+            
+          }
     });
 
     socketRef.current.on("friend_removed", (friend) => {
-      setIsFriend(false);
-      setFriends((prevFriends) =>
-        prevFriends.filter((f) => f.id !== friend.id)
-      );
-      console.log("friend removed", friend);
+      console.log("friend deleted socket")
+      const conversation = conversations.find((conversation) => {
+        conversation.participant1Id === session?.user?.id && conversation.participant2Id === friend.id 
+        ||
+        conversation.participant2Id === session?.user?.id && conversation.participant1Id === friend.id 
+      })
+      if(conversation){
+        setConversations((prev) => {
+          const newConversations = [...prev, {
+            ...conversation,
+            friendStatus: false
+          }]
+          return newConversations
+        })
+      }
+      setActiveConversationState((prev) => { 
+        if(!prev) return null
+        const newActiveConversation = {...prev, friendStatus: false}
+       return newActiveConversation
+      })     
     });
 
     socketRef.current.on("conversation_accepted", () => {
@@ -384,6 +462,7 @@ const Conversations = ({ safeConversations, session }: any) => {
     });
 
     return () => {
+      
       socketRef.current?.emit(
         "leave_conversation",
         activeConversationState?.id
@@ -429,7 +508,7 @@ const Conversations = ({ safeConversations, session }: any) => {
   };
 
   return (
-    <Dash full={true} meta={<title>Conversations</title>}>
+    <Dash full={true} meta={<title>Conversation</title>}>
       <div className="flex border border-gray-200 relative flex-1 flex-grow h-screen overscroll-none">
         {conversations.length > 0 ? (
           <>
@@ -457,7 +536,7 @@ const Conversations = ({ safeConversations, session }: any) => {
               }`}
             >
               <div
-                className={`lg:hidden border bg-gray-50  border-gray-200 w-auto relative ${
+                className={`lg:hidden border bg-gray-50  border-gray-200 shadow w-auto relative ${
                   isOpen ? "w-full min-w-max" : "w-[0]"
                 } border  border-gray-200 `}
               >
@@ -485,11 +564,10 @@ const Conversations = ({ safeConversations, session }: any) => {
                 offerModal={offerModal}
                 setToggleDropdown={() => setToggleDropdown}
                 handleFollow={handleFollow}
-                isFriend={isFriend}
+                isFriend={activeConversationState?.friendStatus}
                 handleBlocked={handleBlocked}
                 isBlocked={isBlocked || false}
               />
-
               <div
                 key={activeConversationState?.id}
                 id="messages"
@@ -502,16 +580,22 @@ const Conversations = ({ safeConversations, session }: any) => {
                     We are here to protect you from fraud please do not share
                     your personal information
                   </div>
+                  
                   <div className="border-t border-gray-200 w-full  hidden lg:block"></div>
                 </div>
                 {status === "none" && (
                   <div className="mx-auto max-w-xl">
+                    {activeConversationState?.status === "none" && (
+
                   <AlertBanner secondary>
                     {activeConversationState?.participant1Id ===
                     session?.user?.id
                       ? `Your message is awaiting approval from ${participantUsername}`
                       : `Accept this message request to start chatting with ${participantUsername} `}
-                  </AlertBanner></div>
+                  </AlertBanner>
+                    )}
+                    </div>
+
                 )}
 
                 {status === "declined" && (
@@ -555,8 +639,8 @@ const Conversations = ({ safeConversations, session }: any) => {
               <div className="border-t-2 mt-auto bg-gray-50 border-gray-200 px-4 mb-2 sm:mb-0">
                 <ImageTextArea
                   onSubmit={handleSubmit}
-                  disabled={activeConversationState?.status === "declined"}
                   key={activeConversationState?.id}
+                  disabled={status !== "accepted" && activeConversationState?.participant2Id === session?.user.id || activeConversationState?.status === "declined"}
                 />
               </div>
             </div>
@@ -572,6 +656,8 @@ const Conversations = ({ safeConversations, session }: any) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
 
+  const conversationId = context.query?.conversationId ?? null;
+
   if (!session) {
     return {
       redirect: {
@@ -583,13 +669,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const user = session?.user;
   const currentUser = await getCurrentUser(session);
-  const safeConversations = await getConversationsByUserId(user?.id);
+  const safeConversations = await getConversationsByUserId(user?.id );
+  // const safeConversations = await getConversationsByUserId(user?.id, currentUser?.blockedFriends, currentUser?.followers, currentUser?.followings);
 
   return {
     props: {
       safeConversations,
       session,
       currentUser,
+      conversationId,
     },
   };
 };

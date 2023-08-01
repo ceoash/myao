@@ -1,6 +1,6 @@
 import { User } from "@prisma/client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
@@ -8,7 +8,7 @@ import axios from "axios";
 import { set } from "date-fns";
 import { ImUserMinus, ImUserPlus } from "react-icons/im";
 import { MdDoNotDisturb } from "react-icons/md";
-import { FaCheck, FaTimes } from "react-icons/fa";
+import { FaUserCheck, FaUserMinus, FaUserTimes } from "react-icons/fa";
 interface FriendsWidgetProps {
   session: any;
   friendsList: User[];
@@ -37,9 +37,17 @@ const FriendsWidget = ({
             if (socket) {
             socket.emit('remove_friend', response.data);
             }
-            setFriendsList((prev) => {
-              return prev.filter((friend) => friend.id === response.data.id)
-            });
+            if(response.data.followerId === session.user.id){
+              setFriendsList((prev) => {
+                return prev.filter((friend) => friend.id !== response.data.followingId)
+              });
+
+            } else {
+              setFriendsList((prev) => {
+                return prev.filter((friend) => friend.id !== response.data.followerId)
+              });
+
+            }
             toast.success("Friend removed!");
           },
           (error) => {
@@ -83,13 +91,62 @@ const FriendsWidget = ({
       toast.success("Friend request accepted!");
       if (socket) {
       socket.emit("accept_friendship", data.responseFriendship);
-      socket.emit("update_activities", data.transactionResult, data.responseFriendship.followerId, data.responseFriendship.followingId);
       }
 
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
   };
+
+  const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+    socketRef.current = io(config.PORT);
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
+  console.log(socketRef)
+
+  useEffect(() => {
+    if (!session.user.id) return;
+    if (!socketRef) return;
+
+    socketRef.current && socketRef?.current.emit("register", session.user.id);
+
+
+    socketRef.current &&
+      socketRef.current.on("friend_added", (data) => {
+        console.log("added", data);
+        setFriendsList((prevFriendsList) => [
+          ...prevFriendsList,
+          data,
+        ]);
+      });
+
+    socketRef.current &&
+      socketRef.current.on("friend_accepted", (data) => {
+        console.log("accepted", data);
+        setFriendsList((prevFriendsList) => {
+          return prevFriendsList.map((friend) =>
+            friend.id === data.id ? { ...friend, accepted: true } : friend
+          );
+        });
+      });
+
+    socketRef.current &&
+      socketRef.current.on("friend_removed", (data) => {
+        console.log("removed", data);
+        setFriendsList((prevFriendsList) =>
+          prevFriendsList.filter((friend) => friend.id !== data.id)
+        );
+      });
+
+    return () => {
+      socketRef.current && socketRef.current.disconnect();
+    };
+  }, [session.id]);
 
 
   return (
@@ -124,8 +181,9 @@ const FriendsWidget = ({
               {friend.relationshipStatus === "following" && (
                 <button
                   onClick={() => onRemoveFriendClick(friend.id)}
-                  className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                  className="flex items-center gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
                 >
+                  <FaUserMinus className="text-md" />
                   Remove
                 </button>
               )}
@@ -134,24 +192,27 @@ const FriendsWidget = ({
                 <div className="flex gap-2 ml-auto items-center">
                   <button
                     onClick={() => handleAccept(friend.friendshipId)}
-                    className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                    className="flex items-center gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
                   >
-                    <FaCheck className="text-md" />
+                    <FaUserCheck className="text-md" />
+                    Accept
                   </button>
                   <button
                     onClick={() => onRemoveFriendClick(friend.id)}
-                    className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                    className="flex items-center gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
                   >
-                    <FaTimes className="text-md" />
+                    <FaUserMinus className="text-md" />
+                    Remove
                   </button>
                 </div>
               )}
               {friend.relationshipStatus === "follower" && friend.accepted && (
                 <button
                   onClick={() => onRemoveFriendClick(friend.id)}
-                  className="inline-block py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                  className=" items-center flex gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
                 >
-                  <ImUserMinus className="text-md" />
+                  <FaUserMinus className="text-md" />
+                  Remove
                 </button>
               )}
             </li>

@@ -2,8 +2,10 @@ import { Bid, DirectMessage, Listing, Profile, User } from "@prisma/client";
 
 export interface IUser extends User{
     profile: Profile
-    followers: User[]
-    followings: User[]
+    followers: User[];
+    followings: User[];
+    blockedBy: User[];
+    blockedFriends: User[];
 }
 
 export interface dashboardProps {

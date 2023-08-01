@@ -1,45 +1,46 @@
-import axios from "axios";
-import getBidByID from "@/actions/getBidByID";
 import { GetServerSideProps } from "next";
-import { use, useEffect, useRef, useState } from "react";
-import { getSession, useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
+import { getSession } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { config } from "@/config";
-import useSearchModal from "@/hooks/useSearchModal";
-
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
-
+import { timeInterval, timeSince } from "@/utils/formatTime";
+import { Activity } from "@/interfaces/authenticated";
+import { Bid, Profile, Review, User } from "@prisma/client";
+import axios from "axios";
+import getBidByID from "@/actions/getBidByID";
 import Link from "next/link";
 import ListingChat from "@/components/chat/ListingChat";
 import OfferDetailsWidget from "@/components/dashboard/offer/OfferDetailsWidget";
 import ReviewForm from "@/components/dashboard/offer/ReviewForm";
 import Loading from "@/components/LoadingScreen";
-import { toast } from "react-hot-toast";
-
-import { timeInterval, timeSince } from "@/utils/formatTime";
-import { Activity } from "@/interfaces/authenticated";
-import { Bid, Profile, Review, User } from "@prisma/client";
 import ReviewBox from "@/components/dashboard/reviews/ReviewBox";
 import Bids from "@/components/dashboard/offer/Bids";
 import OfferTypeBadge from "@/components/dashboard/offer/OfferTypeBadge";
 import ImageSlider from "@/components/dashboard/offer/ImageSlider";
 import AlertBanner from "@/components/dashboard/AlertBanner";
-import Image from "next/image";
-import { BiStar } from "react-icons/bi";
 import Badge from "@/components/dashboard/offer/Badge";
 import StatusChecker from "@/utils/status";
-import { set } from "date-fns";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
+import UserStats from "@/components/dashboard/UserStats";
 
-interface IBid extends Bid {
-  user: User;
-}
+interface IBid extends Bid { user: User; }
 
 interface ProfileUser extends User {
   profile: Profile;
   bids?: IBid[];
+  averageResponseTime?: any;
+  averageCompletionTime?: any;
+  sentCount?: any;
+  receivedCount?: any;
+  cancelledReceivedCount?: any;
+  cancelledSentCount?: any;
+  completedReceivedCount?: any;
+  completedSentCount?: any;
+  bidsCount?: any;
+  trustScore?: any;
 }
 
 interface MessageProps {
@@ -55,6 +56,7 @@ const Index = ({ listing, session }: any) => {
   const [activeSubTab, setActiveSubTab] = useState("description");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true);
   const [statusIsLoading, setStatusIsLoading] = useState(false);
   const [bids, setBids] = useState<any[]>([]);
   const [completedBy, setCompletedBy] = useState<string | null>();
@@ -68,19 +70,42 @@ const Index = ({ listing, session }: any) => {
   const [status, setStatus] = useState<string>("");
   const [tab, setTab] = useState("details");
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
-  const [me, setMe] = useState<ProfileUser>();
   const [messages, setMessages] = useState<MessageProps[]>([]);
-
-  console.log("bids", bids)
-
+  const [me, setMe] = useState<ProfileUser>();
   const [participant, setParticipant] = useState<ProfileUser>();
   const router = useRouter();
   // const DeleteListing = useDeleteConfirmationModal();
-  const SearchModal = useSearchModal();
 
   const now = Date.now();
-
   const socketRef = useRef<Socket>();
+
+  useEffect(() => {
+    if (activeSubTab === "user") {
+      const getUserStats = async () => {
+        if (!participant) console.log("no participant");
+        const userId = participant?.id;
+        const url = `/api/dashboard/getUserStats`;
+        try {
+          const response = await axios.post(url, {
+            userId,
+          });
+          const stats = response.data;
+
+          const totalListings = stats.sentCount + stats.receivedCount;
+          const totalCancelledListings =
+            stats.cancelledSentCount + stats.cancelledReceivedCount;
+          const totalCompletedListings =
+            stats.completedSentCount + stats.completedReceivedCount;
+          const trustScore = Math.trunc( ( (totalCompletedListings - totalCancelledListings) / totalListings) * 100 );
+          setParticipant((prev) => {
+            return { ...prev, ...stats, trustScore };
+          });
+          setUserLoading(false);
+        } catch (error) { console.error(error); }
+      };
+      getUserStats();
+    }
+  }, [activeSubTab]);
 
   useEffect(() => {
     socketRef.current = io(config.PORT);
@@ -92,22 +117,25 @@ const Index = ({ listing, session }: any) => {
     };
   }, [listing?.id]);
 
-
   useEffect(() => {
     if (!session || !session.user?.id) {
       return;
     }
     if (listing?.sellerId === session?.user?.id) {
       setMe(listing?.seller);
-      setParticipant(listing?.buyer);
+      setParticipant((prev) => {
+        return { ...prev, ...listing?.buyer };
+      });
     } else {
       setMe(listing?.buyer);
-      setParticipant(listing?.seller);
+      setParticipant((prev) => {
+        return { ...prev, ...listing?.seller };
+      });
     }
     setMessages([...listing.messages].reverse());
 
     setCompletedBy(listing?.completedById);
-  }, [listing.id, session?.user?.id])
+  }, [listing.id, session?.user?.id]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -116,93 +144,111 @@ const Index = ({ listing, session }: any) => {
     }
     const reversedBids = [...listing.bids].reverse();
     setBids(listing.bids);
-    
+
     setCurrentBid({
       currentPrice:
         listing?.bids.length > 0
           ? listing.bids[listing.bids.length - 1].price
           : listing?.price,
       byUserId: listing.bids[listing.bids.length - 1]?.userId || listing.userId,
-      byUsername: listing.bids[listing.bids.length - 1]?.user?.username || listing.sellerId === listing.userId ? listing.seller.username : listing.buyer.username,
+      byUsername:
+        listing.bids[listing.bids.length - 1]?.user?.username ||
+        listing.sellerId === listing.userId
+          ? listing.seller.username
+          : listing.buyer.username,
       me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
-      participant: reversedBids.filter((bid: Bid) => bid.userId === participant?.id)[0],
+      participant: reversedBids.filter(
+        (bid: Bid) => bid.userId === participant?.id
+      )[0],
     });
-    
-    setIsLoading(false);
+  setIsLoading(false);
 
-  }, [listing.bids, listing.price, listing.sellerId, listing.seller.username, listing.buyer.username, session?.user.id, me?.id, participant?.id]);
-  
+  }, [ listing.bids,
+      listing.price,
+      listing.sellerId,
+      listing.seller.username,
+      listing.buyer.username,
+      session?.user.id,
+      me?.id,
+      participant?.id,
+    ]
+  );
   useEffect(() => {
-    if(!session) {
-      setIsLoading(true);
-    };
-    
-   
-    if (listing.status === "pending") {
-      setDisabled(true);
-      setStatus(listing?.status);
-    }
-    if (listing.status === "awaiting approval") {
-      setStatus(listing?.status);
-    }
-    if (listing.status === "accepted") {
-      setDisabled(true);
-    }
-    
-    setStatus(listing?.status);
 
+    if (listing.status === "pending") { 
+      setDisabled(true); 
+      setStatus(listing?.status); 
+    }
+
+    if (listing.status === "awaiting approval") { 
+      setStatus(listing?.status); 
+    }
+
+    if (listing.status === "accepted") { 
+      setDisabled(true) 
+    }
+    
+    if (!session) { 
+      setIsLoading(true) 
+    }
+
+    setStatus(listing?.status);
     setActivities([...listing?.activities].reverse());
+
     const created = new Date(listing?.createdAt);
     timeInterval(created, setTimeSinceCreated);
     setIsLoading(false);
     setDisabled(false);
+
   }, []);
 
   useEffect(() => {
     socketRef.current &&
-    socketRef.current.on("new_listing_message", (newMessage: any) => {
-      console.log("Received new message: ", newMessage);
+      socketRef.current.on("new_listing_message", (newMessage: any) => {
+        console.log("Received new message: ", newMessage);
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-     
-    });
+      });
 
     socketRef.current &&
-      socketRef.current.on("updated_bid", ({ price, userId, username, listingId, previous}) => {
-        if (listingId === listing.id) {
-          console.log(
-            `Received bid price update for listing ${listingId}: ${price}`
-          );
-          setBids((prevBids) => {
+      socketRef.current.on(
+        "updated_bid",
+        ({ price, userId, username, listingId, previous }) => {
+          if (listingId === listing.id) {
+            console.log(
+              `Received bid price update for listing ${listingId}: ${price}`
+            );
+            setBids((prevBids) => {
+              let temporaryId = (Math.random() + 1).toString(36).substring(7);
+              const newBid = {
+                id: temporaryId,
+                price: price,
+                userId: userId,
+                listingId: listingId,
+                previous: previous,
+                createdAt: new Date(now),
+                updatedAt: new Date(now),
+              };
+              const updatedBids = [...prevBids, newBid];
+              return updatedBids;
+            });
 
-            let temporaryId = (Math.random() + 1).toString(36).substring(7);
-            const newBid = {
-            id: temporaryId,
-            price: price,
-            userId: userId,
-            listingId: listingId,
-            previous: previous,
-            createdAt: new Date(now),
-            updatedAt: new Date(now),
+            setCurrentBid((prev) => {
+              const newBid = {
+                ...prev,
+                currentPrice: price,
+                byUserId: userId || "",
+                byUsername: username || "",
+                me:
+                  listing?.bids && listing?.bids.length > 0
+                    ? listing.bids[listing.bids.length - 1]
+                    : null,
+              };
+              return newBid;
+            });
+            setStatus("negotiating");
           }
-            const updatedBids = [...prevBids, newBid];
-            return updatedBids;
-          });
-
-          setCurrentBid((prev) => {
-            const newBid = {
-            ...prev,
-            currentPrice: price,
-            byUserId: userId || "",
-            byUsername: username || "",
-            me: listing?.bids && listing?.bids.length > 0 ? listing.bids[listing.bids.length - 1] : null,
-            }
-            return newBid;
-          });
-          setStatus("negotiating");
-
-          
         }
-      });
+      );
 
     socketRef.current &&
       socketRef.current.on("update_status", ({ newStatus, listingId }) => {
@@ -223,59 +269,88 @@ const Index = ({ listing, session }: any) => {
 
   const confirmationModal = useConfirmationModal();
 
-  const getStatusMessage = (status: string, bids: any[], currentBid: any, listing: any): string | null => {
-    const messages: {[key: string]: string} = {
-      "pending": "Pending",
+  const createAlertMessage = (
+    bids: any[],
+    currentBid: any,
+    listing: any,
+    baseMessage: string
+  ): string => {
+    return (
+      baseMessage +
+      (bids && bids[0]?.id
+        ? bids[bids.length - 1]?.price
+        : currentBid.currentPrice
+        ? currentBid.currentPrice
+        : listing?.price)
+    );
+  };
+  const createStatusAlert = (
+    status: string,
+    bids: any[],
+    currentBid: any,
+    listing: any
+  ): string | null => {
+    const messages: { [key: string]: string } = {
+      pending: "Pending",
       "awaiting approval": "Awaiting Approval",
-      "accepted": getBidMessage(bids, currentBid, listing, "accept this offer for "),
-      "rejected": getBidMessage(bids, currentBid, listing, "rejected the current bid for "),
-      "negotiating": "start negotiating",
-      "completed": getBidMessage(bids, currentBid, listing, "accept this offer for "),
-      "cancelled": "terminate this offer",
+      accepted: createAlertMessage(
+        bids,
+        currentBid,
+        listing,
+        "accept this offer for £"
+      ),
+      rejected: createAlertMessage(
+        bids,
+        currentBid,
+        listing,
+        "reject the current bid for £"
+      ),
+      negotiating: "start negotiating",
+      completed: "mark this offer as completed",
+      cancelled: "terminate this offer",
     };
-  
-    return messages[status] || null;
-  }
-  
-  const getBidMessage = (bids: any[], currentBid: any, listing: any, baseMessage: string): string => {
-    return baseMessage + (bids && bids[0]?.id ? bids[bids.length - 1]?.price : currentBid.currentPrice ? currentBid.currentPrice : listing?.price);
-  }
 
+    return messages[status] || null;
+  };
 
   const handleStatusChange = async (status: string, userId: string) => {
-    const statusMessage = getStatusMessage(status, bids, currentBid, listing);
-  confirmationModal.onOpen("Are you sure you want to " + statusMessage + "?", async () => {
-    setStatusIsLoading(true);
-    await axios
-      .put(`/api/updateListing/status`, {
-        status: status,
-        listingId: listing.id,
-        userId: userId,
-        completedById: userId,
-      })
-      .then((response) => {
-        toast.success("Offer " + status);
-        setStatus(status);
-        setCompletedBy(userId);
+    const statusMessage = createStatusAlert(status, bids, currentBid, listing);
+    confirmationModal.onOpen(
+      "Are you sure you want to " + statusMessage + "?",
+      async () => {
+        setStatusIsLoading(true);
+        const update = await axios
+          .put(`/api/updateListing/status`, {
+            status: status,
+            listingId: listing.id,
+            userId: userId,
+            completedById: userId,
+          })
+          .then((response) => {
+            
+            setStatus(status);
+            setCompletedBy(userId);
 
-        socketRef.current?.emit("update_status", {
-          newStatus: status,
-          listingId: listing.id,
-        });
-        socketRef.current?.emit(
-          "update_activities",
-          response.data.transactionResult,
-          response.data.listing.sellerId,
-          response.data.listing.buyerId
-        );
-      })
-      .catch((err) => {
-        console.log("Something went wrong!");
-      })
-      .finally(() => {
-        setStatusIsLoading(false);
-      });
-    });
+            socketRef.current?.emit("update_status", {
+              newStatus: status,
+              listingId: listing.id,
+            });
+            socketRef.current?.emit(
+              "update_activities",
+              response.data.transactionResult,
+              response.data.listing.sellerId,
+              response.data.listing.buyerId
+            );
+          })
+          .catch((err) => {
+            console.log("Something went wrong!");
+          })
+          .finally(() => {
+            setStatusIsLoading(false);
+          });
+
+      }
+    );
   };
 
   const userReview =
@@ -373,48 +448,7 @@ const Index = ({ listing, session }: any) => {
                       {listing.seller?.profile.website}
                       {listing.seller.status}
                       {listing.seller.createdAt} */}
-                <div className="grid grid-cols-2 auto-cols-fr gap-2">
-                  <div className="flex flex-col p-4 items-center">
-                    <div className="p-4 w-40 h-40 rounded-full relative">
-                      <Image
-                        src={`/images/placeholders/avatar.png`}
-                        className="border p-1 border-gray-200 rounded-full"
-                        alt="Avatar"
-                        fill
-                        style={{ objectFit: "cover" }}
-                      />
-                    </div>
-                    <div className="p-4 text-center">
-                      <h4>{participant?.username}</h4>
-                      <span className="text-xl text-gray-400">
-                        <BiStar className="inline-block text-orange-500" />
-                        <BiStar className="inline-block text-orange-500" />
-                        <BiStar className="inline-block text-orange-500" />
-                        <BiStar className="inline-block text-orange-500" />
-                        <BiStar className="inline-block text-orange-500" />
-                      </span>
-                      <p>{participant?.profile?.bio}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col p-4">
-                    <div className="text-center">
-                      <h2 className="-mb-2">0</h2>
-                      <p>Offers Completed</p>
-                    </div>
-                    <div className="text-center">
-                      <h2 className="-mb-2">0</h2>
-                      <p>Offers Rejected</p>
-                    </div>
-                    <div className="text-center">
-                      <h2 className="-mb-2">0</h2>
-                      <p>Bids Placed</p>
-                    </div>
-                    <div className="text-center">
-                      <h2 className="-mb-2">100%</h2>
-                      <p>Trust Score</p>
-                    </div>
-                  </div>
-                </div>
+                <UserStats userLoading={userLoading} participant={participant} />
               </div>
             ) : (
               <div>
@@ -430,8 +464,6 @@ const Index = ({ listing, session }: any) => {
     </>
   );
 
-  
-
   if (isLoading) {
     return <Loading />;
   }
@@ -445,22 +477,43 @@ const Index = ({ listing, session }: any) => {
               text="This offer has been accepted"
               success
               button
+              buttonText={"Mark as complete"}
+            />
+          )}
+          {status === "completed" && (
+            <AlertBanner
+              text="Congratulations! You've completed your offer"
+              success
+              button
               buttonText={"Leave a review"}
             />
           )}
           {status === "rejected" && (
             <AlertBanner
-              text={completedBy && session?.user.id && completedBy === session?.user.id ? "You rejected the latest bid. Awaiting repsonse from " + participant?.username : "Your bid has been rejected. Submit a new bid to continue " }
+              text={
+                completedBy &&
+                session?.user.id &&
+                completedBy === session?.user.id
+                  ? "You rejected the latest bid. Awaiting repsonse from " +
+                    participant?.username
+                  : "Your bid has been rejected. Submit a new bid to continue "
+              }
               danger
               button
             />
           )}
           {status === "cancelled" && (
             <AlertBanner
-              text={completedBy === session?.user.id ? "You terminated the offer." : "This offer has been terminated"}
+              text={
+                completedBy === session?.user.id
+                  ? "You terminated the offer."
+                  : "This offer has been terminated"
+              }
               danger
               button
-              buttonText={`Contact ${listing.sellerId === session?.user.id ? "Buyer" : "Seller"}`}
+              buttonText={`Contact ${
+                listing.sellerId === session?.user.id ? "Buyer" : "Seller"
+              }`}
             />
           )}
           <div className="w-full col-span-6 xl:col-span-8">
@@ -473,16 +526,17 @@ const Index = ({ listing, session }: any) => {
               >
                 Details
               </div>
-              {status === "awaiting approval" || status ===  "negotiating" && (
-                <div
-                  onClick={() => setTab("chat")}
-                  className={`cursor-pointer ${
-                    tab === "chat" && "border-b-4 border-orange-400 "
-                  }`}
-                >
-                  Chat
-                </div>
-              )}
+              {status === "awaiting approval" ||
+                (status === "negotiating" && (
+                  <div
+                    onClick={() => setTab("chat")}
+                    className={`cursor-pointer ${
+                      tab === "chat" && "border-b-4 border-orange-400 "
+                    }`}
+                  >
+                    Chat
+                  </div>
+                ))}
               <div
                 onClick={() => setTab("activity")}
                 className={`cursor-pointer ${
@@ -535,7 +589,7 @@ const Index = ({ listing, session }: any) => {
                     </div>
                   </div>
                 )}
-                
+
                 {status === "awaiting approval" && (
                   <div className="w-full  p-4 white border-l-4 border-orange-400 flex gap-2 justify-between items-center">
                     {listing.userId === session?.user?.id ? (
@@ -560,13 +614,12 @@ const Index = ({ listing, session }: any) => {
                     )}
                   </div>
                 )}
-                
               </div>
             )}
             {tab === "details" && (
               <>
                 {body}
-                {status === "accepted" && (
+                {status === "completed" && (
                   <div className="hidden md:block">
                     {userReview && <ReviewBox review={userReview} />}
                     {participantReview && (
@@ -598,7 +651,12 @@ const Index = ({ listing, session }: any) => {
                   </div>
                 </div>
               ))}
-            {tab === "bids" &&<div className="mb-6"> <Bids bids={bids} participant={participant} me={me} /></div>}
+            {tab === "bids" && (
+              <div className="mb-6">
+                {" "}
+                <Bids bids={bids} participant={participant} me={me} />
+              </div>
+            )}
           </div>
           {
             <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4">

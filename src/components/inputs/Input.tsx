@@ -19,7 +19,7 @@ interface InputProps {
   register: UseFormRegister<FieldValues>;
   registerOptions?: RegisterOptions;
   username?: boolean;
-  onChange?: () => void;
+  onChange?: (e?: any) => void;
   inline?: boolean;
   onClick?: () => void;
   btnText?: string;

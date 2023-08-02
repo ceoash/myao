@@ -11,6 +11,7 @@ import axios from "axios";
 import SearchComponent from "./SearchComponent";
 import useQRModal from "@/hooks/useQRModal";
 import { BsQrCode } from "react-icons/bs";
+import useSearchComponentModal from "@/hooks/useSearchComponentModal";
 
 interface IUserMenuProps {
   currentUser?: SafeUser | null;
@@ -25,6 +26,8 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchBox, setSearchBox] = useState(false);
+
+  const search = useSearchComponentModal();
 
   const qr = useQRModal();
 
@@ -82,8 +85,8 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
             className="relative flex items-center text-xl lg:order-2 gap-4"
             style={{ zIndex: 9999 }}
           >
-            <div className="md:hidden cursor-pointer">
-              <div onClick={() => setIsSearchOpen(!isSearchOpen)}>
+            <div className="md:hidden cursor-pointer" onClick={search.onOpen}>
+              <div >
                 <BiSearch />
               </div>
             </div>

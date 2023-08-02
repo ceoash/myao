@@ -18,6 +18,7 @@ import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import QRModal from "@/components/modals/QRModal";
+import SearchComponentModal from "@/components/modals/SearchModal";
 
 type IDashProps = {
   meta: ReactNode;
@@ -120,6 +121,7 @@ const Dash = (props: IDashProps) => {
       <DeleteConfirmation />
       <RejectConversationModal />
       <QRModal />
+      <SearchComponentModal />
       <UserMenu session={session} />
       <SkeletonTheme highlightColor="#edf2f7">
         <main className="content flex flex-col flex-grow">

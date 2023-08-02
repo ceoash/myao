@@ -126,7 +126,7 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
           sales={listings.length}
           offers={listings.length}
           friendsCount={0}
-          onMessageClick={() => messageModal.onOpen(user.id, recipientId)}
+          onMessageClick={() => messageModal.onOpen(session?.user?.id, recipientId)}
           onAddFriendClick={handleFollow}
           isFriend={friend}
           onRemoveFriendClick={handleFollow}
@@ -150,7 +150,7 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
             sales={listings.length}
             offers={listings.length}
             friendsCount={0}
-            onMessageClick={() => messageModal.onOpen(user.id, recipientId)}
+            onMessageClick={() => messageModal.onOpen(session?.user?.id, recipientId)}
             onAddFriendClick={handleFollow}
             isFriend={friend}
             onRemoveFriendClick={handleFollow}

@@ -390,10 +390,10 @@ const Index = ({ listing, session }: any) => {
               </div>
             )}
             <div className="font-extrabold text-3xl text-right -mt-2">
-              £
+              
               {currentBid.currentPrice
-                ? currentBid.currentPrice
-                : listing.price || "Open offer"}
+                ? `£ ${currentBid.currentPrice}`
+                : listing.price !== "" &&  listing.price !== "0" ? `£ ${listing.price}` : <h5 className="underline">Open Offer</h5>}
             </div>
           </div>
         </div>

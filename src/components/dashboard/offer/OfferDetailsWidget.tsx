@@ -215,7 +215,7 @@ const OfferDetailsWidget = ({
                   </div>
                   <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600">
                     {listing.userId === sessionUser?.id && (
-                      <div className="xl:hidden 2xl:block">Start price: £{listing.price}</div>
+                    <div>Start price: {listing.price !== '0' && listing.price !== '' ? `£ ${listing.price}` : 'Open'}</div>
                     )}
                     <div>
                       Last bid:{" "}
@@ -304,7 +304,14 @@ const OfferDetailsWidget = ({
                 status === "rejected" && "text-red-500 line-through"
               }`}
             >
-              £{currentBid.currentPrice || "Open offer"}
+              {currentBid.currentPrice && currentBid.currentPrice !=='0'&& `£ ${currentBid.currentPrice}`}
+            </div>
+            <div
+              className={`text-xl mt-4 ${
+                status === "rejected" && "text-red-500 line-through"
+              }`}
+            >
+              {currentBid.currentPrice =='0' || currentBid.currentPrice =='' &&`Open offer`}
             </div>
           </div>
           {status && (
@@ -488,7 +495,7 @@ const OfferDetailsWidget = ({
                 </div>
                 <div className="flex gap-2 text-[12px]  text-gray-600 xl:text-[14px]">
                   {listing?.userId === nonSessionUser?.id && (
-                    <div>Start price: £{listing.price}</div>
+                    <div>Start price: {listing.price !== '0' && listing.price !== '' ? `£ ${listing.price}` : 'Open'}</div>
                   )}
                   <div>
                     Last bid:{" "}

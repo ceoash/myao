@@ -3,7 +3,7 @@ import AvatarUpload from "@/components/inputs/AvatarUpload";
 import getCurrentUser from "@/actions/getCurrentUser";
 import getListingsByUserId from "@/actions/getListingsByUserId";
 import { GetServerSideProps } from "next";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { BiUser } from "react-icons/bi";
@@ -15,6 +15,7 @@ import { set } from "date-fns";
 import Button from "@/components/dashboard/Button";
 import { FaCog, FaLock, FaUser } from "react-icons/fa";
 import { color } from "html2canvas/dist/types/css/types/color";
+import useConfirmationModal from "@/hooks/useConfirmationModal";
 
 const Settings = ({ user, listings }: any) => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -49,7 +50,6 @@ const Settings = ({ user, listings }: any) => {
   const [tiktok, setTiktok] = useState(user?.profile?.social?.tiktok || "");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  console.log(password, passwordConfirm);
   useEffect(() => {
     setName(user.name);
     setEmail(user.email);
@@ -110,6 +110,35 @@ const Settings = ({ user, listings }: any) => {
     }
   };
 
+  const confirmation = useConfirmationModal();
+
+  const onDelete = async () => {
+    let data = {
+      id: user.id,
+    };
+    try {
+      confirmation.onOpen(
+        `Are you sure you want to delete your account?`,
+        async () => {
+          await axios
+            .post(`/api/settings/deleteUser`, data)
+            .then((response) => {
+              signOut();
+              toast.success("You have deleted your account");
+              console.log("respnse", response)
+            })
+            .catch((error) => {
+              toast.error("failed to delete your account");
+              console.log("error", error)
+            })
+            
+        }
+      );
+    } catch (error) {
+      console.error("Error updating listing:", error);
+    }
+  };
+
   const image = watch("image");
 
   const setCustomValue = (id: string, value: any) => {
@@ -139,13 +168,12 @@ const Settings = ({ user, listings }: any) => {
     <Dash meta={<Meta title="" description="" />}>
       <div className="container px-4 mx-auto">
         <div className="lg:flex flex-col lg:flex-wrap mt-10 gap-6">
-          <h2 className="px-6">
-            Settings
-          </h2>
+          <h2 className="px-6">Settings</h2>
           <div className=" flex px-6 border-b border-gray-200 pb-6">
             <div
               className={`px-3.5 cursor-pointer flex gap-2 items-center py-1.5 ${
-                activeTab === "profile" && "border-b-4 border-orange-400 text-orange-400"
+                activeTab === "profile" &&
+                "border-b-4 border-orange-400 text-orange-400"
               }`}
               onClick={() => setActiveTab("profile")}
             >
@@ -154,7 +182,8 @@ const Settings = ({ user, listings }: any) => {
             </div>
             <div
               className={`px-3.5 cursor-pointer flex gap-2 items-center py-1.5 ${
-                activeTab === "security" && "border-b-4 border-orange-400 text-orange-400"
+                activeTab === "security" &&
+                "border-b-4 border-orange-400 text-orange-400"
               }`}
               onClick={() => setActiveTab("security")}
             >
@@ -163,7 +192,8 @@ const Settings = ({ user, listings }: any) => {
             </div>
             <div
               className={`px-3.5 cursor-pointer flex gap-2 items-center rou1.5 ${
-                activeTab === "preferences" && "border-b-4 border-orange-400 text-orange-400"
+                activeTab === "preferences" &&
+                "border-b-4 border-orange-400 text-orange-400"
               }`}
               onClick={() => setActiveTab("preferences")}
             >
@@ -268,7 +298,11 @@ const Settings = ({ user, listings }: any) => {
                         </div>
                       </div>
                       <div className="mt-6 flex justify-end px-2">
-                        <Button onClick={handleSubmit(onSubmit)} className="mt-4" label="Save" />
+                        <Button
+                          onClick={handleSubmit(onSubmit)}
+                          className="mt-4"
+                          label="Save"
+                        />
                       </div>
                     </div>
                   </div>
@@ -388,7 +422,11 @@ const Settings = ({ user, listings }: any) => {
                           </div>
                         </div>
                         <div className="mt-6 flex justify-end px-2">
-                          <Button onClick={handleSubmit(onSubmit)} className="mt-4" label="Save" />
+                          <Button
+                            onClick={handleSubmit(onSubmit)}
+                            className="mt-4"
+                            label="Save"
+                          />
                         </div>
                       </div>
                     </div>
@@ -448,7 +486,11 @@ const Settings = ({ user, listings }: any) => {
                       </div>
                     </div>
                     <div className="mt-6 flex justify-end px-2">
-                      <Button onClick={handleSubmit(onSubmit)} className="mt-4" label="Save" />
+                      <Button
+                        onClick={handleSubmit(onSubmit)}
+                        className="mt-4"
+                        label="Save"
+                      />
                     </div>
                   </div>
                 </div>
@@ -552,14 +594,17 @@ const Settings = ({ user, listings }: any) => {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end px-2">
-                  <Button onClick={handleSubmit(onSubmit)} className="mt-4" label="Save" />
+                  <Button
+                    onClick={handleSubmit(onSubmit)}
+                    className="mt-4"
+                    label="Save"
+                  />
                 </div>
               </form>
             </div>
           )}
           {activeTab === "security" && (
             <div className="flex-1 bg-white p-6 rounded-lg mb-4">
-              
               <div className="lg:grid lg:grid-cols-12 items-start  pb-4 mb-4  lg:pb-8 lg:mb-12 border-b border-gray-200">
                 <div className="col-span-3 w-full px-4 mb-5 sm:mb-0">
                   <h4 className="text-2xl font-bold tracking-wide mb-1">
@@ -619,7 +664,11 @@ const Settings = ({ user, listings }: any) => {
                       </div>
                     </div>
                     <div className="mt-6 flex justify-end px-2">
-                      <Button onClick={handleSubmit(onPasswordSubmit)} className="mt-4" label="Save" />
+                      <Button
+                        onClick={handleSubmit(onPasswordSubmit)}
+                        className="mt-4"
+                        label="Save"
+                      />
                     </div>
                   </form>
                 </div>
@@ -629,10 +678,16 @@ const Settings = ({ user, listings }: any) => {
                   <h4 className="text-2xl font-bold tracking-wide mb-1">
                     Delete account
                   </h4>
-                  <p className="text-sm mb-6">Delete your account permanently</p>
+                  <p className="text-sm mb-6">
+                    Delete your account permanently
+                  </p>
                 </div>
                 <div className="lg:col-span-9 flex justify-end items-end">
-                  <Button options={{color: 'bg-red-400 text-white'}} label="Delete" />
+                  <Button
+                    onClick={onDelete}
+                    options={{ color: "bg-red-400 text-white" }}
+                    label="Delete"
+                  />
                 </div>
               </div>
             </div>

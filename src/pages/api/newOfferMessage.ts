@@ -8,7 +8,7 @@ interface ErrorResponse {
   error: string;
 }
 
-export default async function listingsApi(
+export default async function newOfferMessage(
   req: NextApiRequest,
   res: NextApiResponse<Listing | ErrorResponse>
 ) {

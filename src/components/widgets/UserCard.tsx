@@ -2,10 +2,12 @@ import removeFriend from "@/pages/api/deleteFriend";
 import { on } from "events";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { BiStar } from "react-icons/bi";
+import { BiBlock, BiCheck, BiMessageAdd, BiStar, BiUserCheck, BiUserMinus } from "react-icons/bi";
 import { User } from "@/types";
 import { ImUserPlus, ImUserMinus } from "react-icons/im";
 import Button from "../dashboard/Button";
+import { Session } from "next-auth";
+import { FaUserCheck, FaUserMinus } from "react-icons/fa";
 
 interface UserCardProps {
   currentUser: User;
@@ -19,7 +21,9 @@ interface UserCardProps {
   onAddFriendClick?: () => void;
   isFriend?: boolean;
   onRemoveFriendClick?: () => void;
-  session: any;
+  handleBlock?: () => void;
+  isBlocked?: boolean;
+  session: Session;
 }
 
 const UserCard = ({
@@ -32,6 +36,8 @@ const UserCard = ({
   onMessageClick,
   onAddFriendClick,
   onRemoveFriendClick,
+  handleBlock,
+  isBlocked,
   isFriend,
   isPublic,
   session,
@@ -83,6 +89,9 @@ const UserCard = ({
           <span className="text-xl md:text-2xl font-medium capitalize">
             {currentUser?.username || "No name"}
           </span>
+          <span className="italic text-sm">
+            Joined {new Date(currentUser.createdAt).toLocaleDateString("en-gb", {dateStyle: "long"}) }
+          </span>
           <span className="text-xl text-gray-400">
             <BiStar className="inline-block text-orange-500" />
             <BiStar className="inline-block text-orange-500" />
@@ -95,11 +104,11 @@ const UserCard = ({
       {!isPublic && (
         <div className="grid grid-cols-3 justify-between">
           <div className="text-center w-full">
-            <div className="font-bold">Offers</div>
+            <div className="font-bold">Sent</div>
             <div>{offers}</div>
           </div>
           <div className="text-center w-full">
-            <div className="font-bold">Requests</div>
+            <div className="font-bold">Received</div>
             <div>{sales}</div>
           </div>
           <div className="text-center w-full">
@@ -136,36 +145,40 @@ const UserCard = ({
           </>
         ) : (
           <>
-            <button
+          {!isBlocked && (
+          <>
+            <Button
               onClick={handleClick}
-              type="button"
-              className="inline-flex items-center justify-center px-3 gap-1  rounded-xl border text-white bg-orange-400 hover:bg-white hover:text-orange-500 hover:border-orange-400  transition"
+              outline
+              options={{ primary: true }}
             >
+              <div className="flex gap-2 items-center">
               {friend === false ? (
-                <ImUserPlus className="text-md" />
+                <FaUserCheck />
               ) : (
-                <ImUserMinus className="text-md" />
+                <FaUserMinus />
               )}
               {friend === false ? "Add" : "Remove"}
-            </button>
+              </div>
+            </Button>
 
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 justify-center h-10 px-3 rounded-xl border border-gray-200 hover:border-gray-400 text-gray-800 hover:text-gray-900 transition"
+            <Button
               onClick={onMessageClick}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                fill="currentColor"
-                className="bi bi-chat-fill"
-                viewBox="0 0 16 16"
-              >
-                <path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z" />
-              </svg>
+              <div className="flex gap-2 items-center">
+              <BiMessageAdd />
               Message
-            </button>
+              </div>
+            </Button>
+            </>
+            
+          )}
+            <Button
+              onClick={handleBlock}
+              cancel={isBlocked}
+            >
+             { isBlocked ? <div className="flex gap-1 items-center"><BiCheck /> Unblock</div> : <div className="flex gap-1 items-center"><BiBlock /> Block</div> }
+            </Button>
           </>
         )}
       </div>

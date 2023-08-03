@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import getBidByID from "@/actions/getBidByID";
+import getOfferById from "@/actions/getOfferById";
 import axios from "axios";
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
@@ -384,8 +384,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const bidId = context?.params?.id as string;
-
+  
+  const offerId = context?.params?.id as string;
   const session = getSession(context);
 
   if (!session) {
@@ -398,7 +398,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const listing = await getBidByID({ bidId });
+    const listing = await getOfferById({ offerId });
     return {
       props: {
         listing,

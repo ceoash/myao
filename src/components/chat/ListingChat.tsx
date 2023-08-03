@@ -58,7 +58,7 @@ const ListingChat = ({ listing, user, disabled, session, messages, setMessages, 
   const handleSubmit = async (image: string, text: string) => {
     try {
       // Send message
-      const response = await axios.post("/api/newBidMessage", {
+      const response = await axios.post("/api/newOfferMessage", {
         listingId: listing.id,
         buyerId: listing.buyerId,
         sellerId: listing.sellerId,

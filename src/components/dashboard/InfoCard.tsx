@@ -1,5 +1,6 @@
 import React from "react";
 import Button from "./Button";
+import Skeleton from "react-loading-skeleton";
 interface ICardProps {
   title?: string;
   text?: string;
@@ -13,6 +14,7 @@ interface ICardProps {
   color: string;
   span?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
 const InfoCard = ({
@@ -25,6 +27,7 @@ const InfoCard = ({
   text,
   span,
   className,
+  isLoading
 }: ICardProps) => {
   return (
     <div
@@ -33,7 +36,7 @@ const InfoCard = ({
       } `}
     >
       <div className="flex gap-2 items-center">
-        {icon && (
+        {isLoading ? <Skeleton circle height={70}/> : icon && (
           <div>
             <img
               src={icon}
@@ -45,7 +48,7 @@ const InfoCard = ({
           <div className="flex justify-between">
             {icon && (
               <div className="font-bold text-2xl leading-none -mb-2">
-                {number}
+                {isLoading ? <Skeleton /> : number}
               </div>
             )}
 
@@ -56,15 +59,14 @@ const InfoCard = ({
               <div
                 className={`text-xs bg-${color}-400 hidden lg:block rounded-full p-1 px-2 border-${color}-500 text-white -mb-2`}
               >
-                {badge}
+                {isLoading ? <Skeleton /> : badge}
               </div>
             )}
           </div>
           <div className="mt-2">{text ? text : !button && title}</div>
           {button && (
             <div className="mt-5 mr-auto">
-            <Button label={button.label} onClick={button.onClick} options={{
-            }} />
+            {isLoading ? <Skeleton /> : <Button label={button.label} onClick={button.onClick} options={{}} /> }
               
             </div>
           )}

@@ -26,7 +26,6 @@ interface SafeUser {
   blockedBy: {
     friendBlockedId: string;
   }[];
-
 }
 
 interface SafeDirectMessage {
@@ -34,6 +33,9 @@ interface SafeDirectMessage {
   updatedAt: string;
   user: SafeUser;
 }
+
+let friends: string[] = [];
+let blocked: string[] = [];
 
 const formatDate = (date: Date): string => {
   return date ? date.toISOString() : "";
@@ -56,10 +58,7 @@ const transformDirectMessage = (directMessage: any): SafeDirectMessage => {
   };
 };
 
-
-
 const transformUser = (user: any): SafeUser => {
-  
   return {
     ...user,
     id: user.id,
@@ -67,31 +66,50 @@ const transformUser = (user: any): SafeUser => {
     updatedAt: formatDate(user.updatedAt),
     profile: {
       image: user?.profile?.image || null,
-      createdAt: user?.profile?.createdAt ? formatDate(user.profile.createdAt) : null,
-      updatedAt: user?.profile?.updatedAt ? formatDate(user.profile.updatedAt) : null,
+      createdAt: user?.profile?.createdAt
+        ? formatDate(user.profile.createdAt)
+        : null,
+      updatedAt: user?.profile?.updatedAt
+        ? formatDate(user.profile.updatedAt)
+        : null,
     },
   };
 };
 
 const transformConversation = (conversation: any, userId: string): any => {
-  
-  const participantId = conversation.participant1Id ===  userId ? conversation.participant2Id : conversation.participant1Id;
+  const participantId =
+    conversation.participant1Id === userId
+      ? conversation.participant2Id
+      : conversation.participant1Id;
 
-  let friends: string[] = [];
-  let blocked: string[] = [];
-  
-  if(conversation.participant1Id === userId) {
-    conversation.participant1.followers.map((follower: {followerId: string}) => friends.push(follower.followerId));
-    conversation.participant1.followings.map((following: {followingId: string}) => friends.push(following.followingId));
-    conversation.participant1.blockedFriends.map((blocker: { friendBlockedId: string}) => blocked.push(blocker.friendBlockedId));
+  if (conversation.participant1Id === userId) {
+    conversation.participant1.followers.map(
+      (follower: { followerId: string }) => friends.push(follower.followerId)
+    );
+    conversation.participant1.followings.map(
+      (following: { followingId: string }) =>
+        friends.push(following.followingId)
+    );
+    conversation.participant1.blockedFriends.map(
+      (blocker: { friendBlockedId: string }) =>
+        blocked.push(blocker.friendBlockedId)
+    );
   }
 
-  if(conversation.participant2Id === userId) {
-    conversation.participant2.followers.map((follower: {followerId: string}) => friends.push(follower.followerId));
-    conversation.participant2.followings.map((following: {followingId: string}) => friends.push(following.followingId));
-    conversation.participant2.blockedFriends.map((blocker: { friendBlockedId: string}) => blocked.push(blocker.friendBlockedId));
+  if (conversation.participant2Id === userId) {
+    conversation.participant2.followers.map(
+      (follower: { followerId: string }) => friends.push(follower.followerId)
+    );
+    conversation.participant2.followings.map(
+      (following: { followingId: string }) =>
+        friends.push(following.followingId)
+    );
+    conversation.participant2.blockedFriends.map(
+      (blocker: { friendBlockedId: string }) =>
+        blocked.push(blocker.friendBlockedId)
+    );
   }
-    
+
   return {
     ...conversation,
     id: conversation.id,
@@ -107,56 +125,96 @@ const transformConversation = (conversation: any, userId: string): any => {
   };
 };
 
+async function getUser(userId: string): Promise<any> {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    include: {
+      followers: {
+        select: {
+          followerId: true,
+        },
+      },
+      followings: {
+        select: {
+          followingId: true,
+        },
+      },
+      blockedFriends: {
+        select: {
+          friendBlockedId: true,
+        },
+      },
+    },
+  });
+  return user;
+}
 
-export default async function getConversationsByUserId(userId: string): Promise<SafeConversation[]> {
-  
-  if (!userId) {
-    throw new Error('No userId provided');
+export default async function getConversationsByUserId(
+  userId: string,
+  currentUser?: any
+): Promise<SafeConversation[]> {
+
+  const user = currentUser ? currentUser : await getUser(userId);
+
+  if (!user) {
+    throw new Error("No user provided");
   }
 
   const conversations = await prisma.conversation.findMany({
     where: {
       OR: [{ participant1Id: userId }, { participant2Id: userId }],
+      participant1Id: {
+        notIn: user.blockedFriends.map(
+          (blocker: { friendBlockedId: string }) => blocker.friendBlockedId
+        ),
+      },
+      participant2Id: {
+        notIn: user.blockedFriends.map(
+          (blocker: { friendBlockedId: string }) => blocker.friendBlockedId
+        ),
+      },
     },
     include: {
       directMessages: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 8,
         include: {
           listing: true,
-          user: true
-          },
+          user: true,
         },
+      },
       participant1: {
         select: {
           id: true,
           username: true,
           profile: {
             select: {
-              image: true
-            }
+              image: true,
+            },
           },
           followers: {
-              select: {
-                followerId: true,
-              }
+            select: {
+              followerId: true,
+            },
           },
           followings: {
-              select: {
-                followingId: true,
-              }
+            select: {
+              followingId: true,
+            },
           },
           blockedBy: {
             select: {
-              userBlockedId: true,            
-            }
+              userBlockedId: true,
+            },
           },
           blockedFriends: {
             select: {
               friendBlockedId: true,
-            }
+            },
           },
-        }
+        },
       },
       participant2: {
         select: {
@@ -164,37 +222,36 @@ export default async function getConversationsByUserId(userId: string): Promise<
           username: true,
           profile: {
             select: {
-              image: true
-            }
+              image: true,
+            },
           },
           followers: {
             select: {
               followerId: true,
-            }
-        },
-        followings: {
+            },
+          },
+          followings: {
             select: {
               followingId: true,
-            }
+            },
+          },
+          blockedBy: {
+            select: {
+              userBlockedId: true,
+            },
+          },
+          blockedFriends: {
+            select: {
+              friendBlockedId: true,
+            },
+          },
         },
-        blockedBy: {
-          select: {
-            userBlockedId: true,            
-          }
-        },
-        blockedFriends: {
-          select: {
-            friendBlockedId: true,
-          }
-        },
-        }
       },
     },
-  }
-   
+  });
+
+  if (!conversations) return [];
+  return conversations.map((conversation) =>
+    transformConversation(conversation, userId)
   );
-
-  if(!conversations) return []
-  return conversations.map((conversation) => transformConversation(conversation, userId));
 }
-

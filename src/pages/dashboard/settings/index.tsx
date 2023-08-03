@@ -6,15 +6,11 @@ import { GetServerSideProps } from "next";
 import { getSession, signOut } from "next-auth/react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
-import { BiUser } from "react-icons/bi";
-import { IoCog, IoLockClosed } from "react-icons/io5";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { set } from "date-fns";
 import Button from "@/components/dashboard/Button";
 import { FaCog, FaLock, FaUser } from "react-icons/fa";
-import { color } from "html2canvas/dist/types/css/types/color";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 
 const Settings = ({ user, listings }: any) => {
@@ -129,7 +125,7 @@ const Settings = ({ user, listings }: any) => {
             })
             .catch((error) => {
               toast.error("failed to delete your account");
-              console.log("error", error)
+            console.log("error", error)
             })
             
         }

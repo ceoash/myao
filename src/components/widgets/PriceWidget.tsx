@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import Button from '../dashboard/Button';
-import { ErrorResponse } from '../modals/UserSearchModal';
 import { io, Socket } from 'socket.io-client';
 import { config } from '@/config';
 import { toast } from 'react-hot-toast';
@@ -32,6 +31,10 @@ interface PriceWidgetProps {
   setBids: Dispatch<SetStateAction<Bid[]>>;
   setStatus: Dispatch<SetStateAction<string>>;
   status: string;
+}
+
+export interface ErrorResponse {
+  error: string;
 }
 
 const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessionUser, socketRef, status, setStatus }: PriceWidgetProps) => {

@@ -134,7 +134,7 @@ const Button = ({
             transition
             ${
               accept &&
-              `!bg-green-50 border-green-400 text-green-500  hover:!bg-green-400 hover:text-white w-full`
+              `!bg-green-50 border-green-200 text-green-500  hover:!bg-green-400 hover:!text-white w-full`
             }
             ${
               cancel === false && options?.outline
@@ -165,9 +165,9 @@ const Button = ({
          
             ${
               cancel && outline ? 
-              "text-red-500  border border-red-500 bg-red-50 hover:bg-red-500 hover:text-red-50 w-full" : 
+              "text-red-500  border border-red-500 bg-red-50 hover:!bg-red-500 hover:text-red-50 w-full" : 
               cancel ? 
-              ` border-red-500 !bg-red-400 text-white hover:bg-white hover:text-red-100 w-full` :
+              ` border-red-500 !bg-red-400 hover:!bg-red-400 text-white hover:text-red-100 w-full` :
               ""
             }
             ${

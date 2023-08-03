@@ -1,7 +1,10 @@
-import { ErrorResponse } from "@/components/modals/UserSearchModal";
 import { Conversation } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
+
+export interface ErrorResponse {
+    error: string;
+  }
 
 export default async function getConversation(
     req: NextApiRequest,

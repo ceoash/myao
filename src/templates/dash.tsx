@@ -1,9 +1,7 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import UserMenu from "@/components/UserMenu";
 import OfferModal from "@/components/modals/OfferModal";
-import SearchModal from "@/components/modals/UserSearchModal";
 import MessageModal from "@/components/modals/MessageModal";
-import DeleteConfirmation from "@/components/modals/DeleteConfirmation";
 import StartConversation from "@/components/modals/StartConversation";
 import { useSession } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
@@ -25,6 +23,10 @@ type IDashProps = {
   children: ReactNode;
   full?: boolean;
 };
+
+export interface ErrorResponse {
+  error: string;
+}
 
 const Dash = (props: IDashProps) => {
   const nextrouter = Router;
@@ -117,8 +119,6 @@ const Dash = (props: IDashProps) => {
       <StartConversation />
       <QuickConnectModal />
       <ConfirmationModal />
-      <SearchModal />
-      <DeleteConfirmation />
       <RejectConversationModal />
       <QRModal />
       <SearchComponentModal />

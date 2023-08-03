@@ -10,7 +10,7 @@ import { timeInterval, timeSince } from "@/utils/formatTime";
 import { Activity } from "@/interfaces/authenticated";
 import { Bid, Profile, Review, User } from "@prisma/client";
 import axios from "axios";
-import getBidByID from "@/actions/getBidByID";
+import getOfferById from "@/actions/getOfferById";
 import Link from "next/link";
 import ListingChat from "@/components/chat/ListingChat";
 import OfferDetailsWidget from "@/components/dashboard/offer/OfferDetailsWidget";
@@ -699,10 +699,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  const bidId = context.params?.id as string;
+  const offerId = context.params?.id as string;
 
   try {
-    const listing = await getBidByID({ bidId });
+    const listing = await getOfferById({ offerId });
     return {
       props: {
         listing,

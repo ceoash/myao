@@ -19,6 +19,7 @@ import Sidebar from "@/components/dashboard/conversations/Sidebar";
 import Header from "@/components/dashboard/conversations/Header";
 import Button from "@/components/dashboard/Button";
 import AlertBanner from "@/components/dashboard/AlertBanner";
+import { set } from "date-fns";
 
 interface IDirectMessage {
   id: string;
@@ -81,8 +82,9 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
   const [isFriend, setIsFriend] = useState<boolean | null>(false);
   const [isBlocked, setIsBlocked] = useState<boolean | null>(false);
   const [status, setStatus] = useState<string | null>("") || null
-
   const [disabled, setDisabled] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [toggleDropdown, setToggleDropdown] = useState<boolean>(false);
   const [friends, setFriends] = useState<IUser[]>([]);
   const reject = useRejectConversation();
@@ -400,20 +402,22 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
 
   useEffect(() => {
     if (!socketRef.current || !activeConversationState || !session) return;
-    socketRef.current.on("message_sent", (newMessage: any) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setActiveConversationState((prevState) => {
-        if (prevState) {
-          const updatedConversation: any = {
-            ...prevState,
-            directMessages: [...prevState.directMessages, newMessage],
-          };
-          return updatedConversation;
-        } else {
-          return null;
-        }
+    if(!activeConversationState?.blockedStatus){
+      socketRef.current.on("message_sent", (newMessage: any) => {
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        setActiveConversationState((prevState) => {
+          if (prevState) {
+            const updatedConversation: any = {
+              ...prevState,
+              directMessages: [...prevState.directMessages, newMessage],
+            };
+            return updatedConversation;
+          } else {
+            return null;
+          }
+        });
       });
-    });
+    }
 
     socketRef.current.on("friend_added", (friend) => { 
       console.log("added friend") 
@@ -478,6 +482,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
   }, [messages]);
 
   const handleSubmit = async (image: string, text: string) => {
+    setSubmitting(true);
     try {
       const response = await axios.post("/api/newConversationMessage", {
         userId: session?.user?.id,
@@ -497,8 +502,10 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
         toast.success("Message sent successfully");
       }
       reset();
+      setSubmitting(false);
     } catch (error) {
       console.error("Error sending message:", error);
+      setSubmitting(false);
     }
   };
 
@@ -569,28 +576,33 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                 className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white"
                 style={{ height: "calc(100vh - 28rem)" }}
               >
+
                 <div className="col-span-12 flex justify-between items-center">
                   <div className="border-t border-gray-200 h-1 w-full hidden lg:block"></div>
-                  <div className="lg:w-auto lg:whitespace-nowrap  text-center mx-4 text-sm text-gray-500">
+                  <div className="lg:w-auto lg:whitespace-nowrap text-center mx-4 text-sm text-gray-500">
                     We are here to protect you from fraud please do not share
                     your personal information
                   </div>
-                  
-                  <div className="border-t border-gray-200 w-full  hidden lg:block"></div>
+                  <div className="border-t border-gray-200 w-full hidden lg:block"></div>
                 </div>
-                {status === "none" && (
+
+                {status === "none" && !activeConversationState?.blockedStatus && (
                   <div className="mx-auto max-w-xl">
-                    {activeConversationState?.status === "none" && (
+                      <AlertBanner secondary>
+                        {activeConversationState?.participant1Id ===
+                        session?.user?.id
+                          ? `Your message is awaiting approval from ${participantUsername}`
+                          : `Accept this message request to start chatting with ${participantUsername} `}
+                      </AlertBanner>
+                  </div>
+                )}
 
-                  <AlertBanner secondary>
-                    {activeConversationState?.participant1Id ===
-                    session?.user?.id
-                      ? `Your message is awaiting approval from ${participantUsername}`
-                      : `Accept this message request to start chatting with ${participantUsername} `}
-                  </AlertBanner>
-                    )}
-                    </div>
-
+                {activeConversationState?.blockedStatus && (
+                  <div className="max-w-xl mx-auto">
+                      <AlertBanner danger  onClick={handleBlocked}>
+                        You blocked this user
+                      </AlertBanner>
+                  </div>
                 )}
 
                 {status === "declined" && (
@@ -616,9 +628,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                 )}
 
                 {messages.map((message, index) => {
-                  if (message.text == "" && message.image == "") {
-                    return null;
-                  }
+                  if (message.text == "" && message.image == "") return null;
                   return (
                     <MessageComponent
                       key={message?.id}
@@ -635,7 +645,8 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                 <ImageTextArea
                   onSubmit={handleSubmit}
                   key={activeConversationState?.id}
-                  disabled={status !== "accepted" && activeConversationState?.participant2Id === session?.user.id || activeConversationState?.status === "declined"}
+                  disabled={status !== "accepted" && activeConversationState?.participant2Id === session?.user.id || activeConversationState?.status === "declined" || activeConversationState?.blockedStatus}
+                  isLoading={submitting}
                 />
               </div>
             </div>
@@ -664,7 +675,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const user = session?.user;
   const currentUser = await getCurrentUser(session);
-  const safeConversations = await getConversationsByUserId(user?.id );
+  const safeConversations = await getConversationsByUserId(user?.id, currentUser );
   // const safeConversations = await getConversationsByUserId(user?.id, currentUser?.blockedFriends, currentUser?.followers, currentUser?.followings);
 
   return {

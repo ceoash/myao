@@ -3,6 +3,8 @@ import { AiFillWarning } from "react-icons/ai";
 import { FaCheck, FaExclamation, FaInfo, FaTimes } from "react-icons/fa";
 import { IoAlert } from "react-icons/io5";
 import { MdDoNotDisturb } from "react-icons/md";
+import Button from "./Button";
+import { BiBlock } from "react-icons/bi";
 interface AlertBannerProps {
   text?: string;
   danger?: boolean;
@@ -51,24 +53,24 @@ const AlertBanner = ({
       <div className="flex items-center gap-2">
         <div
           className={`
-            rounded-full p-2 
+            rounded-full p-1 
             ${success && "text-white border-green-300 bg-green-400 border"}
             ${danger && "text-white border-red-300 border bg-red-400"}
             ${info && "text-white border-yellow-300 border "}
             ${primary && "text-orange-400 border-orange-300 border "}
-            ${secondary && "text-gray-500 border-gray-400 border bg-gray-100"}
+            ${secondary && "text-gray-500 border-gray-400 border !bg-gray-100"}
         `}
         >
           {success && <FaCheck />}
-          {danger && <FaTimes />}
+          {danger && <BiBlock />}
           {info && <FaInfo />}
           {primary && <FaInfo />}
-          {secondary && <FaInfo />}
+          {secondary && <FaInfo className="" />}
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
           <span>{text} {children}</span>
           {button && (
-            <button onClick={onClick} className=" underline">
+            <button className="rounded-full ml-auto bg-white border border-gray-200 px-2 py-1" onClick={onClick} >
               {buttonText}
             </button>
           )}

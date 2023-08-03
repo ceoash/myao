@@ -213,14 +213,11 @@ const OfferDetailsWidget = ({
                       className="h-8 w-10"
                     />
                   </div>
-                  <div className=" flex gap-2 text-[12px]  xl:text-[14px] text-gray-600">
-                    {listing.userId === sessionUser?.id && (
-                    <div>Start price: {listing.price !== '0' && listing.price !== '' ? `£ ${listing.price}` : 'Open'}</div>
+                  <div className="flex text-[12px]  xl:text-[14px] text-gray-600">
+                    {listing.userId === sessionUser?.id && listing.price !== '0' && listing.price !== '' && (
+                    <div>{listing.price !== '0' && listing.price !== '' && `Start price: £ ${listing.price}`}</div>
                     )}
-                    <div>
-                      Last bid:{" "}
-                      {meLastBid?.price ? "£" + meLastBid.price : "No bids yet"}
-                    </div>
+                    <div>{meLastBid?.price ? "Last bid: £" + meLastBid.price : "No bids yet"}</div>
                   </div>
                 </div>
               </div>
@@ -494,13 +491,12 @@ const OfferDetailsWidget = ({
                   />
                 </div>
                 <div className="flex gap-2 text-[12px]  text-gray-600 xl:text-[14px]">
-                  {listing?.userId === nonSessionUser?.id && (
-                    <div>Start price: {listing.price !== '0' && listing.price !== '' ? `£ ${listing.price}` : 'Open'}</div>
+                  {listing?.userId === nonSessionUser?.id && listing.price !== '0' && listing.price !== '' && (
+                    <div>{listing.price !== '0' && listing.price !== '' ? `Start price: £ ${listing.price}` : ''}</div>
                   )}
                   <div>
-                    Last bid:{" "}
                     {participantLastBid?.price
-                      ? "£" + participantLastBid?.price
+                      ? "Last bid: £" + participantLastBid?.price
                       : "No bids yet"}
                   </div>
                 </div>

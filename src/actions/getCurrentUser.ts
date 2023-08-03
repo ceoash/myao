@@ -1,8 +1,10 @@
 import prisma from "@/libs/prismadb";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Session } from "next-auth";
 import { getServerSession } from "next-auth/next";
 
-export default async function getCurrentUser(session: any) {
+export default async function getCurrentUser(session: Session) {
+
     if (!session?.user?.email) {
         console.log('No session found');
         return null;
@@ -28,11 +30,13 @@ export default async function getCurrentUser(session: any) {
             blockedBy: {
                 select: {
                     id: true,
+                    userBlockedId: true,
                 },
             },
             blockedFriends: {
                 select: {
                     id: true,
+                    friendBlockedId: true,
                 },
             },
         },

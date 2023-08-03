@@ -1,30 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import MenuItem from "../MenuItem";
 import {
   BiCalendar,
-  BiCategory,
-  BiCross,
-  BiPencil,
-  BiTrash,
-  BiUser,
+ 
 } from "react-icons/bi";
-import { AiOutlineEye } from "react-icons/ai";
-import { Listing } from "@prisma/client";
+
 import Link from "next/link";
 
 import { useRouter } from "next/navigation";
-import Button from "../Button";
 import axios from "axios";
 import StatusChecker from "@/utils/status";
-import useDeleteConfirmationModal from "@/hooks/useDeleteConfirmationModal";
 import { useSession } from "next-auth/react";
-import { IoClose } from "react-icons/io5";
 import {
-  FaEdit,
   FaEye,
   FaPencilAlt,
   FaTimes,
-  FaTrash,
   FaUser,
 } from "react-icons/fa";
 import { timeInterval } from "@/utils/formatTime";
@@ -52,7 +41,6 @@ const Offer: React.FC<any> = ({
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isOffer, setIsOffer] = useState(false);
-  const DeleteListing = useDeleteConfirmationModal();
   const { data: session } = useSession();
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   let img = []
@@ -100,7 +88,7 @@ const Offer: React.FC<any> = ({
   const formattedStatus = statusState;
 
   const handleStatusChange = async (status: string, userId: string) => {
-    confirmation.onOpen(`Are you sure you want to ${formatStatus(status)} this offer?`,async () => {
+    confirmation.onOpen(`Are you sure you want to ${formatStatus(status)} this offer?`, async () => {
       await axios
       .put(`/api/updateListing/status`, {
         status: status,
@@ -158,14 +146,14 @@ const Offer: React.FC<any> = ({
       
       <div className="md:py-4 md:flex md:gap-4 xl:gap-6">
           <Link href={`/dashboard/offers/${id}`} className="w-1/5">
-            <div className="relative w-full h-full ml-4 mr-2">
+            <div className="relative w-full h-full ml-4 mr-2 aspect-square border border-gray-200 rounded-lg bg-gray-50">
               <Image
                 src={img[0] || "/images/cat.png"}
                 alt="content"
-                layout="responsive"
-                width={500}
-                height={500}
+                layout="fill"
+                objectFit="cover"
                 className="rounded-lg"
+                objectPosition="middle"
               />
             </div>
           </Link>
@@ -189,7 +177,7 @@ const Offer: React.FC<any> = ({
             <div className="flex justify-between md:block mb-2 pb-2 md:pb-0 md:m-0">
               <div>
                 <div className="text-right text-sm">
-                  {bids && bids.length > 0 ? "Bid by " : price !== "0" ? "Starting price by " : "Offer by "}
+                  {bids && bids.length > 0 ? "Bid by " : price !== "0" && price !== '' ? "Starting price by " : "Open offer by "}
                   <span className="underline">
                     {bids && bids.length > 0 && bids[bids.length - 1].userId === sellerId ? seller?.username : userId === sellerId ? seller?.username : buyer?.username }
                   </span>
@@ -200,11 +188,7 @@ const Offer: React.FC<any> = ({
                     `£ ${bids[0].price}`
                   ) : price &&  price !== "0"  ? (
                     `£ ${price}`
-                  ) : (
-                    <span className="text-sm ">
-                      Open offer
-                    </span>
-                  )}
+                  ) : session?.user?.id === userId ? <h4>Awaiting offer</h4> : <h4>Make a offer</h4>}
                 </div>
               </div>
             </div>

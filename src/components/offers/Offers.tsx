@@ -10,6 +10,7 @@ import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
 import Skeleton from "react-loading-skeleton";
 import { set } from "date-fns";
+import OfferSkeleton from "./OfferSkeleton";
 
 interface OffersProps {
   sent: any;
@@ -75,6 +76,7 @@ const Offers = ({
     skip = 0,
     PAGE_SIZE = 5
   ) => {
+    setIsLoading(true);
     const url = `/api/dashboard/${
       tab === "sent" ? "getListingsByCategory" : "getReceivedListingsByCategory"
     }`;
@@ -86,9 +88,13 @@ const Offers = ({
         skip,
         PAGE_SIZE,
       });
+      setIsLoading(false);
+
       return response.data[tab];
     } catch (error) {
       console.error(error);
+      setIsLoading(false);
+
     }
   };
 
@@ -171,6 +177,7 @@ const Offers = ({
   };
 
   const handleCategoryChange = async (category: string) => {
+
     setSelectedCategory(category);
     setCurrentPage(1);
   };
@@ -291,22 +298,7 @@ const Offers = ({
           <>
             <div className="transition">
               {isLoading ? (
-                <div className="flex">
-                  <div className="w-1/5">
-                    <Skeleton height={180} width={180} />
-                  </div>
-                  <div className="flex-1 flex flex-col">
-                    <div>
-                      <Skeleton count={1} />
-                    </div>
-                    <div className="mt-auto">
-                      <div>
-                        <Skeleton circle width={50} height={50} />
-                      </div>
-                      <Skeleton count={1} />
-                    </div>
-                  </div>
-                </div>
+               <OfferSkeleton />
               ) : (
                 <div className="min-w-full transition">
                   {sentListings.all && sentListings.all.length > 0 && sentListings[selectedCategory] ? (
@@ -351,7 +343,7 @@ const Offers = ({
           <>
             <div className="transition">
               {isLoading ? (
-                <Skeleton height={200} count={5} />
+                <OfferSkeleton /> 
               ) : (
                 <div className="min-w-full transition">
                   { receivedListings.all && receivedListings.all.length > 0 &&

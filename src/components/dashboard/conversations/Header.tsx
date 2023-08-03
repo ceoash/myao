@@ -2,7 +2,7 @@ import Button from "@/components/dashboard/Button";
 import { Conversation, Listing } from "@prisma/client";
 import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
-import { BiCheck, BiDotsVerticalRounded, BiUserCheck, BiUserMinus, BiUserPlus, BiUserX } from "react-icons/bi";
+import { BiBlock, BiCheck, BiDotsVerticalRounded, BiUserCheck, BiUserMinus, BiUserPlus, BiUserX } from "react-icons/bi";
 import { BsSignDoNotEnterFill } from "react-icons/bs";
 import { FaCheck, FaPlus, FaTimes, FaUserCheck, FaUserPlus, FaUserTimes } from "react-icons/fa";
 import { MdDoNotDisturbAlt } from "react-icons/md";
@@ -71,39 +71,42 @@ const Header = ({
               <span className="text-gray-700 mr-3">{username}</span>
             </Link>
           </div>
-          <button
+          <Button
             onClick={handleFollow}
+            accept={isFriend}
             className={` border  rounded-lg  px-2 py-1 ${isFriend ? 'bg-orange-100 border-orange-200' : 'bg-white border-gray-200'}`}
           >
             { isFriend ? (
               <div className="flex gap-1 items-center">
-              <FaUserCheck className=" text-orange-500" /> 
-              <div className="hidden md:block text-orange-500 text-sm">Following</div>
+              <BiCheck className=" text-green-500" /> 
+              <div className="hidden md:block text-green-500 text-sm">Following</div>
               </div>
             ) : (
               <div className="flex gap-1 items-center">
-              <FaUserPlus className="" /> 
+              <BiUserPlus className="" /> 
               <div className="hidden md:block text-sm">Add</div>
               </div>
               
             ) }
-          </button> 
-          <button
+          </Button>
+        
+          <Button
             onClick={handleBlocked}
+            cancel={activeConversationState?.blockedStatus}
             className={` border  rounded-lg  px-2 py-1 ${activeConversationState?.blockedStatus ? 'bg-red-100 border-red-200 text-red-500' : 'bg-white border-gray-200'}`}
           >
             { activeConversationState?.blockedStatus ? (
               <div className="flex gap-1 items-center">
-              <FaUserTimes className=" " /> 
+              <BiCheck className=" " /> 
               <div className={`hidden md:block text-sm`}>Blocked</div>
               </div>
             ) : (
               <div className="flex gap-1 items-center">
-              <FaUserTimes className="" /> 
+              <BiBlock className="" /> 
               <div className={`hidden md:block text-sm`}>Block</div>
               </div>
             )}
-          </button> 
+          </Button> 
           
         </div>
       </div>

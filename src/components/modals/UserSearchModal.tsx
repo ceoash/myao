@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import Modal from "./Modal";
 import useSearchModal from "@/hooks/useSearchModal";
 import Heading from "./Heading";
@@ -12,12 +12,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 import { User } from "@prisma/client";
-import { BiArrowToRight, BiChevronRight } from "react-icons/bi";
-import assignUserToListing from "@/actions/assignUserToListing";
-
-export interface ErrorResponse {
-  error: string;
-}
+import { BiChevronRight } from "react-icons/bi";
 
 interface searchModalProps {
   onAssignUser?: (user: User) => void;
@@ -26,6 +21,10 @@ interface searchModalProps {
   setSellerId?: (newSellerId: string | null) => void; // 
   setStatus?: (newStatus: string | null) => void; // 
 
+}
+
+interface ErrorResponse {
+  error: string
 }
 const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searchModalProps) => {
   const { isOpen, listingId, onClose } = useSearchModal();
@@ -46,17 +45,13 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
-    setValue,
   } = useForm<FieldValues>({
     defaultValues: {
       email: "",
     },
   });
 
-  interface SearchModalProps {
-    onAssignUser: (user: User) => void;
-  }
+
 
   const SearchModal = useSearchModal();
 

@@ -18,15 +18,45 @@ import { Socket, io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
 import Link from "next/link";
+import getCurrentUser from "@/actions/getCurrentUser";
+import { set } from "date-fns";
+import { Listing, User } from "@prisma/client";
+import { Session } from "next-auth";
+import useConfirmationModal from "@/hooks/useConfirmationModal";
+import Stats from "@/components/dashboard/Stats";
+import InfoCard from "@/components/dashboard/InfoCard";
+import { stat } from "fs";
+import Image from "next/image";
+import Skeleton from "react-loading-skeleton";
+import { MdWeb } from "react-icons/md";
+import { FaCheckCircle, FaLocationArrow } from "react-icons/fa";
 
-const profile = ({ user, listings, requests, session, isFriend }: any) => {
-  
+interface ProfieProps {
+  user: User;
+  session: Session;
+  isFriend: boolean;
+  isBlocked: boolean;
+}
+
+const profile = ({ user, session, isFriend, isBlocked }: any) => {
   const [friend, setFriend] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [tab, setTab] = useState("stats");
 
-  const offers = listings?.map((listing: any) => (
-    <Offer key={listing.id} {...listing} />
-  ));
+  const [stats, setStats] = useState({
+    sentCount: 0,
+    receivedCount: 0,
+    cancelledSentCount: 0,
+    cancelledReceivedCount: 0,
+    completedSentCount: 0,
+    completedReceivedCount: 0,
+    trustScore: 0,
+    averageCompletionTime: 0,
+    averageResponseTime: 0,
+    bidsCount: 0,
+  });
+
   const userId = session?.user.id;
   const recipientId = user?.id;
   const socketRef = useRef<Socket>();
@@ -38,13 +68,42 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
     };
   }, []);
 
-  console.log(socketRef)
-
+  console.log(socketRef);
 
   useEffect(() => {
-    setFriend(isFriend)
-  },[isFriend])
+    const getUserStats = async () => {
+      const userId = user?.id;
+      const url = `/api/dashboard/getUserStats`;
+      try {
+        const response = await axios.post(url, {
+          userId,
+        });
+        const stats = response.data;
 
+        const totalListings = stats.sentCount + stats.receivedCount;
+        const totalCancelledListings =
+          stats.cancelledSentCount + stats.cancelledReceivedCount;
+        const totalCompletedListings =
+          stats.completedSentCount + stats.completedReceivedCount;
+        const trustScore = Math.trunc(
+          ((totalCompletedListings - totalCancelledListings) / totalListings) *
+            100
+        );
+        setStats(stats);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getUserStats();
+    setIsLoading(false);
+  }, [user?.id]);
+
+  useEffect(() => {
+    setFriend(isFriend);
+    setBlocked(isBlocked);
+  }, [isFriend, isBlocked]);
+
+  const confirmation = useConfirmationModal();
 
   const handleFollow = async () => {
     if (!friend) {
@@ -54,36 +113,66 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
           followingId: user.id,
         });
 
-        toast.success("Friend request sent to ");
+        toast.success("Friend request sent to " + user?.username);
         socketRef.current?.emit("add_friend", response.data.responseFriendship);
-         socketRef.current?.emit(
+        socketRef.current?.emit(
           "update_activities",
           response.data.transactionResult,
           response.data.responseFriendship.followerId,
-          response.data.responseFriendship.followingId,
+          response.data.responseFriendship.followingId
         );
-        setFriend(true)
-        
-
+        setFriend(true);
       } catch (error) {
         toast.error("failed to follow user");
+        console.log(error);
       }
     } else {
       try {
-        const response = await axios.post("/api/deleteFriend", {
-          followerId: session?.user?.id,
-          followingId: user.id,
-        });
-        toast.success("Unfollowed " );
-        if(response.data) {
-          socketRef.current?.emit("remove_friend", response.data);
-          setFriend(false)  
-          console.log("res", response.data)
+        confirmation.onOpen(
+          `Are you sure you want to unfollow ${user?.username}?`,
+          async () => {
+            const response = await axios.post("/api/deleteFriend", {
+              followerId: session?.user?.id,
+              followingId: user.id,
+            });
 
-        }
+            toast.success("Unfollowed " + user?.username);
+
+            if (response.data) {
+              socketRef.current?.emit("remove_friend", response.data);
+              setFriend(false);
+              console.log("res", response.data);
+            }
+          }
+        );
       } catch (error) {
         toast.error("failed to unfollow user");
+        console.log(error);
       }
+    }
+  };
+
+  const handleBlocked = async () => {
+    try {
+      confirmation.onOpen(
+        "Are you sure you want to block this user?",
+        async () => {
+          await axios.post(
+            !blocked ? "/api/blockFriend" : "/api/removeBlocked",
+            {
+              userBlockedId: session?.user?.id,
+              friendBlockedId: user?.id,
+            }
+          );
+          setBlocked(!blocked);
+          toast.success(
+            `${user?.username} has been ${blocked ? "blocked" : "unblocked"}`
+          );
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error("failed to block user");
     }
   };
 
@@ -91,83 +180,240 @@ const profile = ({ user, listings, requests, session, isFriend }: any) => {
     if (!session.user.id) return;
     if (!socketRef) return;
 
-    socketRef.current && socketRef.current.emit("register", session?.user?.id)
-    socketRef.current && socketRef.current.on("friend_blocked", () => {
-      setIsBlocked(true);
-    });
+    socketRef.current && socketRef.current.emit("register", session?.user?.id);
 
-    socketRef.current && socketRef.current.on("friend_unblocked", () => {
-      setIsBlocked(false);
-    });
+    socketRef.current &&
+      socketRef.current.on("friend_added", (friend) => {
+        setFriend(true);
+      });
 
-    socketRef.current && socketRef.current.on("friend_added", (friend) => {
-      console.log("added", friend)
-      setFriend(true);
-    });
-
-    socketRef.current && socketRef.current.on("friend_removed", (friend) => {
-      console.log("added", friend)
-      setFriend(false);
-     
-      console.log("friend removed", friend);
-    });
+    socketRef.current &&
+      socketRef.current.on("friend_removed", (friend) => {
+        setFriend(false);
+      });
     return () => {
-      socketRef.current && socketRef.current.disconnect()
+      socketRef.current && socketRef.current.disconnect();
     };
   }, [session.user.id]);
 
   const messageModal = useMessageModal();
+
+  const statsBody = (
+    <>
+    <div className="grid grid-cols-4 gap-6 mb-6 border border-gray-50 rounded-lg">
+       
+
+        <InfoCard
+          title={stats.averageResponseTime.toString()}
+          text="Avg response time"
+          color={`gray`}
+          span={`col-span-1`}
+          isLoading={isLoading}
+        />
+
+        <InfoCard
+          title={stats.averageCompletionTime.toString()}
+          text="Avg completion time"
+          color={`gray`}
+          span={`col-span-1`}
+          isLoading={isLoading}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
+          <div className="flex gap-2">
+        <InfoCard
+          title={stats.sentCount.toString()}
+          text="Total offers sent"
+          color={`gray`}
+          span={`col-span-1`}
+          isLoading={isLoading}
+        />
+
+        <InfoCard
+          title={stats.receivedCount.toString()}
+          text="Total offers received"
+          color={`gray`}
+          span={`col-span-1`}
+          className=""
+          isLoading={isLoading}
+        />
+
+          </div>
+          <div className="flex flex-col items-center">
+            <h4>You have</h4>
+            <h1 className="text-5xl font-bold">{stats?.sentCount}</h1>
+            <p className="font-bold">negotiations with {user?.username}</p>
+          </div>
+        </div>
+        <div className="col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
+          <div className="flex flex-col p-4 gap-3">
+            <div className="text-center">
+              <h2 className="-mb-2">
+                {isLoading ? (
+                  <Skeleton width={30} />
+                ) : (
+                  stats?.completedSentCount + stats?.completedReceivedCount
+                )}
+              </h2>
+              <p>Offers Completed</p>
+            </div>
+            <div className="text-center">
+              <h2 className="-mb-2">
+                {isLoading ? (
+                  <Skeleton width={30} />
+                ) : (
+                  stats?.cancelledReceivedCount + stats?.cancelledSentCount
+                )}
+              </h2>
+              <p>Offers Cancelled</p>
+            </div>
+            <div className="text-center">
+              <h2 className="-mb-2">
+                {isLoading ? <Skeleton width={30} /> : stats?.bidsCount}
+              </h2>
+              <p>Bids Placed</p>
+            </div>
+            <div className="text-center">
+              <h2 className="-mb-2">
+                {isLoading ? <Skeleton width={30} /> : stats?.trustScore || 0}%
+              </h2>
+              <p>Trust Score</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  const reviews = (
+    <Card title={`Reviews`} icon={<BsFillStarFill />}>
+      <p>No reviews yet</p>
+    </Card>
+  );
+
+  const offers = (
+    <Card title={`Public Offers`} icon={<BsPostcard />}>
+      <p>No public offers yet</p>
+    </Card>
+  );
+
   return (
     <Dash meta={<Meta title="" description="" />}>
       <div className="mt-6 xl:hidden">
         <UserCard
           currentUser={user}
           session={session}
-          sales={listings.length}
-          offers={listings.length}
+          sales={0}
+          offers={0}
           friendsCount={0}
-          onMessageClick={() => messageModal.onOpen(session?.user?.id, recipientId)}
+          onMessageClick={() =>
+            messageModal.onOpen(session?.user?.id, recipientId)
+          }
           onAddFriendClick={handleFollow}
           isFriend={friend}
+          isBlocked={blocked}
           onRemoveFriendClick={handleFollow}
           isPublic={true}
         />
       </div>
+
       <div className="xl:flex gap-6 mb-10 xl:mt-10 px-6">
         <div className="w-full xl:w-9/12 h-64">
-          <Card title={`Public Offers`} icon={<BsPostcard />}>
-            <p>No public offers yet</p>
-          </Card>
+          <div className="flex gap-4 border-b border-gray-200 mb-6 font-medium text-lg ">
+            <div
+              onClick={() => setTab("stats")}
+              className={`${
+                tab === "stats" && "border-b-4 border-orange-400"
+              } cursor-pointer pb-2`}
+            >
+              Stats
+            </div>
+            <div
+              onClick={() => setTab("offers")}
+              className={`${
+                tab === "offers" && "border-b-4 border-orange-400"
+              } cursor-pointer pb-2`}
+            >
+              Offers
+            </div>
+            <div
+              onClick={() => setTab("reviews")}
+              className={`${
+                tab === "reviews" && "border-b-4 border-orange-400"
+              } cursor-pointer pb-2`}
+            >
+              Reviews
+            </div>
+          </div>
+          {tab === "stats" && statsBody}
+          {tab === "offers" && offers}
+          {tab === "reviews" && reviews}
+
           {/* <Satisfication /> */}
-          <Card title={`Reviews`} icon={<BsFillStarFill />}>
-            <p>No reviews yet</p>
-          </Card>
         </div>
         <div className="xl:flex-1 hidden xl:block">
           <UserCard
             currentUser={user}
             session={session}
-            sales={listings.length}
-            offers={listings.length}
+            sales={0}
+            offers={0}
             friendsCount={0}
-            onMessageClick={() => messageModal.onOpen(session?.user?.id, recipientId)}
+            onMessageClick={() =>
+              messageModal.onOpen(session?.user?.id, recipientId)
+            }
             onAddFriendClick={handleFollow}
             isFriend={friend}
+            isBlocked={blocked}
+            handleBlock={handleBlocked}
             onRemoveFriendClick={handleFollow}
             isPublic={true}
           />
           <Card title={`Contact`}>
-            <div className="flex gap-2 items-center">
-              <BiUser />
-              <span className="underline">{user.username}</span>
-              <span className="underline">{user?.profile?.website}</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2 items-center">
+                <MdWeb />
+                <span className="underline">{user?.profile?.website}</span>
+              </div>
+
+              <div className="flex gap-2 items-center">
+                <FaLocationArrow />
+                <span className="underline">{user?.profile?.location}</span>
+              </div>
             </div>
           </Card>
+
           {user.profile?.bio && (
             <Card title={`Bio`}>
               <p>{user.profile?.bio}</p>
             </Card>
           )}
+          <Card title={`Info`}>
+
+            
+            
+            <div className="flex justify-between items-center">
+              <div>Verifed</div>
+              <div>{user?.verified ? <span className="font-bold text-green-600">Yes</span> : <span className="font-bold text-red-600">No</span>}</div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <div>Account Type</div>
+              <div>{user?.type || 'Unknown'}</div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <div>Location</div>
+              <div>{user?.profile?.location || 'United Kingdom'}</div>
+            </div>
+           
+            <div className="flex justify-between items-center">
+              <div>Last seen</div>
+              <div>{user?.lastLogin || 'Recently'}</div>
+            </div>
+            
+          </Card>
+
           {user.profile?.socialLinks && (
             <Card title={`Social Links`}>
               {user.profile?.socialLinks?.map((link: any) => (
@@ -202,22 +448,33 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     if (typeof id !== "string") {
       throw new Error("Invalid user ID");
     }
-    const user = await getUserById({ id: id as string });
-    const listings = await getListingsByUserId(user.id);
-    const requests = await getRequestsByUserId(user.id);
+    const sessionUser = await getCurrentUser(session);
 
-    const isFriend = await checkFriendship({
-      userId1: session?.user.id,
-      userId2: user.id,
-    });
+    if (!sessionUser) {
+      return {
+        redirect: {
+          destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+
+    const user = await getUserById({ id: id as string });
+
+    const isFriend =
+      sessionUser.followers?.some((follower) => follower.followerId === id) ||
+      sessionUser.followings?.some((following) => following.followingId === id);
+
+    const isBlocked = sessionUser.blockedFriends?.some(
+      (blocked) => blocked.friendBlockedId === id
+    );
 
     return {
       props: {
         user,
-        listings,
-        requests,
         session,
         isFriend,
+        isBlocked,
       },
     };
   } catch (error) {

@@ -199,7 +199,7 @@ const Index = ({
             </>
           ) : (
             <>
-            <p className="font-medium text-gray-500 mb-2 text-md">Dashboard</p>
+            <p className="font-medium text-gray-500 mb-2 text-md lg:hidden">Dashboard</p>
               <Stats
                 title="Overview"
                 totalStats={10}
@@ -217,7 +217,7 @@ const Index = ({
         </div>
 
         <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col overflow-auto">
-          <div className=" pt-2 lg:pt-6 mb-8">
+          <div className=" pt-2  mb-8">
             <div className="pb-2">
               <h3>Recent Offers</h3>
             </div>

@@ -146,7 +146,7 @@ const Offer: React.FC<any> = ({
       
       <div className="md:py-4 md:flex md:gap-4 xl:gap-6">
           <Link href={`/dashboard/offers/${id}`} className="w-1/5">
-            <div className="relative w-full h-full ml-4 mr-2 aspect-square border border-gray-200 rounded-lg bg-gray-50">
+            <div className="relative w-full h-full md:ml-4 aspect-square border border-gray-200 rounded-lg bg-gray-50">
               <Image
                 src={img[0] || "/images/cat.png"}
                 alt="content"
@@ -176,7 +176,7 @@ const Offer: React.FC<any> = ({
             </div>
             <div className="flex justify-between md:block mb-2 pb-2 md:pb-0 md:m-0">
               <div>
-                <div className="text-right text-sm">
+                <div className="text-right text-sm pt-2 lg:pt-0">
                   {bids && bids.length > 0 ? "Bid by " : price !== "0" && price !== '' ? "Starting price by " : "Open offer by "}
                   <span className="underline">
                     {bids && bids.length > 0 && bids[bids.length - 1].userId === sellerId ? seller?.username : userId === sellerId ? seller?.username : buyer?.username }
@@ -188,7 +188,7 @@ const Offer: React.FC<any> = ({
                     `£ ${bids[0].price}`
                   ) : price &&  price !== "0"  ? (
                     `£ ${price}`
-                  ) : session?.user?.id === userId ? <h4>Awaiting offer</h4> : <h4>Make a offer</h4>}
+                  ) : session?.user?.id === userId ? <h4 className="text-sm md:text-lg xl:text-xl">Awaiting offer</h4> : <h4 className="text-sm md:text-lg xl:text-xl">Make a offer</h4>}
                 </div>
               </div>
             </div>

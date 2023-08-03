@@ -2,7 +2,6 @@ import { GetServerSideProps } from "next";
 import { useEffect, useRef, useState } from "react";
 import { getSession } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
-import { useRouter } from "next/navigation";
 import { config } from "@/config";
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
@@ -73,8 +72,6 @@ const Index = ({ listing, session }: any) => {
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const [me, setMe] = useState<ProfileUser>();
   const [participant, setParticipant] = useState<ProfileUser>();
-  const router = useRouter();
-  // const DeleteListing = useDeleteConfirmationModal();
 
   const now = Date.now();
   const socketRef = useRef<Socket>();

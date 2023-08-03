@@ -156,7 +156,7 @@ const Header = ({
                       )
                     }
                   >
-                    Create <span className="hidden md:block">offer</span>
+                    Create<span className="hidden md:block ml-1">offer</span>
                   </Button>
 
                   {/* 

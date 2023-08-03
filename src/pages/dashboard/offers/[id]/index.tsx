@@ -468,7 +468,7 @@ const Index = ({ listing, session }: any) => {
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
-        <div className="mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
+        <div className="px-4 mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
           {status === "accepted" && (
             <AlertBanner
               text="This offer has been accepted"

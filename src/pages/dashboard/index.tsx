@@ -35,14 +35,13 @@ const Index = ({
   countPendingSent,
   countPendingReceived,
   username,
-  
 }: dashboardProps) => {
   const offerModal = useOfferModal();
   const pendingConversation = usePendingConversationModal();
 
-  console.log("user", user)
+  console.log("user", user);
 
-  console.log("friends", friends)
+  console.log("friends", friends);
 
   const router = useRouter();
 
@@ -77,7 +76,17 @@ const Index = ({
       setReceivedOffers(received);
       setIsLoading(false);
     }
-  }, [session.user.id, countSent, countReceived, countPendingSent, countPendingReceived, friends, activities, sent, received]);
+  }, [
+    session.user.id,
+    countSent,
+    countReceived,
+    countPendingSent,
+    countPendingReceived,
+    friends,
+    activities,
+    sent,
+    received,
+  ]);
 
   const socketRef = useRef<Socket>();
 
@@ -88,7 +97,7 @@ const Index = ({
     };
   }, []);
 
-  console.log(socketRef)
+  console.log(socketRef);
 
   useEffect(() => {
     if (!session.user.id) return;
@@ -108,10 +117,7 @@ const Index = ({
     socketRef.current &&
       socketRef.current.on("friend_added", (data) => {
         console.log("added", data);
-        setFriendsList((prevFriendsList) => [
-          ...prevFriendsList,
-          data,
-        ]);
+        setFriendsList((prevFriendsList) => [...prevFriendsList, data]);
       });
 
     socketRef.current &&
@@ -146,10 +152,10 @@ const Index = ({
         />
       }
     >
-      <div className=" p-8 ">
-        <div className="flex items-center justify-between">
+      <div className=" p-4 pt-8 lg:p-8 ">
+        <div className="hidden lg:flex items-center justify-between">
           <div>
-            <h2>Dashboard</h2>
+            <h2 className="  text-2xl">Dashboard</h2>
           </div>
           <div className="flex items-center gap-x-2">
             {/* <button
@@ -168,15 +174,18 @@ const Index = ({
                     <path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z" />
                   </svg>
                 </button> */}
-            <Button
-              label="Connect and Create"
-              onClick={offerModal.onOpen}
-              icon="/icons/thumbs-up.png"
-            />
+            <div className="hidden md:block">
+              <Button
+                label="Connect and Create"
+                onClick={offerModal.onOpen}
+                icon="/icons/thumbs-up.png"
+                className="hidden md:block"
+              />
+            </div>
           </div>
         </div>
 
-        <hr className="my-0 mb-6 mt-4" />
+        <hr className="my-0 hidden lg:block lg:mt-4 lg:mb-6" />
         {/*`Activities ${userActivities ? userActivities.length : 0}` */}
         <div className="lg:grid grid-cols-12 gap-x-6 mb-6">
           {isLoading ? (
@@ -190,6 +199,7 @@ const Index = ({
             </>
           ) : (
             <>
+            <p className="font-medium text-gray-500 mb-2 text-md">Dashboard</p>
               <Stats
                 title="Overview"
                 totalStats={10}
@@ -207,13 +217,25 @@ const Index = ({
         </div>
 
         <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col overflow-auto">
-            <div className=" pt-6 mb-8">
-              <div className="pb-6">
-                <h3>Recent Offers</h3>
-              </div>
-
-              <Offers sent={sent} received={received} countSent={countSent} countReceived={countReceived} session={session} countPendingReceived={countPendingReceived} countPendingSent={countPendingSent} setSentPendingCount={setSentPendingCount} setReceivedPendingCount={setReceivedPendingCount}  setSentCount={setSentCount} setReceivedCount={setReceivedCount}  />
+          <div className=" pt-2 lg:pt-6 mb-8">
+            <div className="pb-2">
+              <h3>Recent Offers</h3>
             </div>
+
+            <Offers
+              sent={sent}
+              received={received}
+              countSent={countSent}
+              countReceived={countReceived}
+              session={session}
+              countPendingReceived={countPendingReceived}
+              countPendingSent={countPendingSent}
+              setSentPendingCount={setSentPendingCount}
+              setReceivedPendingCount={setReceivedPendingCount}
+              setSentCount={setSentCount}
+              setReceivedCount={setReceivedCount}
+            />
+          </div>
 
           <div className="pb-6">
             <h3>Make Connections</h3>
@@ -326,7 +348,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const friends = await getFriendsByUserId(session.user.id);
     const PAGE_SIZE = 5;
 
-    const blocked = user?.blockedFriends
+    const blocked = user?.blockedFriends;
 
     const listings = await getOffersByUserId(session, PAGE_SIZE, blocked);
 
@@ -346,7 +368,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const topActivities = reversedActivities.slice(0, 4);
 
     const username = user?.username;
-
 
     return {
       props: {

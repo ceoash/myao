@@ -12,7 +12,7 @@ interface UserStatsProps {
 const UserStats = ({ userLoading, participant,}: UserStatsProps) => {
   return (
     <div className="grid grid-cols-2 auto-cols-fr gap-2">
-      <div className="flex flex-col p-4 items-center">
+      <div className="flex flex-col p-4 items-center col-span-2 lg:col-span-1">
         <div className="p-4 w-40 h-40 rounded-full relative">
           {userLoading ? (
             <Skeleton
@@ -77,9 +77,12 @@ const UserStats = ({ userLoading, participant,}: UserStatsProps) => {
           />
         </div>
       </div>
-      <div className="flex flex-col p-4 gap-3">
+      <div className="flex flex-col pb-4 md:p-4 gap-3 col-span-2 lg:col-span-1">
         <div className="text-center">
           <h3>Stats</h3>
+        </div>
+        <div>
+          
         </div>
         <div className="text-center">
           <h2 className="-mb-2">

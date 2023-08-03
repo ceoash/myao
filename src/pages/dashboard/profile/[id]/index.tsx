@@ -198,7 +198,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
           title={stats.averageResponseTime.toString()}
           text="Avg response time"
           color={`gray`}
-          span={`col-span-1`}
+          span={`col-span-2 md:col-span-1`}
           isLoading={isLoading}
         />
 
@@ -206,12 +206,12 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
           title={stats.averageCompletionTime.toString()}
           text="Avg completion time"
           color={`gray`}
-          span={`col-span-1`}
+          span={`col-span-2 md:col-span-1`}
           isLoading={isLoading}
         />
       </div>
       <div className="grid grid-cols-2 gap-6">
-        <div className="col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
+        <div className="col-span-2 lg:col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
           <div className="flex gap-2">
         <InfoCard
           title={stats.sentCount.toString()}
@@ -237,7 +237,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
             <p className="font-bold">negotiations with {user?.username}</p>
           </div>
         </div>
-        <div className="col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
+        <div className="col-span-2 lg:col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
           <div className="flex flex-col p-4 gap-3">
             <div className="text-center">
               <h2 className="-mb-2">

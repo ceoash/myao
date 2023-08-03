@@ -71,7 +71,7 @@ const Stats = ({
   getTimeOfDay();
 
   return (
-    <div className="col-span-8">
+    <div className="col-span-8 mb-8">
       <div className="flex justify-between gap-2 items-start">
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
         <Link href={`/dashboard/friends`} className="font-bold -mb-4 cursor-pointer">

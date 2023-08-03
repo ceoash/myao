@@ -62,7 +62,7 @@ const Header = ({
             />
           </div>
         </Link>
-        <div className="flex leading-tight gap-2">
+        <div className="flex leading-tight gap-1 md:gap-2">
           <div className="text-xl font-medium flex items-center">
             <Link
               href={`/dashboard/profile/${participant}`}
@@ -74,7 +74,7 @@ const Header = ({
           <Button
             onClick={handleFollow}
             accept={isFriend}
-            className={` border  rounded-lg  px-2 py-1 ${isFriend ? 'bg-orange-100 border-orange-200' : 'bg-white border-gray-200'}`}
+            className={` border rounded-lg  px-2 py-1 ${isFriend ? 'bg-orange-100 border-orange-200' : 'bg-white border-gray-200'}`}
           >
             { isFriend ? (
               <div className="flex gap-1 items-center">
@@ -156,7 +156,7 @@ const Header = ({
                       )
                     }
                   >
-                    Create offer
+                    Create <span className="hidden md:block">offer</span>
                   </Button>
 
                   {/* 
@@ -191,7 +191,7 @@ const Header = ({
               
               */}
         </div>
-        <div>
+        <div className="hidden md:block">
           <BiDotsVerticalRounded
             className="text-2xl cursor-pointer"
             onClick={() => setToggleDropdown()}

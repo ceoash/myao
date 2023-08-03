@@ -107,7 +107,7 @@ const SearchComponentModal = () => {
 
   return (
     <Modal
-      title="Share QR Code"
+      title="User Search"
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={() => {}}

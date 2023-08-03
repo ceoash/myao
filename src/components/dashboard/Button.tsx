@@ -132,6 +132,7 @@ const Button = ({
             ${options?.size == "xs" ? `text-xs` : "text-sm"}
             font-semibold
             transition
+            ${disabled && "opacity-50 cursor-not-allowed"}
             ${
               accept &&
               `!bg-green-50 border-green-200 text-green-500  hover:!bg-green-400 hover:!text-white w-full`

@@ -1,24 +1,32 @@
-import getCurrentUser from "@/actions/getCurrentUser";
-import getListingsByUserId from "@/actions/getListingsByUserId";
-import getRequestsByUserId from "@/actions/getRequestsByUserId";
-import Card from "@/components/dashboard/Card";
-import Offer from "@/components/offers/Offer";
-import UserCard from "@/components/widgets/UserCard";
-import { Meta } from "@/layouts/meta";
-import { Dash } from "@/templates/dash";
-import { fr } from "date-fns/locale";
+import React from "react";
+
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
-import React from "react";
-import { BiStar } from "react-icons/bi";
+
+import getCurrentUser from "@/actions/getCurrentUser";
+import listingsCount from "@/actions/listingsCount";
+
+import { Dash } from "@/templates/dash";
+import { Meta } from "@/layouts/meta";
+import { User } from "@prisma/client";
+import { Session } from "next-auth";
+
+import Card from "@/components/dashboard/Card";
+import UserCard from "@/components/widgets/UserCard";
+
 import { BsFillStarFill } from "react-icons/bs";
 
-const profile = ({ user, listings, requests }: any) => {
+interface myProfileProps {
+  user: User;
+  sent: number;
+  received: number;
+  session: Session;
+}
+
+const profile = ({ user, session, sent, received }: myProfileProps) => {
+  
   const friends = [];
 
-  const offerList = listings?.map((listing: any) => (
-    <Offer key={listing.id} {...listing} />
-  ));
   return (
     <Dash meta={<Meta title="" description="" />}>
       <div className="my-10 px-6">
@@ -33,10 +41,10 @@ const profile = ({ user, listings, requests }: any) => {
         <div className="w-full xl:w-3/12 ">
           <UserCard
             currentUser={user}
-            sales={requests?.length}
-            offers={listings?.length}
+            sales={sent}
+            offers={received}
             friendsCount={friends?.length}
-            session={null}
+            session={session}
             dashboard={true}
             profile={true}
           />
@@ -60,14 +68,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     const user = await getCurrentUser(session);
-    const listings = await getListingsByUserId(session?.user.id);
-    const requests = await getRequestsByUserId(session?.user.id);
+    const count = await listingsCount(session?.user.id);
 
     return {
       props: {
         user,
-        listings,
-        requests,
+        sent: count?.sentListingsCount,
+        received: count?.receivedListingsCount,
+        session,
       },
     };
   } catch (error) {
@@ -77,6 +85,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         user: null,
         listings: null,
         requests: null,
+        session: null,
+
       },
     };
   }

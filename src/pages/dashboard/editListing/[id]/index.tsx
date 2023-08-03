@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import getOfferById from "@/actions/getOfferById";
+import getListingById from "@/actions/getListingById";
 import axios from "axios";
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
@@ -398,7 +398,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const listing = await getOfferById({ offerId });
+    const listing = await getListingById({ offerId });
     return {
       props: {
         listing,

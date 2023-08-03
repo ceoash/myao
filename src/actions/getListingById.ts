@@ -4,7 +4,7 @@ interface IParams {
   offerId: string;
 }
 
-export default async function getOfferById({ offerId }: IParams) {
+export default async function getListingById({ offerId }: IParams) {
   try {
     const bid = await prisma?.listing.findUnique({
       where: {

@@ -1,35 +1,26 @@
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";
-import getListingsByUserId from "@/actions/getListingsByUserId";
 import getUserById from "@/actions/getUserById";
-import Offer from "@/components/offers/Offer";
 import UserCard from "@/components/widgets/UserCard";
-import { BiUser } from "react-icons/bi";
 import { BsFillStarFill, BsPostcard } from "react-icons/bs";
 import Card from "@/components/dashboard/Card";
-import getRequestsByUserId from "@/actions/getRequestsByUserId";
 import { getSession } from "next-auth/react";
 import useMessageModal from "@/hooks/useMessageModal";
 import { toast } from "react-hot-toast";
-import checkFriendship from "@/actions/checkFriendship";
 import axios from "axios";
 import { Socket, io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
 import Link from "next/link";
 import getCurrentUser from "@/actions/getCurrentUser";
-import { set } from "date-fns";
-import { Listing, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { Session } from "next-auth";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
-import Stats from "@/components/dashboard/Stats";
 import InfoCard from "@/components/dashboard/InfoCard";
-import { stat } from "fs";
-import Image from "next/image";
 import Skeleton from "react-loading-skeleton";
 import { MdWeb } from "react-icons/md";
-import { FaCheckCircle, FaLocationArrow } from "react-icons/fa";
+import { FaLocationArrow } from "react-icons/fa";
 
 interface ProfieProps {
   user: User;

@@ -31,6 +31,7 @@ interface PriceWidgetProps {
   setBids: Dispatch<SetStateAction<Bid[]>>;
   setStatus: Dispatch<SetStateAction<string>>;
   status: string;
+
 }
 
 export interface ErrorResponse {
@@ -136,7 +137,19 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
   return (
     <div>
       <div className='mb-4'>
-        <PriceInput id='price' placeholder={"0.00"} label='' formatPrice register={register} />
+        <PriceInput 
+          id='price' 
+          placeholder={"0.00"} 
+          label='' 
+          formatPrice 
+          register={register} 
+          registerOptions={{
+            pattern: {
+              value: /^\d+(\.\d{1,2})?$/,
+              message: "Please enter a valid price (up to two decimal places)"
+            }
+          }} 
+        />
       </div>
       <div className='flex justify-center'>
 

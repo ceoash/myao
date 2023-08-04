@@ -4,6 +4,9 @@ import { Prisma, User } from "@prisma/client";
 export function createActivityForUser(userId: string, newActivity: any, activities: any): Prisma.Prisma__UserClient<any> {
 
     const allActivities = activities
+    if(allActivities) {
+        
+    }
     allActivities.push(newActivity)
     
     return prisma.user.update({

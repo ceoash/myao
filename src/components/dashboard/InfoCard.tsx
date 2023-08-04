@@ -15,6 +15,7 @@ interface ICardProps {
   span?: string;
   className?: string;
   isLoading?: boolean;
+  center?: boolean;
 }
 
 const InfoCard = ({
@@ -27,7 +28,8 @@ const InfoCard = ({
   text,
   span,
   className,
-  isLoading
+  isLoading,
+  center
 }: ICardProps) => {
   return (
     <div
@@ -53,7 +55,7 @@ const InfoCard = ({
             )}
 
             {!icon && (
-              <div className="font-bold text-xl leading-none first-letter:uppercase">{title}</div>
+              <div className={`font-bold text-xl leading-none first-letter:uppercase w-full ${center && 'justify-center'}`}>{title}</div>
             )}
             {badge && (
               <div
@@ -63,7 +65,7 @@ const InfoCard = ({
               </div>
             )}
           </div>
-          <div className="mt-2">{text ? text : !button && title}</div>
+          <div className={`mt-2 ${center && 'text-center'}`}>{text ? text : !button && title}</div>
           {button && (
             <div className="mt-5 mr-auto">
             {isLoading ? <Skeleton /> : <Button label={button.label} onClick={button.onClick} options={{}} /> }

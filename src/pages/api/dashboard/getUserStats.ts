@@ -32,6 +32,34 @@ export default async function handler(
       take: 5
     });
 
+    const highestCompletedBid = await prisma.bid.findFirst({
+      where: {
+        listing: {
+          OR: [{status: "accepted"}, {status: "completed"}]
+        },
+        userId: userId
+      },
+      orderBy: {
+        price: 'desc'
+      },
+      select: {
+        price: true
+      }
+    });
+
+    const highestBid = await prisma.bid.findFirst({
+      where: {
+        userId: userId
+      },
+      orderBy: {
+        price: 'desc'
+      },
+      select: {
+        price: true
+      }
+    });
+    
+
     const listings = await prisma.listing.findMany({
       where: { 
         OR: [
@@ -179,7 +207,7 @@ export default async function handler(
         },
       });
 
-    return res.status(200).json({ sentCount, completedSentCount, cancelledSentCount, receivedCount, completedReceivedCount, cancelledReceivedCount, averageResponseTime, averageCompletionTime, bidsCount  });
+    return res.status(200).json({ sentCount, completedSentCount, cancelledSentCount, receivedCount, completedReceivedCount, cancelledReceivedCount, averageResponseTime, averageCompletionTime, bidsCount, highestCompletedBid: highestCompletedBid?.price || 0, highestBid: highestBid?.price || 0  });
       
       
   } catch (error) {

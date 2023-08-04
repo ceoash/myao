@@ -12,7 +12,25 @@ export default async function getUserById({ id }: IParams) {
                 id: id
             },
             include: {
-                profile: true
+                profile: {
+                    select: {
+                        bio: true,
+                        image: true,
+                        city: true,
+                        postcode: true,
+                        website: true,
+                        social: {
+                            select: {
+                                twitter: true,
+                                facebook: true,
+                                instagram: true,
+                                youtube: true,
+                                twitch: true,
+                                tiktok: true,
+                            }
+                        },
+                    }
+                }
             }
         });
 

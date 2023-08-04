@@ -14,6 +14,7 @@ import dogReject from "@/images/dog-reject.png";
 import dogTerminate from "@/images/dog-terminate.png";
 import catAccept from "@/images/cat-accept.png";
 import catReject from "@/images/cat-reject.png";
+import catTerminate from "@/images/cat-reject.png";
 import avatar from "@/images/avatar.png";
 import Image from "next/image";
 import axios from "axios";
@@ -338,7 +339,7 @@ const OfferDetailsWidget = ({
                       YES
                     </Button>
                     <Image
-                      src={catAccept}
+                      src={ session?.user?.id === listing.sellerId ? catAccept : dogAccept }
                       alt="user"
                       className="rounded-xl px-6"
                     />
@@ -359,7 +360,7 @@ const OfferDetailsWidget = ({
                       NO
                     </Button>
                     <Image
-                      src={catReject}
+                      src={session?.user?.id === listing.sellerId ? catTerminate : dogTerminate}
                       alt="user"
                       className=" rounded-xl px-6"
                     />

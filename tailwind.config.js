@@ -1,10 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/templates/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/templates/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     fontSize: {
@@ -21,12 +21,12 @@ module.exports = {
     },
     content: {
       "chevron-right": "url('/assets/icons/chevron-right.svg')",
-      "arrow-long-right": "url('/assets/icons/arrow-long-right.svg')"
+      "arrow-long-right": "url('/assets/icons/arrow-long-right.svg')",
     },
     extend: {
       fontFamily: {
-        fred: ['Fredoka One'],
-        nunito: ['nunito', 'sans-serif'],
+        fred: ["Fredoka One"],
+        nunito: ["nunito", "sans-serif"],
       },
       lineHeight: {
         "extra-loose": "2.5",
@@ -37,10 +37,10 @@ module.exports = {
         40: "10rem",
       },
       backgroundImage: {
-        "partners": "url('/images/partners-bg.jpg')",
+        partners: "url('/images/partners-bg.jpg')",
       },
       colors: {
-        primary:{
+        primary: {
           default: "#fa923b",
           alt: "#FBA628",
         },
@@ -79,10 +79,19 @@ module.exports = {
           default: "#695C81",
           alt: "#5E5274",
         },
+        social: {
+          twitter: "#1DA1F2",
+          facebook: "#3B5998",
+          linkedin: "#0077B5",
+          github: "#333333",
+          youtube: "#FF0000",
+          instagram: "#E1306C",
+          reddit: "#FF4500",
+          ticktock: "#010101",
+          whatsapp: "#25D366",
+        },
       },
     },
   },
-  plugins: [
- ],
- 
-}
+  plugins: [],
+};

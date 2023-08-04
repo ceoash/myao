@@ -12,15 +12,42 @@ import axios from "axios";
 import { Socket, io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
-import Link from "next/link";
 import getCurrentUser from "@/actions/getCurrentUser";
 import { User } from "@prisma/client";
 import { Session } from "next-auth";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 import InfoCard from "@/components/dashboard/InfoCard";
 import Skeleton from "react-loading-skeleton";
-import { MdWeb } from "react-icons/md";
-import { FaLocationArrow } from "react-icons/fa";
+import {
+  MdHistory,
+  MdMultipleStop,
+  MdOutlineCircleNotifications,
+  MdOutlineContactPage,
+  MdOutlineContactless,
+  MdOutlineLocationOn,
+  MdOutlineLoyalty,
+  MdOutlinePlaylistAddCheckCircle,
+  MdOutlineSwapVerticalCircle,
+  MdOutlineTimelapse,
+  MdShowChart,
+  MdTaskAlt,
+} from "react-icons/md";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedin,
+  FaTwitter,
+  FaUserFriends,
+  FaYoutube,
+} from "react-icons/fa";
+import { Ri24HoursFill, RiProfileLine } from "react-icons/ri";
+import { IoMdLink } from "react-icons/io";
+import { IoShareSocialOutline } from "react-icons/io5";
+import Button from "@/components/dashboard/Button";
+import catAccept from "@/images/cat-accept.png";
+import dogAccept from "@/images/dog-accept.png";
+import Image from "next/image";
+import { hi } from "date-fns/locale";
 
 interface ProfieProps {
   user: User;
@@ -33,7 +60,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
   const [friend, setFriend] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [tab, setTab] = useState("stats");
+  const [tab, setTab] = useState("details");
 
   const [stats, setStats] = useState({
     sentCount: 0,
@@ -46,6 +73,8 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
     averageCompletionTime: 0,
     averageResponseTime: 0,
     bidsCount: 0,
+    highestBid: 0,
+    highestCompletedBid: 0,
   });
 
   const userId = session?.user.id;
@@ -191,53 +220,95 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
 
   const statsBody = (
     <>
-    <div className="grid grid-cols-4 gap-6 mb-6 border border-gray-50 rounded-lg">
-       
-
-        <InfoCard
-          title={stats.averageResponseTime.toString()}
-          text="Avg response time"
-          color={`gray`}
-          span={`col-span-2 md:col-span-1`}
-          isLoading={isLoading}
-        />
-
-        <InfoCard
-          title={stats.averageCompletionTime.toString()}
-          text="Avg completion time"
-          color={`gray`}
-          span={`col-span-2 md:col-span-1`}
-          isLoading={isLoading}
-        />
-      </div>
       <div className="grid grid-cols-2 gap-6">
-        <div className="col-span-2 lg:col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
-          <div className="flex gap-2">
-        <InfoCard
-          title={stats.sentCount.toString()}
-          text="Total offers sent"
-          color={`gray`}
-          span={`col-span-1`}
-          isLoading={isLoading}
-        />
+        <div className="col-span-2 lg:col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50"></div>
+      </div>
+    </>
+  );
 
-        <InfoCard
-          title={stats.receivedCount.toString()}
-          text="Total offers received"
-          color={`gray`}
-          span={`col-span-1`}
-          className=""
-          isLoading={isLoading}
-        />
-
-          </div>
-          <div className="flex flex-col items-center">
-            <h4>You have</h4>
-            <h1 className="text-5xl font-bold">{stats?.sentCount}</h1>
-            <p className="font-bold">negotiations with {user?.username}</p>
-          </div>
+  const details = (
+    <>
+      {user?.profile?.bio && (
+        <div className="col-span-12 lg:col-span-8">
+          <Card title={`Bio`} icon={<RiProfileLine />}>
+            <p>
+              {user?.profile?.bio || <span className="italic">No bio yet</span>}
+            </p>
+          </Card>
         </div>
-        <div className="col-span-2 lg:col-span-1 flex flex-col justify-center items-center border border-orange-100 rounded-xl p-6 mb-6 bg-orange-50">
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6 mb-6 border border-gray-50 rounded-lg">
+        <div className="flex items-center">
+          <MdHistory className="text-[36px] -mt-4" />
+          <InfoCard
+            title={stats.averageResponseTime.toString()}
+            text="Avg response time"
+            color={`gray`}
+            span={`col-span-2 md:col-span-1`}
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="flex items-center">
+          <MdOutlineTimelapse className={`text-[36px] -mt-4`} />
+          <InfoCard
+            title={stats.averageCompletionTime.toString()}
+            text="Avg completion time"
+            color={`gray`}
+            span={`col-span-2 md:col-span-1`}
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="flex items-center">
+          <MdOutlineCircleNotifications className="text-[36px] -mt-4" />
+          <InfoCard
+            title={stats?.highestCompletedBid ? `£${stats?.highestCompletedBid.toString()}` : "None"}
+            text="Highest Offer"
+            color={`gray`}
+            span={`col-span-2 md:col-span-1`}
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="flex items-center">
+          <MdOutlineSwapVerticalCircle className="text-[36px] -mt-4 " />
+          <InfoCard
+            title={stats?.highestBid !== 0 ? `£${stats?.highestBid.toString()}` : "None"}
+            text="Highest Bid"
+            color={`gray`}
+            span={`col-span-2 md:col-span-1`}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6">
+        <div className={`col-span-12`}>
+          <Card>
+            <div className="flex flex-col items-center h-full pb-8">
+              <h4>You have</h4>
+              <h1 className="text-5xl font-bold -mb-2">{stats?.sentCount}</h1>
+              <p className="font-bold mb-4">
+                negotiations with {user?.username}
+              </p>
+              <Button
+                label="Make me a offer"
+                onClick={() => {}}
+                className="mt-4"
+              />
+            </div>
+          </Card>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col items-center justify-center h-full">
+          <h4 className="mb-4">I am a seller</h4>
+          <Image src={catAccept} className="mb-6" alt="" />
+          <Button
+            label="Make me a offer"
+            onClick={() => {}}
+            className="mt-10"
+          />
+        </div>
+        <Card>
           <div className="flex flex-col p-4 gap-3">
             <div className="text-center">
               <h2 className="-mb-2">
@@ -272,11 +343,10 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
               <p>Trust Score</p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </>
   );
-
   const reviews = (
     <Card title={`Reviews`} icon={<BsFillStarFill />}>
       <p>No reviews yet</p>
@@ -313,12 +383,12 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
         <div className="w-full xl:w-9/12 h-64">
           <div className="flex gap-4 border-b border-gray-200 mb-6 font-medium text-lg ">
             <div
-              onClick={() => setTab("stats")}
+              onClick={() => setTab("details")}
               className={`${
-                tab === "stats" && "border-b-4 border-orange-400"
+                tab === "details" && "border-b-4 border-orange-400"
               } cursor-pointer pb-2`}
             >
-              Stats
+              Details
             </div>
             <div
               onClick={() => setTab("offers")}
@@ -340,8 +410,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
           {tab === "stats" && statsBody}
           {tab === "offers" && offers}
           {tab === "reviews" && reviews}
-
-          {/* <Satisfication /> */}
+          {tab === "details" && details}
         </div>
         <div className="xl:flex-1 hidden xl:block">
           <UserCard
@@ -360,61 +429,64 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
             onRemoveFriendClick={handleFollow}
             isPublic={true}
           />
-          <Card title={`Contact`}>
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <MdWeb />
-                <span className="underline">{user?.profile?.website}</span>
-              </div>
 
-              <div className="flex gap-2 items-center">
-                <FaLocationArrow />
-                <span className="underline">{user?.profile?.location}</span>
-              </div>
-            </div>
-          </Card>
-
-          {user.profile?.bio && (
-            <Card title={`Bio`}>
-              <p>{user.profile?.bio}</p>
-            </Card>
-          )}
-          <Card title={`Info`}>
-
-            
-            
+          <Card title={`More Info`} icon={<MdOutlineContactPage />}>
             <div className="flex justify-between items-center">
               <div>Verifed</div>
-              <div>{user?.verified ? <span className="font-bold text-green-600">Yes</span> : <span className="font-bold text-red-600">No</span>}</div>
+              <div>
+                {user?.verified ? (
+                  <span className="font-bold text-green-600">Yes</span>
+                ) : (
+                  <span className="font-bold text-red-600">No</span>
+                )}
+              </div>
             </div>
-
+            {user?.profile?.website && (
+              <div className="flex justify-between items-center">
+                <div>Website</div>
+                <div>
+                  <span className="underline">{user?.profile?.website}</span>
+                </div>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <div>Account Type</div>
-              <div>{user?.type || 'Unknown'}</div>
+              <div>{user?.type || "Unknown"}</div>
             </div>
 
             <div className="flex justify-between items-center">
               <div>Location</div>
-              <div>{user?.profile?.location || 'United Kingdom'}</div>
+              <div>{user?.profile?.location || "United Kingdom"}</div>
             </div>
-           
+
             <div className="flex justify-between items-center">
               <div>Last seen</div>
-              <div>{user?.lastLogin || 'Recently'}</div>
+              <div>{user?.lastLogin || "Recently"}</div>
             </div>
-            
           </Card>
 
-          {user.profile?.socialLinks && (
-            <Card title={`Social Links`}>
-              {user.profile?.socialLinks?.map((link: any) => (
-                <div className="flex gap-2 items-center">
-                  <Link href={link.url} target="_blank" rel="noreferrer">
-                    {link.url}
-                  </Link>
-                </div>
-              ))}
-            </Card>
+          {user?.profile?.social && (
+          <Card title={`Social Links`} icon={<FaUserFriends />}>
+            <div className="flex gap-2 items-center">
+              <div className="flex gap-4">
+                {user?.profile?.social && user?.profile?.social?.twitter && (
+                  <FaTwitter className="text-2xl rounded-full p-1 border-2 border-social-twitter text-social-twitter" />
+                )}
+                {user?.profile?.social && user?.profile?.social?.facebook && (
+                  <FaFacebookF className="text-2xl rounded-full p-1 border-2 border-social-facebook text-social-facebook" />
+                )}
+                {user?.profile?.social && user?.profile?.social?.youtube && (
+                  <FaYoutube className="text-2xl rounded-full p-1 border-2 border-social-youtube text-social-youtube" />
+                )}
+                {user?.profile?.social && user?.profile?.social?.linkedin && (
+                  <FaLinkedin className="text-2xl rounded-full p-1 border-2 border-social-linkedin text-social-linkedin" />
+                )}
+                {user?.profile?.social && user?.profile?.social?.instagram && (
+                  <FaInstagram className="text-2xl rounded-full p-1 border-2 border-social-instagram text-social-instagram" />
+                )}
+              </div>
+            </div>
+          </Card>
           )}
         </div>
       </div>

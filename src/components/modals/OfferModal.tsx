@@ -25,6 +25,7 @@ import TextArea from "../inputs/TextArea";
 import { IoPricetagOutline } from "react-icons/io5";
 import UserType from "../wizard/UserType";
 import { set } from "date-fns";
+import PriceInput from "../inputs/PriceInput";
 
 enum STEPS {
   TYPE = 0,
@@ -334,7 +335,8 @@ const OfferModal = () => {
           clearErrors={() => clearErrors("description")}
         />
       </div>
-      <Input
+      <div>
+      <PriceInput
         id="price"
         label="Starting price (optional)"
         type="number"
@@ -346,6 +348,7 @@ const OfferModal = () => {
         onChange={() => clearErrors("price")}
       />
     </div>
+      </div>
   );
 
   

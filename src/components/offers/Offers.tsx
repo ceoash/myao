@@ -5,11 +5,8 @@ import { BiFilterAlt } from "react-icons/bi";
 import Offer from "./Offer";
 import { Listing } from "@prisma/client";
 import Button from "../Button";
-import { toast } from "react-hot-toast";
 import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
-import Skeleton from "react-loading-skeleton";
-import { set } from "date-fns";
 import OfferSkeleton from "./OfferSkeleton";
 
 interface OffersProps {
@@ -277,6 +274,7 @@ const Offers = ({
                     | "cancelled"
                     | "negotiating"
                     | "rejected"
+                    | "accepted"
                     | "completed"
                     | "pending"
                 )
@@ -286,7 +284,8 @@ const Offers = ({
               <option value="all">All Offers</option>
               <option value="awaiting approval">Awaiting</option>
               <option value="negotiating">Negotiating</option>
-              <option value="completed">Accepted</option>
+              <option value="accepted">Accepted</option>
+              <option value="completed">Completed</option>
               <option value="rejected">Declined</option>
               <option value="cancelled">Terminated</option>
             </select>

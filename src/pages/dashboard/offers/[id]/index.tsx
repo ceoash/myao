@@ -369,7 +369,7 @@ const Index = ({ listing, session }: any) => {
             <div className="px-4 mt-2"></div>
           </div>
           <div className="hidden md:block">
-            {currentBid.currentPrice && (
+            {currentBid.currentPrice && currentBid.currentPrice !== "" && currentBid.currentPrice !== "0"  && (
               <div className="text-right text-sm">
                 {status === "accepted" ? (
                   <div>Agreed price</div>
@@ -388,9 +388,8 @@ const Index = ({ listing, session }: any) => {
             )}
             <div className="font-extrabold text-3xl text-right -mt-2">
               
-              {currentBid.currentPrice
-                ? `£ ${currentBid.currentPrice}`
-                : listing.price !== "" &&  listing.price !== "0" ? `£ ${listing.price}` : <h5 className="underline">Open Offer</h5>}
+              {currentBid.currentPrice && currentBid.currentPrice !== '0' && currentBid.currentPrice !== ''
+                ? `£ ${currentBid.currentPrice}`  :  listing.price !== "" &&  listing.price !== "0" ? `£ ${listing.price}` : <h5 className="underline mt-2">Open Offer</h5>}
             </div>
           </div>
         </div>

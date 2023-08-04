@@ -78,12 +78,12 @@ const Header = ({
           >
             { isFriend ? (
               <div className="flex gap-1 items-center">
-              <BiCheck className=" text-green-500" /> 
-              <div className="hidden md:block text-green-500 text-sm">Following</div>
+              <FaCheck className="" /> 
+              <div className="hidden md:block text-sm">Following</div>
               </div>
             ) : (
               <div className="flex gap-1 items-center">
-              <BiUserPlus className="" /> 
+              <FaUserPlus className="" /> 
               <div className="hidden md:block text-sm">Add</div>
               </div>
               
@@ -97,7 +97,7 @@ const Header = ({
           >
             { activeConversationState?.blockedStatus ? (
               <div className="flex gap-1 items-center">
-              <BiCheck className=" " /> 
+              <BiBlock className=" " /> 
               <div className={`hidden md:block text-sm`}>Blocked</div>
               </div>
             ) : (

@@ -56,8 +56,6 @@ const Index = ({
   const [sentOffers, setSentOffers] = useState<any>([]);
   const [receivedOffers, setReceivedOffers] = useState<any>([]);
 
-  const connect = useQuickConnect();
-
   useEffect(() => {
     if (!user.activated) {
       setIsLoading(true);
@@ -67,7 +65,6 @@ const Index = ({
     } else {
       setFriendsList(friends);
       setUserActivities(activities);
-
       setSentCount(countSent);
       setReceivedCount(countReceived);
       setSentPendingCount(countPendingSent);
@@ -114,29 +111,6 @@ const Index = ({
         setUserActivities(topActivities);
       });
 
-    socketRef.current &&
-      socketRef.current.on("friend_added", (data) => {
-        console.log("added", data);
-        setFriendsList((prevFriendsList) => [...prevFriendsList, data]);
-      });
-
-    socketRef.current &&
-      socketRef.current.on("friend_accepted", (data) => {
-        console.log("accepted", data);
-        setFriendsList((prevFriendsList) => {
-          return prevFriendsList.map((friend) =>
-            friend.id === data.id ? { ...friend, accepted: true } : friend
-          );
-        });
-      });
-
-    socketRef.current &&
-      socketRef.current.on("friend_removed", (data) => {
-        console.log("removed", data);
-        setFriendsList((prevFriendsList) =>
-          prevFriendsList.filter((friend) => friend.id !== data.id)
-        );
-      });
 
     return () => {
       socketRef.current && socketRef.current.disconnect();
@@ -154,26 +128,8 @@ const Index = ({
     >
       <div className=" p-4 pt-8 lg:p-8 ">
         <div className="hidden lg:flex items-center justify-between">
-          <div>
-            <h2 className="  text-2xl">Dashboard</h2>
-          </div>
+          <h2 className="text-2xl">Dashboard</h2>
           <div className="flex items-center gap-x-2">
-            {/* <button
-                  onClick={() => connect.onOpen(searchUser, session.user.id, isLoading)}
-                  type="button"
-                  className="inline-flex items-center justify-center h-9 px-3 rounded-xl border hover:border-gray-400 text-gray-800 hover:text-gray-900 transition"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="1em"
-                    height="1em"
-                    fill="currentColor"
-                    className="bi bi-chat-fill"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z" />
-                  </svg>
-                </button> */}
             <div className="hidden md:block">
               <Button
                 label="Connect and Create"
@@ -187,7 +143,7 @@ const Index = ({
 
         <hr className="my-0 hidden lg:block lg:mt-4 lg:mb-6" />
         {/*`Activities ${userActivities ? userActivities.length : 0}` */}
-        <div className="lg:grid grid-cols-12 gap-x-6 mb-6">
+        <div className="xl:grid grid-cols-12 gap-x-6 mb-6">
           {isLoading ? (
             <>
               <div className="col-span-6">
@@ -265,63 +221,6 @@ const Index = ({
               />
             </div>
           )}
-          {/* {pendingConversations.length > 0 && (
-                <div className="px-4 lg:px-0 flex-1">
-                  <div className="w-full  lg:px-6 lg-max:mt-6 border border-gray-200 rounded-md bg-white mb-6">
-                    <div className="p-4 pb-0 mb-0 bg-white border-b-0 rounded-t-2xl">
-                      <h3 className="mb-0">Pending Conversations</h3>
-                    </div>
-                    <div className="relative flex flex-col h-full min-w-0 break-words bg-white border-0-soft-xl rounded-2xl bg-clip-border">
-                      {pendingConversations.map((conversation) => (
-                        <div className="p-4 border-b border-gray-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <img
-                                src={
-                                  conversation.participant1?.profile?.image ||
-                                  "/images/placeholders/avatar.png"
-                                }
-                                className="w-8 h-8 rounded-full mr-2 border p-[1px] border-gray-200"
-                              />
-                              <div className="flex flex-col">
-                                <div className="font-bold">
-                                  {conversation.participant1.username}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {conversation?.directMessages[0].text}
-                                </div>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex gap-4 text-xs text-orange-500 justify-end font-bold">
-                                <button
-                                  onClick={() =>
-                                    pendingConversation.onOpen(
-                                      conversation.participant1.id,
-                                      conversation,
-                                      session
-                                    )
-                                  }
-                                >
-                                  View
-                                </button>
-                              </div>
-                              <div className="text-xs text-gray-500 text-right">
-                                {formatDistanceToNow(
-                                  new Date(conversation.updatedAt),
-                                  {
-                                    addSuffix: true,
-                                  }
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )} */}
         </div>
       </div>
     </Dash>
@@ -343,13 +242,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    const user = await getCurrentUser(session);
-
-    const friends = await getFriendsByUserId(session.user.id);
     const PAGE_SIZE = 5;
-
+    const user = await getCurrentUser(session);
+    const friends = await getFriendsByUserId(session.user.id);
     const blocked = user?.blockedFriends;
-
     const listings = await getOffersByUserId(session, PAGE_SIZE, blocked);
 
     if (!listings) return { props: { sent: [], received: [], session } };

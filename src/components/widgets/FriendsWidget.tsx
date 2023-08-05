@@ -5,10 +5,8 @@ import { toast } from "react-hot-toast";
 import { Socket, io } from "socket.io-client";
 import { config } from "@/config";
 import axios from "axios";
-import { set } from "date-fns";
-import { ImUserMinus, ImUserPlus } from "react-icons/im";
-import { MdDoNotDisturb } from "react-icons/md";
 import { FaUserCheck, FaUserMinus, FaUserTimes } from "react-icons/fa";
+
 interface FriendsWidgetProps {
   session: any;
   friendsList: User[];
@@ -20,9 +18,8 @@ const FriendsWidget = ({
   friendsList,
   setFriendsList,
 }: FriendsWidgetProps) => {
-
-
-  const socket  = io(config.PORT)
+  
+  const socket = io(config.PORT);
 
   const onRemoveFriendClick = async (userId: string) => {
     try {
@@ -33,20 +30,22 @@ const FriendsWidget = ({
         })
         .then(
           (response) => {
-            console.log("friend response", response.data); 
+            console.log("friend response", response.data);
             if (socket) {
-            socket.emit('remove_friend', response.data);
+              socket.emit("friend", response.data, "remove");
             }
-            if(response.data.followerId === session.user.id){
+            if (response.data.followerId === session.user.id) {
               setFriendsList((prev) => {
-                return prev.filter((friend) => friend.id !== response.data.followingId)
+                return prev.filter(
+                  (friend) => friend.id !== response.data.followingId
+                );
               });
-
             } else {
               setFriendsList((prev) => {
-                return prev.filter((friend) => friend.id !== response.data.followerId)
+                return prev.filter(
+                  (friend) => friend.id !== response.data.followerId
+                );
               });
-
             }
             toast.success("Friend removed!");
           },
@@ -58,7 +57,6 @@ const FriendsWidget = ({
       console.error("Error removing friend:");
     }
   };
-      
 
   const handleAccept = async (friendshipId: string) => {
     try {
@@ -79,7 +77,6 @@ const FriendsWidget = ({
         );
       });
 
-      
       if (!res.ok) {
         throw new Error(data.error);
       }
@@ -90,9 +87,8 @@ const FriendsWidget = ({
 
       toast.success("Friend request accepted!");
       if (socket) {
-      socket.emit("accept_friendship", data.responseFriendship);
+        socket.emit("friend", data.responseFriendship, 'accept');
       }
-
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
@@ -107,7 +103,7 @@ const FriendsWidget = ({
     };
   }, []);
 
-  console.log(socketRef)
+  console.log(socketRef);
 
   useEffect(() => {
     if (!session.user.id) return;
@@ -115,39 +111,32 @@ const FriendsWidget = ({
 
     socketRef.current && socketRef?.current.emit("register", session.user.id);
 
-
     socketRef.current &&
-      socketRef.current.on("friend_added", (data) => {
-        console.log("added", data);
-        setFriendsList((prevFriendsList) => [
-          ...prevFriendsList,
-          data,
-        ]);
-      });
-
-    socketRef.current &&
-      socketRef.current.on("friend_accepted", (data) => {
-        console.log("accepted", data);
-        setFriendsList((prevFriendsList) => {
-          return prevFriendsList.map((friend) =>
-            friend.id === data.id ? { ...friend, accepted: true } : friend
-          );
-        });
-      });
-
-    socketRef.current &&
-      socketRef.current.on("friend_removed", (data) => {
-        console.log("removed", data);
-        setFriendsList((prevFriendsList) =>
-          prevFriendsList.filter((friend) => friend.id !== data.id)
-        );
+      socketRef.current.on("friend", (data, action) => {
+        switch (action) {
+          case 'remove':
+            setFriendsList((prevFriendsList) =>
+              prevFriendsList.filter((friend) => friend.id !== data.id)
+            );
+            break;
+          case 'add':
+            setFriendsList((prevFriendsList) => [...prevFriendsList, data]);
+            break;
+          case 'accept':
+            setFriendsList((prevFriendsList) => {
+              return prevFriendsList.map((friend) =>
+                friend.id === data.id ? { ...friend, accepted: true } : friend
+              );
+            });
+          default:
+            break;
+        }
       });
 
     return () => {
       socketRef.current && socketRef.current.disconnect();
     };
   }, [session.id]);
-
 
   return (
     <ul className="flex flex-col pl-0 rounded-xl flex-grow h-full">
@@ -162,7 +151,8 @@ const FriendsWidget = ({
                 <Link href={`/dashboard/profile/${friend.id}`}>
                   <img
                     src={
-                      friend?.profile?.image || "/images/placeholders/avatar.png"
+                      friend?.profile?.image ||
+                      "/images/placeholders/avatar.png"
                     }
                     alt="profile picture"
                     className="w-full shadow-soft-2xl rounded-full border-2 border-gray-200 p-[1px]"
@@ -217,7 +207,7 @@ const FriendsWidget = ({
               )}
             </li>
           );
-        })
+        }).reverse()
       ) : (
         <i>No friends yet</i>
       )}

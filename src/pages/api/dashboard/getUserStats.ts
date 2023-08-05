@@ -7,7 +7,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { userId } = req.body;
+  const { userId, sessionId } = req.body;
+
+  const sessionUser = sessionId || null
 
   if (!userId ) {
     return res.status(400).json({ error: "Missing necessary parameters." });
@@ -150,6 +152,15 @@ export default async function handler(
     const averageResponseTime = msToTime(Math.trunc(averageTimestamp)); // calculated average response time based on message replies
     const averageCompletionTime = msToTime(Math.trunc(completionCalc)); // calculated average completion time
     
+    const sharedListingsCount = await prisma?.listing.count({
+        where: {
+          OR: [
+            { sellerId: userId as string, buyerId: sessionUser as string },
+            { buyerId: userId as string, sellerId: sessionUser as string }, 
+          ],
+        },
+      });
+
     const sentCount = await prisma?.listing.count({
         where: {
           OR: [
@@ -207,7 +218,7 @@ export default async function handler(
         },
       });
 
-    return res.status(200).json({ sentCount, completedSentCount, cancelledSentCount, receivedCount, completedReceivedCount, cancelledReceivedCount, averageResponseTime, averageCompletionTime, bidsCount, highestCompletedBid: highestCompletedBid?.price || 0, highestBid: highestBid?.price || 0  });
+    return res.status(200).json({ sentCount, completedSentCount, cancelledSentCount, receivedCount, completedReceivedCount, cancelledReceivedCount, averageResponseTime, averageCompletionTime, bidsCount, highestCompletedBid: highestCompletedBid?.price || 0, highestBid: highestBid?.price || 0, sharedListingsCount  });
       
       
   } catch (error) {

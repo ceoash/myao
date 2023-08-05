@@ -8,6 +8,23 @@ export interface IUser extends User{
     blockedFriends: User[];
 }
 
+interface IBid extends Bid { user: User; }
+
+export interface ProfileUser extends User {
+  profile: Profile;
+  bids?: IBid[];
+  averageResponseTime?: any;
+  averageCompletionTime?: any;
+  sentCount?: any;
+  receivedCount?: any;
+  cancelledReceivedCount?: any;
+  cancelledSentCount?: any;
+  completedReceivedCount?: any;
+  completedSentCount?: any;
+  bidsCount?: any;
+  trustScore?: any;
+}
+
 export interface dashboardProps {
   user: IUser;
   friends: any[];

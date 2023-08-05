@@ -1,10 +1,7 @@
-import removeFriend from "@/pages/api/deleteFriend";
-import { on } from "events";
-import Link from "next/link";
+
 import React, { useEffect, useState } from "react";
 import { BiBlock, BiCheck, BiMessageAdd, BiStar, BiUserCheck, BiUserMinus } from "react-icons/bi";
 import { User } from "@/types";
-import { ImUserPlus, ImUserMinus } from "react-icons/im";
 import Button from "../dashboard/Button";
 import { Session } from "next-auth";
 import { FaUserCheck, FaUserMinus } from "react-icons/fa";

@@ -15,11 +15,12 @@ export default async function checkUsernames(
     }
     
     try {
-      console.log(req.body); 
-
       const usernames = req.body;
-
       
+      if (!usernames || !Array.isArray(usernames)) {
+        return res.status(400).json({ error: "Missing necessary parameters." });
+      }
+
       const availableUsernames = await Promise.all(usernames.map(async (username: string) => {
         return new Promise(async (resolve) => {
           try {

@@ -3,22 +3,41 @@ import prisma from "@/libs/prismadb";
 export default async function getOffersByUserId(
   session: any,
   PAGE_SIZE: number,
-  blocked?: {id: string}[] | undefined
+  blocked?: { friendBlockedId: string, id: string }[]
 ) {
   if (!session?.user?.email) {
     console.log("No session found");
     return null;
   }
+  
   const id = session.user.id;
+  const blockedIds = blocked?.map((blocker: { friendBlockedId: string }) => blocker.friendBlockedId);
+  
   try {
     const recentListingsSent = await prisma.listing.findMany({
       where: {
         OR: [
           {
-            AND: [{ buyerId: id }, { type: "buyerOffer" }],
+            AND: [
+              { buyerId: id },
+              { type: "buyerOffer" },
+              {
+                sellerId: {
+                  notIn: blocked?.map((blocker: { friendBlockedId: string }) => blocker.friendBlockedId),
+                },
+              },
+            ],
           },
           {
-            AND: [{ sellerId: id }, { type: "sellerOffer" }],
+            AND: [
+              { sellerId: id },
+              { type: "sellerOffer" },
+              {
+                buyerId: {
+                  notIn: blocked?.map((blocker: { friendBlockedId: string }) => blocker.friendBlockedId),
+                },
+              },
+            ],
           },
         ],
       },
@@ -52,10 +71,25 @@ export default async function getOffersByUserId(
       where: {
         OR: [
           {
-            AND: [{ buyerId: id }, { type: "sellerOffer" }],
+            AND: [
+              { buyerId: id }, 
+              { type: "sellerOffer" },
+              { sellerId: {
+                  notIn: blockedIds,
+                },
+              },
+            ],
           },
           {
-            AND: [{ sellerId: id }, { type: "buyerOffer" }],
+            AND: [
+              { sellerId: id }, 
+              { type: "buyerOffer" },
+              {
+                buyerId: {
+                  notIn: blockedIds,
+                },
+              },
+            ],
           },
         ],
       },
@@ -113,6 +147,7 @@ export default async function getOffersByUserId(
             ],
           },
         ],
+
       },
     });
     const countPendingSent = await prisma?.listing.count({

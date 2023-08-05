@@ -6,6 +6,18 @@ import axios from "axios";
 import { error } from "console";
 import { toast } from "react-hot-toast";
 import { RegisterOptions } from "react-hook-form";
+import { Profile, Review, User } from "@prisma/client";
+
+interface IUser extends User {
+  profile: Profile;
+}
+interface IReview extends Review {
+  user: IUser;
+}
+
+interface ReviewProps {
+  review: IReview;
+}
 
 interface ReviewFormProps {
   listingId: string;
@@ -13,6 +25,9 @@ interface ReviewFormProps {
   buyerId: string;
   sessionId: string;
   disabled?: boolean;
+  setReviews: React.Dispatch<React.SetStateAction<{userReview: IReview, participantReview: IReview }>>;
+  ownerId: string;
+  username?: string;
 }
 
 const ReviewForm = ({
@@ -21,6 +36,9 @@ const ReviewForm = ({
   buyerId,
   sessionId,
   disabled,
+  setReviews,
+  ownerId,
+  username,
 }: ReviewFormProps) => {
 
   const [rating, setRating] = useState(0)
@@ -44,10 +62,17 @@ const ReviewForm = ({
       .post("/api/submitReview", data)
       .then((result) => {
         toast.success(result.data.review.message);
+        reset();
+        setValue("rating", 0);
+        setRating(0);
+        setReviews((prev) => {
+          return { ...prev, userReview: {...result.data.review, user: { username: username } } };
+        });
       })
       .catch((error) => {
         console.log(error);
       });
+    
   };
   return (
     <div className="p-4 bg-orange-50 border rounded-lg border-orange-200 mb-4">

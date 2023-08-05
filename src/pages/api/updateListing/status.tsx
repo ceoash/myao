@@ -36,6 +36,9 @@ export default async function listingsApi(
         case "negotiation":
           message = `Negotiation started`;
           break;
+        case "accepted":
+          message = `Accepted by ${completedBy?.username}`;
+          break;
         case "completed":
           message = `Completed by ${completedBy?.username}`;
           break;
@@ -56,7 +59,8 @@ export default async function listingsApi(
             status,
             completedById: userId,
             activities: [ ...(Array.isArray(findListing?.activities) ? findListing.activities : []), 
-            { message: message, userId: userId, type: "Offer Updated", action: "/dashboard/offers/" + findListing?.id, createdAt: now}]
+            { message: message, userId: userId, type: "Offer Updated", action: "/dashboard/offers/" + findListing?.id, createdAt: now}],
+            updatedAt: new Date(now)
          },
          include: {
           buyer: true,

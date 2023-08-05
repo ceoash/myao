@@ -179,7 +179,7 @@ export default async function getConversationsByUserId(
     include: {
       directMessages: {
         orderBy: { createdAt: "desc" },
-        take: 8,
+        take: 5,
         include: {
           listing: true,
           user: true,

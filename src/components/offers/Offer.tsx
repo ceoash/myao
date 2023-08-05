@@ -77,7 +77,7 @@ const Offer: React.FC<any> = ({
         return "cancel";
         break;
       case "completed":
-        return "accept";
+        return "complete";
         break;
       default:
         return "pending";
@@ -162,9 +162,9 @@ const Offer: React.FC<any> = ({
             <div>
               <Link
                 href={`/dashboard/offers/${id}`}
-                className=" text-gray-900 text-md md:text-lg lg:text-xl xl:text-xl mt-1 md:mt-0 title-font font-medium lg:px-0  md:m-0 xl:-mt-4"
+                className=" text-gray-900 text-md md:text-lg lg:text-xl xl:text-2xl mt-1 md:mt-0 title-font font-medium lg:px-0  md:m-0 xl:-mt-4"
               >
-                <div className="mt-2 first-letter:uppercase truncate ... xl:-mt-2">
+                <div className=" first-letter:uppercase truncate xl:-mt-2">
                   {title}
                 </div>
               </Link>
@@ -188,7 +188,9 @@ const Offer: React.FC<any> = ({
                     `£ ${bids[0].price}`
                   ) : price &&  price !== "0"  ? (
                     `£ ${price}`
-                  ) : session?.user?.id === userId ? <h4 className="text-sm md:text-lg xl:text-xl">Awaiting offer</h4> : <h4 className="text-sm md:text-lg xl:text-xl">Make a offer</h4>}
+                  ) : session?.user?.id === userId ? 
+                        status === 'cancelled' ? '£0.00' : <h4 className="text-sm md:text-lg xl:text-xl">Awaiting offerId</h4> : 
+                        status === 'cancelled' ? '£0.00' : <h4 className="text-sm md:text-lg xl:text-xl">Make a offer</h4>}
                 </div>
               </div>
             </div>
@@ -232,6 +234,7 @@ const Offer: React.FC<any> = ({
               {session?.user?.id === userId &&
                 statusState !== "rejected" &&
                 statusState !== "completed" &&
+                statusState !== "accepted" &&
                 statusState !== "cancelled" && (
                   <>
                     <button

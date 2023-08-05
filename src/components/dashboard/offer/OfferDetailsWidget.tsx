@@ -5,7 +5,7 @@ import PriceWidget from "@/components/widgets/PriceWidget";
 import StatusChecker from "@/utils/status";
 import { BiCalendar, BiCategoryAlt } from "react-icons/bi";
 import { FaThumbsUp } from "react-icons/fa";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, Key, SetStateAction, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import cat from "@/images/cat-neutral.png";
 import dog from "@/images/dog-neutral.png";
@@ -44,6 +44,7 @@ interface OfferDetailsWidgetProps {
   socketRef: React.MutableRefObject<Socket | undefined>;
   completedBy: string | null | undefined;
   isLoading?: boolean;
+  handleFinalise: (userId: string, participantId: string) => void;
   setCompletedBy: Dispatch<SetStateAction<string | null | undefined>>;
   handleStatusChange: (status: string, userId: string) => void;
   setStatus: Dispatch<SetStateAction<string>>;
@@ -56,6 +57,24 @@ interface OfferDetailsWidgetProps {
       participant: Bid;
     }>
   >;
+  loadingState: {
+    cancelled: boolean;
+    accepted: boolean;
+    completed: boolean;
+    contact: boolean;
+    yes: boolean;
+    no: boolean;
+    negotiating: boolean;
+  }
+  setLoadingState: Dispatch<SetStateAction<{
+    cancelled: boolean;
+    accepted: boolean;
+    completed: boolean;
+    contact: boolean;
+    yes: boolean;
+    no: boolean;
+    negotiating: boolean;
+  }>>
   currentBid: any;
   setBids: Dispatch<SetStateAction<Bid[]>>;
 }
@@ -72,10 +91,13 @@ const OfferDetailsWidget = ({
   isLoading,
   completedBy,
   setCompletedBy,
+  setLoadingState,
+  loadingState,
   me,
   participant,
   bids,
   socketRef,
+  handleFinalise
 }: OfferDetailsWidgetProps) => {
   const [ meLastBid, setMeLastBid ] = useState<any>();
   const [ participantLastBid, setParticipantLastBid ] = useState<any>();
@@ -85,15 +107,6 @@ const OfferDetailsWidget = ({
   const noBids = !meLastBid && !participantLastBid && status === "negotiating";
   const rejectedByMe = status === "rejected" && session.user.id !== completedBy;
   const inNegotiation = status === "negotiating";
-
-  const [ loadingState, setLoadingState ] = useState({
-    cancelled: false,
-    yes: false,
-    no: false,
-    accepted: false,
-    completed: false,
-    contact: false
-  })
 
 
   const statusController = noBids || rejectedByMe || inNegotiation;
@@ -159,19 +172,7 @@ const OfferDetailsWidget = ({
     parsedImage = JSON.parse(listing?.image || "");
   }
 
-  const handleFinalise = async (userId: any, participantId: any) => {
-
-    if(!userId || !participantId) return console.log("Invalid entries")
-    try {
-      const url = '/api/getConversationIdByParticipantIds'
-      const response = await axios.post(url, {
-        userId: userId,
-        participantId: participantId
-      })
-      const conversationId = response.data
-      router.push(`/dashboard/conversations?conversationId=${conversationId.id}`)
-    } catch (error) { console.log(error) }
-  }
+  
   return (
     <div
       className={`
@@ -203,6 +204,8 @@ const OfferDetailsWidget = ({
                     src={sessionUser?.profile?.image || avatar}
                     alt="user avatar"
                     className="rounded-full border border-gray-200 max-w-8"
+                    width={60}
+                    height={60}
                   />
                 </span>
                 <div className="w-full">
@@ -282,7 +285,7 @@ const OfferDetailsWidget = ({
             status === "cancelled" ||
             status === "expired"
               ? "Last"
-              : "Current"}{" "}
+              : status === 'completed' || status === 'accepted' ? "Ageeed" : "Current"}{" "}
             offer
           </div>
           <div className="-mt-1">
@@ -327,13 +330,7 @@ const OfferDetailsWidget = ({
                     <Button
                     isLoading={loadingState.yes}
                       accept
-                      onClick={() =>
-                        (handleStatusChange("accepted", session?.user.id), 
-                        setLoadingState((prev) => {
-                          return {...prev, yes: true}
-                        })
-                        )
-                      }
+                      onClick={() => handleStatusChange("accepted", session?.user.id) }
                       className="rounded-xl px-3 py-1 text-center w-10"
                     >
                       YES
@@ -348,13 +345,7 @@ const OfferDetailsWidget = ({
                     <Button
                       cancel
                       isLoading={loadingState.no}
-                      onClick={() =>
-                        (handleStatusChange("rejected", session?.user.id),
-                        setLoadingState((prev) => {
-                          return {...prev, no: true}
-                        })
-                        )
-                      }
+                      onClick={() => handleStatusChange("rejected", session?.user.id)}
                       className="rounded-xl px-3 py-1 text-center bg-orange-400 border border-orange-500"
                     >
                       NO
@@ -373,6 +364,7 @@ const OfferDetailsWidget = ({
                 <div className="flex justify-center gap-2 mb-4 w-full">
                   <Button
                     options={{ primary: true, size: "lg" }}
+                    isLoading={loadingState.negotiating}
                     onClick={() =>
                       handleStatusChange("negotiating", session?.user.id)
                     }
@@ -409,12 +401,7 @@ const OfferDetailsWidget = ({
                 outline
                 options={{ color: "danger", size: "lg" }}
                 isLoading={loadingState.cancelled}
-                onClick={() => (
-                  handleStatusChange("cancelled", session?.user.id),
-                  setLoadingState((prev) => {
-                    return {...prev, cancelled: true}
-                  }))
-                }
+                onClick={() => handleStatusChange("cancelled", session?.user.id)  }
               >
                 TERMINATE
               </Button>
@@ -426,7 +413,7 @@ const OfferDetailsWidget = ({
                 secondary
                 outline
                 options={{ color: "primary", size: "lg" }}
-                isLoading={isLoading}
+                isLoading={loadingState.contact}
                 onClick={() => handleFinalise(session?.user.id, participant.id)
                 }
               >
@@ -437,10 +424,7 @@ const OfferDetailsWidget = ({
               accept
               options={{ size: "lg" }}
                 isLoading={loadingState.completed}
-                onClick={() => (handleStatusChange("completed", session?.user.id), setLoadingState((prev) => {
-                  return {...prev, completed: true}
-                }))
-                }
+                onClick={() => handleStatusChange("completed", session?.user.id) }
               >
                 Complete offer
               </Button>
@@ -480,6 +464,8 @@ const OfferDetailsWidget = ({
                   src={nonSessionUser?.profile?.image || avatar}
                   alt="user avatar"
                   className="rounded-full border border-gray-200"
+                  width={60}
+                  height={60}
                 />
               </span>
               <div className="w-full">

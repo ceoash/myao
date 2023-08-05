@@ -9,7 +9,6 @@ export default async function removeFriend(
   if (req.method === "POST") {
     const { followerId, followingId } = req.body;
 
-    // find the friendship first
     const friendship = await prisma.friendship.findFirst({
       where: {
         OR: [

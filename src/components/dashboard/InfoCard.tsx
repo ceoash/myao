@@ -55,7 +55,7 @@ const InfoCard = ({
             )}
 
             {!icon && (
-              <div className={`font-bold text-xl leading-none first-letter:uppercase w-full ${center && 'justify-center'}`}>{title}</div>
+              <div className={`font-bold text-xl leading-none first-letter:uppercase w-full ${center && 'justify-center'}`}>{ isLoading ?  <Skeleton /> : title}</div>
             )}
             {badge && (
               <div
@@ -65,7 +65,7 @@ const InfoCard = ({
               </div>
             )}
           </div>
-          <div className={`mt-2 ${center && 'text-center'}`}>{text ? text : !button && title}</div>
+          <div className={`mt-2 ${isLoading ?  <Skeleton /> : center && 'text-center'}`}>{text ? text : !button && title}</div>
           {button && (
             <div className="mt-5 mr-auto">
             {isLoading ? <Skeleton /> : <Button label={button.label} onClick={button.onClick} options={{}} /> }

@@ -23,8 +23,6 @@ export default async function listingsApi(
     const id = req.query.id as string;
     const { title, description, price, image, buyerId, category, userId, sellerId } = req.body;
 
-    const now = Date.now();
-
     try {
       const updateListing = await prisma.listing.findUnique({
         where: { id },
@@ -56,7 +54,7 @@ export default async function listingsApi(
       const listing = await prisma.listing.update({
         where: { id: id },
         include: { seller: true, buyer: true, user: true },
-        data: { activities: ListingActivities, title, description, price, image, buyerId, sellerId, category },
+        data: { activities: ListingActivities, title, description, price, image, buyerId, sellerId, category, updatedAt: new Date(now) },
       });
 
       const buyerActivity = {

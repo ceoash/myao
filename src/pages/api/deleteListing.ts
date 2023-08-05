@@ -14,14 +14,12 @@ export default async function deleteListing(
     const { listingId } = req.body;
     
     try {
-      // First, delete all related messages
       await prisma.message.deleteMany({
         where: {
           listingId: listingId,
         }
       });
 
-      // Then delete the listing
       const deletedListing = await prisma.listing.delete({
         where: {
           id: listingId,

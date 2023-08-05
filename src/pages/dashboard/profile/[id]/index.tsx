@@ -13,24 +13,17 @@ import { Socket, io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { config } from "@/config";
 import getCurrentUser from "@/actions/getCurrentUser";
-import { User } from "@prisma/client";
+import { Profile, Social, User } from "@prisma/client";
 import { Session } from "next-auth";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 import InfoCard from "@/components/dashboard/InfoCard";
 import Skeleton from "react-loading-skeleton";
 import {
   MdHistory,
-  MdMultipleStop,
   MdOutlineCircleNotifications,
   MdOutlineContactPage,
-  MdOutlineContactless,
-  MdOutlineLocationOn,
-  MdOutlineLoyalty,
-  MdOutlinePlaylistAddCheckCircle,
   MdOutlineSwapVerticalCircle,
   MdOutlineTimelapse,
-  MdShowChart,
-  MdTaskAlt,
 } from "react-icons/md";
 import {
   FaFacebookF,
@@ -40,23 +33,28 @@ import {
   FaUserFriends,
   FaYoutube,
 } from "react-icons/fa";
-import { Ri24HoursFill, RiProfileLine } from "react-icons/ri";
-import { IoMdLink } from "react-icons/io";
-import { IoShareSocialOutline } from "react-icons/io5";
+import {RiProfileLine } from "react-icons/ri";
 import Button from "@/components/dashboard/Button";
 import catAccept from "@/images/cat-accept.png";
-import dogAccept from "@/images/dog-accept.png";
 import Image from "next/image";
-import { hi } from "date-fns/locale";
+import useOfferModal from "@/hooks/useOfferModal";
+
+interface IProfile extends Profile {
+  social: Social
+}
+interface IUser extends User{
+  profile: IProfile;
+  lastLogin?: String;
+}
 
 interface ProfieProps {
-  user: User;
+  user: IUser;
   session: Session;
   isFriend: boolean;
   isBlocked: boolean;
 }
 
-const profile = ({ user, session, isFriend, isBlocked }: any) => {
+const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
   const [friend, setFriend] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,11 +73,14 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
     bidsCount: 0,
     highestBid: 0,
     highestCompletedBid: 0,
+    sharedListingsCount: 0,
   });
 
   const userId = session?.user.id;
   const recipientId = user?.id;
   const socketRef = useRef<Socket>();
+
+  const offerModal = useOfferModal();
 
   useEffect(() => {
     socketRef.current = io(config.PORT);
@@ -97,6 +98,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
       try {
         const response = await axios.post(url, {
           userId,
+          sessionId: session?.user?.id,
         });
         const stats = response.data;
 
@@ -105,17 +107,21 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
           stats.cancelledSentCount + stats.cancelledReceivedCount;
         const totalCompletedListings =
           stats.completedSentCount + stats.completedReceivedCount;
-        const trustScore = Math.trunc(
+
+        stats.trustScore = Math.trunc(
           ((totalCompletedListings - totalCancelledListings) / totalListings) *
             100
         );
         setStats(stats);
+        setIsLoading(false);
+
       } catch (error) {
         console.error(error);
+        setIsLoading(false);
+
       }
     };
     getUserStats();
-    setIsLoading(false);
   }, [user?.id]);
 
   useEffect(() => {
@@ -134,7 +140,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
         });
 
         toast.success("Friend request sent to " + user?.username);
-        socketRef.current?.emit("add_friend", response.data.responseFriendship);
+        socketRef.current?.emit("friend", response.data.responseFriendship, 'add');
         socketRef.current?.emit(
           "update_activities",
           response.data.transactionResult,
@@ -159,7 +165,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
             toast.success("Unfollowed " + user?.username);
 
             if (response.data) {
-              socketRef.current?.emit("remove_friend", response.data);
+              socketRef.current?.emit("friend", response.data, 'remove');
               setFriend(false);
               console.log("res", response.data);
             }
@@ -203,14 +209,19 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
     socketRef.current && socketRef.current.emit("register", session?.user?.id);
 
     socketRef.current &&
-      socketRef.current.on("friend_added", (friend) => {
-        setFriend(true);
+      socketRef.current.on("friend", (data, action) => {
+        switch (action) {
+          case 'add':
+            setFriend(true);
+            break;
+          case 'remove':
+            setFriend(false);
+            break;
+          default:
+            break;
+        }
       });
-
-    socketRef.current &&
-      socketRef.current.on("friend_removed", (friend) => {
-        setFriend(false);
-      });
+      
     return () => {
       socketRef.current && socketRef.current.disconnect();
     };
@@ -285,14 +296,15 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
           <Card>
             <div className="flex flex-col items-center h-full pb-8">
               <h4>You have</h4>
-              <h1 className="text-5xl font-bold -mb-2">{stats?.sentCount}</h1>
+              <h1 className="text-5xl font-bold -mb-2">{isLoading ? <Skeleton height={50} width={30} /> : stats?.sharedListingsCount}</h1>
               <p className="font-bold mb-4">
                 negotiations with {user?.username}
               </p>
               <Button
-                label="Make me a offer"
-                onClick={() => {}}
-                className="mt-4"
+                label="Connect and Create"
+                onClick={offerModal.onOpen}
+                icon="/icons/thumbs-up.png"
+                className="hidden md:block"
               />
             </div>
           </Card>
@@ -304,7 +316,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
           <Image src={catAccept} className="mb-6" alt="" />
           <Button
             label="Make me a offer"
-            onClick={() => {}}
+            onClick={offerModal.onOpen}
             className="mt-10"
           />
         </div>
@@ -456,7 +468,7 @@ const profile = ({ user, session, isFriend, isBlocked }: any) => {
 
             <div className="flex justify-between items-center">
               <div>Location</div>
-              <div>{user?.profile?.location || "United Kingdom"}</div>
+              <div>{ "United Kingdom"}</div>
             </div>
 
             <div className="flex justify-between items-center">

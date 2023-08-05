@@ -6,41 +6,25 @@ import { config } from "@/config";
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
 import { timeInterval, timeSince } from "@/utils/formatTime";
-import { Activity } from "@/interfaces/authenticated";
+import { Activity, ProfileUser } from "@/interfaces/authenticated";
 import { Bid, Profile, Review, User } from "@prisma/client";
 import axios from "axios";
 import getListingById from "@/actions/getListingById";
-import Link from "next/link";
 import ListingChat from "@/components/chat/ListingChat";
 import OfferDetailsWidget from "@/components/dashboard/offer/OfferDetailsWidget";
 import ReviewForm from "@/components/dashboard/offer/ReviewForm";
 import Loading from "@/components/LoadingScreen";
 import ReviewBox from "@/components/dashboard/reviews/ReviewBox";
 import Bids from "@/components/dashboard/offer/Bids";
-import OfferTypeBadge from "@/components/dashboard/offer/OfferTypeBadge";
 import ImageSlider from "@/components/dashboard/offer/ImageSlider";
-import AlertBanner from "@/components/dashboard/AlertBanner";
-import Badge from "@/components/dashboard/offer/Badge";
-import StatusChecker from "@/utils/status";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 import UserStats from "@/components/dashboard/UserStats";
+import OfferAlerts from "@/components/dashboard/offer/OfferAlerts";
+import Tabs from "@/components/dashboard/Tabs";
+import Button from "@/components/dashboard/Button";
+import Header from "@/components/dashboard/offer/Header";
+import { useRouter } from "next/navigation";
 
-interface IBid extends Bid { user: User; }
-
-interface ProfileUser extends User {
-  profile: Profile;
-  bids?: IBid[];
-  averageResponseTime?: any;
-  averageCompletionTime?: any;
-  sentCount?: any;
-  receivedCount?: any;
-  cancelledReceivedCount?: any;
-  cancelledSentCount?: any;
-  completedReceivedCount?: any;
-  completedSentCount?: any;
-  bidsCount?: any;
-  trustScore?: any;
-}
 
 interface MessageProps {
   buyerId: string;
@@ -50,11 +34,34 @@ interface MessageProps {
   id: string;
 }
 
+interface IUser extends User {
+  profile: Profile;
+}
+interface IReview extends Review {
+  user: IUser;
+}
+
+interface ReviewProps {
+  review: IReview;
+}
+
 const Index = ({ listing, session }: any) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("description");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+    const InitialLoading = {
+      cancelled: false,
+      yes: false,
+      no: false,
+      accepted: false,
+      completed: false,
+      contact: false,
+      negotiating: false,
+    }
+
+  const [loadingState, setLoadingState ] = useState(InitialLoading)
   const [userLoading, setUserLoading] = useState(true);
   const [statusIsLoading, setStatusIsLoading] = useState(false);
   const [bids, setBids] = useState<any[]>([]);
@@ -72,9 +79,26 @@ const Index = ({ listing, session }: any) => {
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const [me, setMe] = useState<ProfileUser>();
   const [participant, setParticipant] = useState<ProfileUser>();
+  const [reviews, setReviews] = useState<{userReview: IReview, participantReview: IReview}>({
+    userReview: {} as IReview,
+    participantReview: {} as IReview,
+  });
 
   const now = Date.now();
   const socketRef = useRef<Socket>();
+
+  const mainTabs = [
+    { id: "details", label: "Details" },
+    { id: "activity", label: "Activity" },
+    { id: "bids", label: "Bid History" },
+    { id: "chat", label: "Chat" },
+  ]
+
+  const secondaryTabs = [
+    { id: "description", label: "Description" },
+    { id: "photos", label: "Photos" },
+    { id: "user", label: session?.user?.id === listing?.sellerId ? "Buyer" : "Seller" + "Details" },
+  ]
 
   useEffect(() => {
     if (activeSubTab === "user") {
@@ -85,6 +109,7 @@ const Index = ({ listing, session }: any) => {
         try {
           const response = await axios.post(url, {
             userId,
+            sessionId: session?.user?.id,
           });
           const stats = response.data;
 
@@ -172,23 +197,22 @@ const Index = ({ listing, session }: any) => {
   );
   useEffect(() => {
 
-    if (listing.status === "pending") { 
-      setDisabled(true); 
-      setStatus(listing?.status); 
+    if (!session || !session.user?.id || !listing?.status) {
+      return;
     }
 
-    if (listing.status === "awaiting approval") { 
-      setStatus(listing?.status); 
+    if (!session) { 
+      setIsLoading(true) 
+    }
+
+    if (listing.status === "pending") { 
+      setDisabled(true); 
     }
 
     if (listing.status === "accepted") { 
       setDisabled(true) 
     }
     
-    if (!session) { 
-      setIsLoading(true) 
-    }
-
     setStatus(listing?.status);
     setActivities([...listing?.activities].reverse());
 
@@ -196,8 +220,12 @@ const Index = ({ listing, session }: any) => {
     timeInterval(created, setTimeSinceCreated);
     setIsLoading(false);
     setDisabled(false);
+    setReviews({
+      userReview: listing.reviews.find((item: IReview) => item.userId === session?.user.id),
+      participantReview: listing.reviews.find((item: IReview) => item.userId !== session?.user.id),
+    });
 
-  }, []);
+  }, [listing?.status, listing?.activities, listing?.createdAt, session]);
 
   useEffect(() => {
     socketRef.current &&
@@ -287,7 +315,9 @@ const Index = ({ listing, session }: any) => {
     currentBid: any,
     listing: any
   ): string | null => {
+
     const messages: { [key: string]: string } = {
+
       pending: "Pending",
       "awaiting approval": "Awaiting Approval",
       accepted: createAlertMessage(
@@ -310,12 +340,46 @@ const Index = ({ listing, session }: any) => {
     return messages[status] || null;
   };
 
+  const router = useRouter();
+
+  const handleFinalise = async (userId: any, participantId: any) => {
+
+    setLoadingState((prev) => ( { ...prev, completed: true } ) )
+
+    if(!userId || !participantId) return console.log("Invalid entries")
+    try {
+      const url = '/api/getConversationIdByParticipantIds'
+     await axios.post(url, {
+        userId: userId,
+        participantId: participantId
+      }).then((res) => {
+        if(!res.data) return console.log("No conversation found")
+        const conversationId = res.data.id
+        router.push(`/dashboard/conversations?conversationId=${conversationId}`)
+      }).catch((err) => {
+        console.log(err)
+      }).finally(() => {
+        setLoadingState((prev) => ( { ...prev, completed: false } ) )
+      })
+    } catch (error) { console.log(error) }
+  }
+
   const handleStatusChange = async (status: string, userId: string) => {
+
     const statusMessage = createStatusAlert(status, bids, currentBid, listing);
+
     confirmationModal.onOpen(
       "Are you sure you want to " + statusMessage + "?",
       async () => {
+
         setStatusIsLoading(true);
+
+        if(status === "rejected") setLoadingState((prev) => { return {...prev, no: true}})
+        if(status === "accepted") setLoadingState((prev) => { return {...prev, yes: true}})
+        if(status === "completed") setLoadingState((prev) => { return {...prev, completed: true}})
+        if(status === "cancelled") setLoadingState((prev) => { return {...prev, cancelled: true}})
+        if(status === "negotiating") setLoadingState((prev) => { return {...prev, negotiating: true}})
+
         const update = await axios
           .put(`/api/updateListing/status`, {
             status: status,
@@ -324,7 +388,7 @@ const Index = ({ listing, session }: any) => {
             completedById: userId,
           })
           .then((response) => {
-            
+
             setStatus(status);
             setCompletedBy(userId);
 
@@ -344,8 +408,8 @@ const Index = ({ listing, session }: any) => {
           })
           .finally(() => {
             setStatusIsLoading(false);
+            setLoadingState(InitialLoading)
           });
-
       }
     );
   };
@@ -357,79 +421,25 @@ const Index = ({ listing, session }: any) => {
     listing.reviews.find((item: Review) => item.userId !== session?.user.id) ||
     null;
 
-  const body = (
+  const MainBody = (
     <>
       <div className="">
-        <div className="md:flex md:justify-between">
-          <div>
-            <div className="text-gray-900 text-xl  md:text-2xl  font-bold first-letter:uppercase ">
-              {listing.title}
-            </div>
-            <div className="  text-gray-500">{listing.category}</div>
-            <div className="px-4 mt-2"></div>
-          </div>
-          <div className="hidden md:block">
-            {currentBid.currentPrice && currentBid.currentPrice !== "" && currentBid.currentPrice !== "0"  && (
-              <div className="text-right text-sm">
-                {status === "accepted" ? (
-                  <div>Agreed price</div>
-                ) : (
-                  <div className="text-right ">
-                    Bid by
-                    <Link
-                      href={`/dashboard/profile/${currentBid.byUserId}`}
-                      className="underline ml-[2px]"
-                    >
-                      {currentBid.byUsername}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="font-extrabold text-3xl text-right -mt-2">
-              
-              {currentBid.currentPrice && currentBid.currentPrice !== '0' && currentBid.currentPrice !== ''
-                ? `£ ${currentBid.currentPrice}`  :  listing.price !== "" &&  listing.price !== "0" ? `£ ${listing.price}` : <h5 className="underline mt-2">Open Offer</h5>}
-            </div>
-          </div>
-        </div>
-        <div>
-          <div className="flex mb-4 pb-4 border-b border-gray-200">
-            <div className="flex flex-1 gap-4 font-bold items-start">
-              <button
-                className={` ${
-                  activeSubTab === "description" &&
-                  "border-orange-400 border-b-4"
-                }`}
-                onClick={() => setActiveSubTab("description")}
-              >
-                Description
-              </button>
-              <button
-                onClick={() => setActiveSubTab("photos")}
-                className={` ${
-                  activeSubTab === "photos" && "border-orange-400 border-b-4"
-                }`}
-              >
-                Photos
-              </button>
-              <button
-                className={` ${
-                  activeSubTab === "user" && "border-orange-400 border-b-4"
-                }`}
-                onClick={() => setActiveSubTab("user")}
-              >
-                {listing.sellerId !== session?.user.id ? "Seller" : "Buyer"}{" "}
-                Details
-              </button>
-            </div>
-          </div>
-        </div>
+        <Header
+          status={status}
+          title={listing.title}
+          price={listing.price}
+          category={listing.category}
+          currentBid={currentBid} 
+        />
+
+       <Tabs status={status} tabs={secondaryTabs} setTab={setActiveSubTab} tab={activeSubTab} />
+       
         {activeSubTab === "description" && (
           <p className="leading-relaxed first-letter:uppercase mb-6">
             {listing.description}
           </p>
         )}
+
         {activeSubTab === "photos" && (
           <div className=" justify-center z-50 mb-6">
             <ImageSlider images={listing.image} />
@@ -437,21 +447,9 @@ const Index = ({ listing, session }: any) => {
         )}
         {activeSubTab === "user" && (
           <div className=" justify-center z-50 mb-6">
-            {session?.user.id ? (
+            { session?.user.id && (
               <div>
-                {/* {listing.seller.username}
-                      {listing.seller?.profile.bio}
-                      {listing.seller?.profile.website}
-                      {listing.seller.status}
-                      {listing.seller.createdAt} */}
                 <UserStats userLoading={userLoading} participant={participant} />
-              </div>
-            ) : (
-              <div>
-                {/* {listing.buyer.username}
-                                {listing.buyer.bio}
-                                {listing.buyer.status}
-                                {listing.buyer.createdAt} */}
               </div>
             )}
           </div>
@@ -467,96 +465,18 @@ const Index = ({ listing, session }: any) => {
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
+
         <div className="px-4 mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
-          {status === "accepted" && (
-            <AlertBanner
-              text="This offer has been accepted"
-              success
-              button
-              buttonText={"Mark as complete"}
-            />
-          )}
-          {status === "completed" && (
-            <AlertBanner
-              text="Congratulations! You've completed your offer"
-              success
-              button
-              buttonText={"Leave a review"}
-            />
-          )}
-          {status === "rejected" && (
-            <AlertBanner
-              text={
-                completedBy &&
-                session?.user.id &&
-                completedBy === session?.user.id
-                  ? "You rejected the latest bid. Awaiting repsonse from " +
-                    participant?.username
-                  : "Your bid has been rejected. Submit a new bid to continue "
-              }
-              danger
-              button
-            />
-          )}
-          {status === "cancelled" && (
-            <AlertBanner
-              text={
-                completedBy === session?.user.id
-                  ? "You terminated the offer."
-                  : "This offer has been terminated"
-              }
-              danger
-              button
-              buttonText={`Contact ${
-                listing.sellerId === session?.user.id ? "Buyer" : "Seller"
-              }`}
-            />
-          )}
+
+          <OfferAlerts handleStatusChange={handleStatusChange} session={session} participant={participant} status={status} completedBy={completedBy} listing={listing} handleFinalise={handleFinalise} />
+          
           <div className="w-full col-span-6 xl:col-span-8">
-            <div className="col-span-12 pb-4 flex font-bold font-md  md:font-xl gap-4 uppercase border-b border-gray-200 mb-4">
-              <div
-                onClick={() => setTab("details")}
-                className={`cursor-pointer ${
-                  tab === "details" && "border-b-4 border-orange-400 "
-                }`}
-              >
-                Details
-              </div>
-              {status === "awaiting approval" ||
-                (status === "negotiating" && (
-                  <div
-                    onClick={() => setTab("chat")}
-                    className={`cursor-pointer ${
-                      tab === "chat" && "border-b-4 border-orange-400 "
-                    }`}
-                  >
-                    Chat
-                  </div>
-                ))}
-              <div
-                onClick={() => setTab("activity")}
-                className={`cursor-pointer ${
-                  tab === "activity" && "border-b-4 border-orange-400 "
-                }`}
-              >
-                Activity
-              </div>
-              <div
-                onClick={() => setTab("bids")}
-                className={`cursor-pointer ${
-                  tab === "bids" && "border-b-4 border-orange-400 "
-                }`}
-              >
-                Bid History
-              </div>
-              <div className="ml-auto hidden md:flex ">
-                <Badge>{StatusChecker(status || "")}</Badge>
-                <OfferTypeBadge type={listing.type} />
-              </div>
-            </div>
+            <Tabs status={status} tabs={mainTabs} setTab={setTab} tab={tab} isListing main  />
 
             {tab === "chat" && (
+
               <div className="messages pt-6 mb-6">
+
                 {status === "negotiating" && (
                   <ListingChat
                     listing={listing}
@@ -568,6 +488,7 @@ const Index = ({ listing, session }: any) => {
                     socketRef={socketRef}
                   />
                 )}
+
                 {status === "accepted" && (
                   <div className="w-full  p-4 white border-l-4 border-orange-400">
                     <div>
@@ -599,42 +520,43 @@ const Index = ({ listing, session }: any) => {
                       </div>
                     )}
                     {listing.userId !== session?.user?.id && (
-                      <button
-                        className="flex text-sm mt-2  text-white bg-orange-400  py-2 px-2 focus:outline-none hover:bg-orange-400 rounded"
+                      <Button
+                        primary
+                        label={`Let's haggle`}
                         onClick={() =>
                           handleStatusChange("negotiating", session?.user?.id)
                         }
-                      >
-                        Lets haggle
-                      </button>
+                     />
                     )}
                   </div>
                 )}
               </div>
             )}
+
             {tab === "details" && (
               <>
-                {body}
+                {MainBody}
                 {status === "completed" && (
                   <div className="hidden md:block">
-                    {userReview && <ReviewBox review={userReview} />}
-                    {participantReview && (
-                      <ReviewBox review={participantReview} />
-                    )}
-
-                    {!userReview && (
+                    { reviews.userReview && <ReviewBox review={reviews.userReview}  /> }
+                    { reviews.participantReview && <ReviewBox review={reviews.participantReview} /> }
+                    {!reviews.userReview && (
                       <ReviewForm
                         listingId={listing.id}
                         sessionId={session?.user.id}
                         sellerId={listing.sellerId}
                         buyerId={listing.buyerId}
                         disabled={disabled}
+                        setReviews={setReviews}
+                        ownerId={listing.userId}
+                        username={me?.username || ""}
                       />
                     )}
                   </div>
                 )}
               </>
             )}
+
             {tab === "activity" &&
               activities?.map((activity: any, i: number) => (
                 <div
@@ -647,9 +569,9 @@ const Index = ({ listing, session }: any) => {
                   </div>
                 </div>
               ))}
+              
             {tab === "bids" && (
               <div className="mb-6">
-                {" "}
                 <Bids bids={bids} participant={participant} me={me} />
               </div>
             )}
@@ -666,6 +588,8 @@ const Index = ({ listing, session }: any) => {
                 setBids={setBids}
                 handleStatusChange={handleStatusChange}
                 isLoading={statusIsLoading}
+                loadingState={loadingState}
+                setLoadingState={setLoadingState}
                 timeSinceCreated={timeSinceCreated}
                 me={me}
                 participant={participant}
@@ -673,8 +597,8 @@ const Index = ({ listing, session }: any) => {
                 setCompletedBy={setCompletedBy}
                 completedBy={completedBy}
                 setStatus={setStatus}
+                handleFinalise={handleFinalise}
               />
-              <div className="group flex text-gray-300"></div>
             </div>
           }
         </div>

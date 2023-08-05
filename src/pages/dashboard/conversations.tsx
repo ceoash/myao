@@ -218,7 +218,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
 
         console.log("response", response.data.responseFriendship);
         toast.success("Friend request sent to " + participantUsername);
-        socketRef.current?.emit("add_friend", response.data.responseFriendship);
+        socketRef.current?.emit("friend", response.data.responseFriendship, 'add');
 
           if(response.data.responseFriendship.participant1Id === session?.user?.id){
             setFriends((prevFriends) => [...prevFriends, response.data.responseFriendship.participant2]);
@@ -269,7 +269,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
         console.log('response', response.data);
 
         if(response.data){
-        socketRef.current?.emit("remove_friend", response.data);
+        socketRef.current?.emit("friend", response.data, 'remove');
     
         const convo = conversations.find((convo) => 
           convo.participant1Id === response.data.followingId && convo.participant2Id === response.data.followerId
@@ -419,17 +419,12 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
       });
     }
 
-    socketRef.current.on("friend_added", (friend) => { 
-      console.log("added friend") 
-
-      console.log('state added', activeConversationState);
-    if(friend.id) conversationAction(friend.id, "add", conversations, session, activeConversationState)
+    socketRef.current.on("friend", (friend, action) => { 
+    console.log(action + "friend") 
+    if(action === 'accept') return
+     conversationAction(friend.id, action, conversations, session, activeConversationState)
    });
-    socketRef.current.on("friend_removed", (friend) => { 
-      console.log("removed friend")
-      console.log('state removed', activeConversationState);
-      if(friend.id) conversationAction(friend.id, "remove", conversations, session, activeConversationState) });
-
+    
     socketRef.current.on("conversation_accepted", () => {
       setActiveConversationState((prevState) => {
         if (prevState) {
@@ -466,10 +461,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
         "leave_conversation",
         activeConversationState?.id
       );
-      socketRef.current?.off("friend_unblocked");
-      socketRef.current?.off("friend_added");
-      socketRef.current?.off("friend_removed");
-      socketRef.current?.off("friend_blocked");
+      socketRef.current?.off("friend");
       socketRef.current?.off("message_sent");
       socketRef.current?.off("conversation_declined");
       socketRef.current?.off("conversation_accepted");

@@ -89,9 +89,9 @@ const Index = ({ listing, session }: any) => {
 
   const mainTabs = [
     { id: "details", label: "Details" },
+    { id: "chat", label: "Chat" },
     { id: "activity", label: "Activity" },
     { id: "bids", label: "Bid History" },
-    { id: "chat", label: "Chat" },
   ]
 
   const secondaryTabs = [

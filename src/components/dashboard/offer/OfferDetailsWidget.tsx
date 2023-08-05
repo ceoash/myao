@@ -217,7 +217,7 @@ const OfferDetailsWidget = ({
                       className="h-8 w-10"
                     />
                   </div>
-                  <div className="flex text-[12px]  xl:text-[14px] text-gray-600">
+                  <div className="flex text-[12px]  xl:text-[14px] text-gray-600 gap-2">
                     {listing.userId === sessionUser?.id && listing.price !== '0' && listing.price !== '' && (
                     <div>{listing.price !== '0' && listing.price !== '' && `Start price: £ ${listing.price}`}</div>
                     )}

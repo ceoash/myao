@@ -189,7 +189,7 @@ const Offer: React.FC<any> = ({
                   ) : price &&  price !== "0"  ? (
                     `£ ${price}`
                   ) : session?.user?.id === userId ? 
-                        status === 'cancelled' ? '£0.00' : <h4 className="text-sm md:text-lg xl:text-xl">Awaiting offerId</h4> : 
+                        status === 'cancelled' ? '£0.00' : <h4 className="text-sm md:text-lg xl:text-xl">Awaiting offer</h4> : 
                         status === 'cancelled' ? '£0.00' : <h4 className="text-sm md:text-lg xl:text-xl">Make a offer</h4>}
                 </div>
               </div>

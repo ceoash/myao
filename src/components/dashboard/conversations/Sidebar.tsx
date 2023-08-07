@@ -48,7 +48,7 @@ const Sidebar = ({
       </div>
       <div className={`${isOpen ? "block" : "hidden"} `}>
         {filterBlockedConversation.map((conversation: any) => {
-            const lastMessage = conversation.directMessages[0]
+            const lastMessage = conversation?.directMessages[0]
             const participant = conversation.participant1Id === session?.user?.id ? conversation.participant2 : conversation.participant1
 
           return (
@@ -100,7 +100,7 @@ const Sidebar = ({
                     {participant?.username}
                   </div>
                   <div className="ml-auto text-xs italic">
-                    {timeSince(lastMessage.createdAt, true)}
+                    {timeSince(lastMessage?.createdAt, true)}
                   </div>
                 </div>
                 <div className={`text-sm truncate ...`}>

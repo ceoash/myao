@@ -1,5 +1,4 @@
 import axios from "axios";
-import { DirectMessage } from "@prisma/client";
 import { GetServerSideProps } from "next";
 import { useState, useEffect, use } from "react";
 import { useRef } from "react";
@@ -20,57 +19,9 @@ import Header from "@/components/dashboard/conversations/Header";
 import Button from "@/components/dashboard/Button";
 import AlertBanner from "@/components/dashboard/AlertBanner";
 import { set } from "date-fns";
+import { Conversation, IDirectMessage, IUser } from "@/interfaces/authenticated";
 
-interface IDirectMessage {
-  id: string;
-  text: string | null;
-  userId: string;
-  conversationId: string;
-  image: string | null;
-}
 
-interface IBlockedStatus {
-  isBlocked: boolean;
-  hasBlocked: boolean;
-  isBlockedBy: string;
-}
-
-interface IUser {
-  id: string;
-  username: string;
-  email: string;
-  profile: {
-    id: string;
-    image: string;
-    bio: string;
-    userId: string;
-    createdAt: string;
-    updatedAt: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  directMessages: IDirectMessage[];
-  friends: IUser[];
-  blockedFriends: any[];
-  blockedBy: any[];
-  buyer: any[];
-  seller: any[];
-}
-
-interface Conversation {
-  id: string;
-  participant1: IUser;
-  participant2: IUser;
-  participant1Id: string;
-  participant2Id: string;
-  createdAt: string;
-  updatedAt: string;
-  directMessages: DirectMessage[];
-  friendStatus?: boolean;
-  blockedStatus?: boolean;
-  status?: string;
-  currentUser?: any
-}
 
 const Conversations = ({ safeConversations, session, conversationId, currentUser }: any) => {
 
@@ -264,9 +215,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
           followerId: session?.user?.id,
           followingId: participant,
         });
-        console.log('post request successful');
         toast.success("Unfollowed " + participantUsername);
-        console.log('response', response.data);
 
         if(response.data){
         socketRef.current?.emit("friend", response.data, 'remove');
@@ -276,10 +225,8 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
           || 
           convo.participant2Id === response.data.followingId && convo.participant1Id === response.data.followerId
         );          
-        console.log('conversation found', convo);
         
         if(convo && convo?.friendStatus === true){
-          console.log('before state updates');
           setConversations(prev => {
             return prev.map(conversation => {
               if (conversation.id === convo.id) {
@@ -301,7 +248,6 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
               }
             });
           }
-          console.log('after state updates');
         }
       }
         return
@@ -404,6 +350,23 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
     if (!socketRef.current || !activeConversationState || !session) return;
     if(!activeConversationState?.blockedStatus){
       socketRef.current.on("message_sent", (newMessage: any) => {
+        setConversations((prevConversations) => {
+          const index = prevConversations.findIndex(conversation => conversation.id === newMessage.conversationId);
+          
+          if(index === -1) return prevConversations;
+      
+          let updatedConversation = {
+              ...prevConversations[index],
+              directMessages: [newMessage, ...prevConversations[index].directMessages],
+          };
+      
+          let updatedConversations = [...prevConversations];
+          updatedConversations.splice(index, 1);
+          
+          updatedConversations.push(updatedConversation);
+      
+          return updatedConversations;
+      });
         setMessages((prevMessages) => [...prevMessages, newMessage]);
         setActiveConversationState((prevState) => {
           if (prevState) {
@@ -552,8 +515,6 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                 handleAccept={handleAccept}
                 session={session}
                 reject={reject}
-                setStatus={() => setStatus}
-                status={status || "pending"}
                 toggleDropdown={toggleDropdown}
                 offerModal={offerModal}
                 setToggleDropdown={() => setToggleDropdown}
@@ -561,6 +522,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                 isFriend={activeConversationState?.friendStatus}
                 handleBlocked={handleBlocked}
                 isBlocked={isBlocked || false}
+                setActiveConversationState={setActiveConversationState}
               />
               <div
                 key={activeConversationState?.id}
@@ -573,14 +535,14 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                   <div className="border-t border-gray-200 h-1 w-full hidden lg:block"></div>
                   <div className="lg:w-auto lg:whitespace-nowrap text-center mx-4 text-sm text-gray-500">
                     We are here to protect you from fraud please do not share
-                    your personal information
+                    your personal information 
                   </div>
                   <div className="border-t border-gray-200 w-full hidden lg:block"></div>
                 </div>
 
-                {status === "none" && !activeConversationState?.blockedStatus && (
+                {activeConversationState?.status === "none" && !activeConversationState?.blockedStatus && (
                   <div className="mx-auto max-w-xl">
-                      <AlertBanner secondary>
+                      <AlertBanner key={activeConversationState?.id} secondary>
                         {activeConversationState?.participant1Id ===
                         session?.user?.id
                           ? `Your message is awaiting approval from ${participantUsername}`
@@ -591,7 +553,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
 
                 {activeConversationState?.blockedStatus && (
                   <div className="max-w-xl mx-auto">
-                      <AlertBanner danger  onClick={handleBlocked}>
+                      <AlertBanner key={activeConversationState?.id} danger  onClick={handleBlocked}>
                         You blocked this user
                       </AlertBanner>
                   </div>
@@ -599,7 +561,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
 
                 {status === "declined" && (
                   <div className="max-w-xl mx-auto">
-                    <AlertBanner danger>
+                    <AlertBanner key={activeConversationState?.id} danger>
                       {activeConversationState?.participant1Id ===
                       session?.user?.id
                         ? `Your message request to ${participantUsername} has been declined`
@@ -637,7 +599,7 @@ const Conversations = ({ safeConversations, session, conversationId, currentUser
                 <ImageTextArea
                   onSubmit={handleSubmit}
                   key={activeConversationState?.id}
-                  disabled={status !== "accepted" && activeConversationState?.participant2Id === session?.user.id || activeConversationState?.status === "declined" || activeConversationState?.blockedStatus}
+                  disabled={activeConversationState?.status !== "accepted" && activeConversationState?.participant2Id === session?.user.id || activeConversationState?.status === "declined" || activeConversationState?.blockedStatus}
                   isLoading={submitting}
                 />
               </div>

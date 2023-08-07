@@ -42,7 +42,7 @@ export default async function ConversationsApi(
       const newActivity = { 
         type: "New Conversation Message", 
         message: "You have a message", 
-        action: "/dashboard/conversations/", 
+        action: `/dashboard/conversations?conversationId=${id}`, 
         modelId: id,
         userId: userId,
         createdAt: now,
@@ -53,7 +53,7 @@ export default async function ConversationsApi(
         const updatedConversation = await prisma.conversation.update({
           where: { id: id },
           data: {
-            updatedAt: date,
+            updatedAt: new Date(now),
             directMessages: {
               create: {
                 userId: userId,
@@ -90,7 +90,7 @@ export default async function ConversationsApi(
         const updatedConversation = await prisma.conversation.update({
           where: { id: id },
           data: {
-            updatedAt: date,
+            updatedAt: new Date(now),
             directMessages: {
               create: {
                 userId: userId,

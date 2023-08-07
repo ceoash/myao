@@ -15,9 +15,11 @@ const Tabs = ({ setTab, tabs, status, lg, uppercase, tab: activeTab, isListing, 
   return (
     <div className={`col-span-12 pb-4 flex font-bold font-md md:font-xl gap-4 border-b border-gray-200 mb-4 ${main && 'uppercase'}`}>
       
-      {tabs.map((tab) => {
+      {tabs.map((tab, i) => {
         if (status !== 'awaiting approval' && status !== "negotiating" && tab.id === 'chat') return null;
-        return (<div
+        return (
+        <div
+        key={i}
         onClick={() => setTab(tab.id)}
         className={`
         cursor-pointer 

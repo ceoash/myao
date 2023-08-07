@@ -23,6 +23,7 @@ interface InputProps {
   inline?: boolean;
   onClick?: () => void;
   btnText?: string;
+  optional?: boolean;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -43,19 +44,16 @@ const Input: React.FC<InputProps> = ({
   onClick,
   inline,
   btnText,
+  optional
 }) => {
   return (
     <div className={`flex ${!inline && 'pt-3'}`}>
-      <div className="w-full relative">
-        {formatPrice && (
-          <BiPound
-            className={`absolute z-10 mt-[1px]  ${
-              modal ? "top-10" : "top-4"
-            } left-2 text-neutral-500`}
-            size={22}
-          />
-        )}
-        <label className="mb-4" htmlFor={id}>{label}</label>
+      <div className="w-full relative flex flex-col gap-[1px]">
+        <label htmlFor={id} className="mb-3 flex gap-1">
+          {label} 
+          { optional && <span className="italic text-gray-500 text-sm "> (Optional)</span> }
+        </label>
+        
         <div className="relative ">
           <input
             id={id}

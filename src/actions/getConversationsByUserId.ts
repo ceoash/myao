@@ -164,7 +164,8 @@ export default async function getConversationsByUserId(
 
   const conversations = await prisma.conversation.findMany({
     where: {
-      OR: [{ participant1Id: userId }, { participant2Id: userId }],
+      OR: [{ participant1Id: userId, status: { not: "declined"} }, { participant2Id: userId, status: { not: "declined"} }, ],
+      
       participant1Id: {
         notIn: user.blockedFriends.map(
           (blocker: { friendBlockedId: string }) => blocker.friendBlockedId
@@ -176,13 +177,24 @@ export default async function getConversationsByUserId(
         ),
       },
     },
+    orderBy: { updatedAt: "desc" },
     include: {
       directMessages: {
         orderBy: { createdAt: "desc" },
         take: 5,
         include: {
           listing: true,
-          user: true,
+          user: {
+            select: {
+              id: true,
+              username: true,
+              profile: {
+                select: {
+                  image: true,
+                },
+              },
+            },
+          },
         },
       },
       participant1: {

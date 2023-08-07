@@ -64,44 +64,107 @@ export default async function newConversation(
           },
           include: {
             directMessages: true,
-            participant1: true,
-            participant2: true,
+            participant1: {
+              select: {
+                id: true,
+                username: true,
+                activities: true,
+                blockedFriends: {
+                  select: {
+                    id: true,
+                  }
+                },
+                blockedBy: {
+                  select: {
+                    id: true,
+                  }
+                },
+              },
+            },
+            participant2: {
+              select: {
+                id: true,
+                username: true,
+                activities: true,
+                blockedFriends: {
+                  select: {
+                    id: true,
+                  }
+                },
+                blockedBy: {
+                  select: {
+                    id: true,
+                  }
+                },
+              },
+            },
           },
         });
 
-        const participantActivity = {
-          type: "Conversation Message",
-          message: `New message`,
-          value: updatedConversation.participant1Id === userId ? updatedConversation.participant2Id : updatedConversation.participant1Id,
-          action: "/dashboard/conversations/",
-          modelId: updatedConversation.id,
-          userId: updatedConversation.participant1Id === userId ? updatedConversation.participant2.username : updatedConversation.participant1.username,
-          createdAt: now,
-        };
+        if(userId === updatedConversation?.participant1Id){
 
-        const participant1Update = createActivityForUser(
-          updatedConversation?.participant1Id,
-          participantActivity,
-          updatedConversation.participant1.activities
-        );
-        const participant2Update = createActivityForUser(
-          updatedConversation.participant2Id,
-          participantActivity,
-          updatedConversation.participant1.activities
-        );
+          const participantActivity = {
+            type: "Conversation Message",
+            message: `You received a new message`,
+            value: updatedConversation.participant1?.username,
+            action: "/dashboard/conversations?=" + updatedConversation.id,
+            modelId: updatedConversation.id,
+            userId: updatedConversation.participant1Id,
+            createdAt: now,
+          };
 
-        const transactionOperations = [participant1Update, participant2Update];
-
-        try {
-          const transactionResult = await prisma.$transaction(
-            transactionOperations
+          const participant2Update = createActivityForUser(
+            updatedConversation.participant2Id,
+            participantActivity,
+            updatedConversation.participant1.activities
           );
-          res.status(200).json({ updatedConversation, transactionResult });
-        } catch (error) {
-          console.error("Transaction failed: ", error);
-          res
-            .status(500)
-            .json({ error: "Something went wrong during the transaction" });
+
+          const transactionOperations = [participant2Update];
+
+          try {
+            const transactionResult = await prisma.$transaction(
+              transactionOperations
+            );
+            res.status(200).json({ updatedConversation, transactionResult });
+          } catch (error) {
+            console.error("Transaction failed: ", error);
+            res
+              .status(500)
+              .json({ error: "Something went wrong during the transaction" });
+          }
+        }
+
+        if(userId === updatedConversation?.participant2Id){
+
+          const participantActivity = {
+            type: "Conversation Message",
+            message: `You received a new message`,
+            value: updatedConversation.participant2?.username,
+            action: "/dashboard/conversations?=" + updatedConversation.id,
+            modelId: updatedConversation.id,
+            userId: updatedConversation.participant2Id,
+            createdAt: now,
+          };
+
+          const participant1Update = createActivityForUser(
+            updatedConversation.participant1Id,
+            participantActivity,
+            updatedConversation.participant2.activities
+          );
+
+          const transactionOperations = [participant1Update];
+
+          try {
+            const transactionResult = await prisma.$transaction(
+              transactionOperations
+            );
+            res.status(200).json({ updatedConversation, transactionResult });
+          } catch (error) {
+            console.error("Transaction failed: ", error);
+            res
+              .status(500)
+              .json({ error: "Something went wrong during the transaction" });
+          }
         }
       } else {
         const newConversation = await prisma.conversation.create({
@@ -117,6 +180,8 @@ export default async function newConversation(
           },
         });
 
+        if(!newConversation) return res.status(500).json({ error: "Something went wrong" });  
+
         const updatedConversation = await prisma.conversation.update({
           where: {
             id: newConversation.id,
@@ -129,7 +194,7 @@ export default async function newConversation(
               {
                 message: "New Message",
                 type: "New Conversation Started",
-                action: "/conversations",
+                action: "/conversations?=" + newConversation.id,
                 userId: userId,
                 value: "",
                 createdAt: now,
@@ -140,23 +205,23 @@ export default async function newConversation(
           include: {
             participant1: true,
             participant2: true,
+            
           },
         });
-
         const participant1Activity = {
-          type: "New Direct Message",
-          message: `${userId === updatedConversation.participant1Id ? "You sent a message" : "You received a message"}`,
-          action: "/dashboard/conversations/",
+          type: "New Conversation Started",
+          message: `${userId === updatedConversation.participant1Id ? "You started a new conversation" : "You received a message"}`,
+          action: "/dashboard/conversations" + updatedConversation.id,
           modelId: updatedConversation.id,
           value: updatedConversation.participant2.username,
           userId: userId,
           createdAt: now,
         };
         const participant2Activity = {
-          type: "New Direct Message",
-          message: `${userId === updatedConversation.participant2Id ? "You sent a message" : "You received a message"}`,
+          type: "New Conversation Started",
+          message: `${userId === updatedConversation.participant2Id ? "You started a new conversation" : "You received a message"}`,
           value: updatedConversation.participant1.username,
-          action: "/dashboard/conversations/",
+          action: "/dashboard/conversations" + updatedConversation.id,
           modelId: updatedConversation?.id,
           userId: userId,
           createdAt: now,

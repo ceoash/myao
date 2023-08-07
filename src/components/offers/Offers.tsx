@@ -296,7 +296,7 @@ const Offers = ({
         {activeTab === "sent"  && (
           <>
             <div className="transition">
-              {isLoading ? (
+              {isLoading  ? (
                <OfferSkeleton />
               ) : (
                 <div className="min-w-full transition">

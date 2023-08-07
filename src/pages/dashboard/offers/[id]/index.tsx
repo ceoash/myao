@@ -24,7 +24,7 @@ import Tabs from "@/components/dashboard/Tabs";
 import Button from "@/components/dashboard/Button";
 import Header from "@/components/dashboard/offer/Header";
 import { useRouter } from "next/navigation";
-
+import { CiMedicalCross, CiLocationOn, CiDeliveryTruck, CiCalendar  } from "react-icons/ci";
 
 interface MessageProps {
   buyerId: string;
@@ -41,45 +41,82 @@ interface IReview extends Review {
   user: IUser;
 }
 
-interface ReviewProps {
-  review: IReview;
-}
+const LOADING_STATE = {
+  cancelled: false,
+  yes: false,
+  no: false,
+  accepted: false,
+  completed: false,
+  contact: false,
+  negotiating: false,
+  user: false,
+  status: false,
+  loading: false,
+};
+
+const CURRENT_BID_STATE = {
+  currentPrice: "",
+  byUserId: "",
+  byUsername: "",
+  me: {} as Bid,
+  participant: {} as Bid,
+};
+
+const initialState = {
+  loading: { ...LOADING_STATE },
+  bids: [],
+  currentBid: CURRENT_BID_STATE,
+  status: "",
+  reviews: {
+    userReview: {} as IReview,
+    participantReview: {} as IReview,
+  },
+};
 
 const Index = ({ listing, session }: any) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("description");
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-    const InitialLoading = {
-      cancelled: false,
-      yes: false,
-      no: false,
-      accepted: false,
-      completed: false,
-      contact: false,
-      negotiating: false,
-    }
-
-  const [loadingState, setLoadingState ] = useState(InitialLoading)
-  const [userLoading, setUserLoading] = useState(true);
-  const [statusIsLoading, setStatusIsLoading] = useState(false);
-  const [bids, setBids] = useState<any[]>([]);
+  const [loadingState, setLoadingState] = useState(LOADING_STATE);
+  const [bids, setBids] = useState<Bid[]>([]);
   const [completedBy, setCompletedBy] = useState<string | null>();
-  const [currentBid, setCurrentBid] = useState({
-    currentPrice: "",
-    byUserId: "",
-    byUsername: "",
-    me: {} as Bid,
-    participant: {} as Bid,
-  });
+  const [currentBid, setCurrentBid] = useState(CURRENT_BID_STATE);
   const [status, setStatus] = useState<string>("");
   const [tab, setTab] = useState("details");
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const [me, setMe] = useState<ProfileUser>();
   const [participant, setParticipant] = useState<ProfileUser>();
-  const [reviews, setReviews] = useState<{userReview: IReview, participantReview: IReview}>({
+
+  const { user: sessionUser } = session;
+  const {
+    id,
+    title,
+    createdAt,
+    updatedAt,
+    description,
+    price,
+    status: listingStatus,
+    sellerId,
+    seller,
+    buyer,
+    bids: listingBids,
+    image: listingImage,
+    userId,
+    reviews: listingReviews,
+    category,
+    user: listingUser,
+    activities: listingActivities,
+    completedById,
+    completedBy: listingCompletedBy,
+  } = listing;
+
+  if (!sessionUser || !listing) return <Loading />;
+
+  const [reviews, setReviews] = useState<{
+    userReview: IReview;
+    participantReview: IReview;
+  }>({
     userReview: {} as IReview,
     participantReview: {} as IReview,
   });
@@ -92,140 +129,170 @@ const Index = ({ listing, session }: any) => {
     { id: "chat", label: "Chat" },
     { id: "activity", label: "Activity" },
     { id: "bids", label: "Bid History" },
-  ]
+  ];
 
   const secondaryTabs = [
     { id: "description", label: "Description" },
     { id: "photos", label: "Photos" },
-    { id: "user", label: session?.user?.id === listing?.sellerId ? "Buyer" : "Seller" + "Details" },
-  ]
+    {
+      id: "user",
+      label: sessionUser?.id === sellerId ? "Buyer" : "Seller" + "Details",
+    },
+  ];
 
   useEffect(() => {
     if (activeSubTab === "user") {
       const getUserStats = async () => {
-        if (!participant) console.log("no participant");
+        if (!participant) console.log("No participant");
+
         const userId = participant?.id;
         const url = `/api/dashboard/getUserStats`;
+
         try {
+          setLoadingState((prev) => ({ ...prev, user: true }));
+
           const response = await axios.post(url, {
             userId,
-            sessionId: session?.user?.id,
+            sessionId: sessionUser?.id,
           });
-          const stats = response.data;
 
+          const stats = response.data;
           const totalListings = stats.sentCount + stats.receivedCount;
           const totalCancelledListings =
             stats.cancelledSentCount + stats.cancelledReceivedCount;
           const totalCompletedListings =
             stats.completedSentCount + stats.completedReceivedCount;
-          const trustScore = Math.trunc( ( (totalCompletedListings - totalCancelledListings) / totalListings) * 100 );
-          setParticipant((prev) => {
-            return { ...prev, ...stats, trustScore };
-          });
-          setUserLoading(false);
-        } catch (error) { console.error(error); }
+          const trustScore = Math.trunc(
+            ((totalCompletedListings - totalCancelledListings) /
+              totalListings) *
+              100
+          );
+
+          setParticipant((prev) => ({ ...prev, ...stats, trustScore }));
+          setLoadingState((prev) => ({ ...prev, user: false }));
+        } catch (error) {
+          console.error(error);
+        }
       };
       getUserStats();
     }
   }, [activeSubTab]);
 
+  const updateLoadingState = (key: string, value: boolean) => {
+    setLoadingState((prev) => ({ ...prev, [key]: value }));
+  };
+
   useEffect(() => {
     socketRef.current = io(config.PORT);
-    socketRef.current && socketRef.current.emit("join_room", listing.id);
+    socketRef.current && socketRef.current.emit("join_room", id);
     return () => {
-      socketRef.current?.emit("leave_room", listing.id);
+      socketRef.current?.emit("leave_room", id);
       socketRef.current?.off("join_room");
       socketRef.current?.disconnect();
     };
-  }, [listing?.id]);
+  }, [id]);
 
   useEffect(() => {
-    if (!session || !session.user?.id) {
+    if (!session || !sessionUser.id) {
       return;
     }
-    if (listing?.sellerId === session?.user?.id) {
-      setMe(listing?.seller);
+    if (sellerId === sessionUser?.id) {
+      setMe(seller);
       setParticipant((prev) => {
-        return { ...prev, ...listing?.buyer };
+        return { ...prev, ...buyer };
       });
     } else {
-      setMe(listing?.buyer);
+      setMe(buyer);
       setParticipant((prev) => {
-        return { ...prev, ...listing?.seller };
+        return { ...prev, ...seller };
       });
     }
-    setMessages([...listing.messages].reverse());
+    setMessages([...messages].reverse());
 
-    setCompletedBy(listing?.completedById);
-  }, [listing.id, session?.user?.id]);
+    setCompletedBy(completedById);
+  }, [id, sessionUser?.id]);
 
   useEffect(() => {
-    setIsLoading(true);
-    if (!session || !session.user?.id || !listing?.bids) {
+    setLoadingState((prev) => ({ ...prev, loading: true }));
+
+    if (!session || !sessionUser?.id || !listingBids) {
       return;
     }
-    const reversedBids = [...listing.bids].reverse();
-    setBids(listing.bids);
+    const reversedBids = [...listingBids].reverse();
+
+    setBids(listingBids);
 
     setCurrentBid({
       currentPrice:
-        listing?.bids.length > 0
-          ? listing.bids[listing.bids.length - 1].price
-          : listing?.price,
-      byUserId: listing.bids[listing.bids.length - 1]?.userId || listing.userId,
+        listingBids && listingBids.length > 0
+          ? listingBids[listingBids.length - 1].price
+          : price && price,
+      byUserId:
+        (listingBids && listingBids[listingBids.length - 1]?.userId) || userId,
       byUsername:
-        listing.bids[listing.bids.length - 1]?.user?.username ||
-        listing.sellerId === listing.userId
-          ? listing.seller.username
-          : listing.buyer.username,
+        (listingBids && listingBids[listingBids.length - 1]?.user?.username) ||
+        sellerId === userId
+          ? seller.username
+          : buyer.username,
       me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
       participant: reversedBids.filter(
         (bid: Bid) => bid.userId === participant?.id
       )[0],
     });
-  setIsLoading(false);
 
-  }, [ listing.bids,
-      listing.price,
-      listing.sellerId,
-      listing.seller.username,
-      listing.buyer.username,
-      session?.user.id,
-      me?.id,
-      participant?.id,
-    ]
-  );
+    setLoadingState((prev) => ({ ...prev, loading: false }));
+  }, [
+    listingBids,
+    price,
+    sellerId,
+    seller?.username,
+    buyer?.username,
+    sessionUser.id,
+    me?.id,
+    participant?.id,
+  ]);
   useEffect(() => {
-
-    if (!session || !session.user?.id || !listing?.status) {
+    if (!session || !sessionUser?.id || !listingStatus) {
       return;
     }
 
-    if (!session) { 
-      setIsLoading(true) 
+    if (!session) {
+      setLoadingState((prev) => ({ ...prev, loading: true }));
     }
 
-    if (listing.status === "pending") { 
-      setDisabled(true); 
+    if (status === "pending") {
+      setDisabled(true);
     }
 
-    if (listing.status === "accepted") { 
-      setDisabled(true) 
+    if (status === "accepted") {
+      setDisabled(true);
     }
-    
-    setStatus(listing?.status);
-    setActivities([...listing?.activities].reverse());
 
-    const created = new Date(listing?.createdAt);
+    setStatus(listingStatus);
+    setActivities([...listingActivities].reverse());
+
+    const created = new Date(createdAt);
     timeInterval(created, setTimeSinceCreated);
-    setIsLoading(false);
-    setDisabled(false);
+
     setReviews({
-      userReview: listing.reviews.find((item: IReview) => item.userId === session?.user.id),
-      participantReview: listing.reviews.find((item: IReview) => item.userId !== session?.user.id),
+      userReview: listingReviews.find(
+        (item: IReview) => item.userId === sessionUser.id
+      ),
+      participantReview: listingReviews.find(
+        (item: IReview) => item.userId !== sessionUser.id
+      ),
     });
 
-  }, [listing?.status, listing?.activities, listing?.createdAt, session]);
+    setLoadingState((prev) => ({ ...prev, loading: false }));
+    setDisabled(false);
+  }, [
+    listingStatus,
+    ,
+    createdAt,
+    sessionUser?.id,
+    listingReviews,
+    listingActivities,
+  ]);
 
   useEffect(() => {
     socketRef.current &&
@@ -238,7 +305,7 @@ const Index = ({ listing, session }: any) => {
       socketRef.current.on(
         "updated_bid",
         ({ price, userId, username, listingId, previous }) => {
-          if (listingId === listing.id) {
+          if (listingId === id) {
             console.log(
               `Received bid price update for listing ${listingId}: ${price}`
             );
@@ -264,8 +331,8 @@ const Index = ({ listing, session }: any) => {
                 byUserId: userId || "",
                 byUsername: username || "",
                 me:
-                  listing?.bids && listing?.bids.length > 0
-                    ? listing.bids[listing.bids.length - 1]
+                  listingBids && listingBids.length > 0
+                    ? listingBids[listingBids.length - 1]
                     : null,
               };
               return newBid;
@@ -277,7 +344,7 @@ const Index = ({ listing, session }: any) => {
 
     socketRef.current &&
       socketRef.current.on("update_status", ({ newStatus, listingId }) => {
-        if (listingId === listing.id) {
+        if (listingId === id) {
           console.log(
             `Received status update for listing ${listingId}: ${newStatus}`
           );
@@ -306,7 +373,7 @@ const Index = ({ listing, session }: any) => {
         ? bids[bids.length - 1]?.price
         : currentBid.currentPrice
         ? currentBid.currentPrice
-        : listing?.price)
+        : price)
     );
   };
   const createStatusAlert = (
@@ -315,9 +382,7 @@ const Index = ({ listing, session }: any) => {
     currentBid: any,
     listing: any
   ): string | null => {
-
     const messages: { [key: string]: string } = {
-
       pending: "Pending",
       "awaiting approval": "Awaiting Approval",
       accepted: createAlertMessage(
@@ -343,113 +408,184 @@ const Index = ({ listing, session }: any) => {
   const router = useRouter();
 
   const handleFinalise = async (userId: any, participantId: any) => {
+    setLoadingState((prev) => ({ ...prev, completed: true }));
 
-    setLoadingState((prev) => ( { ...prev, completed: true } ) )
-
-    if(!userId || !participantId) return console.log("Invalid entries")
+    if (!userId || !participantId) return console.log("Invalid entries");
     try {
-      const url = '/api/getConversationIdByParticipantIds'
-     await axios.post(url, {
-        userId: userId,
-        participantId: participantId
-      }).then((res) => {
-        if(!res.data) return console.log("No conversation found")
-        const conversationId = res.data.id
-        router.push(`/dashboard/conversations?conversationId=${conversationId}`)
-      }).catch((err) => {
-        console.log(err)
-      }).finally(() => {
-        setLoadingState((prev) => ( { ...prev, completed: false } ) )
-      })
-    } catch (error) { console.log(error) }
-  }
+      const url = "/api/getConversationIdByParticipantIds";
+      await axios
+        .post(url, {
+          userId: userId,
+          participantId: participantId,
+        })
+        .then((res) => {
+          if (!res.data) return console.log("No conversation found");
+          const conversationId = res.data.id;
+          router.push(
+            `/dashboard/conversations?conversationId=${conversationId}`
+          );
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+        .finally(() => {
+          setLoadingState((prev) => ({ ...prev, completed: false }));
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleStatusChange = async (status: string, userId: string) => {
-
     const statusMessage = createStatusAlert(status, bids, currentBid, listing);
 
     confirmationModal.onOpen(
       "Are you sure you want to " + statusMessage + "?",
       async () => {
+        setLoadingState((prev) => ({ ...prev, status: true }));
 
-        setStatusIsLoading(true);
+        if (status === "rejected")
+          setLoadingState((prev) => {
+            return { ...prev, no: true };
+          });
+        if (status === "accepted")
+          setLoadingState((prev) => {
+            return { ...prev, yes: true };
+          });
+        if (status === "completed")
+          setLoadingState((prev) => {
+            return { ...prev, completed: true };
+          });
+        if (status === "cancelled")
+          setLoadingState((prev) => {
+            return { ...prev, cancelled: true };
+          });
+        if (status === "negotiating")
+          setLoadingState((prev) => {
+            return { ...prev, negotiating: true };
+          });
 
-        if(status === "rejected") setLoadingState((prev) => { return {...prev, no: true}})
-        if(status === "accepted") setLoadingState((prev) => { return {...prev, yes: true}})
-        if(status === "completed") setLoadingState((prev) => { return {...prev, completed: true}})
-        if(status === "cancelled") setLoadingState((prev) => { return {...prev, cancelled: true}})
-        if(status === "negotiating") setLoadingState((prev) => { return {...prev, negotiating: true}})
-
-        const update = await axios
+        await axios
           .put(`/api/updateListing/status`, {
             status: status,
-            listingId: listing.id,
+            listingId: id,
             userId: userId,
-            completedById: userId,
+            completedById: sessionUser.id,
           })
           .then((response) => {
-
             setStatus(status);
-            setCompletedBy(userId);
+            setCompletedBy(sessionUser.id);
 
             socketRef.current?.emit("update_status", {
               newStatus: status,
-              listingId: listing.id,
+              listingId: id,
             });
             socketRef.current?.emit(
               "update_activities",
               response.data.transactionResult,
-              response.data.listing.sellerId,
-              response.data.listing.buyerId
+              response.data.sellerId,
+              response.data.buyerId
             );
           })
           .catch((err) => {
             console.log("Something went wrong!");
           })
           .finally(() => {
-            setStatusIsLoading(false);
-            setLoadingState(InitialLoading)
+            setLoadingState((prev) => ({ ...prev, status: false }));
+            setLoadingState(LOADING_STATE);
           });
       }
     );
   };
 
-  const userReview =
-    listing.reviews.find((item: Review) => item.userId === session?.user.id) ||
-    null;
-  const participantReview =
-    listing.reviews.find((item: Review) => item.userId !== session?.user.id) ||
-    null;
 
   const MainBody = (
     <>
       <div className="">
         <Header
           status={status}
-          title={listing.title}
-          price={listing.price}
-          category={listing.category}
-          currentBid={currentBid} 
+          title={title}
+          price={price}
+          category={category}
+          currentBid={currentBid}
         />
 
-       <Tabs status={status} tabs={secondaryTabs} setTab={setActiveSubTab} tab={activeSubTab} />
-       
+        <Tabs
+          status={status}
+          tabs={secondaryTabs}
+          setTab={setActiveSubTab}
+          tab={activeSubTab}
+        />
+
         {activeSubTab === "description" && (
-          <p className="leading-relaxed first-letter:uppercase mb-6">
-            {listing.description}
-          </p>
+          <>
+            <p className="leading-relaxed first-letter:uppercase border-b border-gray-200 pb-6 mb-6">
+              {description}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 border-b border-gray-200 pb-6 mb-6 auto-cols-fr gap-4">
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiMedicalCross className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Condition</p>
+                    <p className="capitalize">{listing?.options?.condition}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiLocationOn className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Location</p>
+                    <p className="capitalize">{ listing?.options?.location?.city ? listing.options.location.city : listing?.options?.location.region ? listing.options.location.region : 'Unknown' }</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiDeliveryTruck className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Pickup</p>
+                    <p className="capitalize">{ 
+                    listing?.options?.pickup ? 
+                     listing.options.pickup === 'both' ? 
+                    'Collection or Delivery' : `
+                    ${listing.options.pickup} Only` : 'Unknown' }</p>
+
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                <CiCalendar className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Created</p>
+                    { new Date(createdAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </>
         )}
 
         {activeSubTab === "photos" && (
           <div className=" justify-center z-50 mb-6">
-            <ImageSlider images={listing.image} />
+            <ImageSlider images={listingImage} />
           </div>
         )}
         {activeSubTab === "user" && (
           <div className=" justify-center z-50 mb-6">
-            { session?.user.id && (
+            {sessionUser.id && (
               <div>
-                <UserStats userLoading={userLoading} participant={participant} />
+                <UserStats
+                  userLoading={loadingState.user}
+                  participant={participant}
+                />
               </div>
             )}
           </div>
@@ -458,29 +594,40 @@ const Index = ({ listing, session }: any) => {
     </>
   );
 
-  if (isLoading) {
+  if (loadingState.loading) {
     return <Loading />;
   }
 
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
+        <div className=" flex flex-col px-4 mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
+          <OfferAlerts
+            handleStatusChange={handleStatusChange}
+            session={session}
+            participant={participant}
+            status={status}
+            completedBy={completedBy}
+            listing={listing}
+            handleFinalise={handleFinalise}
+          />
 
-        <div className="px-4 mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
-
-          <OfferAlerts handleStatusChange={handleStatusChange} session={session} participant={participant} status={status} completedBy={completedBy} listing={listing} handleFinalise={handleFinalise} />
-          
-          <div className="w-full col-span-6 xl:col-span-8">
-            <Tabs status={status} tabs={mainTabs} setTab={setTab} tab={tab} isListing main  />
+          <div className="w-full col-span-6 xl:col-span-8 order-3 md:order-2">
+            <Tabs
+              status={status}
+              tabs={mainTabs}
+              setTab={setTab}
+              tab={tab}
+              isListing
+              main
+            />
 
             {tab === "chat" && (
-
               <div className="messages pt-6 mb-6">
-
                 {status === "negotiating" && (
                   <ListingChat
                     listing={listing}
-                    user={session?.user}
+                    user={sessionUser}
                     disabled={disabled}
                     session={session}
                     messages={messages}
@@ -491,25 +638,20 @@ const Index = ({ listing, session }: any) => {
 
                 {status === "accepted" && (
                   <div className="w-full  p-4 white border-l-4 border-orange-400">
-                    <div>
-                      {listing.user === session?.user
-                        ? "Your offer was acceped"
-                        : "You accepted the offer"}
-                      . If you need to contact the
-                      {listing.buyerId === session?.user?.id
-                        ? "seller"
-                        : "buyer"}{" "}
-                      seller{" "}
-                      <span className="text-orange-500 underline cursor-pointer">
-                        click here
-                      </span>
-                    </div>
+                    {listingUser === sessionUser
+                      ? "Your offer was acceped! "
+                      : "You accepted the offer! "}{" "}
+                    If you need to contact the
+                    {buyer?.id === sessionUser?.id ? "seller" : "buyer"}{" "}
+                    <span className="text-orange-500 underline cursor-pointer">
+                      click here
+                    </span>
                   </div>
                 )}
 
                 {status === "awaiting approval" && (
                   <div className="w-full  p-4 white border-l-4 border-orange-400 flex gap-2 justify-between items-center">
-                    {listing.userId === session?.user?.id ? (
+                    {userId === sessionUser?.id ? (
                       <div>
                         Your offer has been created. A request has been sent to{" "}
                         {participant?.username}.
@@ -519,14 +661,14 @@ const Index = ({ listing, session }: any) => {
                         You have received a offer from {participant?.username}
                       </div>
                     )}
-                    {listing.userId !== session?.user?.id && (
+                    {userId !== sessionUser?.id && (
                       <Button
                         primary
                         label={`Let's haggle`}
                         onClick={() =>
-                          handleStatusChange("negotiating", session?.user?.id)
+                          handleStatusChange("negotiating", sessionUser?.id)
                         }
-                     />
+                      />
                     )}
                   </div>
                 )}
@@ -538,17 +680,21 @@ const Index = ({ listing, session }: any) => {
                 {MainBody}
                 {status === "completed" && (
                   <div className="hidden md:block">
-                    { reviews.userReview && <ReviewBox review={reviews.userReview}  /> }
-                    { reviews.participantReview && <ReviewBox review={reviews.participantReview} /> }
+                    {reviews.userReview && (
+                      <ReviewBox review={reviews.userReview} />
+                    )}
+                    {reviews.participantReview && (
+                      <ReviewBox review={reviews.participantReview} />
+                    )}
                     {!reviews.userReview && (
                       <ReviewForm
-                        listingId={listing.id}
-                        sessionId={session?.user.id}
-                        sellerId={listing.sellerId}
-                        buyerId={listing.buyerId}
+                        listingId={id}
+                        sessionId={sessionUser.id}
+                        sellerId={sellerId}
+                        buyerId={buyer.id}
                         disabled={disabled}
                         setReviews={setReviews}
-                        ownerId={listing.userId}
+                        ownerId={userId}
                         username={me?.username || ""}
                       />
                     )}
@@ -569,38 +715,38 @@ const Index = ({ listing, session }: any) => {
                   </div>
                 </div>
               ))}
-              
+
             {tab === "bids" && (
               <div className="mb-6">
                 <Bids bids={bids} participant={participant} me={me} />
               </div>
             )}
           </div>
-          {
-            <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4">
-              <OfferDetailsWidget
-                listing={listing}
-                status={status || "pending"}
-                session={session}
-                currentBid={currentBid}
-                setCurrentBid={setCurrentBid}
-                bids={bids}
-                setBids={setBids}
-                handleStatusChange={handleStatusChange}
-                isLoading={statusIsLoading}
-                loadingState={loadingState}
-                setLoadingState={setLoadingState}
-                timeSinceCreated={timeSinceCreated}
-                me={me}
-                participant={participant}
-                socketRef={socketRef}
-                setCompletedBy={setCompletedBy}
-                completedBy={completedBy}
-                setStatus={setStatus}
-                handleFinalise={handleFinalise}
-              />
-            </div>
-          }
+          
+          <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4 order-2 md:order-3">
+            <OfferDetailsWidget
+              listing={listing}
+              status={status || "pending"}
+              session={session}
+              currentBid={currentBid}
+              setCurrentBid={setCurrentBid}
+              bids={bids}
+              setBids={setBids}
+              handleStatusChange={handleStatusChange}
+              isLoading={loadingState.status}
+              loadingState={loadingState}
+              setLoadingState={setLoadingState}
+              timeSinceCreated={timeSinceCreated}
+              me={me}
+              participant={participant}
+              socketRef={socketRef}
+              setCompletedBy={setCompletedBy}
+              completedBy={completedBy}
+              setStatus={setStatus}
+              handleFinalise={handleFinalise}
+            />
+          </div>
+          
         </div>
       </Dash>
     )

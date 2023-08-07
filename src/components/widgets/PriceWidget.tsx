@@ -1,18 +1,12 @@
-import React, { Dispatch, SetStateAction, use, useEffect, useRef, useState } from 'react';
-import Input from '../inputs/Input';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
 import axios from 'axios';
 import Button from '../dashboard/Button';
-import { io, Socket } from 'socket.io-client';
-import { config } from '@/config';
+import {Socket } from 'socket.io-client';
 import { toast } from 'react-hot-toast';
-import { set } from 'date-fns';
-import { Bid, User } from '@prisma/client';
-import { randomInt } from 'crypto';
+import { Bid } from '@prisma/client';
 import PriceInput from '../inputs/PriceInput';
-import { da } from 'date-fns/locale';
 
 interface PriceWidgetProps {
   listing: any;

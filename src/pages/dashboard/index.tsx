@@ -104,7 +104,6 @@ const Index = ({
 
     socketRef.current &&
       socketRef.current.on("updated_activities", (activities: any) => {
-        console.log("updated activities", activities);
         const copiedActivities = [...(activities.activities as any[])];
         const reversedActivities = copiedActivities.reverse();
         const topActivities = reversedActivities.slice(0, 3);

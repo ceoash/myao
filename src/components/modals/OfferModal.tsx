@@ -24,16 +24,17 @@ import Button from "../dashboard/Button";
 import TextArea from "../inputs/TextArea";
 import { IoPricetagOutline } from "react-icons/io5";
 import UserType from "../wizard/UserType";
-import { set } from "date-fns";
 import PriceInput from "../inputs/PriceInput";
+import CityAutocomplete from "../dashboard/AutoComplete";
 
 enum STEPS {
   TYPE = 0,
   BUYER = 1,
   DESCRIPTION = 2,
-  CATEGORY = 3,
-  IMAGES = 4,
-  REVIEW = 5,
+  ITEM = 3,
+  CATEGORY = 4,
+  IMAGES = 5,
+  REVIEW = 6,
 }
 
 const OfferModal = () => {
@@ -48,9 +49,15 @@ const OfferModal = () => {
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
   const [userType, setUserType] = useState("sellerOffer");
-  const [foundUser, setFoundUser] = useState<any | null>(offerModal?.participant || null);
-// console.log("foundUser", foundUser);
-// console.log("session", session);
+  const [selectedCity, setSelectedCity] = useState<{
+    region: string;
+    city?: string | '';
+  }>({ city: "", region: "" });
+  const [foundUser, setFoundUser] = useState<any | null>(
+    offerModal?.participant || null
+  );
+  // console.log("foundUser", foundUser);
+  // console.log("session", session);
   const port = config.PORT;
   const socket = io(port);
 
@@ -78,6 +85,11 @@ const OfferModal = () => {
       sellerId: "",
       public: false,
       userType: "",
+      location: {
+        region: "",
+        city: "",
+      },
+      condition: ''
     },
   });
   const onSearchUser = () => {
@@ -87,14 +99,15 @@ const OfferModal = () => {
     axios
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
-        if (res.data.id  && res.data.id === session?.user?.id) {
+        if (res.data.id && res.data.id === session?.user?.id) {
           toast.error("You can't create an offer with yourself");
           setFoundUser(null);
-          setError("user", { message: "You can't create an offer with yourself" });
+          setError("user", {
+            message: "You can't create an offer with yourself",
+          });
         } else {
           setFoundUser(res.data);
-          clearErrors("user")
-
+          clearErrors("user");
         }
       })
       .catch((err) => {
@@ -107,7 +120,7 @@ const OfferModal = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  }
+  };
 
   const validateStep = (step: any, data: any) => {
     const validation = {
@@ -119,7 +132,9 @@ const OfferModal = () => {
       case STEPS.TYPE:
         if (!data.userType) {
           validation.isValid = false;
-          setError("userType", { message: "Select the type of listing you would like to create" });
+          setError("userType", {
+            message: "Select the type of listing you would like to create",
+          });
         }
         break;
       case STEPS.BUYER:
@@ -137,6 +152,9 @@ const OfferModal = () => {
           validation.isValid = false;
           setError("description", { message: "Description is required" });
         }
+        break;
+      case STEPS.ITEM:
+       
         break;
       case STEPS.CATEGORY:
         if (selectedCategory.length === 0) {
@@ -167,14 +185,20 @@ const OfferModal = () => {
       sellerId: "",
       public: false,
       userType: "",
+      location: {
+        region: "",
+        city: "",
+      },
+      condition: ''
     });
+    setSelectedCity({ city: "", region: "" });
     setFoundUser(null);
     setSearch("");
     setSelectedCategory("");
     setUserType("");
     setPrice("0");
-    offerModal.onClose();
     setStep(STEPS.TYPE);
+    offerModal.onClose();
   };
 
   const onBack = () => {
@@ -209,6 +233,8 @@ const OfferModal = () => {
         return "Next";
       case STEPS.DESCRIPTION:
         return "Next";
+      case STEPS.ITEM:
+        return "Next";
       case STEPS.CATEGORY:
         return "Next";
       case STEPS.IMAGES:
@@ -226,6 +252,8 @@ const OfferModal = () => {
         return "Back";
       case STEPS.DESCRIPTION:
         return "Back";
+      case STEPS.ITEM:
+        return "Back";
       case STEPS.CATEGORY:
         return "Back";
       case STEPS.IMAGES:
@@ -237,14 +265,12 @@ const OfferModal = () => {
 
   const image = watch("image");
 
-  let im = null
+  let im = null;
 
   if (image) {
-      let arr = new Array(image);
- im = JSON.parse(image)
+    let arr = new Array(image);
+    im = JSON.parse(image);
   }
-  
-
 
   const setCustomValue = (id: string, value: any) => {
     setValue(id, value, {
@@ -264,20 +290,26 @@ const OfferModal = () => {
       return;
     }
 
-    if(!foundUser){
-       toast.error("Please select a user to send the offer to")
-       setStep(STEPS.BUYER)
-       return
-    };
+    if (!foundUser) {
+      toast.error("Please select a user to send the offer to");
+      setStep(STEPS.BUYER);
+      return;
+    }
 
     setIsLoading(true);
     data.category = selectedCategory;
     data.participantId = foundUser?.id;
     data.conversationId = offerModal.conversationId;
-    data.type = userType === 'buyer' ? 'buyerOffer' : "sellerOffer";
+    data.type = userType === "buyer" ? "buyerOffer" : "sellerOffer";
     data.userId = session.user.id;
     data.sellerId = userType === "seller" ? session.user.id : foundUser?.id;
     data.buyerId = userType === "buyer" ? session.user.id : foundUser?.id;
+    data.options = {
+      location: selectedCity,
+      condition: data.condition ? data.condition : "Unknown",
+      pickup: data.pickup ? data.pickup : 'Unknown',
+      public: false,
+    };
 
     await axios
       .post("/api/listings", data)
@@ -286,7 +318,12 @@ const OfferModal = () => {
         reset();
         setStep(STEPS.TYPE);
         offerModal.onClose();
-        socket.emit("new_listing", response.data.listing, response.data.listing.userId, foundUser?.id);
+        socket.emit(
+          "new_listing",
+          response.data.listing,
+          response.data.listing.userId,
+          foundUser?.id
+        );
         if (response.data.message) {
           socket.emit("new_message", response.data.message);
         }
@@ -313,7 +350,7 @@ const OfferModal = () => {
         description="Name and describe your thing"
         nounderline
       />
-      <div className="mb-4">
+      <div className="mb-5">
         <Input
           id="title"
           label="Name of thing"
@@ -324,7 +361,9 @@ const OfferModal = () => {
           onChange={() => clearErrors("title")}
         />
       </div>
-      <div className="mb-4">
+
+      
+      <div>
         <TextArea
           id="description"
           label="Description"
@@ -336,22 +375,65 @@ const OfferModal = () => {
         />
       </div>
       <div>
-      <PriceInput
-        id="price"
-        label="Starting price (optional)"
-        type="number"
-        modal
-        formatPrice
-        register={register}
-        errors={errors}
-        placeholder="0.00"
-        onChange={() => clearErrors("price")}
-      />
-    </div>
+        <PriceInput
+          id="price"
+          label="Starting price"
+          type="number"
+          modal
+          formatPrice
+          register={register}
+          errors={errors}
+          placeholder="0.00"
+          onChange={() => clearErrors("price")}
+          sm
+          optional
+        />
       </div>
+     
+   </div>
   );
+  if (step === STEPS.ITEM) {
+    bodyContent = (
+    <div className="flex flex-col">
+      <Heading
+        title="Item Details"
+        description="Important infortmation about your thing"
+        nounderline
+      />
+      <div className="mb-5">
+        <CityAutocomplete selectedCity={selectedCity} setSelectedCity={setSelectedCity} />
+      </div>
+      
 
-  
+        <div className="mb-4">
+        <label className="block mb-3">
+          Condition <span className="italic text-gray-500 text-sm "> (Optional)</span>
+        </label>
+        <select defaultValue={'Select'} className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0 active:ring-0 active:border-0 " {...register('condition')}>
+          <option value="Select" disabled className="text-gray-600">Select</option>
+          <option value="new">New</option>
+          <option value="used">Used</option>
+          <option value="damaged">Damaged</option>
+        </select>
+
+        </div>
+        <div className="mb-4">
+        <label className="block mb-3">
+          Pickup <span className="italic text-gray-500 text-sm "> (Optional)</span>
+        </label>
+        <select defaultValue={'Select'} className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0" {...register('pickup')}>
+          <option value="Select" disabled className="text-gray-600">Select</option>
+          <option className=" focus:border-orange-300 focus:ring-0" value="collection">Collection Only</option>
+          <option value="pickup">Pickup Only</option>
+          <option value="both">Collection or Pickup</option>
+        </select>
+
+        </div>
+    
+      </div>
+    );
+  };
+
   if (step === STEPS.CATEGORY) {
     const updateCategory = (category: string) => {
       setSelectedCategory(category);
@@ -372,10 +454,10 @@ const OfferModal = () => {
           <div className="text-red-500 text-sm">Select a category</div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
-          {itemCategories.map((item) => (
+          {itemCategories.map((item, i) => (
             <CategoryInput
               name={item}
-              key={item}
+              key={i}
               selected={selectedCategory === item}
               onClick={updateCategory}
               register={register}
@@ -393,12 +475,12 @@ const OfferModal = () => {
           title="Offer type"
           description="Choose the type of offer you want to create"
         />
-        <div className="mb-4">
+        <div className="mb-5">
           <UserType
             setValue={setValue}
             setUserType={setUserType}
             userType={userType}
-            notrade 
+            notrade
             clearErrors={clearErrors}
           />
           {errors.userType && (
@@ -431,12 +513,11 @@ const OfferModal = () => {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
-          title={`Select the ${userType === 'buyer' ? 'Seller' : 'Buyer'}`}
+          title={`Select the ${userType === "buyer" ? "Seller" : "Buyer"}`}
           description={`Who would you like to send this offer to?`}
           nounderline
         />
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-       
           {foundUser ? (
             <>
               <p className="font-bold">Found: {}</p>
@@ -464,8 +545,8 @@ const OfferModal = () => {
                   <Button
                     options={{ size: "xs" }}
                     onClick={() => {
-                      setFoundUser(null)
-                      clearErrors("buyer")
+                      setFoundUser(null);
+                      clearErrors("buyer");
                     }}
                   >
                     Change
@@ -475,30 +556,30 @@ const OfferModal = () => {
             </>
           ) : (
             <>
-            <div className="flex rounded-lg relative pb-8">
-              <input
-                id="username"
-                type="text"
-                required
-                placeholder="Enter MYAO name"
-                className="rounded-l-lg border border-gray-200 p-2 flex-1 lowercase focus:border-orange-300 hover:border-orange-300 focus:outline-none"
-                value={search}
-                onChange={(e) => {setSearch(e.target.value);}}
-                {...register}
-              />
-              <button
-                className="bg-orange-400 border border-orange-400 px-2 my-auto rounded-r-lg mr-auto text-sm py-2 text-white flex gap-2 items-center"
-                onClick={onSearchUser}
-              >
-                Search <BiChevronRight />
-              </button>
-              {errors && errors.user && (
-            <div className=" text-sm text-red-500 absolute bottom-0">
-              {String(errors.user?.message)}
-            </div>
-          )}
-            </div>
-            
+              <div className="flex rounded-lg relative pb-8">
+                <input
+                  id="username"
+                  type="text"
+                  required
+                  placeholder="Enter MYAO name"
+                  className="rounded-l-lg border border-gray-200 p-2 flex-1 lowercase focus:border-orange-300 hover:border-orange-300 focus:outline-none"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                  }}
+                />
+                <button
+                  className="bg-orange-400 border border-orange-400 px-2 my-auto rounded-r-lg mr-auto text-sm py-2 text-white flex gap-2 items-center"
+                  onClick={onSearchUser}
+                >
+                  Search <BiChevronRight />
+                </button>
+                {errors && errors.user && (
+                  <div className=" text-sm text-red-500 absolute bottom-0">
+                    {String(errors.user?.message)}
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -514,7 +595,7 @@ const OfferModal = () => {
           nounderline
         />
         <div>
-          <h5 className="mb-4">Review Details</h5>
+          <h5 className="mb-5">Review Details</h5>
           <div className="flex gap-4">
             <div className="w-1/5">
               <img

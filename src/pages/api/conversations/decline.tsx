@@ -17,7 +17,7 @@ export default async function accept(
     try {
       const listing = await prisma.conversation.update({
         where: { id: conversationId },
-        data: { status: "declined", updatedAt: new Date(now) },
+        data: { status: "declined" },
       });
 
 

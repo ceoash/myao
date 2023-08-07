@@ -19,6 +19,7 @@ import avatar from "@/images/avatar.png";
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { MdOutlineCalendarMonth, MdOutlineSignpost, MdOutlineSyncAlt } from "react-icons/md";
 
 interface SafeUser extends User {
   profile: Profile;
@@ -65,6 +66,9 @@ interface OfferDetailsWidgetProps {
     yes: boolean;
     no: boolean;
     negotiating: boolean;
+    user: boolean;
+    status: boolean;
+    loading: boolean;
   }
   setLoadingState: Dispatch<SetStateAction<{
     cancelled: boolean;
@@ -74,6 +78,9 @@ interface OfferDetailsWidgetProps {
     yes: boolean;
     no: boolean;
     negotiating: boolean;
+    user: boolean;
+    status: boolean;
+    loading: boolean;
   }>>
   currentBid: any;
   setBids: Dispatch<SetStateAction<Bid[]>>;
@@ -264,13 +271,13 @@ const OfferDetailsWidget = ({
                       </div>
                       <div className="flex gap-2 text-sm">
                         <div className="flex gap-1 items-center">
-                          <BiCategoryAlt />
+                          <MdOutlineSyncAlt />
                           <div>
                             {listing.type === "sellerOffer" ? "Sale" : "Buy"}
                           </div>
                         </div>
                         <div className="flex gap-1 items-center">
-                          <BiCalendar />
+                          <MdOutlineCalendarMonth />
                           <div>{timeSinceCreated}</div>
                         </div>
                       </div>
@@ -323,7 +330,7 @@ const OfferDetailsWidget = ({
         </div>
         <div>
           <div className=" gap-2 text-sm text-white font-bold mb-6 items-start">
-            {currentBid.byUserId !== session?.user?.id  &&
+            {currentBid.byUserId !== session?.user?.id  && currentBid.currentPrice !=='0' && currentBid.currentPrice !=='' && 
               status === "negotiating" && (
                 <div className="w-2/3 flex gap-2 mx-auto justify-center">
                   <div className="flex flex-col justify-center  items-center gap-4">

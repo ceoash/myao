@@ -43,8 +43,8 @@ const ReviewBox = ({ review }: ReviewProps) => {
         </div>
       </div>
       <div className="flex items-center mb-2">
-        {Array.apply(null, Array(review.rating)).map((star) => (
-          <BsFillStarFill className="inline-block text-orange-500" />
+        {Array.apply(null, Array(review.rating)).map((star, i) => (
+          <BsFillStarFill key={i} className="inline-block text-orange-500" />
         ))}
       </div>
 

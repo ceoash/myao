@@ -1,12 +1,26 @@
 import Button from "@/components/dashboard/Button";
-import { Conversation, Listing } from "@prisma/client";
+import { IUser } from "@/interfaces/authenticated";
+import { DirectMessage, Listing } from "@prisma/client";
 import Link from "next/link";
-import React, { use, useEffect, useState } from "react";
+import React, { Dispatch, use, useEffect, useState } from "react";
 import { BiBlock, BiCheck, BiDotsVerticalRounded, BiUserCheck, BiUserMinus, BiUserPlus, BiUserX } from "react-icons/bi";
 import { BsSignDoNotEnterFill } from "react-icons/bs";
 import { FaCheck, FaPlus, FaTimes, FaUserCheck, FaUserPlus, FaUserTimes } from "react-icons/fa";
 import { MdDoNotDisturbAlt } from "react-icons/md";
-
+interface Conversation {
+  id: string;
+  participant1: IUser;
+  participant2: IUser;
+  participant1Id: string;
+  participant2Id: string;
+  createdAt: string;
+  updatedAt: string;
+  directMessages: DirectMessage[];
+  friendStatus?: boolean;
+  blockedStatus?: boolean;
+  status?: string;
+  currentUser?: any
+}
 interface HeaderProps {
   participant: any;
   username: string;
@@ -14,7 +28,7 @@ interface HeaderProps {
   handleAccept: () => void;
   session: any;
   reject: any;
-  setStatus: () => void;
+ 
   toggleDropdown: any;
   offerModal: any;
   setToggleDropdown: () => void;
@@ -22,7 +36,7 @@ interface HeaderProps {
   isFriend: any;
   handleBlocked: () => void;
   isBlocked: boolean;
-  status: string;
+  setActiveConversationState: Dispatch<React.SetStateAction<Conversation | null>>;
 }
 
 const Header = ({
@@ -32,7 +46,6 @@ const Header = ({
   handleAccept,
   session,
   reject,
-  setStatus,
   toggleDropdown,
   offerModal,
   setToggleDropdown,
@@ -40,7 +53,7 @@ const Header = ({
   isFriend,
   handleBlocked,
   isBlocked,
-  status,
+  setActiveConversationState
 }: HeaderProps) => {
   const [statusState, setStatusState] = useState("");
 
@@ -112,7 +125,7 @@ const Header = ({
       </div>
       <div className="flex items-center gap-2 relative">
         <div className="flex gap-2 relative">
-          {status !== "declined" && (
+          {activeConversationState?.status !== "declined" && (
             <>
               {activeConversationState.status === "none" &&
               activeConversationState?.participant2Id === session.user.id ? (
@@ -124,13 +137,14 @@ const Header = ({
                     <Button
                       onClick={() =>
                         reject.onOpen(
+                          activeConversationState,
                           activeConversationState?.id,
                           activeConversationState?.participant1Id ===
                             session.user.id
                             ? activeConversationState?.participant2Id
                             : activeConversationState?.participant1Id,
-                          session.user,
-                          setStatus
+                          session,
+                          setActiveConversationState
                         )
                       }
                     >
@@ -142,8 +156,7 @@ const Header = ({
                 <>
                   <Button
                   
-                    onClick={() =>
-                      offerModal.onOpen(
+                    onClick={() => session?.user?.id && offerModal.onOpen(
                         activeConversationState?.participant1Id ===
                           session.user.id
                           ? activeConversationState?.participant1

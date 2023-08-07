@@ -127,6 +127,7 @@ model Listing {
   expireAt        DateTime?
   title           String?
   description     String?
+  options         Json?
   category        String?
   status          String?
   image           String?

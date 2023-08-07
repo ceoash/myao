@@ -75,7 +75,7 @@ export default async function listingsApi(
         type: "Offer",
         message: userId === listing?.buyer?.id 
         ? `You ${status !== "negotiating" ? status : "are negotiating"} your offer` 
-        : `${status === "negotiating" ? 'You and ' + listing?.seller?.username + " are negotiating" : listing?.seller?.username + " accepted the offer"}`,
+        : `${status === "negotiating" ? 'You and ' + listing?.seller?.username + " are negotiating" : listing?.seller?.username + " " + status + " the offer"}`,
         action: "/dashboard/offers/" + listing.id,
         modelId: listing.id,
         createdAt: now,
@@ -86,7 +86,7 @@ export default async function listingsApi(
         type: "Offer",
         message: userId === listing?.seller?.id 
         ? `You ${status !== "negotiating" ? status : "are negotiating"} your offer` 
-        : `${status === "negotiating" ? 'You and ' + listing?.buyer?.username + " are negotiating" : listing?.buyer?.username + " accepted the offer"}`,
+        : `${status === "negotiating" ? 'You and ' + listing?.buyer?.username + " are negotiating" : listing?.buyer?.username + " " + status + " the offer"}`,
         action: "/dashboard/offers/" + listing.id,
         modelId: listing?.id,
         createdAt: now,

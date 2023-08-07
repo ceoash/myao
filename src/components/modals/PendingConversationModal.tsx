@@ -91,7 +91,7 @@ const PendingConversationModal = ({}) => {
           <div className="font-bold">{participant?.username}</div>
         </div>
         {conversation?.directMessages?.map((message: any) => (
-          <div className="px-4 py-2 border-2 border-gray-200 rounded-md mr-auto bg-gray-50">
+          <div key={message.id} className="px-4 py-2 border-2 border-gray-200 rounded-md mr-auto bg-gray-50">
             <div>{message.text}</div>
             <div className="text-gray-400 text-xs">
               {formatDistanceToNow(new Date(message.updatedAt), {

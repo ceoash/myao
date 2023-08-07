@@ -1,14 +1,54 @@
 import { Bid, DirectMessage, Listing, Profile, User } from "@prisma/client";
 
-export interface IUser extends User{
-    profile: Profile
-    followers: User[];
-    followings: User[];
-    blockedBy: User[];
-    blockedFriends: User[];
-}
+
 
 interface IBid extends Bid { user: User; }
+
+export interface IDirectMessage {
+  id: string;
+  text: string | null;
+  userId: string;
+  conversationId: string;
+  image: string | null;
+}
+
+interface IBlockedStatus {
+  isBlocked: boolean;
+  hasBlocked: boolean;
+  isBlockedBy: string;
+}
+
+export interface IUser extends User {
+  profile: {
+    id: string;
+    image: string;
+    bio: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  directMessages: IDirectMessage[];
+  friends: IUser[];
+  blockedFriends: any[];
+  blockedBy: any[];
+  buyer: any[];
+  seller: any[];
+}
+
+export interface Conversation {
+  id: string;
+  participant1: IUser;
+  participant2: IUser;
+  participant1Id: string;
+  participant2Id: string;
+  createdAt: string;
+  updatedAt: string;
+  directMessages: DirectMessage[];
+  friendStatus?: boolean;
+  blockedStatus?: boolean;
+  status?: string;
+  currentUser?: any
+}
 
 export interface ProfileUser extends User {
   profile: Profile;

@@ -21,13 +21,22 @@ export default async function listingsApi(
   req: NextApiRequest,
   res: NextApiResponse<ListingResponse | ErrorResponse>
 ) {
-  const now = Date.now()
+  const now = Date.now();
 
   async function createListing(data: any) {
+    if (!data)
+      return res.status(400).json({ error: "Missing required fields" });
 
-    if(!data) return res.status(400).json({ error: "Missing required fields" })
+   const listingActivities = [
+      {
+        type: "Listing Created",
+        message: "Listing Created",
+        createdAt: now,
+        userId: data.userId,
+      },
+    ];
 
-    data.activities = [{ type: "Listing Created", message: "Listing Created", createdAt: now, userId: data.userId }]
+    data.activities = listingActivities;
 
     const listing = await prisma.listing.create({
       data: data,
@@ -43,20 +52,20 @@ export default async function listingsApi(
       },
     });
 
-    if(listing?.image) parsedImg = JSON.parse(listing.image) || null
+    if (listing?.image) parsedImg = JSON.parse(listing.image) || null;
 
+    if (!listing)
+      return res.status(400).json({ error: "Unable to create listing" });
 
-    if (!listing) return res.status(400).json({ error: "Unable to create listing" });
+    const participantId =
+      listing.userId === listing.buyerId ? listing.sellerId : listing.buyerId;
 
-    const participantId = listing.userId === listing.buyerId ? listing.sellerId : listing.buyerId;
-    
-    
     const newActivity = {
       type: "New Offer",
       message: "New Offer",
       action: "/dashboard/offers/" + listing.id,
       modelId: participantId,
-      createdAt: now
+      createdAt: now,
     };
 
     let activities = Array.isArray(listing.activities)
@@ -77,7 +86,7 @@ export default async function listingsApi(
           take: 1,
           orderBy: {
             createdAt: "desc",
-          }
+          },
         },
         user: true,
       },
@@ -86,8 +95,6 @@ export default async function listingsApi(
     return updatedListing;
   }
 
-
-
   async function createMessage(
     prisma: PrismaClient,
     listing: any,
@@ -95,8 +102,6 @@ export default async function listingsApi(
     type: string | null
   ) {
     const message = await prisma.directMessage.create({
-
-      
       data: {
         image: parsedImg[0],
         text: "New offer created",
@@ -111,20 +116,20 @@ export default async function listingsApi(
           include: {
             user: {
               include: {
-                profile: true
-              }
+                profile: true,
+              },
             },
             buyer: {
               include: {
-                profile: true
-              }
+                profile: true,
+              },
             },
             seller: {
               include: {
-                profile: true
-              }
-            }
-          }
+                profile: true,
+              },
+            },
+          },
         },
       },
     });
@@ -144,9 +149,10 @@ export default async function listingsApi(
       type,
       userId,
       participantId,
+      options,
     } = req.body;
 
-    console.log(req.body)
+    console.log(req.body);
 
     try {
       const newListingData = {
@@ -160,85 +166,135 @@ export default async function listingsApi(
         buyerId,
         userId,
         type,
+        options,
+
       };
 
       let message;
-
 
       const listing = await createListing(newListingData);
       if (conversationId) {
         message = await createMessage(prisma, listing, conversationId, type);
       }
 
-      const ownerId = listing?.type === 'buyerOffer' ? listing?.buyerId : listing?.sellerId;
+      const ownerId =
+        listing?.type === "buyerOffer" ? listing?.buyerId : listing?.sellerId;
+
+        
 
       const buyerActivity = {
         type: "New Offer",
-        message: `${listing?.type === 'buyerOffer' && listing.userId === listing.buyerId ? `You sent ${listing?.seller.username} a offer` : `${listing?.buyer?.username} sent you a offer`} `,
+        message: `${
+          listing?.type === "buyerOffer" && listing.userId === listing.buyerId
+            ? `You sent ${listing?.seller.username} a offer`
+            : `${listing?.seller?.username} sent you a offer`
+        } `,
         action: "/dashboard/offers/" + listing?.id,
         modelId: listing?.id,
         createdAt: now,
         value: listing?.status,
         userId: ownerId,
       };
-  
+
       const sellerActivity = {
         type: "New Offer",
-        message: `${listing?.type === 'sellerOffer' && listing.userId === listing.sellerId ? `You sent ${listing?.buyer?.username} a offer` : `${listing?.seller.username} sent you a offer`} `,
+        message: `${
+          listing?.type === "sellerOffer" && listing.userId === listing.sellerId
+            ? `You sent ${listing?.buyer?.username} a offer`
+            : `${listing?.buyer?.username} sent you a offer`
+        } `,
         action: "/dashboard/offers/" + listing?.id,
         modelId: listing?.seller?.id,
         createdAt: now,
         value: listing?.status,
-        userId: ownerId
+        userId: ownerId,
       };
-  
+
       if (listing?.sellerId && listing.buyerId) {
-        const seller = createActivityForUser(listing.sellerId, sellerActivity, listing.seller.activities);
-        const buyer = createActivityForUser(listing.buyerId, buyerActivity, listing?.buyer?.activities);
+        const seller = createActivityForUser(
+          listing.sellerId,
+          sellerActivity,
+          listing.seller.activities
+        );
+        const buyer = createActivityForUser(
+          listing.buyerId,
+          buyerActivity,
+          listing?.buyer?.activities
+        );
         const transactionOperations = [seller, buyer];
-        
+
         try {
-          const transactionResult = await prisma.$transaction(transactionOperations);
+          const transactionResult = await prisma.$transaction(
+            transactionOperations
+          );
           res.status(200).json({ listing, message, transactionResult });
         } catch (error) {
           console.error("Transaction failed: ", error);
-          res.status(500).json({ error: "Something went wrong during the transaction" });
+          res
+            .status(500)
+            .json({ error: "Something went wrong during the transaction" });
         }
       } else if (listing?.user) {
-        const seller = createActivityForUser(listing.sellerId, sellerActivity, listing?.seller.activities);
+        const seller = createActivityForUser(
+          listing.sellerId,
+          sellerActivity,
+          listing?.seller.activities
+        );
         const transactionOperations = [seller];
         try {
-          const transactionResult = await prisma.$transaction(transactionOperations);
+          const transactionResult = await prisma.$transaction(
+            transactionOperations
+          );
           res.status(200).json({ listing, message, transactionResult });
         } catch (error) {
           console.error("Transaction failed: ", error);
-          res.status(500).json({ error: "Something went wrong during the transaction" });
+          res
+            .status(500)
+            .json({ error: "Something went wrong during the transaction" });
         }
       }
-      
     } catch (error) {
       console.error("Error creating listing:", error);
       res.status(500).json({ error: "Something went wrong" });
     }
   } else if (req.method === "PUT") {
     const id = req.query.id as string;
-    const { title, description, price, image, buyerId, category, sellerId, type } = req.body;
+    const {
+      title,
+      description,
+      price,
+      image,
+      buyerId,
+      category,
+      sellerId,
+      type,
+      options
+    } = req.body;
     if (!id) {
       res.status(400).json({ error: "Missing listing id" });
       return;
     }
     let img;
 
-    if (image.isArray){
-      img = image[0]
-    }
-    else {
-      img = image
+    if (image.isArray) {
+      img = image[0];
+    } else {
+      img = image;
     }
     try {
       const listing = await prisma.listing.update({
         where: { id },
-        data: { title, description, category, price, image, buyerId, sellerId, type },
+        data: {
+          title,
+          description,
+          category,
+          price,
+          image,
+          buyerId,
+          sellerId,
+          type,
+          options
+        },
         include: {
           buyer: true,
           seller: true,
@@ -247,7 +303,7 @@ export default async function listingsApi(
             take: 1,
             orderBy: {
               createdAt: "desc",
-            }
+            },
           },
         },
       });
@@ -257,8 +313,8 @@ export default async function listingsApi(
         return;
       }
 
-      const ownerId = listing?.type === 'sale' ? listing?.buyerId : listing?.sellerId;
-      
+      const ownerId =
+        listing?.type === "sale" ? listing?.buyerId : listing?.sellerId;
 
       const buyerActivity = {
         type: "Offer",
@@ -267,7 +323,7 @@ export default async function listingsApi(
         modelId: listing.id,
         createdAt: now,
         value: listing.status,
-        userId: ownerId
+        userId: ownerId,
       };
       const sellerActivity = {
         type: "Offer",
@@ -276,32 +332,51 @@ export default async function listingsApi(
         modelId: listing?.id,
         createdAt: now,
         value: listing.status,
-        userId: ownerId
+        userId: ownerId,
       };
 
       if (listing?.sellerId && listing.buyerId) {
-        const seller = createActivityForUser(listing.sellerId, sellerActivity, listing.seller.activities);
-        const buyer = createActivityForUser(listing.buyerId, buyerActivity, listing.buyer?.activities);
+        const seller = createActivityForUser(
+          listing.sellerId,
+          sellerActivity,
+          listing.seller.activities
+        );
+        const buyer = createActivityForUser(
+          listing.buyerId,
+          buyerActivity,
+          listing.buyer?.activities
+        );
         const transactionOperations = [seller, buyer];
-        
+
         try {
-          const transactionResult = await prisma.$transaction(transactionOperations);
+          const transactionResult = await prisma.$transaction(
+            transactionOperations
+          );
           res.status(200).json({ listing, transactionResult });
         } catch (error) {
           console.error("Transaction failed: ", error);
-          res.status(500).json({ error: "Something went wrong during the transaction" });
+          res
+            .status(500)
+            .json({ error: "Something went wrong during the transaction" });
         }
       } else if (ownerId) {
-        const seller = createActivityForUser(listing.userId, sellerActivity, listing.user.activities);
+        const seller = createActivityForUser(
+          listing.userId,
+          sellerActivity,
+          listing.user.activities
+        );
         const transactionOperations = [seller];
         try {
-          const transactionResult = await prisma.$transaction(transactionOperations);
+          const transactionResult = await prisma.$transaction(
+            transactionOperations
+          );
           res.status(200).json({ listing, transactionResult });
         } catch (error) {
           console.error("Transaction failed: ", error);
-          res.status(500).json({ error: "Something went wrong during the transaction" });
+          res
+            .status(500)
+            .json({ error: "Something went wrong during the transaction" });
         }
-   
       } else {
         res.status(404).json({ error: "Buyer or seller not found" });
       }

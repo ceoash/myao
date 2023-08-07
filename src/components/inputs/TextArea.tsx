@@ -19,6 +19,7 @@ interface TextAreaProps {
   rows?: number;
   children?: React.ReactNode;
   clearErrors?: (name?: string | string[]) => void;
+  optional?: boolean;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -36,12 +37,16 @@ const TextArea: React.FC<TextAreaProps> = ({
   username,
   children,
   clearErrors,
+  optional
 }) => {
   return (
     <div>
       <div className="w-full">
-        <label htmlFor={id}>{label}</label>
-        <div className="relative">
+      <label htmlFor={id} className="flex gap-1">
+          {label} 
+          { optional && <span className="italic text-gray-500 text-sm "> (Optional)</span> }
+        </label>
+        <div className="relative mt-2">
         <textarea
           id={id}
           disabled={disabled}

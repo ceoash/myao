@@ -10,7 +10,7 @@ export default async function accept(
   req: NextApiRequest,
   res: NextApiResponse<any | ErrorResponse>
 ) {
-      const { user: userBlockedId, user2: friendBlockedId, conversationId } = req.body;
+      const { userBlockedId, friendBlockedId, conversationId } = req.body;
       const now = Date.now()
       if (!userBlockedId || !friendBlockedId) {
           return res.status(400).json({ error: "Missing necessary parameters." });

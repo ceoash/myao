@@ -20,6 +20,8 @@ const Sidebar = ({
   activeConversationState,
   session,
 }: SidebarProps) => {
+  
+
   return (
     <>
       <div className={`py-5 px-4 absolute ${isOpen ? "-right-8" : "-left-8"} `}>
@@ -46,6 +48,9 @@ const Sidebar = ({
       </div>
       <div className={`${isOpen ? "block" : "hidden"} `}>
         {filterBlockedConversation.map((conversation: any) => {
+            const lastMessage = conversation.directMessages[0]
+            const participant = conversation.participant1Id === session?.user?.id ? conversation.participant2 : conversation.participant1
+
           return (
             <div
               key={conversation.id}
@@ -57,7 +62,7 @@ const Sidebar = ({
               onClick={() => handleSetActiveConversation(conversation)}
             >
               <div className="w-10">
-                {conversation.participant1Id === session?.user?.id ? (
+                { conversation.participant1Id === session?.user?.id ? (
                   <Image
                     src={
                       conversation?.participant2?.profile?.image ||
@@ -92,32 +97,24 @@ const Sidebar = ({
               <div className="w-full">
                 <div className="flex justify-between items-center w-full">
                   <div className={`font-bold flex-1`}>
-                    {conversation.participant1Id === session?.user?.id
-                      ? conversation.participant2?.username
-                      : conversation.participant1?.username}
+                    {participant?.username}
                   </div>
                   <div className="ml-auto text-xs italic">
-                    {timeSince(conversation.updatedAt, true)}
+                    {timeSince(lastMessage.createdAt, true)}
                   </div>
                 </div>
                 <div className={`text-sm truncate ...`}>
                   {conversation.directMessages.length === 0 ||
-                  conversation.directMessages[
-                    conversation.directMessages.length - 1
-                  ].text === ""
-                    ? conversation.directMessages[
-                        conversation.directMessages.length - 1
-                      ]?.image
+                  lastMessage.text === ""
+                    ? lastMessage?.image
                       ? "image uploaded"
                       : "No messages yet"
-                    : conversation.directMessages[
-                        conversation.directMessages.length - 1
-                      ].text}
+                    : lastMessage.text}
                 </div>
               </div>
             </div>
           );
-        })}
+        }).reverse()}
       </div>
     </>
   );

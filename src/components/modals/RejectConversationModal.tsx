@@ -14,35 +14,43 @@ export interface ErrorResponse {
 }
 
 const RejectConversationModal = () => {
-  const { isOpen, conversationId, onClose, onOpen, setStatus, session, recipientId} = useRejectConversationModal();
+  const { isOpen, activeConversationState, onClose, onOpen, setActiveConversationState, session, recipientId} = useRejectConversationModal();
   const socketRef = React.useRef<Socket | null>(null);
   const [blockUser, setBlockUser] = useState(false);
 
   const handleDecline = async () => {
     if (blockUser) {
+      const data = {
+        conversationId: activeConversationState?.id,
+        userBlockedId: activeConversationState?.participant2Id,
+        friendBlockedId: activeConversationState?.participant1Id,
+      };
+      console.log("data", data);
       try {
-        const response = await axios.post("/api/conversations/declineBlock", {
-          conversationId: conversationId,
-          user: session?.user.id,
-          user2: recipientId,
-        });
+        const response = await axios.post("/api/conversations/declineBlock", data);
         toast.error("Declined and blocked");
-        setStatus("blocked");
+        setActiveConversationState((prev) => ({
+          ...prev,
+          status: "declined",
+          blockedStatus: true,
+        }));
         socketRef.current?.emit("decline_conversation", response.data.conversation);
         onClose();
         socketRef.current?.emit("block_user", response.data.newFriendshipBlock);
       } catch (error) {
-        toast.error("failed to decline and block user");
       }
       return;
     }
     
     try {
       const response = await axios.post("/api/conversations/decline", {
-        conversationId: conversationId,
+        conversationId: activeConversationState?.id,
       });
       toast.error("declined");
-      setStatus("declined"); 
+      setActiveConversationState((prev) => ({
+        ...prev,
+        status: "declined",
+      }));
       onClose();
       socketRef.current?.emit("decline_conversation", response.data);
     } catch (error) {

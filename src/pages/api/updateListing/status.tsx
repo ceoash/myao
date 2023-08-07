@@ -11,6 +11,7 @@ interface ErrorResponse {
 interface ListingResponse {
   listing: Listing
   transactionResult: Activity[]
+  userId?: string
 }
 
 export default async function listingsApi(
@@ -101,7 +102,7 @@ export default async function listingsApi(
         
         try {
           const transactionResult = await prisma.$transaction(transactionOperations);
-          res.status(200).json({ listing, transactionResult });
+          res.status(200).json({ listing, transactionResult, userId });
         } catch (error) {
           console.error("Transaction failed: ", error);
           res.status(500).json({ error: "Something went wrong during the transaction" });
@@ -111,7 +112,7 @@ export default async function listingsApi(
         const transactionOperations = [user];
         try {
           const transactionResult = await prisma.$transaction(transactionOperations);
-          res.status(200).json({ listing, transactionResult });
+          res.status(200).json({ listing, transactionResult, userId });
         } catch (error) {
           console.error("Transaction failed: ", error);
           res.status(500).json({ error: "Something went wrong during the transaction" });

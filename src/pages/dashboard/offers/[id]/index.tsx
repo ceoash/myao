@@ -25,6 +25,7 @@ import Button from "@/components/dashboard/Button";
 import Header from "@/components/dashboard/offer/Header";
 import { useRouter } from "next/navigation";
 import { CiMedicalCross, CiLocationOn, CiDeliveryTruck, CiCalendar  } from "react-icons/ci";
+import { set } from "date-fns";
 
 interface MessageProps {
   buyerId: string;
@@ -343,12 +344,14 @@ const Index = ({ listing, session }: any) => {
       );
 
     socketRef.current &&
-      socketRef.current.on("update_status", ({ newStatus, listingId }) => {
+      socketRef.current.on("update_status", ({ newStatus, listingId, userId }) => {
         if (listingId === id) {
           console.log(
             `Received status update for listing ${listingId}: ${newStatus}`
           );
           setStatus(newStatus);
+          setCompletedBy(userId);
+
         }
       });
 
@@ -479,7 +482,10 @@ const Index = ({ listing, session }: any) => {
             socketRef.current?.emit("update_status", {
               newStatus: status,
               listingId: id,
+              userId: userId,
             });
+
+            console.log("Status updated successfully!", response.data);
             socketRef.current?.emit(
               "update_activities",
               response.data.transactionResult,

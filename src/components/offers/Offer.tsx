@@ -103,7 +103,7 @@ const Offer: React.FC<any> = ({
           newStatus: response.data.listing.status,
           listingId: id,
         });
-        // console.log("response", response.data);
+       console.log("response", response.data);
         socketRef.current?.emit(
           "update_activities",
           response.data.transactionResult,

@@ -103,6 +103,9 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
         });
         const now = Date.now();
         let newBid: Bid;
+
+        console.log("transactions", transactions);  
+        console.log("updated", updatedListing);  
         
         
         const userId = sessionUser?.id

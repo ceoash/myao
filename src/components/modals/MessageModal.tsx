@@ -58,8 +58,9 @@ const MessageModal = ({  }) => {
 
           socket && socket.emit(
             "update_activities",
-            transactionResult[0],
-            owner.id,
+            transactionResult,
+            updatedConversation.participant1.id,
+            updatedConversation.participant2.id
           );
         }
       })

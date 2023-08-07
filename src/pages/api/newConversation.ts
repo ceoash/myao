@@ -201,6 +201,7 @@ export default async function newConversation(
                 modelId: newConversation.id
               },
             ],
+            
           },
           include: {
             participant1: true,
@@ -210,18 +211,18 @@ export default async function newConversation(
         });
         const participant1Activity = {
           type: "New Conversation Started",
-          message: `${userId === updatedConversation.participant1Id ? "You started a new conversation" : "You received a message"}`,
-          action: "/dashboard/conversations" + updatedConversation.id,
+          message: `You started a new conversation`,
+          action: "/dashboard/conversations?=" + updatedConversation.id,
           modelId: updatedConversation.id,
           value: updatedConversation.participant2.username,
-          userId: userId,
+          userId: updatedConversation.id,
           createdAt: now,
         };
         const participant2Activity = {
           type: "New Conversation Started",
-          message: `${userId === updatedConversation.participant2Id ? "You started a new conversation" : "You received a message"}`,
+          message: `You received a message`,
           value: updatedConversation.participant1.username,
-          action: "/dashboard/conversations" + updatedConversation.id,
+          action: "/dashboard/conversations?=" + updatedConversation.id,
           modelId: updatedConversation?.id,
           userId: userId,
           createdAt: now,

@@ -97,14 +97,7 @@ export default async function submitBid(
         modelId: listing.id,
         userId: bidById,
         createdAt: now,
-        value: `By ${
-          bidById === listing?.userId
-            ? "You"
-            : listing.bids[listing.bids.length - 1].userId ===
-              listing.sellerId
-            ? listing.seller.username
-            : listing.buyer?.username
-        }`,
+        value: `By ${ listing.bids[listing.bids.length - 1].userId === listing.sellerId ? "You" : listing.buyer?.username }`,
       };
 
       const buyerActivity = {
@@ -114,14 +107,7 @@ export default async function submitBid(
         modelId: listing?.id,
         userId: bidById,
         createdAt: now,
-        value: `By ${
-          bidById === listing?.userId
-            ? "You"
-            : listing.bids[listing.bids.length - 1].userId ===
-              listing.sellerId
-            ? listing.seller.username
-            : listing.buyer?.username
-        }`,
+        value: `By ${ listing.bids[listing.bids.length - 1].userId === listing.buyerId ? "You" : listing.seller?.username }`,
       };
 
       if (listing?.sellerId && listing.buyerId) {

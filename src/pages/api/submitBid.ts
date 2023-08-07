@@ -88,16 +88,16 @@ export default async function submitBid(
         }
       });
 
-      if (!listing) { return res.status(400).json({ error: "Unable to update listing" }); }
+      if (!listing || !newBid) { return res.status(400).json({ error: "Unable to update listing" }); }
       
       const sellerActivity = {
         type: "Offer",
         message: `New bid submitted`,
         action: "/dashboard/offers/" + listing.id,
         modelId: listing.id,
-        userId: bidById,
+        userId: newBid.userId,
         createdAt: now,
-        value: `By ${ listing.bids[listing.bids.length - 1].userId === listing.sellerId ? "You" : listing.buyer?.username }`,
+        value: `By ${ newBid.userId === listing.sellerId ? "You" : listing.buyer?.username }`,
       };
 
       const buyerActivity = {
@@ -105,9 +105,9 @@ export default async function submitBid(
         message: `New bid submitted`,
         action: "/dashboard/offers/" + listing.id,
         modelId: listing?.id,
-        userId: bidById,
+        userId: newBid.userId,
         createdAt: now,
-        value: `By ${ listing.bids[listing.bids.length - 1].userId === listing.buyerId ? "You" : listing.seller?.username }`,
+        value: `By ${ newBid.userId === listing.buyerId ? "You" : listing.seller?.username }`,
       };
 
       if (listing?.sellerId && listing.buyerId) {

@@ -213,11 +213,11 @@ const Index = ({
             <Offers
               sent={sentOffers}
               received={receivedOffers}
-              countSent={countSent}
-              countReceived={countReceived}
+              countSent={count.sent}
+              countReceived={count.received}
               session={session}
-              countPendingReceived={countPendingReceived}
-              countPendingSent={countPendingSent}
+              countPendingReceived={count.pendingReceived}
+              countPendingSent={count.pendingSent}
               setCount={setCount}
             />
             {countSent || countReceived ? (

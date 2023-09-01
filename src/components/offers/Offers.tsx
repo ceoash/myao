@@ -63,12 +63,8 @@ const Offers = ({
   >({});
   const [activeTab, setActiveTab] = useState(defaultTab || "sent");
   const [skip, setSkip] = useState(5);
-
   const [isMounted, setIsMounted] = useState(false);
-
   const create = useOfferModal();
-
-  console.log("received", receivedListings);
 
   // console.log("sent", allSent);
   // console.log("received", allReceived);
@@ -101,6 +97,9 @@ const Offers = ({
     }
   }, [sent, received]);
 
+
+  console.log("count", countSent,)
+  console.log("listings", sentListings,)
   const fetchListingsByCategory = async (
     category: string,
     userId: string,
@@ -126,8 +125,6 @@ const Offers = ({
       setIsLoading(false);
     }
   };
-
-  console.log("selectedCategory", selectedCategory);
 
 
   useEffect(() => {
@@ -204,9 +201,10 @@ const Offers = ({
   const socket = useSocketContext();
 
   useEffect(() => {
-    if (!isMounted) return;
     socket.on("new_listing", (data) => {
       const { listing } = data;
+
+      console.log("new", listing)
 
       if (session?.user.id !== listing.userId) {
         setAllReceived((prevListings: any) => {
@@ -226,6 +224,7 @@ const Offers = ({
             };
             return newCount;
           });
+          console.log("count sent", countSent)
       }
 
       if (session?.user.id === listing.userId) {
@@ -247,7 +246,7 @@ const Offers = ({
     return () => {
       socket.off("new_listing");
     };
-  }, [isMounted]);
+  }, [session?.user.id]);
 
   return (
     <div className="-mx-4 sm:-mx-8 px-4 sm:px-8  rounded-lg mb-4">
@@ -262,8 +261,8 @@ const Offers = ({
                       "border !bg-orange-300 border-orange-200 text-white"
                     }`}
                     onClick={() => {
-                      setActiveTab("sent");
-                      handleCategoryChange("all");
+                      activeTab !== "sent" && setActiveTab("sent");
+                      activeTab !== "sent" && handleCategoryChange("all");
                     }}
                   >
                     SENT
@@ -271,8 +270,8 @@ const Offers = ({
                   <div
                     className={`uppercase cursor-pointer font-bold items-start flex`}
                     onClick={() => {
-                      setActiveTab("received");
-                      handleCategoryChange("all");
+                      activeTab !== "received" && setActiveTab("received");
+                      activeTab !== "received" && handleCategoryChange("all");
                     }}
                   >
                     <span
@@ -336,7 +335,7 @@ const Offers = ({
                 ))
               ) : (
                 <div className="min-w-full transition-all ease-in-out duration-200">
-                  {countSent > 0 &&
+                  {sentListings.all.length > 0 && 
                   sentListings[selectedCategory] ? (
                     sentListings[selectedCategory].map((item: Listing) => {
                       return <Offer key={item.id} {...item} />;
@@ -387,19 +386,20 @@ const Offers = ({
                 ))
               ) : (
                 <div className="min-w-full transition-all ease-in-out duration-200">
-                  {countReceived > 0 &&
+                  {receivedListings.all.length > 0 &&
                   receivedListings[selectedCategory] ? (
                     receivedListings[selectedCategory].map((item: Listing) => {
                       return <Offer key={item.id} {...item} />;
                     })
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center rounded-xl bg-white  border border-gray-200 py-16 ">
-                    <div className="text-gray-700 text-lg font-bold  mx-4 mb-4 text-center">
+                    <div className="text-gray-700 text-lg font-bold  mx-4 mb-4 text-center ">
                       No offers to display{" "}
                       <p className="text-gray-700 text-sm mt-2 font-normal mb-3">
                        Connect and create a offer to get started
                       </p>
                     </div>
+                   
                     <Button
                       label="Get started"
                       onClick={create.onOpen}

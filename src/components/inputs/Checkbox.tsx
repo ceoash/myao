@@ -1,7 +1,5 @@
 "use client";
 
-import { set } from "date-fns";
-
 interface CheckboxProps {
   id: string;
   label: string;
@@ -17,7 +15,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
   checked,
   onChange,
   onClick,
-  radio,
+  radio
 
 }) => {
   return (
@@ -26,21 +24,23 @@ const Checkbox: React.FC<CheckboxProps> = ({
       items-center
       mr-4
     ">
-      <div
+      <input
         id={id}
-        className={`
+        name={id}
+        value={id}
+        type={`${radio ? "radio" : "checkbox"}`}
+        checked={checked}
+        onChange={onChange}
+        onClick={onClick}
+        className="
           w-4
           h-4
-          accent-red-500
+          accent-pink-500
+          bg-gray-100
+          border-gray-300
           rounded
-          !text-white
-          !bg-white
-          p-1
-          border-2
-          border-gray-400
-          ${checked && "bg-red-500 border-red-500"}
-          ${"rounded-full"}
-          `}
+          focus:ring-orange-500
+          focus:ring-2"
       />
       <label
       htmlFor={id}

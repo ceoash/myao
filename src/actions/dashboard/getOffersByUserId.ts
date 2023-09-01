@@ -10,7 +10,7 @@ export default async function getOffersByUserId(
     return null;
   }
   
-  const id = session.user.id;
+  const id = session?.user.id;
   const blockedIds = blocked?.map((blocker: { friendBlockedId: string }) => blocker.friendBlockedId);
   
   try {
@@ -62,6 +62,24 @@ export default async function getOffersByUserId(
                 image: true,
               },
             },
+          },
+        },
+        buyer: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            profile: {
+              select: {
+                image: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            username: true,
           },
         },
       },
@@ -138,18 +156,29 @@ export default async function getOffersByUserId(
             AND: [
               { buyerId: id },
               { type: "buyerOffer" },
+              {
+                sellerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
           {
             AND: [
               { sellerId: id },
               { type: "sellerOffer" },
+              {
+                buyerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
         ],
 
       },
     });
+
     const countPendingSent = await prisma?.listing.count({
       where: {
         OR: [
@@ -158,6 +187,11 @@ export default async function getOffersByUserId(
               { buyerId: id },
               { type: "buyerOffer" },
               { status: "awaiting approval" },
+              {
+                sellerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
           {
@@ -165,11 +199,17 @@ export default async function getOffersByUserId(
               { sellerId: id },
               { type: "sellerOffer" },
               { status: "awaiting approval" },
+              {
+                buyerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
         ],
       },
     });
+
     const countReceived = await prisma?.listing.count({
       where: {
         OR: [
@@ -177,18 +217,29 @@ export default async function getOffersByUserId(
             AND: [
               { buyerId: id },
               { type: "sellerOffer" },
+              {
+                sellerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
           {
             AND: [
               { sellerId: id },
               { type: "buyerOffer" },
+              {
+                buyerId: {
+                  notIn: blockedIds,
+                },
+              },
 
             ],
           },
         ],
       },
     });
+    
     const countPendingReceived = await prisma?.listing.count({
       where: {
         OR: [
@@ -197,6 +248,11 @@ export default async function getOffersByUserId(
               { buyerId: id },
               { type: "sellerOffer" },
               { status: "awaiting approval" },
+              {
+                sellerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
           {
@@ -204,6 +260,11 @@ export default async function getOffersByUserId(
               { sellerId: id },
               { type: "buyerOffer" },
               { status: "awaiting approval" },
+              {
+                buyerId: {
+                  notIn: blockedIds,
+                },
+              },
             ],
           },
         ],

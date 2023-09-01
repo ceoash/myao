@@ -166,7 +166,7 @@ const StartConversation = ({}: StartConversationProps) => {
         <>
         <div className="flex mb-4">
         <input type="text" disabled value={notFoundUser} className="border border-gray-200 rounded-md px-4 py-2 w-full"/>
-        <button onClick={() => setNotFoundUser("")} className="bg-orange-400 px-4 py-2 text-white flex-1 rounded-r-md">Change</button>
+        <button onClick={() => setNotFoundUser("")} className="bg-orange-default px-4 py-2 text-white flex-1 rounded-r-md">Change</button>
             
         </div>
 
@@ -178,7 +178,7 @@ const StartConversation = ({}: StartConversationProps) => {
         <button
         onClick={handleSubmit(onSendMessage)}
           type="button"
-          className="p-2 bg-orange-400 rounded-md text-xs text-white">
+          className="p-2 bg-orange-default rounded-md text-xs text-white">
             Send message
         </button>
 
@@ -195,7 +195,7 @@ const StartConversation = ({}: StartConversationProps) => {
           {foundUser.username}
           <button
             onClick={() => handleUserSelect(foundUser)}
-            className="p-2 bg-orange-400 rounded-md text-xs text-white"
+            className="p-2 bg-orange-default rounded-md text-xs text-white"
           >
             Select user
           </button>

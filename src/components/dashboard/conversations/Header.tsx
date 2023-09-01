@@ -1,12 +1,11 @@
 import Button from "@/components/dashboard/Button";
 import { IUser } from "@/interfaces/authenticated";
-import { DirectMessage, Listing } from "@prisma/client";
+import { DirectMessage } from "@prisma/client";
 import Link from "next/link";
-import React, { Dispatch, use, useEffect, useState } from "react";
-import { BiBlock, BiCheck, BiDotsVerticalRounded, BiUserCheck, BiUserMinus, BiUserPlus, BiUserX } from "react-icons/bi";
-import { BsSignDoNotEnterFill } from "react-icons/bs";
-import { FaCheck, FaPlus, FaTimes, FaUserCheck, FaUserPlus, FaUserTimes } from "react-icons/fa";
-import { MdDoNotDisturbAlt } from "react-icons/md";
+import React, { Dispatch, useEffect, useState } from "react";
+import { BiBlock, BiDotsVerticalRounded } from "react-icons/bi";
+import { FaCheck, FaPlus, FaTimes, FaUserMinus, FaUserPlus } from "react-icons/fa";
+
 interface Conversation {
   id: string;
   participant1: IUser;
@@ -28,7 +27,6 @@ interface HeaderProps {
   handleAccept: () => void;
   session: any;
   reject: any;
- 
   toggleDropdown: any;
   offerModal: any;
   setToggleDropdown: () => void;
@@ -52,7 +50,6 @@ const Header = ({
   handleFollow,
   isFriend,
   handleBlocked,
-  isBlocked,
   setActiveConversationState
 }: HeaderProps) => {
   const [statusState, setStatusState] = useState("");
@@ -84,15 +81,13 @@ const Header = ({
               <span className="text-gray-700 mr-3">{username}</span>
             </Link>
           </div>
-          <Button
+          <button className="flex items-center bg-white gap-1 border border-gray-200 rounded-lg text-xs p-1 px-2 hover:bg-gray-50"
             onClick={handleFollow}
-            accept={isFriend}
-            className={` border rounded-lg  px-2 py-1 ${isFriend ? 'bg-orange-100 border-orange-200' : 'bg-white border-gray-200'}`}
           >
             { isFriend ? (
               <div className="flex gap-1 items-center">
-              <FaCheck className="" /> 
-              <div className="hidden md:block text-sm">Following</div>
+              <FaUserMinus className="" /> 
+              <div className="hidden md:block text-sm">Unfollow</div>
               </div>
             ) : (
               <div className="flex gap-1 items-center">
@@ -101,12 +96,10 @@ const Header = ({
               </div>
               
             ) }
-          </Button>
-        
-          <Button
+          </button>
+
+          <button className="flex items-center bg-white gap-1 border border-gray-200 rounded-lg text-xs p-1 px-2 hover:bg-gray-50"
             onClick={handleBlocked}
-            cancel={activeConversationState?.blockedStatus}
-            className={` border  rounded-lg  px-2 py-1 ${activeConversationState?.blockedStatus ? 'bg-red-100 border-red-200 text-red-500' : 'bg-white border-gray-200'}`}
           >
             { activeConversationState?.blockedStatus ? (
               <div className="flex gap-1 items-center">
@@ -119,8 +112,7 @@ const Header = ({
               <div className={`hidden md:block text-sm`}>Block</div>
               </div>
             )}
-          </Button> 
-          
+          </button> 
         </div>
       </div>
       <div className="flex items-center gap-2 relative">
@@ -128,29 +120,9 @@ const Header = ({
           {activeConversationState?.status !== "declined" && (
             <>
               {activeConversationState.status === "none" &&
-              activeConversationState?.participant2Id === session.user.id ? (
+              activeConversationState?.participant2Id === session?.user?.id ? (
                 <>
-                  <Button onClick={handleAccept}>
-                    <FaCheck className="mr-2" /> Accept
-                  </Button>
-                  {activeConversationState && (
-                    <Button
-                      onClick={() =>
-                        reject.onOpen(
-                          activeConversationState,
-                          activeConversationState?.id,
-                          activeConversationState?.participant1Id ===
-                            session.user.id
-                            ? activeConversationState?.participant2Id
-                            : activeConversationState?.participant1Id,
-                          session,
-                          setActiveConversationState
-                        )
-                      }
-                    >
-                      <FaTimes className="mr-2" /> Decline
-                    </Button>
-                  )}
+                 
                 </>
               ) : (
                 <>
@@ -158,18 +130,18 @@ const Header = ({
                   
                     onClick={() => session?.user?.id && offerModal.onOpen(
                         activeConversationState?.participant1Id ===
-                          session.user.id
+                          session?.user.id
                           ? activeConversationState?.participant1
                           : activeConversationState?.participant2,
                         activeConversationState?.participant1Id ===
-                          session.user.id
+                          session?.user.id
                           ? activeConversationState?.participant2
                           : activeConversationState?.participant1,
                         activeConversationState?.id
                       )
                     }
                   >
-                    Create<span className="hidden md:block ml-1">offer</span>
+                   <FaPlus className="mr-1" />Create<span className="hidden md:block ml-1">offer</span>
                   </Button>
 
                   {/* 

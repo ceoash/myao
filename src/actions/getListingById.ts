@@ -12,23 +12,48 @@ export default async function getListingById({ offerId }: IParams) {
       },
       include: {
         buyer: {
-          include: {
-            profile: true,
+          select: {
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                image: true,
+               
+              },
+            },
           },
         },
         seller: {
-          include: {
-            profile: true,
+          select: {
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                image: true,
+
+              },
+            },
           },
         },
         bids: {
-          include: {
-            user: true,
+          select: {
+            id: true,
+            price: true,
+            createdAt: true,
+            previous: true,
+            userId: true,
+            user: {
+              select: {
+                id: true,
+                username: true,               
+              },
+            },
           },
         },
         user: {
-          include: {
-            profile: true,
+          select: {
+            id: true,
+            username: true
           },
         },
         messages: {
@@ -51,19 +76,33 @@ export default async function getListingById({ offerId }: IParams) {
             
           },
         },
+        activity: {
+          select: {
+            id: true,
+            type: true,
+            message: true,
+            createdAt: true,
+            listingActivity: {
+              select: {
+                message: true,
+                type: true,
+                receiverId: true,
+              },
+            },
+          },
+        },
         reviews: {
           take: 2,
-          orderBy: {
-            createdAt: "desc",
-          },
-          include: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            rating: true,
+            userId: true,
+            createdAt: true,
             user: {
-              include: {
-                profile: {
-                  select: {
-                    image: true,
-                  },
-                },
+              select: {
+                id: true,
+                username: true,                
               },
             },
           },
@@ -71,44 +110,20 @@ export default async function getListingById({ offerId }: IParams) {
       },
     });
 
-    console.log(bid?.reviews);
-
-    if (!bid) {
-      throw new Error("Bid not found");
-    }
+    if (!bid) throw new Error("Bid not found");
 
     return {
       ...bid,
       createdAt: bid.createdAt.toISOString(),
       updatedAt: bid.updatedAt.toISOString(),
       expireAt: bid.expireAt?.toISOString() || null,
-      seller: {
-        ...bid.seller,
-        createdAt: bid.seller?.createdAt.toISOString(),
-        updatedAt: bid.seller?.updatedAt.toISOString(),
-      },
-      user: {
-        ...bid.user,
-        createdAt: bid.user?.createdAt.toISOString(),
-        updatedAt: bid.user?.updatedAt.toISOString(),
-      },
-      buyer: bid.buyer
-        ? {
-            ...bid.buyer,
-            createdAt: bid.buyer.createdAt.toISOString(),
-            updatedAt: bid.buyer.updatedAt.toISOString(),
-          }
-        : null,
-
       reviews: bid.reviews.map((review) => ({
         ...review,
         createdAt: review.createdAt.toISOString(),
-        updatedAt: review.updatedAt.toISOString(),
-        user: {
-          ...review.user,
-          createdAt: review.user.createdAt.toISOString(),
-          updatedAt: review.user.updatedAt.toISOString(),
-        },
+      })),
+      activity: bid.activity.map((activity) => ({
+        ...activity,
+        createdAt: activity.createdAt.toISOString(),
       })),
       messages: bid.messages.map((message) => ({
         ...message,
@@ -119,12 +134,6 @@ export default async function getListingById({ offerId }: IParams) {
       bids: bid.bids.map((bid) => ({
         ...bid,
         createdAt: bid.createdAt.toISOString(),
-        updatedAt: bid.updatedAt.toISOString(),
-        user: {
-          ...bid.user,
-          createdAt: bid.user.createdAt.toISOString(),
-          updatedAt: bid.user.updatedAt.toISOString(),
-        },
       })),
     };
   } catch (error: any) {

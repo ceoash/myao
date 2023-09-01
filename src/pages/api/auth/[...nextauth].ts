@@ -3,9 +3,13 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/libs/prismadb"
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
+import { User as NextAuthUser } from 'next-auth';
+
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma),
+
+    
     
     providers: [
         CredentialsProvider({
@@ -30,6 +34,8 @@ export const authOptions: AuthOptions = {
 
             async authorize(credentials) {
 
+                const now = Date.now();
+
                 // Add logic here to look up the user from the credentials supplied
                 if(!credentials?.email || !credentials?.password) throw new Error("Invalid credentials")
                 const user = await prisma.user.findUnique({
@@ -41,12 +47,36 @@ export const authOptions: AuthOptions = {
                         username: true,
                         email: true,
                         hashedPassword: true,
+                        options: true,
                     },
                 });
+
+                if(user) {
+                    user.username = user.username || 'defaultUsername';
+                }
 
                 if (!user || !user.hashedPassword) {
                     throw new Error("Invalid credentials")
                 };
+
+               /*  prisma.user.update({
+                    where: {
+                        id: user.id,
+                    },
+                    data: {
+                        options: {
+                                create: {
+                                    current: now,
+                                    previous: user?.options?.,
+                                },
+                                update: {
+                                    currentLogin: now,
+                                    previous: now,
+                                },
+                            
+                        },
+                    },
+                }); */
 
                 const isValid = await bcrypt.compare(credentials.password, user.hashedPassword)
                 if (!isValid) {
@@ -63,16 +93,19 @@ export const authOptions: AuthOptions = {
             if (account) {
               token.accessToken = account.access_token
               token.id = user?.id
+              token.email = user?.email
+              token.username = user?.username
             }
             return token
           },
-          session: ({ session, token, user }) => ({
+          session: ({ session, token }) => ({
             ...session,
             user: {
               ...session.user,
               id: token.sub,
               email: token.email,
-              username: token.username,
+                username: token.username,
+
             },
           }),
       },  

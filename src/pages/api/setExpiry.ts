@@ -12,10 +12,12 @@ export default async function SetExpiry(
 ) {
     const { expiry, id } = req.body;
 
+    const now = Date.now();
+
     try {
       const listing = await prisma.listing.update({
         where: { id },
-        data: { expireAt: expiry },
+        data: { expireAt: expiry, updatedAt: new Date(now) },
       });
       res.status(200).json(listing);
     } catch (error) {

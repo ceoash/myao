@@ -60,6 +60,7 @@ export default async function handler(
         type: true,
         image: true,
         category: true,
+        
         bids: {
           take: 1,
           orderBy: {

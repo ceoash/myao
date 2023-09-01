@@ -1,71 +1,45 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import Modal from "./Modal";
 import useRejectConversationModal from "@/hooks/useRejectConversationModal";
 import axios from "axios";
-import {io } from "socket.io-client";
 import { toast } from "react-hot-toast";
-import { config } from "@/config";
-import { Socket } from 'socket.io-client';
+import { useSocket } from "@/hooks/useSocket";
+import { useSocketContext } from "@/context/SocketContext";
+import { stat } from "fs";
 
 export interface ErrorResponse {
   error: string;
 }
 
 const RejectConversationModal = () => {
-  const { isOpen, activeConversationState, onClose, onOpen, setActiveConversationState, session, recipientId} = useRejectConversationModal();
-  const socketRef = React.useRef<Socket | null>(null);
+  const { isOpen, activeConversationState, onClose, setActiveConversationState, session } = useRejectConversationModal();
   const [blockUser, setBlockUser] = useState(false);
 
-  const handleDecline = async () => {
-    if (blockUser) {
+  const socket = useSocketContext();
+
+  const handleStatus = async (status: string) => {
       const data = {
         conversationId: activeConversationState?.id,
-        userBlockedId: activeConversationState?.participant2Id,
-        friendBlockedId: activeConversationState?.participant1Id,
+        userBlockedId: blockUser ? session?.user.id : "",
+        friendBlockedId: blockUser ? activeConversationState?.participant1Id === session?.user.id ? activeConversationState?.participant2Id : activeConversationState?.participant1Id : "",
+        status: status,
       };
-      console.log("data", data);
       try {
-        const response = await axios.post("/api/conversations/declineBlock", data);
-        toast.error("Declined and blocked");
+        const response = await axios.post("/api/conversations/status", data);
         setActiveConversationState((prev) => ({
           ...prev,
-          status: "declined",
+          status: status,
           blockedStatus: true,
         }));
-        socketRef.current?.emit("decline_conversation", response.data.conversation);
+        socket.emit("decline_conversation", response.data.conversation,);
         onClose();
-        socketRef.current?.emit("block_user", response.data.newFriendshipBlock);
+        blockUser && socket.emit("block_user", response.data.newFriendshipBlock);
       } catch (error) {
       }
       return;
     }
-    
-    try {
-      const response = await axios.post("/api/conversations/decline", {
-        conversationId: activeConversationState?.id,
-      });
-      toast.error("declined");
-      setActiveConversationState((prev) => ({
-        ...prev,
-        status: "declined",
-      }));
-      onClose();
-      socketRef.current?.emit("decline_conversation", response.data);
-    } catch (error) {
-      toast.error("failed to decline conversation");
-    }
-  };
-
-  useEffect(() => {
-    socketRef.current = io(config.PORT || 'http://localhost:3000');
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  } ,[]);
-
-
 
   let bodyContent = (
     <>
@@ -90,7 +64,7 @@ const RejectConversationModal = () => {
       title="Decline conversation"
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={() => handleDecline()}
+      onSubmit={() => handleStatus("declined")}
       actionLabel={"Decline"}
       secondaryAction={() => onClose()}
       secondaryActionLabel={"Cancel"}

@@ -21,7 +21,7 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(
       <div
         ref={ref}
         className={`flex gap-2 w-1/2 ${
-          message.userId === session.user.id
+          message.userId === session?.user.id
             ? "justify-end ml-auto"
             : "justify-start mr-auto"
         }
@@ -37,13 +37,13 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(
         </div>
         <div
           className={` py-2 px-4 rounded-lg  ${
-            message.userId === session.user.id
+            message.userId === session?.user.id
               ? " bg-orange-100 text-gray-700"
               : " bg-gray-100 text-gray-700"
           }`}
         >
           <div className="font-bold">
-            {message.userId === session.user.id
+            {message.userId === session?.user.id
               ? "You"
               : message.user?.username}
           </div>

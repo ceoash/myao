@@ -34,9 +34,9 @@ const Badge = ({
       ${noBg}
       ${success && ' bg-green-200 text-green-700} rounded-full'}
       ${danger && ' bg-red-200 text-red-500} rounded-full'}
-      ${info && ' bg-orange-200 text-orange-400} rounded-full'}
+      ${info && ' bg-orange-200 text-orange-default} rounded-full'}
       ${primary && ' bg-gray-200 text-gray-700} rounded-full'}
-      ${secondary && ' bg-orange-50 text-orange-400} rounded-full'}
+      ${secondary && ' bg-orange-50 text-orange-default} rounded-full'}
       `}
     >
       {children}

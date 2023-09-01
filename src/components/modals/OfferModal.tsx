@@ -12,7 +12,6 @@ import ImageUpload from "../inputs/ImageUpload";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { io } from "socket.io-client";
 import { config } from "@/config";
 import {
   BiCategory,
@@ -26,6 +25,8 @@ import { IoPricetagOutline } from "react-icons/io5";
 import UserType from "../wizard/UserType";
 import PriceInput from "../inputs/PriceInput";
 import CityAutocomplete from "../dashboard/AutoComplete";
+import { useSocket } from "@/hooks/useSocket";
+import { useSocketContext } from "@/context/SocketContext";
 
 enum STEPS {
   TYPE = 0,
@@ -58,8 +59,7 @@ const OfferModal = () => {
   );
   // console.log("foundUser", foundUser);
   // console.log("session", session);
-  const port = config.PORT;
-  const socket = io(port);
+
 
   useEffect(() => {
     setFoundUser(offerModal?.participant || null);
@@ -280,15 +280,15 @@ const OfferModal = () => {
     });
   };
 
+  const socket = useSocketContext()
+
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     if (step !== STEPS.REVIEW) {
       return onNext();
     }
     if (status === "authenticated" && session?.user) {
       data.sellerId = session.user.id;
-    } else {
-      return;
-    }
+    } else { return }
 
     if (!foundUser) {
       toast.error("Please select a user to send the offer to");
@@ -301,9 +301,10 @@ const OfferModal = () => {
     data.participantId = foundUser?.id;
     data.conversationId = offerModal.conversationId;
     data.type = userType === "buyer" ? "buyerOffer" : "sellerOffer";
-    data.userId = session.user.id;
-    data.sellerId = userType === "seller" ? session.user.id : foundUser?.id;
-    data.buyerId = userType === "buyer" ? session.user.id : foundUser?.id;
+    data.userId = session?.user.id;
+    data.sellerId = userType === "seller" ? session?.user.id : foundUser?.id;
+    data.buyerId = userType === "buyer" ? session?.user.id : foundUser?.id;
+    
     data.options = {
       location: selectedCity,
       condition: data.condition ? data.condition : "Unknown",
@@ -314,25 +315,30 @@ const OfferModal = () => {
     await axios
       .post("/api/listings", data)
       .then((response) => {
+
         toast.success("Offer created successfully!");
         reset();
         setStep(STEPS.TYPE);
         offerModal.onClose();
+
         socket.emit(
           "new_listing",
           response.data.listing,
           response.data.listing.userId,
           foundUser?.id
         );
-        if (response.data.message) {
-          socket.emit("new_message", response.data.message);
+
+        if (response.data.message) { 
+          socket.emit("new_message", response.data.message, session?.user.id, foundUser.id);
         }
+
         socket.emit(
           "update_activities",
           response.data.transactionResult,
           response.data.listing.sellerId,
           response.data.listing.buyerId
         );
+
       })
       .catch((err) => {
         console.log(err);
@@ -361,8 +367,6 @@ const OfferModal = () => {
           onChange={() => clearErrors("title")}
         />
       </div>
-
-      
       <div>
         <TextArea
           id="description"
@@ -569,7 +573,7 @@ const OfferModal = () => {
                   }}
                 />
                 <button
-                  className="bg-orange-400 border border-orange-400 px-2 my-auto rounded-r-lg mr-auto text-sm py-2 text-white flex gap-2 items-center"
+                  className="bg-orange-default border border-orange-default px-2 my-auto rounded-r-lg mr-auto text-sm py-2 text-white flex gap-2 items-center"
                   onClick={onSearchUser}
                 >
                   Search <BiChevronRight />

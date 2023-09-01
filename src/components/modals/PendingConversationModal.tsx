@@ -24,8 +24,6 @@ const PendingConversationModal = ({}) => {
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
-    setValue,
   } = useForm<FieldValues>({
     defaultValues: {
       message: "",
@@ -35,40 +33,25 @@ const PendingConversationModal = ({}) => {
   const { isOpen, onClose, userId, conversation, session } =
     useConversationModal();
 
-  const onAccept: SubmitHandler<FieldValues> = async (data: any) => {
+  const updateStatus: SubmitHandler<FieldValues> = async (data: any) => {
     data.conversationId = conversation?.id;
     data.status = "accepted";
+    data.userId = session?.user.id;
 
     await axios
-      .post("/api/conversations/accept", data)
+      .post("/api/conversations/status", data)
       .then((response) => {
         reset();
+        router.push("/dashboard/conversations");
+        onClose();
       })
       .catch((err) => {
         toast.error("Something went wrong!");
       })
       .finally(() => {
-        onClose();
-        router.push("/dashboard/conversations");
       });
   };
-  const onDecline: SubmitHandler<FieldValues> = async (data: any) => {
-    data.conversationId = conversation?.id;
-    data.status = "declined";
-
-    await axios
-      .post("/api/conversations/decline", data)
-      .then((response) => {
-        reset();
-      })
-      .catch((err) => {
-        toast.error("Something went wrong!");
-      })
-      .finally(() => {
-        onClose();
-        router.push("/dashboard/conversations");
-      });
-  };
+  
 
   const participant =
     conversation?.participant1.id === session?.user.id
@@ -109,9 +92,9 @@ const PendingConversationModal = ({}) => {
       title="New Message Request"
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={handleSubmit(onAccept)}
+      onSubmit={handleSubmit(updateStatus)}
       actionLabel={"Accept"}
-      secondaryAction={handleSubmit(onDecline)}
+      secondaryAction={handleSubmit(updateStatus)}
       secondaryActionLabel="Decline"
       body={bodyContent}
     />

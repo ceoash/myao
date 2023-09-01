@@ -1,6 +1,5 @@
 import React from 'react'
 import AlertBanner from '../AlertBanner'
-import { Listing, User } from '@prisma/client';
 import { Session } from 'next-auth';
 import { ProfileUser } from '@/interfaces/authenticated';
 
@@ -8,7 +7,7 @@ interface OfferAlertsProps {
     status: string;
     completedBy: string | null | undefined;
     participant: ProfileUser | null | undefined;
-    listing: Listing;
+    listing: any;
     session: Session;
     handleStatusChange: (status: string, sessionId: string) => void;
     handleFinalise: (status: string, userId: string) => void;
@@ -26,36 +25,42 @@ const OfferAlerts = ({
   return (
     <>
     {status === "accepted" && (
-            <AlertBanner
-              text="This offer has been accepted"
-              success
-              button
-              buttonText={"Mark as complete"}
-              onClick={() => handleStatusChange("completed", session?.user.id)}
-            />
-          )}
-          {status === "completed" && (
-            <AlertBanner
-              text="Congratulations! You've completed your offer"
-              success
-              button
-              buttonText={"Leave a review"}
-            />
-          )}
-          {status === "rejected" && (
-            <AlertBanner
-              text={
-                completedBy &&
-                session?.user.id &&
-                completedBy === session?.user.id
-                  ? "You rejected the latest bid. Awaiting repsonse from " +
-                    participant?.username
-                  : "Your bid has been rejected. Submit a new bid to continue "
-              }
-              danger
-              button
-            />
-          )}
+      <AlertBanner
+        text={ completedBy === session?.user.id ? 
+          completedBy === listing.buyerId ? "You accepted the latest bid. Make payment to complete the negotiation" : `You accepted the latest bid. Payment instructions have been sent to ${participant?.username }`: 
+          session?.user.id === listing.buyerId && completedBy !== session?.user.id ? "Your bid has been accepted. Make payment to complete the negotiation" : `Your bid was accepted the. Payment instructions have been sent to ${participant?.username}` }
+        success
+        button
+        buttonText={session?.user.id === listing.buyerId ? "Pay" : "Contact "}
+        onClick={() => (
+          session?.user.id === listing.buyerId ? handleStatusChange("completed", session?.user.id) : {}
+
+          )
+        }
+      />
+    )}
+    {status === "completed" && (
+      <AlertBanner
+        text={completedBy === session?.user.id ? "We've received your payment. Leave a review for " + participant?.username : "Your offer has been paid. Leave a review for " + participant?.username}
+        success
+        button
+        buttonText={"Leave a review"}
+      />
+    )}
+    {status === "rejected" && (
+      <AlertBanner
+        text={
+          completedBy &&
+          session?.user.id &&
+          completedBy === session?.user.id
+            ? "You rejected the latest bid. Awaiting repsonse from " +
+              participant?.username
+            : "Your bid has been rejected. Submit a new bid to continue "
+        }
+        danger
+        button
+      />
+    )}
           {status === "cancelled" && (
             <AlertBanner
               text={

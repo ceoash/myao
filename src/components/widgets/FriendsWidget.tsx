@@ -1,57 +1,46 @@
-import { User } from "@prisma/client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "react-hot-toast";
-import { Socket, io } from "socket.io-client";
-import { config } from "@/config";
 import axios from "axios";
-import { FaUserCheck, FaUserMinus, FaUserTimes } from "react-icons/fa";
+import { User } from "@prisma/client";
+import { toast } from "react-hot-toast";
+import { FaUserCheck, FaUserMinus } from "react-icons/fa";
+import { useSocketContext } from "@/context/SocketContext";
+import useQuickConnect from "@/hooks/useQuickConnect";
+import Button from "../dashboard/Button";
 
 interface FriendsWidgetProps {
   session: any;
   friendsList: User[];
-  setFriendsList: React.Dispatch<React.SetStateAction<User[]>>;
+  dispatch: React.Dispatch<any>;
 }
 
 const FriendsWidget = ({
   session,
   friendsList,
-  setFriendsList,
+  dispatch,
 }: FriendsWidgetProps) => {
-  
-  const socket = io(config.PORT);
+
+  const socket = useSocketContext();
+  const connect = useQuickConnect();
 
   const onRemoveFriendClick = async (userId: string) => {
     try {
-      axios
+      await axios
         .post("/api/deleteFriend", {
-          followerId: session.userId,
+          followerId: session?.user?.id,
           followingId: userId,
         })
         .then(
           (response) => {
             console.log("friend response", response.data);
-            if (socket) {
-              socket.emit("friend", response.data, "remove");
-            }
-            if (response.data.followerId === session.user.id) {
-              setFriendsList((prev) => {
-                return prev.filter(
-                  (friend) => friend.id !== response.data.followingId
-                );
-              });
+            if (socket) socket.emit("friend", response.data, "remove");
+            if (response.data.followerId === session?.user.id) {
+              dispatch({ type: "remove", payload: { id: response.data.followingId } });
             } else {
-              setFriendsList((prev) => {
-                return prev.filter(
-                  (friend) => friend.id !== response.data.followerId
-                );
-              });
+              dispatch({ type: "remove", payload: { id: response.data.followerId } });
             }
             toast.success("Friend removed!");
           },
-          (error) => {
-            console.log(error);
-          }
+          (error) => console.log(error)
         );
     } catch (error) {
       console.error("Error removing friend:");
@@ -60,94 +49,47 @@ const FriendsWidget = ({
 
   const handleAccept = async (friendshipId: string) => {
     try {
-      const res = await fetch("/api/acceptFriendship", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          friendshipId: friendshipId,
-        }),
-      });
-      const data = await res.json();
+    await axios.post("/api/acceptFriendship",{ 
+        friendshipId: friendshipId,
+      }).then((response) => {
+        const data = response.data
+        console.log("data", data)
 
-      setFriendsList((prevFriendsList) => {
-        return prevFriendsList.map((friend) =>
-          friend.id === data.id ? { ...friend, accepted: true } : friend
-        );
-      });
+        dispatch({ type: "accept", payload: data.responseFriendship.followerId });
 
-      if (!res.ok) {
-        throw new Error(data.error);
-      }
+        if (socket) {
+          console.log("socket emit", socket)
+          socket.emit("friend", data.responseFriendship, 'accept');
+          socket.emit(
+            "update_activities",
+            data.transactionResult,
+            data.responseFriendship.followerId,
+            data.responseFriendship.followingId,
+            [ data.followerNotification, data.followingNotification ],
+            []
+          );
+        }
+        toast.success("Friend request accepted!");
+      })
+      .catch((error) => console.log(error));
 
-      if (data.error) {
-        console.error(data.error);
-      }
-
-      toast.success("Friend request accepted!");
-      if (socket) {
-        socket.emit("friend", data.responseFriendship, 'accept');
-      }
+      
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
   };
 
-  const socketRef = useRef<Socket>();
-
-  useEffect(() => {
-    socketRef.current = io(config.PORT);
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, []);
-
-  console.log(socketRef);
-
-  useEffect(() => {
-    if (!session.user.id) return;
-    if (!socketRef) return;
-
-    socketRef.current && socketRef?.current.emit("register", session.user.id);
-
-    socketRef.current &&
-      socketRef.current.on("friend", (data, action) => {
-        switch (action) {
-          case 'remove':
-            setFriendsList((prevFriendsList) =>
-              prevFriendsList.filter((friend) => friend.id !== data.id)
-            );
-            break;
-          case 'add':
-            setFriendsList((prevFriendsList) => [...prevFriendsList, data]);
-            break;
-          case 'accept':
-            setFriendsList((prevFriendsList) => {
-              return prevFriendsList.map((friend) =>
-                friend.id === data.id ? { ...friend, accepted: true } : friend
-              );
-            });
-          default:
-            break;
-        }
-      });
-
-    return () => {
-      socketRef.current && socketRef.current.disconnect();
-    };
-  }, [session.id]);
-
   return (
-    <ul className="flex flex-col pl-0 rounded-xl flex-grow h-full">
+    <ul className="flex flex-col pl-0 px-4 pt-2 pb-0 bg-white border border-gray-200 rounded-xl">
       {friendsList && friendsList.length > 0 ? (
         friendsList.map((friend: any) => {
           return (
             <li
               key={friend.id}
-              className="relative flex items-center px-0 mb-2 bg-white border-0 rounded-t-xl text-inherit"
+              className="relative flex items-center justify-between px-0 mb-2 bg-white border-0 rounded-t-xl text-inherit"
             >
-              <div className="inline-flex items-center justify-center w-8 h-12 mr-4 text-white transition-all duration-200 text-base ease-soft-in-out rounded-xl">
+              <div className="flex items-center">
+              <div className="inline-flex items-center justify-center w-10 h-14 mx-4 text-white transition-all duration-200 text-base ease-soft-in-out rounded-xl">
                 <Link href={`/dashboard/profile/${friend.id}`}>
                   <img
                     src={
@@ -160,56 +102,61 @@ const FriendsWidget = ({
                 </Link>
               </div>
               <div className="flex flex-col items-start justify-center">
-                <h6 className="mb-0 leading-normal text-sm flex gap-2">
-                  <span className="font-bold">{friend.username}</span>
-                  {friend.relationshipStatus === "following" &&
+                <h4 className="mb-0 leading-normal text-md md:flex gap-2 items-center">
+                  <div className="font-bold">{friend.username}</div>
+                  {
                     !friend.accepted && (
-                      <span className="italic">{"(pending)"}</span>
+                      <div className="italic text-sm text-gray-500 font-normal">{"(awaiting approval)"}</div>
                     )}
-                </h6>
+                </h4>
               </div>
-              {friend.relationshipStatus === "following" && (
-                <button
-                  onClick={() => onRemoveFriendClick(friend.id)}
-                  className="flex items-center gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
-                >
-                  <FaUserMinus className="text-md" />
-                  Remove
-                </button>
-              )}
+              </div>
+             
+              <div className="flex items-center ml-auto gap-2">
 
-              {friend.relationshipStatus === "follower" && !friend.accepted && (
-                <div className="flex gap-2 ml-auto items-center">
+                <div className="flex gap-2 items-center">
+                  {friend.accepted === false && friend.relationshipStatus === "follower" && (
+
                   <button
                     onClick={() => handleAccept(friend.friendshipId)}
-                    className="flex items-center gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                    className="flex items-center ml-auto gap-1 border border-gray-200 rounded-lg text-sm bg-gray-50 p-1 px-2 hover:bg-gray-50"
                   >
-                    <FaUserCheck className="text-md" />
+                    <FaUserCheck className="text-[10px]" />
                     Accept
                   </button>
+
+                  )}
                   <button
                     onClick={() => onRemoveFriendClick(friend.id)}
-                    className="flex items-center gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border-2 border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
+                    className="flex items-center ml-auto gap-1 border border-gray-200 rounded-lg text-sm bg-gray-50 p-1 px-2 hover:bg-gray-50"
                   >
-                    <FaUserMinus className="text-md" />
+                    <FaUserMinus className="text-[10px]" />
                     Remove
                   </button>
                 </div>
-              )}
-              {friend.relationshipStatus === "follower" && friend.accepted && (
-                <button
-                  onClick={() => onRemoveFriendClick(friend.id)}
-                  className=" items-center flex gap-1 py-1 px-2 mb-0 ml-auto font-bold text-center  align-middle transition-all bg-transparent border border-orange-400 rounded-lg shadow-none cursor-pointer leading-pro text-xs ease-soft-in hover:scale-102 hover:active:scale-102 active:opacity-85 text-orange-500 hover:text-orange-800 hover:shadow-none active:scale-100"
-                >
-                  <FaUserMinus className="text-md" />
-                  Remove
-                </button>
-              )}
+             
+              </div>
             </li>
           );
         }).reverse()
       ) : (
-        <i>No friends yet</i>
+        <div className="min-w-full transition">
+               
+                    <div className="flex flex-col items-center justify-center h-full text-center rounded-xl bg-white   py-16 ">
+                    <div className="text-gray-700 text-lg font-bold  mx-4 mb-2 text-center">
+                      No offers to display{" "}
+                      <p className="text-gray-700 text-sm mt-2 font-normal mb-3">
+                        You can get connected with other users by clicking the button below.
+                      </p>
+                    </div>
+                    <Button
+                      primary
+                      label="Get connected"
+                      onClick={() => connect.onOpen(null, session?.user?.id, false)}
+                    />
+                  </div>
+            
+                </div>
       )}
     </ul>
   );

@@ -15,7 +15,7 @@ const OfferNav = ({ setTab, tab, status, listingType }: OfferNavProps) => {
       <div
         onClick={() => setTab("details")}
         className={`cursor-pointer ${
-          tab === "details" && "border-b-4 border-orange-400 "
+          tab === "details" && "border-b-4 border-orange-default "
         }`}
       >
         Details
@@ -25,7 +25,7 @@ const OfferNav = ({ setTab, tab, status, listingType }: OfferNavProps) => {
           <div
             onClick={() => setTab("chat")}
             className={`cursor-pointer ${
-              tab === "chat" && "border-b-4 border-orange-400 "
+              tab === "chat" && "border-b-4 border-orange-default "
             }`}
           >
             Chat
@@ -34,7 +34,7 @@ const OfferNav = ({ setTab, tab, status, listingType }: OfferNavProps) => {
       <div
         onClick={() => setTab("activity")}
         className={`cursor-pointer ${
-          tab === "activity" && "border-b-4 border-orange-400 "
+          tab === "activity" && "border-b-4 border-orange-default "
         }`}
       >
         Activity
@@ -42,7 +42,7 @@ const OfferNav = ({ setTab, tab, status, listingType }: OfferNavProps) => {
       <div
         onClick={() => setTab("bids")}
         className={`cursor-pointer ${
-          tab === "bids" && "border-b-4 border-orange-400 "
+          tab === "bids" && "border-b-4 border-orange-default "
         }`}
       >
         Bid History

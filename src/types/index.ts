@@ -12,9 +12,11 @@ export interface User extends PrismaUser {
 
 export type SafeUser = Omit<
 User,
+
 "createdAt" | "updatedAt" > & {
 createdAt: string;
 updatedAt: string;
+profile?: Profile;
 };
 
 export type SafeListing = Omit<

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { createActivityForUser } from "@/prisma";
+import { createActivity } from "@/prisma";
 
 export default async function submitReview(
   req: NextApiRequest,
@@ -18,59 +18,67 @@ export default async function submitReview(
           message,
         },
         include: {
+          user: {
+            select: {
+              username: true,
+              id: true,
+            },
+          },
           listing: {
             select: {
+              id: true,
               title: true,
               sellerId: true,
               buyerId: true,
               seller: {
                 select: {
-                    activities: true
+                    username: true,
                 }
               },
               buyer: {
                 select: {
-                    activities: true
+                    username: true,
                 }
-              }
+              },
+              user: true,
             },
           },
         },
       });
 
+
+      if (!review) {
+        res.status(404).json({ error: "Review not created" });
+        return;
+      }
+
       const now = Date.now();
 
-      const sellerActivity = {
-        type: "ReviewSubmitted",
-        message: `New review`,
-        action: "/dashboard/offers/" + listingId,
-        modelId: review.id,
-        value: review.listing.title,
-        userId: review.userId,
-        createdAt: now,
-      };
-      const buyerActivity = {
-        type: "ReviewSubmitted",
-        message: `New review`,
-        action: "/dashboard/offers/" + listingId,
-        modelId: review.id,
-        value: review.listing.title,
-        userId: review.userId,
-        createdAt: now,
-      };
+      const buyerActivity = createActivity({
+        type: "listing",
+        message: `New review ${review.userId === review.listing.buyerId ? "You" : review?.user?.username}`,
+        listing_message: review.listing.title || "",
+        listing_message_type: "bid",
+        userId: review.listing.buyerId || "",
+        user_message: "New bid",
+        user_message_type: "submit review",
+        action: `/dashboard/offers/${review.listing.id}`,
+        receiverId: review.listing.sellerId || "",
+      });
 
-      const sellerUpdate = createActivityForUser(
-        review?.listing.sellerId,
-        sellerActivity,
-        review?.listing.seller?.activities
-      );
-      const buyerUpdate = createActivityForUser(
-        review?.listing?.buyerId || "",
-        buyerActivity,
-        review?.listing?.seller?.activities
-      );
+      const sellerActivity = createActivity({
+        type: "listing",
+        message: `New review by ${review.userId === review.listing.sellerId ? "You" : review?.user?.username}`,
+        listing_message: review.listing.title || "",
+        listing_message_type: "review",
+        userId: review.listing.sellerId || "",
+        user_message: "New review",
+        user_message_type: "submit review",
+        action: `/dashboard/offers/${review.listing.id}`,
+        receiverId: review.listing.buyerId || "",
+      });
 
-      const transactionOperations = [sellerUpdate, buyerUpdate];
+      const transactionOperations = [sellerActivity, buyerActivity];
 
       try {
         const transactionResult = await prisma.$transaction(

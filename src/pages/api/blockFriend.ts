@@ -21,6 +21,33 @@ export default async function blockFriend(req: NextApiRequest, res: NextApiRespo
                     userBlockedId,
                     friendBlockedId,
                 },
+                select: {
+                    id: true,
+                    userBlockedId: true,
+                    friendBlockedId: true,
+                    userBlocked: {
+                        select: {
+                            id: true,
+                            username: true,
+                            profile: {
+                                select: {
+                                    image: true,
+                                },
+                            },
+                        },
+                    },
+                    friendBlocked: {
+                        select: {
+                            id: true,
+                            username: true,
+                            profile: {
+                                select: {
+                                    image: true,
+                                },
+                            },
+                        },
+                    },
+                },
               });
             res.status(200).json(newFriendshipBlock);
             

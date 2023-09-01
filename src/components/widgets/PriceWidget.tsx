@@ -3,15 +3,14 @@ import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import Button from '../dashboard/Button';
-import {Socket } from 'socket.io-client';
 import { toast } from 'react-hot-toast';
 import { Bid } from '@prisma/client';
 import PriceInput from '../inputs/PriceInput';
+import { useSocketContext } from '@/context/SocketContext';
 
 interface PriceWidgetProps {
   listing: any;
   isBuyer?: boolean;
-  socketRef: React.MutableRefObject<Socket | undefined>;
   setCurrentBid: Dispatch<SetStateAction<{
     currentPrice: string;
     byUserId: string;
@@ -32,12 +31,11 @@ export interface ErrorResponse {
   error: string;
 }
 
-const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessionUser, socketRef, status, setStatus }: PriceWidgetProps) => {
+const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }: PriceWidgetProps) => {
+
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [bidPrice, setBidPrice] = useState<string | null>(null);
-  const [currentBids, setCurrentBids] = useState<any>([]);
 
   const currentPrice = currentBid.currentPrice;
 
@@ -52,11 +50,10 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
     },
   });
 
+  const socket = useSocketContext();
+
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     setIsLoading(true);
-
-    console.log("data", data);
-
     data.id = listing.id;
     data.bid = parseFloat(data.price);
     data.status = 'counterOffer';
@@ -73,7 +70,6 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
       return;
     }
 
-
     try {
       const response = await axios.post("/api/submitBid", {
         price: data.price,
@@ -86,10 +82,8 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
       if ('error' in updatedListing) {
         console.log("Bid not updated:", updatedListing.error);
       } else {
-        console.log("Bid updated:", updatedListing);
-        const myLastBid = updatedListing.bids.find(
-          (bid: any) => bid.userId === session?.user.id
-        );
+
+        const myLastBid = updatedListing.bids.find((bid: any) => bid.userId === session?.user.id);
 
         setCurrentBid((prev) => {
           const newBid = {
@@ -101,12 +95,6 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
           }
           return newBid;
         });
-        const now = Date.now();
-        let newBid: Bid;
-
-        console.log("transactions", transactions);  
-        console.log("updated", updatedListing);  
-        
         
         const userId = sessionUser?.id
         const username = sessionUser?.username
@@ -114,16 +102,16 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
         const listingId = listing.id
         const previous = currentBid.currentPrice
 
-        socketRef.current?.emit('update_bid', {price, userId, username, listingId, previous});
-        socketRef.current?.emit('update_activities', {
-          activities: transactions,
-          participant1Id: updatedListing.sellerId,
-          participant2Id: updatedListing.buyerId,
-        });
+        socket.emit('update_bid', { price, userId, username, listingId, previous });
+        socket.emit('update_activities', 
+          transactions,
+          updatedListing.sellerId,
+          updatedListing.buyerId,
+        );
         toast.success("Bid submitted!");
       }
-
       reset();
+
     } catch (err) {
       console.log("Something went wrong!");
     } finally {
@@ -135,11 +123,13 @@ const PriceWidget = ({ listing, setBids, bids, setCurrentBid, currentBid, sessio
     <div>
       <div className='mb-4'>
         <PriceInput 
+          sidebar
           id='price' 
           placeholder={"0.00"} 
           label='' 
           formatPrice 
           register={register} 
+          status={status}
           registerOptions={{
             pattern: {
               value: /^\d+(\.\d{1,2})?$/,

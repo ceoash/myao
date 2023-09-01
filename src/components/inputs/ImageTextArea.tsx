@@ -39,7 +39,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled, isLoa
   }}
 >
   {({ open }: any) => (
-    <form onSubmit={handleFormSubmit}>
+    <form onSubmit={handleFormSubmit} className="pb-4">
       <div className="flex items-center gap-2 my-4">
         <button
           type="button"
@@ -51,7 +51,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled, isLoa
         </button>
        
       </div>
-      <div className="relative">
+      <div className="relative mb-4">
         {imageValue && (
           <div className="absolute inset-0">
             <Image
@@ -72,7 +72,7 @@ const ImageTextArea: React.FC<ImageTextAreaProps> = ({ onSubmit, disabled, isLoa
       </div>
       <Button
         submit
-        className={`mt-4 px-4 py-2 bg-orange-400 text-white rounded hover:bg-orange-400 ${disabled && "opacity-50 cursor-not-allowed"}`}
+        className={`mt-4 px-4 py-2 bg-orange-default text-white rounded hover:bg-orange-default ${disabled && "opacity-50 cursor-not-allowed"}`}
         disabled={disabled || isLoading}
         isLoading={isLoading}
       >

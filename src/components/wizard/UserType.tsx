@@ -29,7 +29,7 @@ const UserType = ({
       <div
         onClick={() => (handleSelect("buyer"), clearErrors && clearErrors("userType"))}
         className={`${
-          userType === "buyer" && "bg-gray-100"
+          userType === "buyer" && "bg-orange-200 !border-orange-400"
         } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}
       >
         <div className="mb-4">
@@ -42,7 +42,7 @@ const UserType = ({
       <div
         onClick={() => (handleSelect("seller"), clearErrors && clearErrors("userType"))}
         className={`${
-          userType === "seller" && "bg-gray-100"
+          userType === "seller" && "bg-orange-200 !border-orange-400"
         } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}
       >
         <div className="mb-2">
@@ -56,7 +56,7 @@ const UserType = ({
         <div
           onClick={() => handleSelect("trader")}
           className={`${
-            userType === "trader" && "bg-gray-100"
+            userType === "trader" && "!bg-orange-200 !border-orange-400"
           } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}
         >
           <div className="mb-2">

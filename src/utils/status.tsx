@@ -4,7 +4,7 @@ function StatusChecker(status: string) {
   
     switch (status) {
         case "negotiating":
-            return ( <div className='flex gap-1 items-center text-yellow-500'><CgEditBlackPoint/><span >Haggle On</span> </div>)
+            return ( <div className='flex gap-1 items-center text-yellow-500'><CgEditBlackPoint/><span >Haggling</span> </div>)
             break
         case "awaiting approval": 
             return ( <div className='flex gap-1 items-center text-teal-500'><CgEditBlackPoint/><span >Awaiting</span> </div>)
@@ -19,7 +19,7 @@ function StatusChecker(status: string) {
             return ( <div className='flex gap-1 items-center text-red-500'><CgEditBlackPoint /><span>Terminated</span></div> )
             break
         case "completed":
-            return ( <div className='flex gap-1 items-center text-green-500'><CgEditBlackPoint /><span>Agreed</span></div> )
+            return ( <div className='flex gap-1 items-center text-green-500'><CgEditBlackPoint /><span>Paid</span></div> )
             break
         case "expired":
             return ( <div className='flex gap-1 items-center text-red-500'><CgEditBlackPoint /><span>Expired</span></div> )
@@ -29,5 +29,7 @@ function StatusChecker(status: string) {
             break
       }
 }
+
+
 
 export default StatusChecker

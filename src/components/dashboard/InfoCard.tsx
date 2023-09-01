@@ -1,12 +1,14 @@
 import React from "react";
 import Button from "./Button";
 import Skeleton from "react-loading-skeleton";
+import { useRouter } from "next/navigation";
 interface ICardProps {
   title?: string;
   text?: string;
   icon?: string;
   number?: number;
   badge?: string;
+  link?: string;
   button?: {
     label: string;
     onClick: () => void;
@@ -29,10 +31,14 @@ const InfoCard = ({
   span,
   className,
   isLoading,
-  center
+  center,
+  link
 }: ICardProps) => {
+
+  const router = useRouter();
   return (
     <div
+      onClick={() => link && router.push(link)}
       className={`p-4 ${className} rounded-xl text-gray-800 ${
         span ? span : "col-span-2"
       } `}
@@ -42,7 +48,7 @@ const InfoCard = ({
           <div>
             <img
               src={icon}
-              className={`w-[70px] border border-${color}-200 rounded-full bg-white p-1.5`}
+              className={`w-[70px] border border-${color}-100 rounded-full bg-white p-1.5`}
             />
           </div>
         )}
@@ -59,7 +65,7 @@ const InfoCard = ({
             )}
             {badge && (
               <div
-                className={`text-xs bg-${color}-400 hidden lg:block rounded-full p-1 px-2 border-${color}-500 text-white -mb-2`}
+                className={`text-xs ${color === 'orange' ? 'bg-orange-300' : color} hidden lg:block rounded-full p-1 px-2 border-${color}-500 text-white -mb-2`}
               >
                 {isLoading ? <Skeleton /> : badge}
               </div>

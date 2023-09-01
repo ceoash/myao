@@ -9,9 +9,7 @@ import { getSession } from "next-auth/react";
 import useMessageModal from "@/hooks/useMessageModal";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { Socket, io } from "socket.io-client";
-import { useEffect, useRef, useState } from "react";
-import { config } from "@/config";
+import { use, useEffect, useRef, useState } from "react";
 import getCurrentUser from "@/actions/getCurrentUser";
 import { Profile, Social, User } from "@prisma/client";
 import { Session } from "next-auth";
@@ -33,16 +31,19 @@ import {
   FaUserFriends,
   FaYoutube,
 } from "react-icons/fa";
-import {RiProfileLine } from "react-icons/ri";
+import { RiProfileLine } from "react-icons/ri";
 import Button from "@/components/dashboard/Button";
 import catAccept from "@/images/cat-accept.png";
 import Image from "next/image";
 import useOfferModal from "@/hooks/useOfferModal";
+import { useSocket } from "@/hooks/useSocket";
+import { useSocketContext } from "@/context/SocketContext";
+import { is } from "date-fns/locale";
 
 interface IProfile extends Profile {
-  social: Social
+  social: Social;
 }
-interface IUser extends User{
+interface IUser extends User {
   profile: IProfile;
   lastLogin?: String;
 }
@@ -50,15 +51,34 @@ interface IUser extends User{
 interface ProfieProps {
   user: IUser;
   session: Session;
-  isFriend: boolean;
-  isBlocked: boolean;
+  friend: Friend;
 }
 
-const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
-  const [friend, setFriend] = useState(false);
-  const [blocked, setBlocked] = useState(false);
+interface Friend {
+  id: string;
+  accepted: boolean;
+  status: string;
+  blocked: boolean;
+  isFriend?: boolean;
+  friendshipId: string;
+}
+
+const profile = ({ user, session, friend }: ProfieProps) => {
+  const [friendStatus, setFriendStatus] = useState<Friend>({
+    id: "",
+    accepted: false,
+    status: "",
+    blocked: false,
+    isFriend: false,
+    friendshipId: "",
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState("details");
+  const [isMounted, setIsMounted] = useState(false);
+
+  const messageModal = useMessageModal();
+
+  const socket = useSocketContext();
 
   const [stats, setStats] = useState({
     sentCount: 0,
@@ -78,20 +98,18 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
 
   const userId = session?.user.id;
   const recipientId = user?.id;
-  const socketRef = useRef<Socket>();
 
   const offerModal = useOfferModal();
 
   useEffect(() => {
-    socketRef.current = io(config.PORT);
+    setIsMounted(true);
     return () => {
-      socketRef.current?.disconnect();
+      setIsMounted(false);
     };
   }, []);
 
-  console.log(socketRef);
-
   useEffect(() => {
+    if (!isMounted) return;
     const getUserStats = async () => {
       const userId = user?.id;
       const url = `/api/dashboard/getUserStats`;
@@ -114,40 +132,45 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
         );
         setStats(stats);
         setIsLoading(false);
-
       } catch (error) {
         console.error(error);
         setIsLoading(false);
-
       }
     };
     getUserStats();
-  }, [user?.id]);
+  }, [isMounted]);
 
   useEffect(() => {
-    setFriend(isFriend);
-    setBlocked(isBlocked);
-  }, [isFriend, isBlocked]);
+    if (friend && isMounted) setFriendStatus(friend);
+  }, [friend, isMounted]);
 
   const confirmation = useConfirmationModal();
-
   const handleFollow = async () => {
-    if (!friend) {
+    if (!friendStatus.isFriend) {
       try {
         const response = await axios.post("/api/addFriend", {
           followerId: session?.user?.id,
           followingId: user.id,
         });
+        console.log("response emit", response.data);
 
         toast.success("Friend request sent to " + user?.username);
-        socketRef.current?.emit("friend", response.data.responseFriendship, 'add');
-        socketRef.current?.emit(
+        socket.emit("friend", response.data.responseFriendship, "add");
+        socket.emit(
           "update_activities",
-          response.data.transactionResult,
-          response.data.responseFriendship.followerId,
-          response.data.responseFriendship.followingId
+          response.data.transactionResult || [],
+          response.data.responseFriendship.followerId || "",
+          response.data.responseFriendship.followingId || "",
+          [
+            response.data.followerNotification,
+            response.data.followingNotification,
+          ] || [],
+          []
         );
-        setFriend(true);
+        setFriendStatus((prev) => ({
+          ...prev,
+          isFriend: true,
+        }));
       } catch (error) {
         toast.error("failed to follow user");
         console.log(error);
@@ -165,8 +188,11 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
             toast.success("Unfollowed " + user?.username);
 
             if (response.data) {
-              socketRef.current?.emit("friend", response.data, 'remove');
-              setFriend(false);
+              socket.emit("friend", response.data, "remove");
+              setFriendStatus((prev) => ({
+                ...prev,
+                isFriend: false,
+              }));
               console.log("res", response.data);
             }
           }
@@ -178,21 +204,58 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
     }
   };
 
+  const handleAccept = async () => {
+    try {
+      await axios
+        .post("/api/acceptFriendship", {
+          friendshipId: friendStatus.friendshipId,
+        })
+        .then((response) => {
+          const data = response.data;
+          console.log("data", data);
+
+          if (socket) {
+            console.log("socket emit", socket);
+            socket.emit("friend", data.responseFriendship, "accept");
+            socket.emit(
+              "update_activities",
+              data.transactionResult,
+              data.responseFriendship.followerId,
+              data.responseFriendship.followingId,
+              [data.followerNotification, data.followingNotification],
+              []
+            );
+          }
+          toast.success("Friend request accepted!");
+        })
+        .catch((error) => console.log(error));
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+    }
+  };
+
   const handleBlocked = async () => {
     try {
       confirmation.onOpen(
-        "Are you sure you want to block this user?",
+        `Are you sure you want to ${
+          friendStatus.blocked ? `unblock` : `block`
+        } this user?`,
         async () => {
           await axios.post(
-            !blocked ? "/api/blockFriend" : "/api/removeBlocked",
+            !friendStatus.blocked ? "/api/blockFriend" : "/api/removeBlocked",
             {
               userBlockedId: session?.user?.id,
               friendBlockedId: user?.id,
             }
           );
-          setBlocked(!blocked);
+          setFriendStatus((prev) => ({
+            ...prev,
+            blocked: !prev.blocked,
+          }));
           toast.success(
-            `${user?.username} has been ${blocked ? "blocked" : "unblocked"}`
+            `${user?.username} has been ${
+              friendStatus.blocked ? "blocked" : "unblocked"
+            }`
           );
         }
       );
@@ -203,31 +266,51 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
   };
 
   useEffect(() => {
-    if (!session.user.id) return;
-    if (!socketRef) return;
+    if (!session?.user.id) return;
 
-    socketRef.current && socketRef.current.emit("register", session?.user?.id);
-
-    socketRef.current &&
-      socketRef.current.on("friend", (data, action) => {
-        switch (action) {
-          case 'add':
-            setFriend(true);
-            break;
-          case 'remove':
-            setFriend(false);
-            break;
-          default:
-            break;
-        }
-      });
-      
+    socket.on("friend", (data) => {
+      console.log("friend", data);
+      const { action } = data;
+      switch (action) {
+        case "add":
+          const participant =
+            data.followerId === session?.user.id
+              ? data.followingId
+              : data.followerId;
+          if (friendStatus.id !== participant) {
+            setFriendStatus((prev) => ({
+              ...prev,
+              id: participant,
+              isFriend: true,
+              friendshipId: data.id,
+              status:
+                data.followerId === session?.user.id ? "following" : "follower",
+            }));
+          } else {
+            console.log("Problem adding user");
+          }
+          break;
+        case "remove":
+          setFriendStatus((prev) => ({
+            ...prev,
+            isFriend: false,
+            status: "",
+          }));
+          break;
+        case "accept":
+          setFriendStatus((prev) => ({
+            ...prev,
+            accepted: true,
+          }));
+          break;
+        default:
+          break;
+      }
+    });
     return () => {
-      socketRef.current && socketRef.current.disconnect();
+      socket.off("friend");
     };
-  }, [session.user.id]);
-
-  const messageModal = useMessageModal();
+  }, [socket]);
 
   const statsBody = (
     <>
@@ -248,8 +331,8 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
           </Card>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6 mb-6 border border-gray-50 rounded-lg">
-        <div className="flex items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6 mb-6 xl:border xl:bg-white xl:p-6 border-gray-200 rounded-lg">
+        <div className="flex items-center ">
           <MdHistory className="text-[36px] -mt-4" />
           <InfoCard
             title={stats.averageResponseTime.toString()}
@@ -272,7 +355,11 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
         <div className="flex items-center">
           <MdOutlineCircleNotifications className="text-[36px] -mt-4" />
           <InfoCard
-            title={stats?.highestCompletedBid ? `£${stats?.highestCompletedBid.toString()}` : "None"}
+            title={
+              stats?.highestCompletedBid
+                ? `£${stats?.highestCompletedBid.toString()}`
+                : "None"
+            }
             text="Highest Offer"
             color={`gray`}
             span={`col-span-2 md:col-span-1`}
@@ -282,7 +369,11 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
         <div className="flex items-center">
           <MdOutlineSwapVerticalCircle className="text-[36px] -mt-4 " />
           <InfoCard
-            title={stats?.highestBid !== 0 ? `£${stats?.highestBid.toString()}` : "None"}
+            title={
+              stats?.highestBid !== 0
+                ? `£${stats?.highestBid.toString()}`
+                : "None"
+            }
             text="Highest Bid"
             color={`gray`}
             span={`col-span-2 md:col-span-1`}
@@ -296,7 +387,13 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
           <Card>
             <div className="flex flex-col items-center h-full pb-8">
               <h4>You have</h4>
-              <h1 className="text-5xl font-bold -mb-2">{isLoading ? <Skeleton height={50} width={30} /> : stats?.sharedListingsCount}</h1>
+              <h1 className="text-5xl font-bold -mb-2">
+                {isLoading ? (
+                  <Skeleton height={50} width={30} />
+                ) : (
+                  stats?.sharedListingsCount
+                )}
+              </h1>
               <p className="font-bold mb-4">
                 negotiations with {user?.username}
               </p>
@@ -311,48 +408,160 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex flex-col items-center justify-center h-full">
-          <h4 className="mb-4">I am a seller</h4>
-          <Image src={catAccept} className="mb-6" alt="" />
-          <Button
-            label="Make me a offer"
-            onClick={offerModal.onOpen}
-            className="mt-10"
-          />
-        </div>
+        <Card className="mb-auto">
+          <div className="flex flex-col items-center justify-center h-full pb-6">
+            <h3 className="mb-4">I am a seller</h3>
+            <Image src={catAccept} className="mb-6" alt="" />
+            <p>
+</p>
+            <Button
+              label="Make me a offer"
+              onClick={offerModal.onOpen}
+              className="mt-10"
+            />
+          </div>
+        </Card>
         <Card>
-          <div className="flex flex-col p-4 gap-3">
-            <div className="text-center">
-              <h2 className="-mb-2">
-                {isLoading ? (
-                  <Skeleton width={30} />
-                ) : (
-                  stats?.completedSentCount + stats?.completedReceivedCount
-                )}
-              </h2>
-              <p>Offers Completed</p>
+          <div className="flex flex-col p-4 pt-2 -mb-1 only:gap-3">
+            <h2 className="text-center ">Stats</h2>
+
+            <div className="flex items-center mb-2">
+              <svg
+                className="w-4 h-4 text-orange-300 mr-1"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 22 20"
+              >
+                <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+              </svg>
+              <svg
+                className="w-4 h-4 text-orange-300 mr-1"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 22 20"
+              >
+                <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+              </svg>
+              <svg
+                className="w-4 h-4 text-orange-300 mr-1"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 22 20"
+              >
+                <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+              </svg>
+              <svg
+                className="w-4 h-4 text-orange-300 mr-1"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 22 20"
+              >
+                <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+              </svg>
+              <svg
+                className="w-4 h-4 text-gray-300 mr-1 "
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 22 20"
+              >
+                <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+              </svg>
+              <p className="ml-2 text-sm font-medium text-gray-900 ">
+                0 out of 5
+              </p>
             </div>
-            <div className="text-center">
-              <h2 className="-mb-2">
-                {isLoading ? (
-                  <Skeleton width={30} />
-                ) : (
-                  stats?.cancelledReceivedCount + stats?.cancelledSentCount
-                )}
-              </h2>
-              <p>Offers Cancelled</p>
+            <p className="text-sm font-medium text-gray-500 ">
+             0 global ratings
+            </p>
+            <div className="flex items-center mt-4">
+              <a
+                href="#"
+                className="text-sm font-medium text-gray-600  hover:underline"
+              >
+                5 star
+              </a>
+              <div className="flex-grow h-5 mx-4 bg-gray-200 rounded ">
+                <div
+                  className="h-5 bg-orange-300 rounded "
+                  style={{ width: "0%" }}
+                ></div>
+              </div>
+              <span className="text-sm font-medium text-gray-500 ">
+                0%
+              </span>
             </div>
-            <div className="text-center">
-              <h2 className="-mb-2">
-                {isLoading ? <Skeleton width={30} /> : stats?.bidsCount}
-              </h2>
-              <p>Bids Placed</p>
+            <div className="flex items-center mt-4">
+              <a
+                href="#"
+                className="text-sm font-medium text-gray-600  hover:underline"
+              >
+                4 star
+              </a>
+              <div className="flex-grow h-5 mx-4 bg-gray-200 rounded ">
+                <div
+                  className="h-5 bg-orange-300 rounded"
+                  style={{ width: "0" }}
+                ></div>
+              </div>
+              <span className="text-sm font-medium text-gray-500 ">
+                0%
+              </span>
             </div>
-            <div className="text-center">
-              <h2 className="-mb-2">
-                {isLoading ? <Skeleton width={30} /> : stats?.trustScore || 0}%
-              </h2>
-              <p>Trust Score</p>
+            <div className="flex items-center mt-4">
+              <a
+                href="#"
+                className="text-sm font-medium text-gray-600  hover:underline"
+              >
+                3 star
+              </a>
+              <div className="flex-grow h-5 mx-4 bg-gray-200 rounded ">
+                <div
+                  className="h-5 bg-orange-300 rounded"
+                  style={{ width: "0" }}
+                ></div>
+              </div>
+              <span className="text-sm font-medium text-gray-500 ">
+                0%
+              </span>
+            </div>
+            <div className="flex items-center mt-4">
+              <a
+                href="#"
+                className="text-sm font-medium text-gray-600  hover:underline"
+              >
+                2 star
+              </a>
+              <div className="flex-grow h-5 mx-4 bg-gray-200 rounded ">
+                <div
+                  className="h-5 bg-orange-300 rounded"
+                  style={{ width: "0" }}
+                ></div>
+              </div>
+              <span className="text-sm font-medium text-gray-500 ">
+                0%
+              </span>
+            </div>
+            <div className="flex items-center mt-4">
+              <a
+                href="#"
+                className="text-sm font-medium text-gray-600  hover:underline"
+              >
+                1 star
+              </a>
+              <div className="flex-grow h-5 mx-4 bg-gray-200 rounded ">
+                <div
+                  className="h-5 bg-orange-300 rounded"
+                  style={{ width: "0" }}
+                ></div>
+              </div>
+              <span className="text-sm font-medium text-gray-500 ">
+                0%
+              </span>
             </div>
           </div>
         </Card>
@@ -373,21 +582,25 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
 
   return (
     <Dash meta={<Meta title="" description="" />}>
-      <div className="mt-6 xl:hidden">
+      <div className="xl:hidden">
         <UserCard
+          header
+          isPublic={true}
           currentUser={user}
           session={session}
           sales={0}
           offers={0}
           friendsCount={0}
+          status={friendStatus.status}
+          isFriend={friendStatus.isFriend}
+          isBlocked={friendStatus.blocked}
+          isAccepted={friendStatus.accepted}
+          handleFollow={handleFollow}
+          handleBlock={handleBlocked}
+          handleAccept={handleAccept}
           onMessageClick={() =>
             messageModal.onOpen(session?.user?.id, recipientId)
           }
-          onAddFriendClick={handleFollow}
-          isFriend={friend}
-          isBlocked={blocked}
-          onRemoveFriendClick={handleFollow}
-          isPublic={true}
         />
       </div>
 
@@ -396,24 +609,24 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
           <div className="flex gap-4 border-b border-gray-200 mb-6 font-medium text-lg ">
             <div
               onClick={() => setTab("details")}
-              className={`${
-                tab === "details" && "border-b-4 border-orange-400"
+              className={`pr-2 font-medium ${
+                tab === "details" && "border-b-4 border-orange-default"
               } cursor-pointer pb-2`}
             >
               Details
             </div>
             <div
               onClick={() => setTab("offers")}
-              className={`${
-                tab === "offers" && "border-b-4 border-orange-400"
+              className={`pr-2 font-medium ${
+                tab === "offers" && "border-b-4 border-orange-default"
               } cursor-pointer pb-2`}
             >
               Offers
             </div>
             <div
               onClick={() => setTab("reviews")}
-              className={`${
-                tab === "reviews" && "border-b-4 border-orange-400"
+              className={`pr-2 font-medium ${
+                tab === "reviews" && "border-b-4 border-orange-default"
               } cursor-pointer pb-2`}
             >
               Reviews
@@ -426,23 +639,28 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
         </div>
         <div className="xl:flex-1 hidden xl:block">
           <UserCard
+            isPublic={true}
             currentUser={user}
             session={session}
             sales={0}
             offers={0}
             friendsCount={0}
+            status={friendStatus.status}
+            isFriend={friendStatus.isFriend}
+            isBlocked={friendStatus.blocked}
+            isAccepted={friendStatus.accepted}
+            handleFollow={handleFollow}
+            handleBlock={handleBlocked}
+            handleAccept={handleAccept}
             onMessageClick={() =>
               messageModal.onOpen(session?.user?.id, recipientId)
             }
-            onAddFriendClick={handleFollow}
-            isFriend={friend}
-            isBlocked={blocked}
-            handleBlock={handleBlocked}
-            onRemoveFriendClick={handleFollow}
-            isPublic={true}
           />
-
-          <Card title={`More Info`} icon={<MdOutlineContactPage />}>
+          <Card
+            className="p-6 text-sm text-gray-600"
+            title={`More Info`}
+            icon={<MdOutlineContactPage />}
+          >
             <div className="flex justify-between items-center">
               <div>Verifed</div>
               <div>
@@ -468,7 +686,7 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
 
             <div className="flex justify-between items-center">
               <div>Location</div>
-              <div>{ "United Kingdom"}</div>
+              <div>{"United Kingdom"}</div>
             </div>
 
             <div className="flex justify-between items-center">
@@ -478,27 +696,28 @@ const profile = ({ user, session, isFriend, isBlocked }: ProfieProps) => {
           </Card>
 
           {user?.profile?.social && (
-          <Card title={`Social Links`} icon={<FaUserFriends />}>
-            <div className="flex gap-2 items-center">
-              <div className="flex gap-4">
-                {user?.profile?.social && user?.profile?.social?.twitter && (
-                  <FaTwitter className="text-2xl rounded-full p-1 border-2 border-social-twitter text-social-twitter" />
-                )}
-                {user?.profile?.social && user?.profile?.social?.facebook && (
-                  <FaFacebookF className="text-2xl rounded-full p-1 border-2 border-social-facebook text-social-facebook" />
-                )}
-                {user?.profile?.social && user?.profile?.social?.youtube && (
-                  <FaYoutube className="text-2xl rounded-full p-1 border-2 border-social-youtube text-social-youtube" />
-                )}
-                {user?.profile?.social && user?.profile?.social?.linkedin && (
-                  <FaLinkedin className="text-2xl rounded-full p-1 border-2 border-social-linkedin text-social-linkedin" />
-                )}
-                {user?.profile?.social && user?.profile?.social?.instagram && (
-                  <FaInstagram className="text-2xl rounded-full p-1 border-2 border-social-instagram text-social-instagram" />
-                )}
+            <Card title={`Social Links`} icon={<FaUserFriends />}>
+              <div className="flex gap-2 items-center">
+                <div className="flex gap-4">
+                  {user?.profile?.social && user?.profile?.social?.twitter && (
+                    <FaTwitter className="text-2xl rounded-full p-1 border-2 border-social-twitter text-social-twitter" />
+                  )}
+                  {user?.profile?.social && user?.profile?.social?.facebook && (
+                    <FaFacebookF className="text-2xl rounded-full p-1 border-2 border-social-facebook text-social-facebook" />
+                  )}
+                  {user?.profile?.social && user?.profile?.social?.youtube && (
+                    <FaYoutube className="text-2xl rounded-full p-1 border-2 border-social-youtube text-social-youtube" />
+                  )}
+                  {user?.profile?.social && user?.profile?.social?.linkedin && (
+                    <FaLinkedin className="text-2xl rounded-full p-1 border-2 border-social-linkedin text-social-linkedin" />
+                  )}
+                  {user?.profile?.social &&
+                    user?.profile?.social?.instagram && (
+                      <FaInstagram className="text-2xl rounded-full p-1 border-2 border-social-instagram text-social-instagram" />
+                    )}
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
           )}
         </div>
       </div>
@@ -536,20 +755,26 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const user = await getUserById({ id: id as string });
 
-    const isFriend =
-      sessionUser.followers?.some((follower) => follower.followerId === id) ||
-      sessionUser.followings?.some((following) => following.followingId === id);
+    const findFriend = sessionUser.friends?.find((friend) => friend.id === id);
 
     const isBlocked = sessionUser.blockedFriends?.some(
       (blocked) => blocked.friendBlockedId === id
     );
 
+    const friend = {
+      id: id,
+      accepted: findFriend?.accepted || false,
+      status: findFriend?.relationshipStatus || "",
+      blocked: isBlocked || false,
+      isFriend: findFriend ? true : false,
+      friendshipId: findFriend?.friendshipId || "",
+    };
+
     return {
       props: {
         user,
         session,
-        isFriend,
-        isBlocked,
+        friend,
       },
     };
   } catch (error) {
@@ -557,10 +782,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         user: null,
-        listings: null,
-        requests: null,
         session: null,
-        isFriend: false,
       },
     };
   }

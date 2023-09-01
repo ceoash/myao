@@ -1,52 +1,44 @@
-import { Bid, Listing, Profile, User } from "@prisma/client";
+import { Bid, Profile, Review, User } from "@prisma/client";
 import Link from "next/link";
 import Button from "../Button";
 import PriceWidget from "@/components/widgets/PriceWidget";
-import StatusChecker from "@/utils/status";
-import { BiCalendar, BiCategoryAlt } from "react-icons/bi";
-import { FaThumbsUp } from "react-icons/fa";
-import React, { Dispatch, Key, SetStateAction, useEffect, useState } from "react";
-import { Socket } from "socket.io-client";
+import { FaPencilAlt, FaThumbsUp } from "react-icons/fa";
+import React, {
+  Dispatch,
+  Key,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import cat from "@/images/cat-neutral.png";
 import dog from "@/images/dog-neutral.png";
 import dogAccept from "@/images/dog-accept.png";
-import dogReject from "@/images/dog-reject.png";
 import dogTerminate from "@/images/dog-terminate.png";
 import catAccept from "@/images/cat-accept.png";
-import catReject from "@/images/cat-reject.png";
 import catTerminate from "@/images/cat-reject.png";
-import avatar from "@/images/avatar.png";
 import Image from "next/image";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-import { MdOutlineCalendarMonth, MdOutlineSignpost, MdOutlineSyncAlt } from "react-icons/md";
+import StripeCheckout from "@/components/StripeCheckout";
 
-interface SafeUser extends User {
-  profile: Profile;
-}
-
-interface SafeListing extends Listing {
-  seller: SafeUser;
-  buyer: SafeUser;
-}
-
-interface ICurrentBid {
-  currentPrice: string;
-}
+import {
+  MdArrowCircleDown,
+  MdArrowCircleUp,
+  MdOutlineSwapVerticalCircle,
+} from "react-icons/md";
+import { CustomListing } from "@/interfaces/authenticated";
+import { CiCalendar, CiDeliveryTruck, CiLocationOn, CiMedicalCross } from "react-icons/ci";
+import useOfferEditModal from "@/hooks/useOfferEditModal";
 
 interface OfferDetailsWidgetProps {
-  listing: SafeListing;
+  listing: CustomListing;
   status: string;
   session: any;
   timeSinceCreated: string | null;
   bids: any;
   me: any;
   participant: any;
-  socketRef: React.MutableRefObject<Socket | undefined>;
   completedBy: string | null | undefined;
   isLoading?: boolean;
   handleFinalise: (userId: string, participantId: string) => void;
-  setCompletedBy: Dispatch<SetStateAction<string | null | undefined>>;
   handleStatusChange: (status: string, userId: string) => void;
   setStatus: Dispatch<SetStateAction<string>>;
   setCurrentBid: Dispatch<
@@ -69,19 +61,21 @@ interface OfferDetailsWidgetProps {
     user: boolean;
     status: boolean;
     loading: boolean;
-  }
-  setLoadingState: Dispatch<SetStateAction<{
-    cancelled: boolean;
-    accepted: boolean;
-    completed: boolean;
-    contact: boolean;
-    yes: boolean;
-    no: boolean;
-    negotiating: boolean;
-    user: boolean;
-    status: boolean;
-    loading: boolean;
-  }>>
+  };
+  setLoadingState: Dispatch<
+    SetStateAction<{
+      cancelled: boolean;
+      accepted: boolean;
+      completed: boolean;
+      contact: boolean;
+      yes: boolean;
+      no: boolean;
+      negotiating: boolean;
+      user: boolean;
+      status: boolean;
+      loading: boolean;
+    }>
+  >;
   currentBid: any;
   setBids: Dispatch<SetStateAction<Bid[]>>;
 }
@@ -89,7 +83,6 @@ const OfferDetailsWidget = ({
   listing,
   status,
   session,
-  timeSinceCreated,
   handleStatusChange,
   currentBid,
   setCurrentBid,
@@ -97,27 +90,27 @@ const OfferDetailsWidget = ({
   setStatus,
   isLoading,
   completedBy,
-  setCompletedBy,
   setLoadingState,
   loadingState,
   me,
   participant,
   bids,
-  socketRef,
-  handleFinalise
+  handleFinalise,
 }: OfferDetailsWidgetProps) => {
-  const [ meLastBid, setMeLastBid ] = useState<any>();
-  const [ participantLastBid, setParticipantLastBid ] = useState<any>();
-  const [ mostRecentBid, setMostRecentBid ] = useState<any>();
-  const [ buttonClicked, setButtonClicked ] = useState("")
+  const [meLastBid, setMeLastBid] = useState<any>();
+  const [participantLastBid, setParticipantLastBid] = useState<any>();
+  const [mostRecentBid, setMostRecentBid] = useState<any>();
+
+  const edit = useOfferEditModal()
+  const { options } = listing;
 
   const noBids = !meLastBid && !participantLastBid && status === "negotiating";
-  const rejectedByMe = status === "rejected" && session.user.id !== completedBy;
+  const rejectedByMe =
+    status === "rejected" && session?.user.id !== completedBy;
   const inNegotiation = status === "negotiating";
 
-
   const statusController = noBids || rejectedByMe || inNegotiation;
-  const router = useRouter()
+
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -146,27 +139,23 @@ const OfferDetailsWidget = ({
     }
   }, [bids, session?.user?.id]);
 
-  useEffect(() => {
-    if (status === "rejected") {
-      setCompletedBy(listing.completedById);
-    }
-  }, [currentBid]);
+  
 
   useEffect(() => {
-    if(isLoading === false){
+    if (isLoading === false) {
       setLoadingState((prev) => {
-       return  {
-        ...prev, 
-        yes: false, 
-        no: false, 
-        cancelled: false, 
-        accepted: false, 
-        completed: false,
-        contact: false,
-      }
-      })
+        return {
+          ...prev,
+          yes: false,
+          no: false,
+          cancelled: false,
+          accepted: false,
+          completed: false,
+          contact: false,
+        };
+      });
     }
-  },[isLoading])
+  }, [isLoading]);
 
   let parsedImage;
 
@@ -178,263 +167,359 @@ const OfferDetailsWidget = ({
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
   }
+  const FormatPrice = Number(listing.price).toLocaleString();
+  const formatLastBid = Number(currentBid.currentPrice).toLocaleString();
+  const formatUserLastBid = Number(listing.price).toLocaleString();
+  const formatParticipantLast = Number(listing.price).toLocaleString();
 
-  
   return (
     <div
       className={`
     w-full
-    border
-    shadow
-    p-4
     rounded-lg
-    ${status === "accepted" && "bg-orange-100 border-orange-200"}
-    ${status === "completed" && "bg-orange-50 border-orange-200"}
-    ${status === "rejected" && "bg-red-50 border-red-100"}
-    ${status === "cancelled" && "bg-red-100 border-red-200"}
-    ${status === "negotiating" && "bg-orange-400 border-orange-200"}
-    ${status === "awaiting approval" && "bg-orange-100 border-orange-200"}
+    border
+    p-4
     
-    
+    ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50  border-red-50' : status === 'accepted' || status === 'completed' ? 'bg-green-100 border-green-50' : 'bg-white border-gray-200'}
+   border-gray-200
     `}
     >
-      <div className=" p-4 rounded-lg border bg-white  border-white shadow ">
-        {
-          <Link
-            href={"/dashboard/profile/" + session?.user.id}
-            className="cursor-pointer"
-          >
-            <div className="">
-              <div className="flex gap-3">
-                <span className="w-[60px] xl:w-1/5">
-                  <Image
-                    src={sessionUser?.profile?.image || avatar}
-                    alt="user avatar"
-                    className="rounded-full border border-gray-200 max-w-8"
-                    width={60}
-                    height={60}
-                  />
-                </span>
-                <div className="w-full">
-                  <div className="capitalize font-bold text-2xl flex justify-between items-center">
-                    You
-                    <Image
-                      src={listing.sellerId === session?.user.id ? dog : cat}
-                      alt=""
-                      className="h-8 w-10"
-                    />
-                  </div>
-                  <div className="flex text-[12px]  xl:text-[14px] text-gray-600 gap-2">
-                    {listing.userId === sessionUser?.id && listing.price !== '0' && listing.price !== '' && (
-                    <div>{listing.price !== '0' && listing.price !== '' && `Start price: £ ${listing.price}`}</div>
-                    )}
-                    <div>{meLastBid?.price ? "Last bid: £" + meLastBid.price : "No bids yet"}</div>
+      <div className="relative mx-auto w-full  ">
+        <Link href={`/dashboard/profile/${session?.user.id}`} className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform transform hover:-translate-y-2 w-full shadow mb-4 
+        ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50 text-red-500 border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50 text-green-500 border-green-100' : 'bg-gray-50 border-gray-200'} border  shadow`}>
+        <div className="grid grid-cols-2 my-4 mx-4">
+          <div className="flex items-center">
+            <div className="relative">
+              <div className="rounded-full w-6 h-6 md:w-8 md:h-8 bg-white"></div>
+              <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
+              <Image
+                src={listing.seller.profile?.image ? listing.seller.profile?.image : dog }
+                alt=""
+                layout="fill"
+                objectFit="cover"
+              />
+            </div>
+            <p className="ml-2 !container text-gray-800 line-clamp-1 text-lg font-bold">You</p>
+          </div>
+
+          <div className="flex justify-end">
+            <p className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
+              <span className="text-sm">{meLastBid?.price ? <div className="text-right"><p className="text-xs text-gray-800">Latest Bid</p> <span className="text-sm uppercase">{`£${Number(meLastBid?.price).toLocaleString()}`}</span></div> : <span className="text-xs text-gray-800">no offers yet</span>}</span>
+            </p>
+          </div>
+        </div>
+      </Link>
+        
+        <div className={`relative inline-block duration-300 ease-in-out transition-transform transform hover:-translate-y-2 w-full shadow rounded-lg ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50 border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50 border-green-100' : 'bg-white border-gray-200'} border  shadow`}>
+          <div className="p-4 flex gap-4 ">
+            <div className=" relative rounded-lg overflow-hidden w-20  h-14">
+              <div className="transition-transform duration-500 transform ease-in-out hover:scale-110 ">
+                <div className="absolute inset-0 bg-black opacity-10"></div>
+                <img
+                  src={parsedImage && parsedImage[0]
+                      ? parsedImage[0]
+                      : "/images/cat.png"
+                  }
+                  alt="user"
+                  width="100%"
+                  height="100%"
+                  className="h-14 w-16 object-cover object-center rounded-x absolute"
+                />
+              </div>
+
+             
+            </div>
+
+            <div className=" w-full">
+                <h2 className="flex-1 capitalize font-bold text-base md:text-xl text-gray-800 line-clamp-1">
+                  {listing.title}
+                </h2>
+               
+              <div className="-mt-4 flex items-start justify-between flex-1">
+              <p className=" text-sm  line-clamp-1">
+                {listing.category}
+              </p>
+             
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 h-1 shadow-2xl" />
+          <div className="px-6">
+            <div className="text-lg -mb-3 font-bold text-center flex flex-col items-center mt-6 ">
+              {status === "rejected" ||
+              status === "cancelled" ||
+              status === "expired"
+                ? "Last"
+                : status === "completed" || status === "accepted"
+                ? "Ageeed"
+                : "Current"}{" "}
+              offer
+            </div>
+           
+            <div
+              className={`font-extrabold text-4xl flex gap-2 mx-auto items-center justify-center`}
+            >
+              <div
+                className={`text-5xl text-center flex justify-center ${
+                  status === "rejected" && "text-red-500 line-through"
+                }`}
+              >
+                {currentBid.currentPrice &&
+                  currentBid.currentPrice !== "0" &&
+                  `£${Number(currentBid.currentPrice).toLocaleString()}`}
+              </div>
+              <div
+                className={`text-xl mt-4 ${
+                  status === "rejected" &&
+                  "text-red-500 line-through text-center flex justify-center"
+                }`}
+              >
+                {currentBid.currentPrice == "0" ||
+                  (currentBid.currentPrice == "" &&
+                    listing.price === "0 " &&
+                    `Open offer`)}
+              </div>
+            </div>
+
+            <div className="-mt-2 flex justify-center gap-1 ">
+              By
+              <Link
+                href={`/dashboard/profile/${currentBid.byUserId}`}
+                className="underline ml-[2px]"
+              >
+                {currentBid.byUsername}
+              </Link>
+            </div>
+
+            <div className="py-2 pt-6">
+              <div className=" gap-2 text-sm  font-bold mb-6 items-start">
+                {currentBid.byUserId !== session?.user?.id &&
+                  currentBid.currentPrice !== "0" &&
+                  currentBid.currentPrice !== "" &&
+                  status === "negotiating" && (
+                    <div className="w-2/3 flex gap-2 mx-auto justify-center">
+                      <div className="flex flex-col justify-center  items-center gap-4">
+                        <Button
+                          isLoading={loadingState.yes}
+                          accept
+                          onClick={() =>
+                            handleStatusChange("accepted", session?.user.id)
+                          }
+                          className="rounded-xl px-3 py-1 text-center w-10"
+                        >
+                          YES
+                        </Button>
+                        <div className="relative h-16 w-16 mx-6">
+                        <Image
+                          src={
+                            session?.user?.id === listing.sellerId
+                              ? catAccept
+                              : dogAccept
+                          }
+                          alt="user"
+                          className="rounded-xl"
+                        />
+                      </div>
+                      </div>
+                      <div className="flex flex-col justify-center items-center  gap-4">
+                        <Button
+                          cancel
+                          isLoading={loadingState.no}
+                          onClick={() =>
+                            handleStatusChange("rejected", session?.user.id)
+                          }
+                          className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
+                        >
+                          NO
+                        </Button>
+                        <div className="relative h-16 w-16 mx-6">
+                        <Image
+                          src={
+                            session?.user?.id === listing.sellerId
+                              ? catTerminate
+                              : dogTerminate
+                          }
+                          alt="user"
+                          className=" rounded-xl"
+                        />
+
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {status === "awaiting approval" &&
+                  listing.userId !== session?.user?.id && (
+                    <div className="flex justify-center gap-2 mb-4 w-full">
+                      <Button
+                        options={{ primary: true, size: "lg" }}
+                        isLoading={loadingState.negotiating}
+                        onClick={() =>
+                          handleStatusChange("negotiating", session?.user.id)
+                        }
+                      >
+                        <div className="flex gap-2 items-center ">
+                          <div>
+                            <FaThumbsUp />
+                          </div>
+                          <div>Let's haggle</div>
+                        </div>
+                      </Button>
+                    </div>
+                  )}
+              </div>
+             
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      
+      <div className="relative inline-block  w-full  rounded-lg mt-4 ">
+
+      
+      <div className="w-full flex justify-center">
+      {bids && bids[bids.length - 1]?.userId && bids[bids.length - 1]?.userId === session?.user.id ?
+      <MdArrowCircleUp className={`text-[70px] md:text-[70px] lg:text-[90px] xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full  ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50 text-red-500 border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50 text-green-400 border-green-100' : 'text-orange-default bg-gray-50 border-gray-200'} border  shadow`} /> :
+      bids && bids[bids.length - 1]?.userId && bids[bids.length - 1]?.userId !== session?.user.id ? <MdArrowCircleDown className={`text-[70px] md:text-[70px] lg:text-[90px] xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50 text-red-400 border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50 text-green-400 border-green-100' : 'text-orange-default bg-gray-50 border-gray-200'} border shadow`} /> :
+      <MdOutlineSwapVerticalCircle className={`text-[70px] md:text-[70px] lg:text-[90px] xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full  ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50 text-red-400 border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50 text-green-400 border-green-100' : 'bg-gray-50 border-gray-200 text-orange-default'} border shadow`} />
+       }
+
+      </div>
+      <Link href={`/dashboard/profile/${participant?.id}`} className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform transform hover:-translate-y-2 w-full ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50 text-red-500 border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50 text-green-500 border-green-100' : 'bg-gray-50 border-gray-200'} border shadow`}>
+        <div className="grid grid-cols-2 my-4 mx-4">
+          <div className="flex items-center">
+            <div className="relative">
+              <div className="rounded-full w-6 h-6 md:w-8 md:h-8 "></div>
+              <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
+              <Image
+                src={listing.buyer.profile?.image ? listing.buyer.profile?.image : cat }
+                alt=""
+                layout="fill"
+                objectFit="cover"
+              />
+            </div>
+            <p className="ml-2 text-gray-800 line-clamp-1 text-lg font-bold">{participant?.username}</p>
+          </div>
+          <div className="flex justify-end">
+            <p className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
+              <span className="text-sm">{participantLastBid?.price ? <div className="text-right"><p className="text-xs text-gray-800">Latest Bid</p> <span className="text-sm uppercase">{`£${Number(participantLastBid?.price).toLocaleString()}`}</span></div> : <span className="text-xs text-gray-800">no offers yet</span>}</span>
+            </p>
+          </div>
+        </div>
+      </Link>
+      </div>
+    
+      {statusController && (
+        <div className="border border-orange-300 bg-orange-default px-4 pb-4 pt-1 rounded-xl shadow mt-6">
+          <PriceWidget
+            listing={listing}
+            currentBid={currentBid}
+            setCurrentBid={setCurrentBid}
+            bids={bids}
+            setBids={setBids}
+            sessionUser={sessionUser}
+            status={status}
+            setStatus={setStatus}
+          />
+        </div>
+      )}
+      <div className={`mt-6 grid grid-cols-1 md:grid-cols-2 border rounded-lg px-4 shadow  pt-6 pb-6 mb-6 auto-cols-fr gap-4 relative ${status === 'rejected' || status === 'cancelled' ? 'bg-red-50  border-red-100' : status === 'accepted' || status === 'completed' ? 'bg-green-50  border-green-100' : 'bg-gray-50 border-gray-200'} `} >
+            { status !== 'cancelled' &&
+              status !== 'accepted' &&
+              status !== 'completed' &&
+            <FaPencilAlt className=" mt-4 mr-2 absolute top-1 right-1 text-gray-600  border p-1 rounded-full bg-white border-gray-200 text-2xl" onClick={() => edit.onOpen(session?.user, listing, "item", options)} />
+            }
+            <h5 className="col-span-2">Item details</h5>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiMedicalCross className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Type</p>
+                    <p className="capitalize text-xs">{listing.type} </p>
                   </div>
                 </div>
               </div>
-            </div>
-          </Link>
-        }
-      </div>
-      <div
-        className={`${status === "accepted" && "border-green-300"}${
-          status === "rejected" || (status === "cancelled" && "border-red-300")
-        } mt-4 p-4 rounded-xl border  bg-white`}
-      >
-        <div className="text-center flex flex-col">
-          <div className="mt-6 border-b border-gray-200 pb-4 mb-4">
-            <div className="flow-root">
-              <ul role="list" className="-my-6 divide-y divide-gray-200">
-                <li className="flex pb-6">
-                  <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                    <img
-                      src={
-                        parsedImage && parsedImage[0]
-                          ? parsedImage[0]
-                          : "/images/cat.png"
-                      }
-                      alt="user"
-                      width="100%"
-                      height="100%"
-                      className="h-full w-full object-cover object-center rounded-xl"
-                    />
-                  </div>
-
-                  <div className="ml-4 flex flex-1 flex-col">
-                    <div>
-                      <div className="flex justify-between text-base font-medium text-gray-900">
-                        <h3 className="xl:w-[120px] 2xl:w-[250px]">
-                          <div className="first-letter:uppercase text-left truncate md:text-md lg:text-lg xl:text-xl">
-                            {listing.title}
-                          </div>
-                        </h3>
-                      </div>
-                      <div className="flex gap-2 text-sm">
-                        <div className="flex gap-1 items-center">
-                          <MdOutlineSyncAlt />
-                          <div>
-                            {listing.type === "sellerOffer" ? "Sale" : "Buy"}
-                          </div>
-                        </div>
-                        <div className="flex gap-1 items-center">
-                          <MdOutlineCalendarMonth />
-                          <div>{timeSinceCreated}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="text-md font-bold">
-            {status === "rejected" ||
-            status === "cancelled" ||
-            status === "expired"
-              ? "Last"
-              : status === 'completed' || status === 'accepted' ? "Ageeed" : "Current"}{" "}
-            offer
-          </div>
-          <div className="-mt-1">
-            By
-            <Link
-              href={`/dashboard/profile/${currentBid.byUserId}`}
-              className="underline ml-[2px]"
-            >
-              {currentBid.byUsername}
-            </Link>
-          </div>
-          <div
-            className={`font-extrabold text-4xl flex gap-2 mx-auto items-center`}
-          >
-            <div
-              className={`text-5xl ${
-                status === "rejected" && "text-red-500 line-through"
-              }`}
-            >
-              {currentBid.currentPrice && currentBid.currentPrice !=='0'&& `£ ${currentBid.currentPrice}`}
-            </div>
-            <div
-              className={`text-xl mt-4 ${
-                status === "rejected" && "text-red-500 line-through"
-              }`}
-            >
-              {currentBid.currentPrice =='0' || currentBid.currentPrice =='' &&`Open offer`}
-            </div>
-          </div>
-          {status && (
-            <div className="flex justify-center pb-2 rounded-xl mb-2">
-              {StatusChecker(status)}
-            </div>
-          )}
-        </div>
-        <div>
-          <div className=" gap-2 text-sm text-white font-bold mb-6 items-start">
-            {currentBid.byUserId !== session?.user?.id  && currentBid.currentPrice !=='0' && currentBid.currentPrice !=='' && 
-              status === "negotiating" && (
-                <div className="w-2/3 flex gap-2 mx-auto justify-center">
-                  <div className="flex flex-col justify-center  items-center gap-4">
-                    <Button
-                    isLoading={loadingState.yes}
-                      accept
-                      onClick={() => handleStatusChange("accepted", session?.user.id) }
-                      className="rounded-xl px-3 py-1 text-center w-10"
-                    >
-                      YES
-                    </Button>
-                    <Image
-                      src={ session?.user?.id === listing.sellerId ? catAccept : dogAccept }
-                      alt="user"
-                      className="rounded-xl px-6"
-                    />
-                  </div>
-                  <div className="flex flex-col justify-center items-center  gap-4">
-                    <Button
-                      cancel
-                      isLoading={loadingState.no}
-                      onClick={() => handleStatusChange("rejected", session?.user.id)}
-                      className="rounded-xl px-3 py-1 text-center bg-orange-400 border border-orange-500"
-                    >
-                      NO
-                    </Button>
-                    <Image
-                      src={session?.user?.id === listing.sellerId ? catTerminate : dogTerminate}
-                      alt="user"
-                      className=" rounded-xl px-6"
-                    />
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiMedicalCross className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Condition</p>
+                    <p className="capitalize text-xs">{options && options?.condition} </p>
                   </div>
                 </div>
-              )}
-
-            {status === "awaiting approval" &&
-              listing.userId !== session?.user?.id && (
-                <div className="flex justify-center gap-2 mb-4 w-full">
-                  <Button
-                    options={{ primary: true, size: "lg" }}
-                    isLoading={loadingState.negotiating}
-                    onClick={() =>
-                      handleStatusChange("negotiating", session?.user.id)
-                    }
-                  >
-                    <div className="flex gap-2 items-center ">
-                      <div>
-                        <FaThumbsUp />
-                      </div>
-                      <div>Let's haggle</div>
-                    </div>
-                  </Button>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiLocationOn className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Location</p>
+                    <p className="capitalize text-xs">{options && options?.location?.city ? options.location?.city : options?.location?.region ? options.location?.region : 'Unknown' }</p>
+                  </div>
                 </div>
-              )}
-          </div>
-          {statusController && (
-            <div className="">
-              <PriceWidget
-                listing={listing}
-                currentBid={currentBid}
-                setCurrentBid={setCurrentBid}
-                bids={bids}
-                setBids={setBids}
-                sessionUser={sessionUser}
-                socketRef={socketRef}
-                status={status}
-                setStatus={setStatus}
-              />
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiDeliveryTruck className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Pickup</p>
+                    <p className="capitalize text-xs">{  options?.pickup === 'both' ? 'Collection or Delivery' : options?.pickup === 'delivery' ? 'Delivery' :  options?.pickup === 'pickup' ? "Collection" : 'Unknown' }</p>
+
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <CiDeliveryTruck className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Private</p>
+                    <p className="capitalize text-xs">Yes</p>
+
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex gap-2">
+                <CiCalendar className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Created</p>
+                    <p className="text-xs"> { new Date(listing.createdAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}</p>
+                   
+                  </div>
+                </div>
+              </div>
+              
             </div>
-          )}
-          {status !== "cancelled" && status !== "accepted" && status !== "completed" && (
+            {status !=='cancelled' && status !== 'accepted' && status !== 'completed' && (
+            <div className="col-span-2 -mt-1 flex gap-2">
+                <Button label="Terminate" cancel onClick={() =>handleStatusChange("cancelled", session?.user.id)} />
+              </div>
+            )}
+            {status === "accepted"  && (
             <div className="flex flex-col items-center gap-4 mt-4 w-full">
-              <Button
-                cancel
-                outline
-                options={{ color: "danger", size: "lg" }}
-                isLoading={loadingState.cancelled}
-                onClick={() => handleStatusChange("cancelled", session?.user.id)  }
-              >
-                TERMINATE
-              </Button>
-            </div>
-          )}
-          {status === "accepted"  && (
-            <div className="flex flex-col items-center gap-4 mt-4 w-full">
-              <Button
-                secondary
-                outline
-                options={{ color: "primary", size: "lg" }}
-                isLoading={loadingState.contact}
-                onClick={() => handleFinalise(session?.user.id, participant.id)
-                }
-              >
-                Arrange to {completedBy === session.user.id && listing.type === "sellerOffer" ? "get paid" : "get your item"}
-              </Button>
-              {completedBy === session.user.id && status === "accepted" &&(
-              <Button
-              accept
-              options={{ size: "lg" }}
-                isLoading={loadingState.completed}
-                onClick={() => handleStatusChange("completed", session?.user.id) }
-              >
-                Complete offer
-              </Button>
+             
+              {listing.buyerId === session?.user.id && status === "accepted" &&(
+               <StripeCheckout
+               session={session}
+               listing={{
+                 id: listing.id,
+                 price: Number(currentBid.currentPrice ? currentBid.currentPrice : listing.price),
+                 title: listing.title,
+                 buyer: {id: listing.buyerId, username: listing.buyer.username},
+                 seller: {id: listing.sellerId, username: listing.seller.username},
+                 status: status,
+                 image: parsedImage && parsedImage[0] ? parsedImage[0] : "/images/cat.png",
+               }
+             }
+             handleStatusChange={handleStatusChange}
+             />
               )}
             </div>
           )}
@@ -454,51 +539,9 @@ const OfferDetailsWidget = ({
                 )
               }
               >
-                Contact {session.user.id === listing.sellerId ? "Buyer" : "Seller"}
+                Contact {session?.user.id === listing.sellerId ? "Buyer" : "Seller"}
               </Button>
               )}
-        </div>
-      </div>
-      <div className="bg-white p-4 mt-4 rounded-lg border border-white shadow">
-        <Link
-          href={"/dashboard/profile/" + nonSessionUser?.id}
-          className="cursor-pointer"
-        >
-          <div className="">
-            <div className="flex gap-3">
-              <span className="w-[60px] xl:w-1/5">
-                <Image
-                  src={nonSessionUser?.profile?.image || avatar}
-                  alt="user avatar"
-                  className="rounded-full border border-gray-200"
-                  width={60}
-                  height={60}
-                />
-              </span>
-              <div className="w-full">
-                <div className="capitalize font-bold text-2xl flex justify-between items-center">
-                  {nonSessionUser?.username}
-                  <Image
-                    src={listing.sellerId === nonSessionUser.id ? dog : cat}
-                    alt=""
-                    className="h-8 w-10"
-                  />
-                </div>
-                <div className="flex gap-2 text-[12px]  text-gray-600 xl:text-[14px]">
-                  {listing?.userId === nonSessionUser?.id && listing.price !== '0' && listing.price !== '' && (
-                    <div>{listing.price !== '0' && listing.price !== '' ? `Start price: £ ${listing.price}` : ''}</div>
-                  )}
-                  <div>
-                    {participantLastBid?.price
-                      ? "Last bid: £" + participantLastBid?.price
-                      : "No bids yet"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Link>
-      </div>
     </div>
   );
 };

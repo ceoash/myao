@@ -3,6 +3,7 @@
 import React from "react";
 import Modal from "./Modal";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
+import Alert from "./Alert";
 
 export interface ErrorResponse {
   error: string;
@@ -21,8 +22,9 @@ const ConfirmationModal = () => {
     );
   
     return (
-      <Modal
-        title="Update offer status"
+      
+      <Alert
+        title="Are you sure?"
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={() => {

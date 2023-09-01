@@ -1,9 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { User } from ".prisma/client";
 import bcrypt from "bcrypt";
-import { tr } from "date-fns/locale";
-import { createActivityForUser } from "@/prisma";
+import { createActivity } from "@/prisma";
 
 interface ErrorResponse {
   error: string;
@@ -43,15 +41,6 @@ export default async function UpdateProfile(
 
     const now = Date.now()
 
-    const activity = {
-      type: "UpdatedSettings",
-      message: `You updated your profile`,
-      action: "/dashboard/my-profile",
-      modelId: findUser.id,
-      value: "",
-      userId: findUser.id,
-      createdAt: now,
-    };
   
     const user = await prisma.user.update({
       where: { id: findUser.id },
@@ -124,21 +113,24 @@ export default async function UpdateProfile(
                 userId: user.id,
                 text: message,
                 type: "text",
+                read: false
               },
             },
           },
         });
       }
     }
-    
 
-    const createActivity = createActivityForUser(
-      safeUser.id,
-      activity,
-      safeUser.activities
-    );
-    
-    const transactionOperations = [createActivity];
+    const newActivity = createActivity({
+      type: "account",
+      message: `Settings updated`,
+      user_message: "You updated your profile",
+      user_message_type: "profile update",
+      action: `/dashboard/profile/${id}`,
+      userId: user.id,
+    });
+
+    const transactionOperations = [newActivity];
 
     try {
       const transactionResult = await prisma.$transaction(

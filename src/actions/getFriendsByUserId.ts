@@ -9,15 +9,39 @@ export default async function getFriendsByUserId(userId: string) {
         { followingId: userId }
       ]
     },
-    include: {
+    select: {
+      id: true,
+      followerId: true,
+      followingId: true,
+      accepted: true,
       following: {
-        include: {
-          profile: true,
+        select: {
+          id: true,
+          username: true,
+          createdAt: true,
+          profile: {
+            select: {
+              image: true,
+              bio: true,
+              website: true,
+              social: true,
+            },
+          },
         },
       },
       follower: {
-        include: {
-          profile: true,
+        select: {
+          id: true,
+          username: true,
+          createdAt: true,
+          profile: {
+            select: {
+              image: true,
+              bio: true,
+              website: true,
+              social: true,
+            },
+          },
         },
       },
     }
@@ -39,7 +63,6 @@ export default async function getFriendsByUserId(userId: string) {
     return {
       ...friend,
       createdAt: friend.createdAt.toISOString(),
-      updatedAt: friend.updatedAt.toISOString(),
       relationshipStatus,
       accepted: friendship.accepted,
       friendshipId: friendship.id

@@ -1,6 +1,10 @@
 import { Users } from '../../data/users';
+import prisma from "@/libs/prismadb";
+
+
 
 export default function handler(req: any, res: any) {
+    const now = Date.now();
     try {
         if (req.method !== 'POST') {
             res.status(405).send({ message: 'Only POST requests allowed' })
@@ -12,6 +16,7 @@ export default function handler(req: any, res: any) {
             res.status(404).send({ message: 'User does not exit!' })
             return
         }
+       
 
         res.status(200).json(user);
     } catch (error) {

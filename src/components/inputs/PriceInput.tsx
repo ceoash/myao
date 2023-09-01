@@ -23,6 +23,8 @@ interface InputProps {
     message: string;
   };
   optional?: boolean;
+  sidebar?: boolean;
+  status?: string;
 }
 
 
@@ -41,28 +43,46 @@ const PriceInput: React.FC<InputProps> = ({
   registerOptions,
   onChange,
   sm,
-  optional
+  optional,
+  sidebar,
+  status
 }) => {
   const [inputValue, setInputValue] = React.useState('');
+  const [classes, setClasses] = React.useState('');
  useEffect(() => {
   if (inputValue.startsWith(".")) {
    setInputValue(`0${inputValue}`);
   }},[inputValue])
+
+  useEffect(() => {
+      switch (status) {
+        case "accepted":
+          setClasses("bg-green-50 border-green-100")
+        case "completed":
+          setClasses("bg-green-50 border-green-100")
+        case "rejected":
+          setClasses("bg-red-50 border-red-100")
+        case "cancelled":
+          setClasses("bg-red-50 border-red-100")
+        case "negotiating":
+          setClasses("bg-orange-alt border-orange-100")
+        case "awaiting approval":
+          setClasses("bg-gray-50 border-gray-200")
+        default:
+          setClasses("bg-orange-alt border-orange-100")
+      }
+  }, [status]);
   
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let inputValue = event.target.value;
     const regex = /^[0-9]*[.,]?[0-9]{0,2}$/;
 
-    if (inputValue.startsWith(".")) {
-      inputValue = `0${inputValue}`;
-     }
+    if (inputValue.startsWith(".")) inputValue = `0${inputValue}`;
     
     const numberValue = parseFloat(inputValue);
-  
-    if (inputValue === "" || (regex.test(inputValue) && !isNaN(numberValue) && numberValue <= 5000000)) {
-      setInputValue(inputValue);
-    }
+    if (inputValue === "" || (regex.test(inputValue) && !isNaN(numberValue) && numberValue <= 5000000)) setInputValue(inputValue);
   };
+
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -70,12 +90,35 @@ const PriceInput: React.FC<InputProps> = ({
           {label} 
           { optional && <span className="italic text-gray-500 text-sm "> (Optional)</span> }
         </label>
-      <div className="flex items-center text-center border border-gray-200 rounded-lg" >
+      <div className={`flex items-center text-center border rounded-lg bg-white
+      ${sidebar ?
+      status === "accepted" ? "bg-green-50 border-green-100" :
+      status === "completed" ? "bg-green-50 border-green-100" :
+      status === "rejected" ? "bg-red-50 border-red-100" :
+      status === "cancelled" ? "bg-red-50 border-red-100" :
+      status === "negotiating" ? "  border-gray-200 " :
+      status === "awaiting approval" ? " border-gray-200 " :
+      " border-orange-100" : "border-gray-200"}`} >
         
-        <div className={`flex border-r-2 border-gray-200  bg-gray-50 ${sm ? 'px-2 py-3' : 'p-3'} h-full`}>
+        <div className={`flex border-r rounded-l-lg ${sidebar ?
+          status === "accepted" ? 'bg-green-100 border-green-200' :
+          status === "completed" ? 'bg-green-100 border-green-100' :
+          status === "rejected" ? 'bg-red-100 border-red-200' :
+          status === "cancelled" ? 'bg-red-100 border-red-200' :
+          status === "negotiating" ? ' border-gray-200' :
+          status === "awaiting approval" ? ' border-gray-200' :
+          'bg-white border-gray-100' : ' border-gray-200'} 
+          ${sm ? 'px-2 py-3' : 'p-3'} h-full`}>
           {formatPrice && (
             <BiPound
-              className={`left-2 text-gray-500`}
+              className={`left-2 ${sidebar ? 
+                status === "accepted" ? ' text-green-500' :
+                status === "completed" ? ' text-green-100' :
+                status === "rejected" ? ' text-red-500' :
+                status === "cancelled" ? ' text-red-500' :
+                status === "negotiating" ? ' text-orange-300' :
+                status === "awaiting approval" ? 'text-orange-300' :
+                ' text-orange-300' : 'text-gray-500'} `}
               size={sm ? 20 : 24}
             />
           )}
@@ -93,14 +136,17 @@ const PriceInput: React.FC<InputProps> = ({
             w-full
             font-light
             outline-none
-            transition
             disabled:cursor-not-allowed
             disabled:opacity-50          
-            rounded-md
+            rounded-r-lg
             py-3
+            focus:bg-white
+            active:bg-white
+            transition-all
+            h-14
             ${sm ? 'pl-4' : formatPrice ? "pl-6" : "pl-4"}
-            ${errors && errors[id] ? "border-red-500" : "border-gray-200"}
-            ${errors && errors[id] ? "text-red-500" : "text-gray-700"}
+            ${errors && errors[id] && "!border-red-500" }
+            ${errors && errors[id] ? "!text-red-500" : "text-gray-700"}
           `}
           {...register(id, {
             required: required && "This field is required",

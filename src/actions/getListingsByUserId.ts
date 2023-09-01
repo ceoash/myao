@@ -55,26 +55,6 @@ export default async function getListingsByUserId(id: any,) {
       },
     });
 
-    const countListings = await prisma?.listing.count({
-      where: {
-        OR: [
-          {
-            AND: [
-              { buyerId: id },
-              { type: "buyerOffer" },
-              { userId: id },
-            ],
-          },
-          {
-            AND: [
-              { sellerId: id },
-              { type: "sellerOffer" },
-              { userId: id },
-            ],
-          },
-        ],
-      },
-    });
 
     return listings.map(listing => ({
       ...listing,

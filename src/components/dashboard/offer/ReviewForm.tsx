@@ -75,7 +75,7 @@ const ReviewForm = ({
     
   };
   return (
-    <div className="p-4 bg-orange-50 border rounded-lg border-orange-200 mb-4">
+    <div className="p-4 bg-white border rounded-lg border-gray-200 mb-6">
       <h4 className="mb-2">Leave a review</h4>
       <p className="mb-2">How would you rate your experience?</p>
       <form onChange={() => clearErrors}>
@@ -85,7 +85,7 @@ const ReviewForm = ({
             <input
               id="rating"
               type="radio"
-              className="text-orange-400"
+              className="text-orange-default"
               value={1}
               {...register("rating")}
               onChange={(e) => setRating(Number(e?.target?.value))}
@@ -97,7 +97,7 @@ const ReviewForm = ({
             <input
               id="rating"
               type="radio"
-              className="text-orange-400"
+              className="text-orange-default"
               value={2}
               {...register("rating")}
               onChange={(e) => setRating(Number(e?.target?.value))}
@@ -109,7 +109,7 @@ const ReviewForm = ({
             <input
               id="rating"
               type="radio"
-              className="text-orange-400"
+              className="text-orange-default"
               value={3}
               {...register("rating")}
               onChange={(e) => setRating(Number(e?.target?.value))}
@@ -121,7 +121,7 @@ const ReviewForm = ({
             <input
               id="rating"
               type="radio"
-              className="text-orange-400"
+              className="text-orange-default"
               value={4}
               {...register("rating")}
               onChange={(e) => setRating(Number(e?.target?.value))}
@@ -133,7 +133,7 @@ const ReviewForm = ({
             <input
               id="rating"
               type="radio"
-              className="text-orange-400"
+              className="text-orange-default"
               value={5}
               {...register("rating")}
               onChange={(e) => setRating(Number(e?.target?.value))}

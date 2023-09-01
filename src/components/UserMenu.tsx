@@ -1,34 +1,37 @@
-import React, { useEffect, useRef, useState } from "react";
-import { signOut } from "next-auth/react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
-import { BiCog, BiMessage, BiSearch } from "react-icons/bi";
+import { BiBell, BiCog, BiMessage, BiNotification, BiSearch } from "react-icons/bi";
 import Avatar from "./Avatar";
 import Link from "next/link";
-import MenuItem from "./MenuItem";
-import { User } from "@prisma/client";
 import { SafeUser } from "@/types";
 import axios from "axios";
 import SearchComponent from "./SearchComponent";
 import useQRModal from "@/hooks/useQRModal";
-import { BsQrCode } from "react-icons/bs";
 import useSearchComponentModal from "@/hooks/useSearchComponentModal";
+import { useUnreadMessages } from "@/context/UnreadMessagesContext";
+import { useSocketContext } from "@/context/SocketContext";
+import { Session } from "next-auth";
+import { ImQrcode } from "react-icons/im";
+import MenuItem from "./MenuItem";
+import { signOut } from "next-auth/react";
 
 interface IUserMenuProps {
   currentUser?: SafeUser | null;
-  session: any;
+  session: Session | null;
+  blockedUsers?: string[];
+  toggle?: boolean;
+  setToggle: (mobile?: boolean) => void;
 }
 
-const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
+const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchBox, setSearchBox] = useState(false);
+  const [user, setUser] = useState<SafeUser | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const search = useSearchComponentModal();
-
   const qr = useQRModal();
 
   const handleClickOutside = (e: any) => {
@@ -37,23 +40,35 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
     }
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axios.get("/api/getUserByIdApi");
-        setUser(response.data);
-        setLoading(false);
-      } catch (err) {
-        setLoading(false);
-      }
-    };
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+};
 
-    if (session) {
-      fetchUser();
-    } else {
-      setLoading(false);
+
+  const { setUnreadCount, unreadCount } = useUnreadMessages();
+  const socket = useSocketContext();
+
+  
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+  useEffect(() => {
+    if (!isMounted) return;
+    if (session?.user?.id) {
+      axios
+        .get(`/api/dashboard/unreadMessagesCount?userId=${session?.user.id}`)
+        .then((response) => {
+          setUnreadCount(response.data.count);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch unread messages count:", error);
+        });
     }
-  }, [session]);
+  }, [isMounted]);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,11 +76,32 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    socket.emit("register", session?.user.id);
+    return () => {
+      socket.off("register");
+      socket.emit("unregister", session?.user.id);
+    };
+  }, [isMounted]);
+
+  console.log("blockedUsers", blockedUsers);
+
+  useEffect(() => {
+    socket.on("message_sent", (newMessage: any) => {
+      console.log("newMessage", newMessage);
+     if (newMessage?.userId === session?.user?.id) return;
+     setUnreadCount((prev: number) => prev + 1);
+    });
+    return () => {
+      socket.off("message_sent");
+    };
+  }, [isMounted, session?.user?.id]);
 
   return (
     <header className="w-full z-40 antialiased fixed">
@@ -80,80 +116,118 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
             </Link>
           </div>
           <SearchComponent navbar />
-
           <div
             className="relative flex items-center text-xl lg:order-2 gap-4"
             style={{ zIndex: 9999 }}
           >
             <div className="md:hidden cursor-pointer" onClick={search.onOpen}>
-              <div >
-                <BiSearch />
-              </div>
+              <BiSearch />
             </div>
 
             <div className="relative cursor-pointer">
-              <div onClick={qr.onOpen}>
-                <BsQrCode className="h-4 cursor-pointer" />
-              </div>
-            </div>
-
-            <div className="relative cursor-pointer">
-              <Link href={`/dashboard/conversations`}>
-                <BiMessage />
-              </Link>
+              <button
+              className="h-[16px]"
+                onClick={() =>
+                  qr.onOpen(
+                    session?.user.username || "",
+                    user?.profile?.image || ""
+                  )
+                }
+              >
+                <ImQrcode className="cursor-pointer h-[16px] text-gray-600" />
+              </button>
             </div>
 
             <div className="hidden md:block relative cursor-pointer">
-              <Link href="/dashboard/settings">
-                <BiCog />
+              <Link href={`/dashboard/conversations`} className="relative">
+                {unreadCount > 0 && (
+                  <div className="
+                  -top-1
+                  -right-1
+                  flex
+                  absolute
+                  justify-center
+                  items-center
+                  p-0.5
+                  w-4
+                  text-xs
+                  font-bold
+                  text-white
+                  bg-orange-default
+                  rounded-full
+                  h-[16px]
+                  ">
+                    {unreadCount}
+                  </div>
+                )}
+                <BiMessage className="h-[19px] text-gray-600" />
               </Link>
             </div>
+
+            <div className="relative cursor-pointer">
+              <div onClick={() => setToggle(false)}>
+                <BiBell className="h-[20px] text-gray-600" />
+              </div>
+            </div>
             <div
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={handleToggle}
               className="
-            p-4
-            md:py-1
-            md:px-2
-            border-[1px]
-            border-neutral-200
-            flex
-            flex-row
-            items-center
-            justify-center
-            gap-3
-            rounded-full
-            cursor-pointer
-            hover:shadow-md
-            transition
-            relative
-          "
+                py-2 px-3
+                md:py-1
+                md:px-2
+                border-[1px]
+                border-gray-200
+                flex-row
+                items-center
+                justify-center
+                gap-3
+                rounded-lg
+                md:rounded-full
+                cursor-pointer
+                hover:shadow-md
+                transition
+                relative
+                bg-gray-50
+                hidden md:flex
+              "
             >
-              <div className="hidden md:block">
+              <div className="">
                 <Avatar user={user} />
               </div>
-              <AiOutlineMenu />
+              <AiOutlineMenu className="text-gray-600 md:text-gray-400" />
+            </div>
+            <div
+              onClick={() => setToggle(true)}
+              className="
+                py-2 px-3
+                md:py-1
+                md:px-2
+                border-[1px]
+                border-gray-200
+                flex-row
+                items-center
+                justify-center
+                gap-3
+                rounded-lg
+                md:rounded-full
+                cursor-pointer
+                hover:shadow-md
+                transition
+                relative
+                bg-gray-50
+                block md:hidden
+              "
+            >
+              
+              <AiOutlineMenu className="text-gray-600 md:text-gray-400" />
             </div>
             {isOpen && (
               <div
-                className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm"
+                className={` rouned-xl shadow-md bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm absolute rounded-b-xl border border-gray-200 `}
                 ref={dropdownRef}
                 style={{ zIndex: 9999 }}
               >
-                <div className="flex flex-col cursor-pointer z-50">
-                  <div className="flex flex-col md:hidden">
-                    <MenuItem label="Offers" link url={"/dashboard/offers"} />
-                    <MenuItem label="Friends" link url={"/dashboard/friends"} />
-                    <MenuItem
-                      label="Activity"
-                      link
-                      url={"/dashboard/activity"}
-                    />
-                    <MenuItem
-                      label="Settings"
-                      link
-                      url={"/dashboard/settings"}
-                    />
-                  </div>
+                <div className="flex flex-col cursor-pointer z-50"> 
                   <>
                     <MenuItem
                       label="Profile"
@@ -165,20 +239,21 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session }: any) => {
                     <MenuItem label="Logout" onClick={() => signOut()} />
                   </>
                 </div>
+                
               </div>
             )}
           </div>
         </div>
       </nav>
-        {isSearchOpen && (
-          <div
-            className=" rouned-xl shadow-md bg-white overflow-hidden right-0 w-full bottom-0 mt-10 text-sm"
-            ref={searchRef}
-            style={{ zIndex: 9999 }}
-          >
-            <SearchComponent />
-          </div>
-        )}
+      {isSearchOpen && (
+        <div
+          className=" rouned-xl shadow-md bg-white overflow-hidden right-0 w-full bottom-0 mt-10 text-sm"
+          ref={searchRef}
+          style={{ zIndex: 9999 }}
+        >
+          <SearchComponent />
+        </div>
+      )}
     </header>
   );
 };

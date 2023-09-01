@@ -7,11 +7,11 @@ const Logout = () => {
   const router = useRouter();
   const session = useSession();
   useEffect(() => {
-    if(session.status === 'authenticated') {
+    if(session?.status === 'authenticated') {
         signOut()
     }
     router.push('/login');
-  }, [session.status]);
+  }, [session?.status]);
 
   return (
     <div>

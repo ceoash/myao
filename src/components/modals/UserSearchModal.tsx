@@ -148,7 +148,7 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
             <button
               onClick={() => handleUserSelect(foundUser)}
               className="
-        bg-orange-400 
+        bg-orange-default 
         px-2 rounded-md 
         text-sm py-1 
         text-white 
@@ -176,7 +176,7 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
                 </div>{" "}
                 <button
                   className=" 
-                    bg-orange-400 
+                    bg-orange-default 
                     px-2 rounded-md 
                     text-sm py-1 
                     text-white 

@@ -1,8 +1,22 @@
-import { Bid, DirectMessage, Listing, Profile, User } from "@prisma/client";
-
-
+import { Activity, Bid, DirectMessage, Listing, ListingActivity, Profile, Review, User, UserActivity } from "@prisma/client";
 
 interface IBid extends Bid { user: User; }
+
+export interface OfferModalStore {
+  isOpen: boolean;
+  user?: User | null;
+  listing?: CustomListing | null;
+  section: string | null;
+  data: any | null;
+  onOpen: (user: any, listing: CustomListing, section: string, data: any) => void;
+  onClose: () => void;
+}
+
+export interface ExtendedActivity extends Activity {
+  listingActivity?: ListingActivity;
+  userActivity?: UserActivity;
+  listing?: Listing;
+}
 
 export interface IDirectMessage {
   id: string;
@@ -10,6 +24,16 @@ export interface IDirectMessage {
   userId: string;
   conversationId: string;
   image: string | null;
+  read: boolean;
+}
+export interface AdminDirectMessage {
+  id: string;
+  text: string | null;
+  userId: string;
+  conversationId: string;
+  image: string | null;
+  user: User;
+  read: boolean;
 }
 
 interface IBlockedStatus {
@@ -48,6 +72,18 @@ export interface Conversation {
   blockedStatus?: boolean;
   status?: string;
   currentUser?: any
+  unreadCount?: number;
+}
+export interface AdminConversation {
+  id: string;
+  participant1: IUser;
+  participant2: IUser;
+  participant1Id: string;
+  participant2Id: string;
+  createdAt: string;
+  updatedAt: string;
+  directMessages: AdminDirectMessage[];
+  status?: string;
 }
 
 export interface ProfileUser extends User {
@@ -65,13 +101,37 @@ export interface ProfileUser extends User {
   trustScore?: any;
 }
 
+export interface CheckoutListingProps {
+  id: string;
+  price: number;
+  title: string;
+  userId: string;
+}
+
+export interface CheckoutProps {
+  listing: CheckoutListingProps;
+  options?: Object;
+}
+
+export interface INotification  {
+  id: string;
+  type: string;
+  message: string;
+  userId: string;
+  read?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  action: string;
+}
+
+
 export interface dashboardProps {
   user: IUser;
   friends: any[];
   followings: IUser[];
   session: any;
   conversations: IConversation[];
-  activities: Activity[];
+  activities: ExtendedActivity[];
   sent?: Listing[];
   received?: Listing[];
   listingsCount?: number;
@@ -81,6 +141,8 @@ export interface dashboardProps {
   countReceived: number;
   countPendingSent: number;
   countPendingReceived: number;
+  countCompletedSent?: number;
+  notifications: INotification[];
 }
 
 export interface IConversation {
@@ -93,21 +155,67 @@ export interface IConversation {
     participant1: IUser;
     participant2: IUser;
     directMessages: DirectMessage[];
+    user: IUser;
   }
 
-export interface Activity {
-    modelId?: string;
-    message: string;
-    value?: string
-    type: string;
-    action?: string;
-    userId: string;
-    createdAt?: Date;
+export interface EventsProps{
+  id: string,
+  event: string, 
+  price: string,
+  date: string, 
+  userId: string 
+}
+
+  interface MessageProps {
+    buyerId: string;
+    sellerId: string;
+    listingId: string;
+    text: string;
+    id: string;
   }
+
+  export interface CustomListing {
+    activity?: ExtendedActivity[]
+    bids: Bid[]
+    buyer: {id: string, username: string, profile?: {
+      image?: string;
+    }}
+    buyerId: string;
+    category: string;
+    completedById: string;
+    createdAt: Date;
+    description: string;
+    expireAt: Date;
+    id: string;
+    image: string | null;
+    messages: MessageProps[]
+    options: {location: {
+      city?: string,
+      region?: string
+    }, condition: string, pickup: string, public: boolean}
+    price: string 
+    reviews: Review[]
+    seller: {id: string, username: string, profile?: {
+      image?: string;
+    }}
+    sellerId: string
+    status: string;
+    title: string;
+    type: string;
+    updatedAt: Date;
+    user: {
+      id: string, username: string
+    }
+    userId: string;
+    }
   
   export interface ActivityWidgetProps {
     title?: string;
-    activities?: Activity[];
+    activities?: ExtendedActivity[];
+  }
+
+  export interface IActvity extends Activity {
+
   }
 
   export interface GolablListing {

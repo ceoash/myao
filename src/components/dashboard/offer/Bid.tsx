@@ -56,7 +56,7 @@ const Bid = ({ bid, participant, me }: BidProps) => {
           </svg>
         </div>
         <div>
-          <span className="font-extrabold">£{bid?.price}</span> by{" "}
+          <span className="font-extrabold">£{Number(bid?.price).toLocaleString()}</span> by{" "}
           <Link
             href={`/dashboard/profile/${participant && me ? bid.userId === me.id ? me.id : participant.id : bid?.userId }`}
             className="underline"

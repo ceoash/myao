@@ -22,7 +22,7 @@ interface InputProps {
   onChange?: (e?: any) => void;
   inline?: boolean;
   onClick?: () => void;
-  btnText?: string;
+  btnText?: string | React.ReactNode;
   optional?: boolean;
 }
 
@@ -44,16 +44,20 @@ const Input: React.FC<InputProps> = ({
   onClick,
   inline,
   btnText,
-  optional
+  optional,
 }) => {
   return (
-    <div className={`flex ${!inline && 'pt-3'}`}>
+    <div className={`flex ${!inline && "pt-3"}`}>
       <div className="w-full relative flex flex-col gap-[1px]">
-        <label htmlFor={id} className="mb-3 flex gap-1">
-          {label} 
-          { optional && <span className="italic text-gray-500 text-sm "> (Optional)</span> }
-        </label>
-        
+        {label && (
+          <label htmlFor={id} className="mb-3 flex gap-1">
+            {label}
+            {optional && (
+              <span className="italic text-gray-500 text-sm "> (Optional)</span>
+            )}
+          </label>
+        )}
+
         <div className="relative ">
           <input
             id={id}
@@ -71,7 +75,7 @@ const Input: React.FC<InputProps> = ({
           outline-none
           transition
           disabled:cursor-not-allowed
-          disabled:opacity-50          
+          disabled:bg-gray-50          
          
           py-2
           flex-1
@@ -104,7 +108,7 @@ const Input: React.FC<InputProps> = ({
         <Button
           label={btnText}
           onClick={onClick}
-          options={{ primary: true, size: "sm" }}
+          options={{ primary: true,  }}
           className="ml-2 my-auto"
           inline={inline}
         />

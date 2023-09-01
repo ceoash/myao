@@ -20,8 +20,6 @@ export default async function assignUserToListing({
         throw new Error("Listing not found");
       }
   
-    
-
     let updatedListing;
 
     if (listing?.type === "sale" ) {

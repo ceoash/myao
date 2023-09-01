@@ -1,10 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { createActivityForUser } from "@/prisma";
+import { createActivity } from "@/prisma";
 
-interface ErrorResponse {
-  error: string;
-}
+interface ErrorResponse { error: string; }
 
 export default async function newConversation(
   req: NextApiRequest,
@@ -48,7 +46,11 @@ export default async function newConversation(
         },
       });
 
+
       if (existingConversation) {
+
+        const participantId = existingConversation?.participant1Id === userId ? existingConversation?.participant2Id : existingConversation?.participant1Id
+
         const updatedConversation = await prisma.conversation.update({
           where: {
             id: existingConversation.id,
@@ -58,6 +60,8 @@ export default async function newConversation(
               create: {
                 userId: userId,
                 text: message,
+                read: false,
+                receiverId: participantId
               },
             },
             updatedAt: new Date(),
@@ -68,7 +72,12 @@ export default async function newConversation(
               select: {
                 id: true,
                 username: true,
-                activities: true,
+                activity: {
+                  take: 4,
+                  orderBy: {
+                    createdAt: "desc",
+                  }
+                },
                 blockedFriends: {
                   select: {
                     id: true,
@@ -85,7 +94,12 @@ export default async function newConversation(
               select: {
                 id: true,
                 username: true,
-                activities: true,
+                activity: {
+                  include: {
+                    listingActivity: true,
+                    userActivity: true,
+                  },
+                },
                 blockedFriends: {
                   select: {
                     id: true,
@@ -103,23 +117,16 @@ export default async function newConversation(
 
         if(userId === updatedConversation?.participant1Id){
 
-          const participantActivity = {
-            type: "Conversation Message",
+          const participantActivity = createActivity({
+            type: "conversation",
             message: `You received a new message`,
-            value: updatedConversation.participant1?.username,
-            action: "/dashboard/conversations?=" + updatedConversation.id,
-            modelId: updatedConversation.id,
-            userId: updatedConversation.participant1Id,
-            createdAt: now,
-          };
-
-          const participant2Update = createActivityForUser(
-            updatedConversation.participant2Id,
-            participantActivity,
-            updatedConversation.participant1.activities
-          );
-
-          const transactionOperations = [participant2Update];
+            userId: updatedConversation.participant2Id || "",
+            user_message: `You accepted a friend request`,
+            user_message_type: "message",
+            action: `/dashboard/conversations?conversationId=${updatedConversation.id}`,
+            receiverId: updatedConversation.participant1Id || "",
+          });
+          const transactionOperations = [participantActivity];
 
           try {
             const transactionResult = await prisma.$transaction(
@@ -136,23 +143,17 @@ export default async function newConversation(
 
         if(userId === updatedConversation?.participant2Id){
 
-          const participantActivity = {
-            type: "Conversation Message",
+          const participantActivity = createActivity({
+            type: "conversation",
             message: `You received a new message`,
-            value: updatedConversation.participant2?.username,
-            action: "/dashboard/conversations?=" + updatedConversation.id,
-            modelId: updatedConversation.id,
-            userId: updatedConversation.participant2Id,
-            createdAt: now,
-          };
+            userId: updatedConversation.participant1Id || "",
+            user_message: `You accepted a friend request`,
+            user_message_type: "message",
+            action: `/dashboard/conversations?conversationId=${updatedConversation.id}`,
+            receiverId: updatedConversation.participant2Id || "",
+          });
 
-          const participant1Update = createActivityForUser(
-            updatedConversation.participant1Id,
-            participantActivity,
-            updatedConversation.participant2.activities
-          );
-
-          const transactionOperations = [participant1Update];
+          const transactionOperations = [participantActivity];
 
           try {
             const transactionResult = await prisma.$transaction(
@@ -175,6 +176,8 @@ export default async function newConversation(
               create: {
                 userId,
                 text: message,
+                read: false,
+                receiverId: participant2Id
               },
             },
           },
@@ -187,20 +190,7 @@ export default async function newConversation(
             id: newConversation.id,
           },
           data: {
-            activities: [
-              ...(Array.isArray(newConversation?.activities)
-                ? newConversation.activities
-                : []),
-              {
-                message: "New Message",
-                type: "New Conversation Started",
-                action: "/conversations?=" + newConversation.id,
-                userId: userId,
-                value: "",
-                createdAt: now,
-                modelId: newConversation.id
-              },
-            ],
+            
             
           },
           include: {
@@ -209,44 +199,19 @@ export default async function newConversation(
             
           },
         });
-        const participant1Activity = {
-          type: "New Conversation Started",
-          message: `You started a new conversation`,
-          action: "/dashboard/conversations?=" + updatedConversation.id,
-          modelId: updatedConversation.id,
-          value: updatedConversation.participant2.username,
-          userId: updatedConversation.id,
-          createdAt: now,
-        };
-        const participant2Activity = {
-          type: "New Conversation Started",
-          message: `You received a message`,
-          value: updatedConversation.participant1.username,
-          action: "/dashboard/conversations?=" + updatedConversation.id,
-          modelId: updatedConversation?.id,
-          userId: userId,
-          createdAt: now,
-        };
 
-        const participant1Update = createActivityForUser(
-          updatedConversation?.participant1Id,
-          participant1Activity,
-          updatedConversation?.participant1.activities
-        );
-        const participant2Update = createActivityForUser(
-          updatedConversation.participant2Id,
-          participant2Activity,
-          updatedConversation?.participant2.activities
+        const notification  = await prisma.notification.create({
+          data: {
+            userId: updatedConversation.participant2Id || "",
+            message: `Message received from ${updatedConversation.participant1.username}`,
+            action: `/dashboard/conversations?conversationId=${updatedConversation.id}`,
+            type: "conversation",
+            read: false,
+          }
 
-        );
-
-        const transactionOperations = [participant1Update, participant2Update];
-
+        })
         try {
-          const transactionResult = await prisma.$transaction(
-            transactionOperations
-          );
-          res.status(200).json({ updatedConversation, transactionResult });
+          res.status(200).json({ updatedConversation, notification });
         } catch (error) {
           console.error("Transaction failed: ", error);
           res

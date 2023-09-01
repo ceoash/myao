@@ -2,17 +2,25 @@ import { create } from "zustand";
 
 interface QRModal {
     isOpen: boolean;
-    onOpen: () => void;
+    username: string;
+    image: string;
+    onOpen: (
+        username: string,
+        image: string
+    ) => void;
     onClose: () => void;
+
 }
 
 const useQRModal = create<QRModal>((set) => ({
     isOpen: false,
+    username: '',
+    image: '',
     onOpen: () => {
-      set({ isOpen: true, });
+      set({ isOpen: true, username: '', image: '' });
     },
     onClose: () => {
-      set({ isOpen: false });
+      set({ isOpen: false, username: '', image: '' });
     },
 }));
 

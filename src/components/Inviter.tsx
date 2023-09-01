@@ -35,7 +35,7 @@ const Inviter = ({inviter}: any) => {
           </div>
           <div className="">
             <h4 className="-mb-1">{ username}</h4>
-            <p className="text-sm font-bold text-orange-400">Buyer</p>
+            <p className="text-sm font-bold text-orange-default">Buyer</p>
           </div>
         </div>
   )

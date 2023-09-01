@@ -38,6 +38,7 @@ module.exports = {
       },
       backgroundImage: {
         partners: "url('/images/partners-bg.jpg')",
+        border: "url('/images/border.svg')",
       },
       colors: {
         primary: {
@@ -71,9 +72,13 @@ module.exports = {
           900: "#2a4365",
         },
         orange: {
-          default: "#D23E18",
-          alt: "#BD3715",
+          // default: "#f47c64",
+          default: "#ff9f50",
+          alt: "#FCBE6A",
           light: "#FFE3DB",
+          background: "#ce654f",
+          border: "#ce654f",
+
         },
         purple: {
           default: "#695C81",

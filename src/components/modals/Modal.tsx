@@ -12,16 +12,17 @@ interface ModalProps {
     title?: string;
     body?: React.ReactNode;
     footer?: string;
-    actionLabel?: string;
+    actionLabel?: string | React.ReactNode;
     disabled?: boolean;
     secondaryAction?: () => void;
-    secondaryActionLabel?: string;
+    secondaryActionLabel?: string | React.ReactNode;
     listingId?: string;
     children?: React.ReactNode;
     errors?: FieldErrors<FieldValues> | undefined;
     isLoading?: boolean;
     auto?: boolean;
     confirmation?: boolean;
+    buttonsLeft?: boolean
 
 }
 
@@ -40,8 +41,8 @@ const Modal: React.FC<ModalProps> = ({
     errors,
     isLoading,
     auto,
-    confirmation
-
+    confirmation,
+    buttonsLeft
 }) => {
     const [showModal, setShowModal] = useState(isOpen);
 
@@ -52,7 +53,6 @@ const Modal: React.FC<ModalProps> = ({
    
 
     const handleClose = useCallback(() => {
-        if (disabled) return;
         setShowModal(false);
         if (onClose) onClose();
       }, [disabled, onClose]);
@@ -101,7 +101,8 @@ const Modal: React.FC<ModalProps> = ({
     <div 
         className={`
         justify-center
-        items-center
+        items-end
+        md:items-center
         flex
         overflow-x-hidden
         overflow-y-auto
@@ -110,16 +111,15 @@ const Modal: React.FC<ModalProps> = ({
         z-50
         outline-none
         focus:outline-none
-       ${showModal && 'bg-neutral-800/70'}
+       ${showModal && 'backdrop-blur-md bg-neutral-800/70'}
         `}
     >
         <div 
             className={`
             relative
             ${auto ? 'w-full md:w-auto' : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
-            my-6
             mx-auto
-            h-full  
+            h-full pt-32
             lg:h-auto
             md:h-auto        
     `}>
@@ -134,12 +134,14 @@ const Modal: React.FC<ModalProps> = ({
             `}>
                 <div 
                     className="
+                    
                     translate
                     h-full
                     lg:h-auto
                     md:h-auto
                     border-0
-                    rounded-lg
+                    rounded-t-lg
+                    md:rounded-lg
                     shadow-lg
                     relative
                     flex
@@ -177,7 +179,7 @@ const Modal: React.FC<ModalProps> = ({
                             hover:opacity-75
                             transition
                             text-gray-500
-                            hover:text-orange-400
+                            hover:text-orange-default
                             
                         ">
                             <IoClose size={18}  />
@@ -188,18 +190,20 @@ const Modal: React.FC<ModalProps> = ({
                         {body}
                     </div>
                     {/* FOOTER */}
+                    {actionLabel && (
                     <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
                         <div className={`flex flex-row items-center gap-2 w-full ${!auto && 'justify-between'}`}>
-                            <div className={`${auto && 'ml-auto'}`}>
-                            { secondaryAction && !isLoading && <Button label={secondaryActionLabel || 'Back'}  onClick={secondaryAction} options={{size: "xl"}}  /> }
+                            <div className={`${auto && !buttonsLeft && 'ml-auto'}`}>
+                            { secondaryActionLabel  && !isLoading && <Button label={secondaryActionLabel || 'Back'}  onClick={secondaryAction} options={{size: "xl"}}  /> }
                             </div>
-                            <div className={`${!auto && 'ml-auto'}`}>
+                            <div className={`${!auto && !buttonsLeft && 'ml-auto'}`}>
                            <Button disabled={disabled} isLoading={isLoading} label={actionLabel || 'Submit'} onClick={handleSubmit} options={{size: "xl"}} cancel={confirmation} />
 
                             </div>
                         </div>
                         {footer}
                     </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,7 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { ExtendedActivity } from "@/interfaces/authenticated";
+import { createActivity } from "@/prisma";
+import { Listing } from ".prisma/client";
+
 import prisma from "@/libs/prismadb";
-import { Listing, User } from ".prisma/client";
-import { createActivityForUser } from "@/prisma";
 
 interface ErrorResponse {
   error: string;
@@ -9,7 +12,7 @@ interface ErrorResponse {
 
 interface SuccessResponse {
   listing: Listing;
-  transactionResult: User[];
+  transactionResult: ExtendedActivity[];
 }
 
 export default async function submitBid(
@@ -19,11 +22,9 @@ export default async function submitBid(
   const now = Date.now();
 
   if (req.method === "POST") {
-
     const { price, id, bidById, userId } = req.body;
 
-    console.log("REQUEST",req.body);
-    
+    console.log("REQUEST", req.body);
 
     try {
       const updateListing = await prisma.listing.findFirst({
@@ -31,111 +32,111 @@ export default async function submitBid(
           id,
         },
         select: {
-          id: true,
-          activities: true,
-          userId: true,
+          seller: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+          buyer: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+
           bids: {
             take: 1,
-            orderBy: {
-              createdAt: "desc",
+            select: {
+              price: true,
             },
-          }
-        },
-      });
-
-      if (!updateListing) { return res.status(400).json({ error: "Unable to find listing" }); }
-
-      
-
-    const newBid = await prisma.bid.create({
-      data: {
-        price: price,
-        listingId: updateListing.id,
-        userId: userId,
-        previous: updateListing.bids[updateListing.bids.length - 1]?.price || "0",
-      },
-    });
-      const listing = await prisma.listing.update({
-        where: {
-          id: updateListing.id,
-        },
-        data: {
-          status: "negotiating",
-          updatedAt: new Date(now),
-          activities: [
-            ...(Array.isArray(updateListing?.activities)
-              ? updateListing.activities
-              : []),
-            {
-              message: "New bid submitted",
-              userId: bidById,
-              type: "newBid",
-              action: "/dashboard/offers/" + updateListing?.id,
-              createdAt: now,
-              status: "negotiating"
-            },
-          ],
-        },
-        include: {
-          seller: true,
-          buyer: true,
-          user: true,
-          bids: {
             orderBy: {
               createdAt: "desc",
             },
           },
-        }
+        },
       });
 
-      if (!listing || !newBid) { return res.status(400).json({ error: "Unable to update listing" }); }
-      
-      const sellerActivity = {
-        type: "Offer",
-        message: `New bid submitted`,
-        action: "/dashboard/offers/" + listing.id,
-        modelId: listing.id,
-        userId: newBid.userId,
-        createdAt: now,
-        value: `By ${ newBid.userId === listing.sellerId ? "You" : listing.buyer?.username }`,
-      };
+      if (!updateListing) {
+        return res.status(400).json({ error: "Unable to find listing" });
+      }
 
-      const buyerActivity = {
-        type: "Offer",
-        message: `New bid submitted`,
-        action: "/dashboard/offers/" + listing.id,
-        modelId: listing?.id,
-        userId: newBid.userId,
-        createdAt: now,
-        value: `By ${ newBid.userId === listing.buyerId ? "You" : listing.seller?.username }`,
-      };
+      const listing = await prisma.listing.update({
+        where: {
+          id: id,
+        },
+        data: {
+          updatedAt: new Date(now),
+          bids: {
+            create: [
+              {
+                price: price,
+                userId: userId,
+                previous:
+                  updateListing.bids[updateListing.bids.length - 1]?.price ||
+                  "0",
+              },
+            ],
+          },
+        },
+        include: {
+          bids: true,
+          seller: true,
+          buyer: true,
+        },
+      });
+
+      if (!listing) {
+        return res.status(400).json({ error: "Unable to update listing" });
+      }
+
+      const buyerActivity = createActivity({
+        type: "listing",
+        message: `New bid submitted by ${
+          listing.userId === listing.buyerId ? "You" : listing.seller?.username
+        }`,
+        listing_message: listing.title || "",
+        listing_message_type: "bid",
+        userId: listing.buyerId || "",
+        user_message: "listing updated",
+        user_message_type: "listing",
+        action: `/dashboard/offers/${listing.id}`,
+        receiverId: listing.sellerId || "",
+      });
+
+      const sellerActivity = createActivity({
+        type: "listing",
+        message: `New bid submitted by ${
+          listing.userId === listing.sellerId ? "You" : listing.buyer?.username
+        }`,
+        listing_message: listing.title || "",
+        listing_message_type: "bid",
+        userId: listing.sellerId || "",
+        user_message: "listing updated",
+        user_message_type: "listing",
+        action: `/dashboard/offers/${listing.id}`,
+        receiverId: listing.buyerId || "",
+      });
 
       if (listing?.sellerId && listing.buyerId) {
-        const seller = createActivityForUser(
-          listing.sellerId,
-          sellerActivity,
-          listing.seller.activities
-        );
-        const buyer = createActivityForUser(
-          listing.buyerId,
-          buyerActivity,
-          listing?.buyer?.activities
-        );
-        const transactionOperations = [seller, buyer];
+        const transactionOperations = [sellerActivity, buyerActivity];
 
         try {
-          const transactionResult = await prisma.$transaction(transactionOperations);
+          const transactionResult = await prisma.$transaction(
+            transactionOperations
+          );
           res.status(200).json({ listing, transactionResult });
         } catch (error) {
           console.error("Transaction failed: ", error);
-          res.status(500).json({ error: "Something went wrong during the transaction" });
+          res
+            .status(500)
+            .json({ error: "Something went wrong during the transaction" });
         }
-      } 
+      }
     } catch (error) {
       console.log("Error occurred:", error);
       res.status(500).json({ error: "Something went wrong" });
     }
-    
   } else {
     res.status(405).json({ error: "Method not allowed" });
   }

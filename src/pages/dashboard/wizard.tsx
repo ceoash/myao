@@ -344,7 +344,7 @@ const wizard = ({ session, user }: any) => {
                 <div
                   className={`flex items-center justify-center w-10 h-10 ${
                     step === STEPS.PASSWORD
-                      ? "text-white bg-orange-400 border-orange-600"
+                      ? "text-white bg-orange-default border-orange-600"
                       : "text-orange-500 bg-gray-100 border-gray-300"
                   }  rounded-full lg:h-12 lg:w-12 shrink-0`}
                 >
@@ -376,7 +376,7 @@ const wizard = ({ session, user }: any) => {
                 <div
                   className={`flex items-center justify-center w-10 h-10 ${
                     step === STEPS.REGISTRATION
-                      ? "text-white bg-orange-400 border-orange-600"
+                      ? "text-white bg-orange-default border-orange-600"
                       : "text-orange-500 bg-gray-100 border-gray-300"
                   }  rounded-full lg:h-12 lg:w-12 shrink-0`}
                 >
@@ -408,7 +408,7 @@ const wizard = ({ session, user }: any) => {
                 <div
                   className={`flex items-center justify-center w-10 h-10 ${
                     step === STEPS.PROFILE
-                      ? "text-white bg-orange-400 border-orange-600"
+                      ? "text-white bg-orange-default border-orange-600"
                       : "text-orange-500 bg-gray-100 border-gray-300"
                   }  rounded-full lg:h-12 lg:w-12 shrink-0`}
                 >
@@ -441,7 +441,7 @@ const wizard = ({ session, user }: any) => {
                 <div
                   className={`flex items-center justify-center w-10 h-10  ${
                     step === STEPS.CONNECTION
-                      ? "text-white bg-orange-400 border-orange-600"
+                      ? "text-white bg-orange-default border-orange-600"
                       : "text-orange-500 bg-gray-100 border-gray-300"
                   }  rounded-full lg:h-12 lg:w-12 shrink-0`}
                 >
@@ -475,7 +475,7 @@ const wizard = ({ session, user }: any) => {
                 <div
                   className={`flex items-center justify-center w-10 h-10 -mr-4 ${
                     step === STEPS.FINISH
-                      ? "text-white bg-orange-400 border-orange-600"
+                      ? "text-white bg-orange-default border-orange-600"
                       : "text-orange-500 bg-gray-100 border-gray-300"
                   }  rounded-full lg:h-12 lg:w-12 shrink-0 z-10`}
                 >
@@ -789,14 +789,14 @@ const wizard = ({ session, user }: any) => {
               {STEPS.PASSWORD !== step && (
                 <button
                   onClick={onSecondaryAction}
-                  className="text-orange-500 hover:bg-orange-500 border-2 border-orange-500 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2 text-center  dark:hover:bg-orange-400 "
+                  className="text-orange-500 hover:bg-orange-500 border-2 border-orange-500 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2 text-center  dark:hover:bg-orange-default "
                 >
                   {secondaryActionLabel}
                 </button>
               )}
               <button
                 onClick={handleSubmit(onSubmit)}
-                className="text-white bg-orange-400 hover:bg-orange-500 border-2 border-orange-500 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2 text-center  dark:hover:bg-orange-400 "
+                className="text-white bg-orange-default hover:bg-orange-500 border-2 border-orange-500 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2 text-center  dark:hover:bg-orange-default "
               >
                 {actionLabel}
               </button>

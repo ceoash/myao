@@ -28,20 +28,20 @@ const Sidebar = ({
         <button
           onClick={handleSidebarToggle}
           className="
-                    top-[50%] 
-                    bottom-[50%] 
-                    mt-1 
-                    bg-orange-300 
-                    text-white 
-                    rounded-full 
-                    px-1 
-                    py-1 
-                    text-xl 
-                    flex 
-                    items-center 
-                    border 
-                    border-white
-                  "
+            top-[50%] 
+            bottom-[50%] 
+            mt-1 
+            bg-gray-300 
+            text-white 
+            rounded-full 
+            px-1 
+            py-1 
+            text-xl 
+            flex 
+            items-center 
+            border 
+            border-white
+          "
         >
           {isOpen ? <BiChevronLeft /> : <BiChevronRight />}
         </button>
@@ -50,18 +50,23 @@ const Sidebar = ({
         {filterBlockedConversation.map((conversation: any) => {
             const lastMessage = conversation?.directMessages[0]
             const participant = conversation.participant1Id === session?.user?.id ? conversation.participant2 : conversation.participant1
-
           return (
             <div
               key={conversation.id}
               className={`border-b border-gray-200 p-4 flex gap-4 ${
                 conversation.id === activeConversationState?.id
-                  ? "bg-orange-50"
-                  : "bg-white"
+                  ? "bg-white"
+                  : "bg-gray-50"
               }`}
               onClick={() => handleSetActiveConversation(conversation)}
             >
-              <div className="w-10">
+              <div className="w-10 shrink-0 relative">
+                {conversation.unreadCount !== 0 && (
+                  
+                  <div className="text-xs absolute rounded-full p-0.5 -top-1 -left-1 bg-orange-default text-white font-bold  w-4 h-4 flex justify-center items-center">
+                    {conversation.unreadCount}
+                  </div>
+                )}
                 { conversation.participant1Id === session?.user?.id ? (
                   <Image
                     src={
@@ -70,7 +75,7 @@ const Sidebar = ({
                     }
                     className={`rounded-full  ${
                       conversation.id === activeConversationState?.id
-                        ? "border border-orange-200"
+                        ? "border border-gray-200"
                         : `border border-gray-200`
                     } `}
                     width={100}
@@ -85,7 +90,7 @@ const Sidebar = ({
                     }
                     className={`rounded-full h-10 w-10 ${
                       conversation.id === activeConversationState?.id
-                        ? "border border-orange-200"
+                        ? "border border-gray-200"
                         : `border border-gray-200`
                     } `}
                     height={100}
@@ -103,7 +108,7 @@ const Sidebar = ({
                     {timeSince(lastMessage?.createdAt, true)}
                   </div>
                 </div>
-                <div className={`text-sm truncate ...`}>
+                <div className={`text-sm truncate w-[300px] md:w-[500px] lg:w-[150px] xl:w-[240px]`}>
                   {conversation.directMessages.length === 0 ||
                   lastMessage.text === ""
                     ? lastMessage?.image

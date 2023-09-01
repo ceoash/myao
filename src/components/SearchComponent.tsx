@@ -45,7 +45,7 @@ const SearchComponent = ({navbar}: any) => {
   };
 
   return (
-    <div className={`relative hidden w-1/2 xl:w-2/3  md:block ${navbar ? 'mr-auto' : ""}`}>
+    <div className={`relative hidden max-w-[300px] md:max-w-[380px] lg:max-w-[500px] xl:max-w-[800px] w-full  md:block ${navbar ? 'mr-auto' : ""}`}>
       <div className="flex flex-grow flex-nowrap">
         <input
           type="text"
@@ -55,7 +55,7 @@ const SearchComponent = ({navbar}: any) => {
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
-          className="bg-orange-400 text-white px-4 py-2 rounded-r-lg"
+          className="bg-gray-100 border border-l-0 border-gray-200 text-gray-600 px-4 py-2 rounded-r-lg"
           onClick={onSearch}
         >
           <BiSearch />

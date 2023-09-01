@@ -11,7 +11,7 @@ interface UserStatsProps {
 
 const UserStats = ({ userLoading, participant,}: UserStatsProps) => {
   return (
-    <div className="grid grid-cols-2 auto-cols-fr gap-2">
+    <div className="grid grid-cols-2 auto-cols-fr gap-2 z-10">
       <div className="flex flex-col p-4 items-center col-span-2 lg:col-span-1">
         <div className="p-4 w-40 h-40 rounded-full relative">
           {userLoading ? (
@@ -47,7 +47,12 @@ const UserStats = ({ userLoading, participant,}: UserStatsProps) => {
             <BiStar className="inline-block text-orange-500" />
           </div>
           {participant?.profile?.bio && (
-            <p className="mb-4">{participant?.profile?.bio}</p>
+            <>
+            <p className="font-bold">Member since</p>
+            <p className="mb-4">{ new Date(participant?.createdAt).toLocaleDateString("en-gb", {
+              dateStyle: 'long'
+            })}</p>
+            </>
           )}
           <div className="mb-4">
             {participant?.averageResponseTime && (
@@ -71,10 +76,17 @@ const UserStats = ({ userLoading, participant,}: UserStatsProps) => {
               </p>
             )}
           </div>
+          <div className="flex gap-1 w-full justify-center">
           <Button
             link={`/dashboard/profile/${participant?.id}`}
             label={`Profile`}
           />
+          <Button
+            link={`/dashboard/profile/${participant?.id}`}
+            label={`Report`}
+          />
+
+          </div>
         </div>
       </div>
       <div className="flex flex-col pb-4 md:p-4 gap-3 col-span-2 lg:col-span-1">
@@ -114,7 +126,7 @@ const UserStats = ({ userLoading, participant,}: UserStatsProps) => {
         </div>
         <div className="text-center">
           <h2 className="-mb-2">
-            {userLoading ? <Skeleton width={30} /> : participant?.trustScore}%
+            {userLoading ? <Skeleton width={30} /> : participant?.trustScore + '%'}
           </h2>
           <p>Trust Score</p>
         </div>

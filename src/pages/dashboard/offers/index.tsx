@@ -1,19 +1,14 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";
-import { Listing, Message, User } from "@prisma/client";
 import { getSession } from "next-auth/react";
 import { DashListing } from "@/interfaces/authenticated";
 
 import getOffersByUserId from "@/actions/dashboard/getOffersByUserId";
 import Offers from "@/components/offers/Offers";
-import { Socket, io } from "socket.io-client";
-import { config } from "@/config";
-
-interface ListingType extends Listing {
-  buyer: User;
-}
+import { useSocket } from "@/hooks/useSocket";
+import { useSocketContext } from "@/context/SocketContext";
 
 interface IndexProps {
   session: any;
@@ -23,6 +18,7 @@ interface IndexProps {
   countReceived: number;
   countPendingSent: number;
   countPendingReceived: number;
+  defaultTab?: string;
 }
 
 const Index = ({
@@ -33,16 +29,8 @@ const Index = ({
   countReceived,
   countPendingSent,
   countPendingReceived,
+  defaultTab
 }: IndexProps) => {
-
-  const socketRef = useRef<Socket>();
-
-  useEffect(() => {
-    socketRef.current = io(config.PORT);
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, []);
 
   return (
     <Dash
@@ -56,10 +44,10 @@ const Index = ({
       <div>
         <div className="w-full mx-auto px-4 sm:px-8">
           <div className="pt-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold leading-tight mb-2">
+            <div className="flex justify-between items-center mb-8">
+              <h3>
                 Your Offers {}
-              </h2>
+              </h3>
             </div>
             <Offers
               sent={sent}
@@ -70,6 +58,7 @@ const Index = ({
               countPendingSent={countPendingSent}
               countPendingReceived={countPendingReceived}
               multipage
+              defaultTab={defaultTab}
             />
           </div>
           <div className="flex justify-center h-full gap-2"></div>
@@ -82,6 +71,7 @@ const Index = ({
 export const getServerSideProps: GetServerSideProps<any> = async (context) => {
   try {
     const session = await getSession(context);
+    const id = context.query?.id ?? null;
 
     if (!session) {
       return {
@@ -97,6 +87,9 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
     const listings = await getOffersByUserId(session, PAGE_SIZE);
 
     if (!listings) return { props: { sent: [], received: [], session } };
+
+    const defaultTab = context.query?.received ? 'received' : 'sent';
+
 
     const {
       sent,
@@ -116,6 +109,8 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
         countReceived,
         countPendingSent,
         countPendingReceived,
+        id,
+        defaultTab
       },
     };
   } catch (error) {
@@ -124,6 +119,7 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
       props: {
         received: [],
         sent: [],
+        
       },
     };
   }

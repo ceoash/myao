@@ -7,11 +7,9 @@ import axios from "axios";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { User } from "@prisma/client";
 import useMessageModal from "@/hooks/useMessageModal";
-import { config } from "@/config";
-import { io } from "socket.io-client";
+import { useSession } from "next-auth/react";
+import { useSocketContext } from "@/context/SocketContext";
 
 export interface ErrorResponse {
   error: string;
@@ -21,6 +19,7 @@ const MessageModal = ({  }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const {
     register,
@@ -34,11 +33,7 @@ const MessageModal = ({  }) => {
   });
 
   const { isOpen, onClose, userId, recipientId } = useMessageModal();
-
-  const port = config.PORT;
-  const socket = io(port);
-
-
+  const socket = useSocketContext();
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
    
@@ -54,9 +49,8 @@ const MessageModal = ({  }) => {
 
         if(response.data){
           const {transactionResult, updatedConversation} = response.data;
-          const owner = transactionResult[0].userId === updatedConversation.participant1Id ? updatedConversation.participant1 : updatedConversation.participant2;
-
-          socket && socket.emit(
+          
+          socket.emit(
             "update_activities",
             transactionResult,
             updatedConversation.participant1.id,

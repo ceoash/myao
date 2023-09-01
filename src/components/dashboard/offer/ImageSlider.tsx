@@ -9,14 +9,20 @@ import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
 
+import plus from "@/images/plus.svg"
+
 // import required modules
 import SwiperCore, { Pagination, Thumbs, Navigation, FreeMode } from "swiper";
+import Image from "next/image";
+import { OfferModalStore } from "@/interfaces/authenticated";
+import { FaPlus } from "react-icons/fa";
 
 interface ImageSliderProps {
   images: string;
+  handleAddImages: () => void
 }
 
-const ImageSlider = ({ images }: ImageSliderProps) => {
+const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
   const thumbsSwiperRef = useRef<SwiperCore | null>(null);
   const [imagesStore, setImagesStore] = useState([]);
   
@@ -44,8 +50,8 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
         className=" mySwiper2 flex justify-center z-10 "
       >
         {imagesStore.map((image, i) => (
-          <SwiperSlide key={i}>
-            <img src={image} className="rounded-md"/>
+          <SwiperSlide key={i} className="relative h-full aspect-video bg-gray-50">
+            <Image alt="" src={image} className="rounded-md bg-white" objectFit="contain" layout="fill" />
           </SwiperSlide>
         ))}
       </Swiper>
@@ -63,10 +69,14 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
         className="mx-2"
       >
         {imagesStore.map((image, i) => (
-          <SwiperSlide key={i} className="bg-white rounded-md" >
+          <SwiperSlide key={i} className="bg-white rounded-md border border-gry-200" >
             <img src={image} className="" />
           </SwiperSlide>
+          
         ))}
+        <SwiperSlide key={"0"} className="bg-white rounded-md border border-gry-200" onClick={handleAddImages} >
+            <Image src={plus} layout="fill" objectFit="cover" alt="plus icon" className="text-gray-300" />
+          </SwiperSlide>
       </Swiper>
       </div>
     </div>

@@ -1,13 +1,17 @@
 import { GetServerSideProps } from "next";
 import { useEffect, useRef, useState } from "react";
 import { getSession } from "next-auth/react";
-import { io, Socket } from "socket.io-client";
-import { config } from "@/config";
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
 import { timeInterval, timeSince } from "@/utils/formatTime";
-import { Activity, ProfileUser } from "@/interfaces/authenticated";
+import {
+  ExtendedActivity,
+  EventsProps,
+  ProfileUser,
+} from "@/interfaces/authenticated";
 import { Bid, Profile, Review, User } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useSocketContext } from "@/context/SocketContext";
 import axios from "axios";
 import getListingById from "@/actions/getListingById";
 import ListingChat from "@/components/chat/ListingChat";
@@ -23,9 +27,14 @@ import OfferAlerts from "@/components/dashboard/offer/OfferAlerts";
 import Tabs from "@/components/dashboard/Tabs";
 import Button from "@/components/dashboard/Button";
 import Header from "@/components/dashboard/offer/Header";
-import { useRouter } from "next/navigation";
-import { CiMedicalCross, CiLocationOn, CiDeliveryTruck, CiCalendar  } from "react-icons/ci";
-import { set } from "date-fns";
+import useOfferEditModal from "@/hooks/useOfferEditModal";
+import { FaImage, FaPencilAlt, FaPlus } from "react-icons/fa";
+import { Session } from "next-auth";
+import { tempId } from "@/utils/generate";
+import { toast } from "react-hot-toast";
+import StatusChecker from "@/utils/status";
+import Link from "next/link";
+// import OfferDetailsWidgetOld from "@/components/dashboard/offer/OfferDetailsWidgetOld";
 
 interface MessageProps {
   buyerId: string;
@@ -63,24 +72,65 @@ const CURRENT_BID_STATE = {
   participant: {} as Bid,
 };
 
-const initialState = {
-  loading: { ...LOADING_STATE },
-  bids: [],
-  currentBid: CURRENT_BID_STATE,
-  status: "",
-  reviews: {
-    userReview: {} as IReview,
-    participantReview: {} as IReview,
-  },
-};
+interface Listing {
+  activity: ExtendedActivity[];
+  bids: Bid[];
+  buyer: {
+    id: string;
+    username: string;
+    profile?: {
+      image?: string;
+    };
+  };
+  buyerId: string;
+  category: string;
+  completedById: string;
+  createdAt: Date;
+  description: string;
+  expireAt: Date;
+  id: string;
+  image: string | null;
+  events: EventsProps[];
+  messages: MessageProps[];
+  options: {
+    location: {
+      city?: string;
+      region?: string;
+    };
+    condition: string;
+    pickup: string;
+    public: boolean;
+  };
+  price: string;
+  reviews: Review[];
+  seller: {
+    id: string;
+    username: string;
+    profile?: {
+      image?: string;
+    };
+  };
+  sellerId: string;
+  status: string;
+  title: string;
+  type: string;
+  updatedAt: Date;
+  user: { id: string; username: string };
+  userId: string;
+}
 
-const Index = ({ listing, session }: any) => {
+interface PageProps {
+  listing: Listing;
+  session: Session;
+}
+
+const Index = ({ listing, session }: PageProps) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("description");
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<ExtendedActivity[]>([]);
   const [loadingState, setLoadingState] = useState(LOADING_STATE);
   const [bids, setBids] = useState<Bid[]>([]);
-  const [completedBy, setCompletedBy] = useState<string | null>();
+  const [events, setEvents] = useState<EventsProps[]>([]);
   const [currentBid, setCurrentBid] = useState(CURRENT_BID_STATE);
   const [status, setStatus] = useState<string>("");
   const [tab, setTab] = useState("details");
@@ -88,31 +138,20 @@ const Index = ({ listing, session }: any) => {
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const [me, setMe] = useState<ProfileUser>();
   const [participant, setParticipant] = useState<ProfileUser>();
-
   const { user: sessionUser } = session;
-  const {
-    id,
-    title,
-    createdAt,
-    updatedAt,
-    description,
-    price,
-    status: listingStatus,
-    sellerId,
-    seller,
-    buyer,
-    bids: listingBids,
-    image: listingImage,
-    userId,
-    reviews: listingReviews,
-    category,
-    user: listingUser,
-    activities: listingActivities,
-    completedById,
-    completedBy: listingCompletedBy,
-  } = listing;
+  const router = useRouter();
+  const [currentListing, setCurrentListing] = useState<any>({});
+
+  const edit = useOfferEditModal();
+  const now = Date.now();
+  const socket = useSocketContext();
+
+
+  
 
   if (!sessionUser || !listing) return <Loading />;
+
+  console.log("listing", listing);
 
   const [reviews, setReviews] = useState<{
     userReview: IReview;
@@ -122,8 +161,31 @@ const Index = ({ listing, session }: any) => {
     participantReview: {} as IReview,
   });
 
-  const now = Date.now();
-  const socketRef = useRef<Socket>();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      setCurrentListing(listing);
+      toast.success("Welcome to your offer!");
+    }
+  }, [isMounted]);
+
+  const options = {
+    pickup: currentListing?.options?.pickup || "",
+    condition: currentListing?.options?.condition || "",
+    location: {
+      city: currentListing?.options?.location?.city || "",
+      region: currentListing?.options?.location?.region || "",
+    },
+  };
+
+  const handleAddImages = () => {
+    edit.onOpen(session?.user, currentListing, "images", {});
+  };
 
   const mainTabs = [
     { id: "details", label: "Details" },
@@ -137,7 +199,9 @@ const Index = ({ listing, session }: any) => {
     { id: "photos", label: "Photos" },
     {
       id: "user",
-      label: sessionUser?.id === sellerId ? "Buyer" : "Seller" + "Details",
+      label: `${
+        sessionUser?.id === currentListing.sellerId ? "Buyer" : "Seller"
+      } Details`,
     },
   ];
 
@@ -145,7 +209,6 @@ const Index = ({ listing, session }: any) => {
     if (activeSubTab === "user") {
       const getUserStats = async () => {
         if (!participant) console.log("No participant");
-
         const userId = participant?.id;
         const url = `/api/dashboard/getUserStats`;
 
@@ -179,62 +242,47 @@ const Index = ({ listing, session }: any) => {
     }
   }, [activeSubTab]);
 
-  const updateLoadingState = (key: string, value: boolean) => {
-    setLoadingState((prev) => ({ ...prev, [key]: value }));
-  };
-
   useEffect(() => {
-    socketRef.current = io(config.PORT);
-    socketRef.current && socketRef.current.emit("join_room", id);
-    return () => {
-      socketRef.current?.emit("leave_room", id);
-      socketRef.current?.off("join_room");
-      socketRef.current?.disconnect();
-    };
-  }, [id]);
+    if (!session || !sessionUser.id) return;
 
-  useEffect(() => {
-    if (!session || !sessionUser.id) {
-      return;
-    }
-    if (sellerId === sessionUser?.id) {
-      setMe(seller);
+    if (currentListing.sellerId === sessionUser?.id) {
+      setMe(currentListing.seller);
       setParticipant((prev) => {
-        return { ...prev, ...buyer };
+        return { ...prev, ...currentListing.buyer };
       });
     } else {
-      setMe(buyer);
+      setMe(currentListing.buyer);
       setParticipant((prev) => {
-        return { ...prev, ...seller };
+        return { ...prev, ...currentListing.seller };
       });
     }
-    setMessages([...messages].reverse());
-
-    setCompletedBy(completedById);
-  }, [id, sessionUser?.id]);
+    setMessages([...listing.messages].reverse());
+    setEvents([...listing?.events].reverse());
+  }, [currentListing.id, sessionUser?.id]);
 
   useEffect(() => {
     setLoadingState((prev) => ({ ...prev, loading: true }));
-
-    if (!session || !sessionUser?.id || !listingBids) {
+    if (!session || !sessionUser?.id || !currentListing.bids) {
       return;
     }
-    const reversedBids = [...listingBids].reverse();
+    const reversedBids = [...currentListing.bids].reverse();
 
-    setBids(listingBids);
+    setBids(currentListing.bids);
 
     setCurrentBid({
       currentPrice:
-        listingBids && listingBids.length > 0
-          ? listingBids[listingBids.length - 1].price
-          : price && price,
+        currentListing.bids && currentListing.bids.length > 0
+          ? currentListing.bids[currentListing.bids.length - 1].price
+          : currentListing.price && currentListing.price,
       byUserId:
-        (listingBids && listingBids[listingBids.length - 1]?.userId) || userId,
+        (currentListing.bids &&
+          currentListing.bids[currentListing.bids.length - 1]?.userId) ||
+        currentListing.userId,
       byUsername:
-        (listingBids && listingBids[listingBids.length - 1]?.user?.username) ||
-        sellerId === userId
-          ? seller.username
-          : buyer.username,
+        (currentListing.bids &&
+          currentListing.bids[currentListing.bids.length - 1]?.user
+            ?.username) ||
+        currentListing.user.username,
       me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
       participant: reversedBids.filter(
         (bid: Bid) => bid.userId === participant?.id
@@ -242,44 +290,29 @@ const Index = ({ listing, session }: any) => {
     });
 
     setLoadingState((prev) => ({ ...prev, loading: false }));
-  }, [
-    listingBids,
-    price,
-    sellerId,
-    seller?.username,
-    buyer?.username,
-    sessionUser.id,
-    me?.id,
-    participant?.id,
-  ]);
+  }, [currentListing.bids, currentListing.price]);
+
   useEffect(() => {
-    if (!session || !sessionUser?.id || !listingStatus) {
-      return;
-    }
+    if (!session || !sessionUser?.id || !currentListing.status) return;
+    if (!session) setLoadingState((prev) => ({ ...prev, loading: true }));
+    if (status === "pending" || status === "accepted") setDisabled(true);
 
-    if (!session) {
-      setLoadingState((prev) => ({ ...prev, loading: true }));
-    }
-
-    if (status === "pending") {
-      setDisabled(true);
-    }
-
-    if (status === "accepted") {
-      setDisabled(true);
-    }
-
-    setStatus(listingStatus);
-    setActivities([...listingActivities].reverse());
-
-    const created = new Date(createdAt);
+    setStatus(currentListing.status);
+    setActivities((prev) => {
+      if (Array.isArray(currentListing.activity)) {
+        const arr = [...currentListing.activity].reverse();
+        return arr;
+      }
+      return prev;
+    });
+    const created = new Date(currentListing.createdAt);
     timeInterval(created, setTimeSinceCreated);
 
     setReviews({
-      userReview: listingReviews.find(
+      userReview: currentListing.reviews.find(
         (item: IReview) => item.userId === sessionUser.id
       ),
-      participantReview: listingReviews.find(
+      participantReview: currentListing.reviews.find(
         (item: IReview) => item.userId !== sessionUser.id
       ),
     });
@@ -287,80 +320,91 @@ const Index = ({ listing, session }: any) => {
     setLoadingState((prev) => ({ ...prev, loading: false }));
     setDisabled(false);
   }, [
-    listingStatus,
-    ,
-    createdAt,
+    currentListing.status,
+    currentListing.createdAt,
     sessionUser?.id,
-    listingReviews,
-    listingActivities,
+    currentListing.reviews,
+    currentListing.activities,
   ]);
 
   useEffect(() => {
-    socketRef.current &&
-      socketRef.current.on("new_listing_message", (newMessage: any) => {
-        console.log("Received new message: ", newMessage);
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+    socket.emit("join_listing", currentListing.id);
+    return () => {
+      socket.emit("leave_listing", currentListing.id);
+    };
+  }, [currentListing.id]);
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+
+    socket.on("new_listing_message", (data) => {
+      console.log("Received new message: ", data);
+      setMessages((prevMessages) => [...prevMessages, data]);
+    });
+    socket.on("updated_listing", (data) => {
+      console.log("Received listing updates: ", data);
+      setCurrentListing((prev: any) => {
+        return {
+          ...prev,
+          ...data.listing,
+        };
       });
+    });
 
-    socketRef.current &&
-      socketRef.current.on(
-        "updated_bid",
-        ({ price, userId, username, listingId, previous }) => {
-          if (listingId === id) {
-            console.log(
-              `Received bid price update for listing ${listingId}: ${price}`
-            );
-            setBids((prevBids) => {
-              let temporaryId = (Math.random() + 1).toString(36).substring(7);
-              const newBid = {
-                id: temporaryId,
-                price: price,
-                userId: userId,
-                listingId: listingId,
-                previous: previous,
-                createdAt: new Date(now),
-                updatedAt: new Date(now),
-              };
-              const updatedBids = [...prevBids, newBid];
-              return updatedBids;
-            });
+    socket.on("updated_bid", (data) => {
+      const { price, userId, username, listingId, previous } = data;
 
-            setCurrentBid((prev) => {
-              const newBid = {
-                ...prev,
-                currentPrice: price,
-                byUserId: userId || "",
-                byUsername: username || "",
-                me:
-                  listingBids && listingBids.length > 0
-                    ? listingBids[listingBids.length - 1]
-                    : null,
-              };
-              return newBid;
-            });
-            setStatus("negotiating");
-          }
-        }
+      console.log("Received new bid: ", data);
+      console.log(
+        `Received bid price update for listing ${listingId}: ${price}`
       );
-
-    socketRef.current &&
-      socketRef.current.on("update_status", ({ newStatus, listingId, userId }) => {
-        if (listingId === id) {
-          console.log(
-            `Received status update for listing ${listingId}: ${newStatus}`
-          );
-          setStatus(newStatus);
-          setCompletedBy(userId);
-
-        }
+      setBids((prevBids) => {
+        let temporaryId = tempId();
+        const newBid = {
+          id: temporaryId,
+          price: price,
+          userId: userId,
+          listingId: listingId,
+          previous: previous,
+          createdAt: new Date(now),
+          updatedAt: new Date(now),
+        };
+        const updatedBids = [...prevBids, newBid];
+        return updatedBids;
       });
+
+      setCurrentBid((prev) => {
+        const newBid = {
+          ...prev,
+          currentPrice: price,
+          byUserId: userId || "",
+          byUsername: username || "",
+          me:
+            currentListing.bids && currentListing.bids.length > 0
+              ? currentListing.bids[currentListing.bids.length - 1]
+              : null,
+        };
+        return newBid;
+      });
+      setStatus("negotiating");
+    });
+
+    socket.on("update_status", (data) => {
+      const { listingId, newStatus } = data;
+      if (listingId === currentListing.id)
+        console.log(
+          `Received status update for listing ${listingId}: ${newStatus}`
+        );
+      setStatus(newStatus);
+    });
 
     return () => {
-      socketRef.current?.off("updated_bid");
-      socketRef.current?.off("update_status");
-      socketRef.current?.disconnect();
+      socket.off("new_listing_message");
+      socket.off("updated_bid");
+      socket.off("update_status");
+      socket.emit("leave_listing", currentListing.id);
     };
-  }, []);
+  }, [session?.user.id]);
 
   const confirmationModal = useConfirmationModal();
 
@@ -376,9 +420,10 @@ const Index = ({ listing, session }: any) => {
         ? bids[bids.length - 1]?.price
         : currentBid.currentPrice
         ? currentBid.currentPrice
-        : price)
+        : currentListing.price)
     );
   };
+
   const createStatusAlert = (
     status: string,
     bids: any[],
@@ -408,10 +453,8 @@ const Index = ({ listing, session }: any) => {
     return messages[status] || null;
   };
 
-  const router = useRouter();
-
   const handleFinalise = async (userId: any, participantId: any) => {
-    setLoadingState((prev) => ({ ...prev, completed: true }));
+    setLoadingState((prev) => ({ ...prev, contact: true }));
 
     if (!userId || !participantId) return console.log("Invalid entries");
     try {
@@ -430,10 +473,9 @@ const Index = ({ listing, session }: any) => {
         })
         .catch((err) => {
           console.log(err);
+          setLoadingState((prev) => ({ ...prev, contact: false }));
         })
-        .finally(() => {
-          setLoadingState((prev) => ({ ...prev, completed: false }));
-        });
+        .finally(() => {});
     } catch (error) {
       console.log(error);
     }
@@ -441,7 +483,46 @@ const Index = ({ listing, session }: any) => {
 
   const handleStatusChange = async (status: string, userId: string) => {
     const statusMessage = createStatusAlert(status, bids, currentBid, listing);
+    if (status === "completed") {
+      setLoadingState((prev) => {
+        return { ...prev, completed: true };
+      });
 
+      await axios
+        .put(`/api/updateListing/status`, {
+          status: status,
+          listingId: currentListing.id,
+          userId: userId,
+          completedById: sessionUser.id,
+        })
+        .then((response) => {
+          setStatus(status);
+          setEvents(response.data.listing.events);
+
+          socket.emit("update_status", {
+            newStatus: status,
+            listingId: currentListing.id,
+          });
+
+          const { sellerId, buyerId, transactionResult } = response.data;
+
+          socket.emit(
+            "update_activities",
+            transactionResult,
+            sellerId,
+            buyerId
+          );
+        })
+        .catch((err) => {
+          console.log("Something went wrong!");
+        })
+        .finally(() => {
+          setLoadingState((prev) => ({ ...prev, status: false }));
+          setLoadingState(LOADING_STATE);
+        });
+
+      return;
+    }
     confirmationModal.onOpen(
       "Are you sure you want to " + statusMessage + "?",
       async () => {
@@ -471,26 +552,26 @@ const Index = ({ listing, session }: any) => {
         await axios
           .put(`/api/updateListing/status`, {
             status: status,
-            listingId: id,
+            listingId: currentListing.id,
             userId: userId,
             completedById: sessionUser.id,
           })
           .then((response) => {
             setStatus(status);
-            setCompletedBy(sessionUser.id);
+            setEvents(response.data.listing.events);
 
-            socketRef.current?.emit("update_status", {
+            socket.emit("update_status", {
               newStatus: status,
-              listingId: id,
-              userId: userId,
+              listingId: currentListing.id,
             });
 
-            console.log("Status updated successfully!", response.data);
-            socketRef.current?.emit(
+            const { sellerId, buyerId, transactionResult } = response.data;
+
+            socket.emit(
               "update_activities",
-              response.data.transactionResult,
-              response.data.sellerId,
-              response.data.buyerId
+              transactionResult,
+              sellerId,
+              buyerId
             );
           })
           .catch((err) => {
@@ -504,16 +585,14 @@ const Index = ({ listing, session }: any) => {
     );
   };
 
-
   const MainBody = (
     <>
-      <div className="">
+      <div className="h-full flex flex-col mb-6">
         <Header
           status={status}
-          title={title}
-          price={price}
-          category={category}
           currentBid={currentBid}
+          listing={currentListing}
+          session={session}
         />
 
         <Tabs
@@ -524,68 +603,126 @@ const Index = ({ listing, session }: any) => {
         />
 
         {activeSubTab === "description" && (
-          <>
-            <p className="leading-relaxed first-letter:uppercase border-b border-gray-200 pb-6 mb-6">
-              {description}
+          <div className="h-full flex flex-col bg-white p-4 pt-0 border rounded-b-lg border-gray-200 border-t-0 transition-all ease-in-out duration-200">
+            <p className="mb-auto mt-4 md:mx-1 flex-grow leading-relaxed first-letter:uppercase pb-6 relative">
+              {status !== "cancelled" &&
+                status !== "accepted" &&
+                status !== "completed" &&
+                currentListing.userId === session?.user.id && (
+                  <FaPencilAlt
+                    className="absolute top-1 right-1 text-gray-600 -mt-2 border p-1 rounded-full bg-white border-gray-200 text-2xl"
+                    onClick={() =>
+                      edit.onOpen(session?.user, listing, "description", {
+                        title: currentListing.title,
+                        description: currentListing.description,
+                      })
+                    }
+                  />
+                )}
+              {currentListing.description}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 border-b border-gray-200 pb-6 mb-6 auto-cols-fr gap-4">
-              <div className="flex-1">
-                <div className="flex gap-2">
-                  <CiMedicalCross className="w-6 h-6" />
-                  <div>
-                    <p className="font-bold">Condition</p>
-                    <p className="capitalize">{listing?.options?.condition}</p>
-                  </div>
+            <div className="flex gap-2 justify-between bg-gray-default border border-gray-200 rounded-xl mt-4 p-4 ">
+              <div className="block">
+                {currentBid.currentPrice &&
+                  currentBid.currentPrice !== "" &&
+                  currentBid.currentPrice !== "0" && (
+                    <div className="text-sm">
+                      <div className="">
+                        Start price by
+                        <Link
+                          href={`/dashboard/profile/${currentBid.byUserId}`}
+                          className="underline ml-[2px]"
+                        >
+                          {listing.user.username}
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                <div className="font-extrabold ">
+                  {currentBid.currentPrice &&
+                  currentBid.currentPrice !== "0" &&
+                  currentBid.currentPrice !== "" ? (
+                    `£${Number(currentBid.currentPrice).toLocaleString()}`
+                  ) : listing.price !== "" && listing.price !== "0" ? (
+                    `£${Number(
+                      listing.price === "0" ? "0.00" : listing.price
+                    ).toLocaleString()}`
+                  ) : (
+                    <h5 className="underline mt-2">Open Offer {status}</h5>
+                  )}
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="flex gap-2">
-                  <CiLocationOn className="w-6 h-6" />
-                  <div>
-                    <p className="font-bold">Location</p>
-                    <p className="capitalize">{ listing?.options?.location?.city ? listing.options.location.city : listing?.options?.location.region ? listing.options.location.region : 'Unknown' }</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex gap-2">
-                  <CiDeliveryTruck className="w-6 h-6" />
-                  <div>
-                    <p className="font-bold">Pickup</p>
-                    <p className="capitalize">{ 
-                    listing?.options?.pickup ? 
-                     listing.options.pickup === 'both' ? 
-                    'Collection or Delivery' : `
-                    ${listing.options.pickup} Only` : 'Unknown' }</p>
 
-                  </div>
+              <div className="block">
+                {currentBid.currentPrice &&
+                  currentBid.currentPrice !== "" &&
+                  currentBid.currentPrice !== "0" && (
+                    <div className="text-right text-sm">
+                      {status === "accepted" ? (
+                        <div className="mb-0.5">Agreed price</div>
+                      ) : (
+                        <div className="text-right mb-0.5">
+                          Bid by
+                          <Link
+                            href={`/dashboard/profile/${currentBid.byUserId}`}
+                            className="underline ml-[2px]"
+                          >
+                            {currentBid.byUsername}
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                <div className="font-extrabold text-right">
+                  {currentBid.currentPrice &&
+                  currentBid.currentPrice !== "0" &&
+                  currentBid.currentPrice !== "" ? (
+                    `£${Number(
+                      currentBid.currentPrice === "0" ||
+                        currentBid.currentPrice === ""
+                        ? "0.00"
+                        : currentBid.currentPrice
+                    ).toLocaleString()}`
+                  ) : (listing.price !== "" && listing.price !== "0") ||
+                    status === "cancelled" ||
+                    status === "rejected" ? (
+                    `£${Number(
+                      listing.price === "0" || listing.price === ""
+                        ? "0.00"
+                        : listing.price
+                    ).toLocaleString()}`
+                  ) : (
+                    <div className="p-1 rounded-lg text-sm border-lg border border-gray-200 bg-gray-50 mt-2 text-orange-alt">
+                      Open Offer
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="flex gap-2">
-                <CiCalendar className="w-6 h-6" />
-                  <div>
-                    <p className="font-bold">Created</p>
-                    { new Date(createdAt).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </div>
-                </div>
-              </div>
-              
             </div>
-          </>
-        )}
-
-        {activeSubTab === "photos" && (
-          <div className=" justify-center z-50 mb-6">
-            <ImageSlider images={listingImage} />
           </div>
         )}
+        {activeSubTab === "photos" && (
+          <>
+            {currentListing.image ? (
+              <div className=" justify-center z-10 mb-6">
+                <ImageSlider
+                  images={currentListing.image}
+                  handleAddImages={handleAddImages}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center my-12">
+                <p className="font-bold my-6 ">No photos available</p>
+                <div className=" flex gap-2 items-center justify-center p-2 border border-gray-200 rounded-lg">
+                  <FaImage className="text-xl text-gray-400" />
+                  <p className="font-bold text-gray-500">Add photos</p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
         {activeSubTab === "user" && (
-          <div className=" justify-center z-50 mb-6">
+          <div className=" justify-center z-10 mb-6">
             {sessionUser.id && (
               <div>
                 <UserStats
@@ -607,18 +744,17 @@ const Index = ({ listing, session }: any) => {
   return (
     listing && (
       <Dash meta={<Meta title="" description="" />}>
-        <div className=" flex flex-col px-4 mt-8 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
+        <div className=" flex flex-col px-4 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
           <OfferAlerts
             handleStatusChange={handleStatusChange}
             session={session}
             participant={participant}
             status={status}
-            completedBy={completedBy}
+            completedBy={events[0]?.userId || null}
             listing={listing}
             handleFinalise={handleFinalise}
           />
-
-          <div className="w-full col-span-6 xl:col-span-8 order-3 md:order-2">
+          <div className="w-full col-span-6 xl:col-span-8  flex flex-col">
             <Tabs
               status={status}
               tabs={mainTabs}
@@ -626,29 +762,32 @@ const Index = ({ listing, session }: any) => {
               tab={tab}
               isListing
               main
+              additionalData={StatusChecker(status)}
             />
-
             {tab === "chat" && (
               <div className="messages pt-6 mb-6">
                 {status === "negotiating" && (
                   <ListingChat
-                    listing={listing}
+                    id={listing.id}
+                    sellerId={listing.sellerId}
+                    buyerId={listing.buyerId}
                     user={sessionUser}
                     disabled={disabled}
                     session={session}
                     messages={messages}
                     setMessages={setMessages}
-                    socketRef={socketRef}
                   />
                 )}
 
                 {status === "accepted" && (
-                  <div className="w-full  p-4 white border-l-4 border-orange-400">
-                    {listingUser === sessionUser
+                  <div className="w-full  p-4 white border-l-4 border-orange-default">
+                    {currentListing.user === sessionUser
                       ? "Your offer was acceped! "
                       : "You accepted the offer! "}{" "}
                     If you need to contact the
-                    {buyer?.id === sessionUser?.id ? "seller" : "buyer"}{" "}
+                    {currentListing.buyer?.id === sessionUser?.id
+                      ? "seller"
+                      : "buyer"}{" "}
                     <span className="text-orange-500 underline cursor-pointer">
                       click here
                     </span>
@@ -656,8 +795,8 @@ const Index = ({ listing, session }: any) => {
                 )}
 
                 {status === "awaiting approval" && (
-                  <div className="w-full  p-4 white border-l-4 border-orange-400 flex gap-2 justify-between items-center">
-                    {userId === sessionUser?.id ? (
+                  <div className="w-full  p-4 white border-l-4 border-orange-default flex gap-2 justify-between items-center">
+                    {currentListing.userId === sessionUser?.id ? (
                       <div>
                         Your offer has been created. A request has been sent to{" "}
                         {participant?.username}.
@@ -667,7 +806,7 @@ const Index = ({ listing, session }: any) => {
                         You have received a offer from {participant?.username}
                       </div>
                     )}
-                    {userId !== sessionUser?.id && (
+                    {currentListing.userId !== sessionUser?.id && (
                       <Button
                         primary
                         label={`Let's haggle`}
@@ -694,13 +833,13 @@ const Index = ({ listing, session }: any) => {
                     )}
                     {!reviews.userReview && (
                       <ReviewForm
-                        listingId={id}
+                        listingId={currentListing.id}
                         sessionId={sessionUser.id}
-                        sellerId={sellerId}
-                        buyerId={buyer.id}
+                        sellerId={currentListing.sellerId}
+                        buyerId={currentListing.buyer.id}
                         disabled={disabled}
                         setReviews={setReviews}
-                        ownerId={userId}
+                        ownerId={currentListing.userId}
                         username={me?.username || ""}
                       />
                     )}
@@ -708,19 +847,20 @@ const Index = ({ listing, session }: any) => {
                 )}
               </>
             )}
-
-            {tab === "activity" &&
-              activities?.map((activity: any, i: number) => (
-                <div
-                  key={i}
-                  className="flex gap-4 justify-between py-2 border-b border-gray-200 mb-6"
-                >
-                  <div>{activity.message}</div>
-                  <div className="text-gray-500 text-sm italic">
-                    {timeSince(activity.createdAt)}
+            <div className="mt-2">
+              {tab === "activity" &&
+                activities?.map((activity: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex gap-4 justify-between px-1 pb-2 border-b border-gray-200 mb-2"
+                  >
+                    <div>{activity.message}</div>
+                    <div className="text-gray-500 text-sm italic">
+                      {timeSince(activity.createdAt)}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+            </div>
 
             {tab === "bids" && (
               <div className="mb-6">
@@ -728,8 +868,12 @@ const Index = ({ listing, session }: any) => {
               </div>
             )}
           </div>
-          
-          <div className="w-full xl:col-span-4 col-span-4 flex flex-col gap-4 order-2 md:order-3">
+
+          <div
+            className={`w-full xl:col-span-4 col-span-4 ${
+              tab === "overview" ? "block" : "hidden md:block"
+            }`}
+          >
             <OfferDetailsWidget
               listing={listing}
               status={status || "pending"}
@@ -743,16 +887,13 @@ const Index = ({ listing, session }: any) => {
               loadingState={loadingState}
               setLoadingState={setLoadingState}
               timeSinceCreated={timeSinceCreated}
-              me={me}
               participant={participant}
-              socketRef={socketRef}
-              setCompletedBy={setCompletedBy}
-              completedBy={completedBy}
+              completedBy={events[0]?.userId || null}
               setStatus={setStatus}
               handleFinalise={handleFinalise}
+              me={me}
             />
           </div>
-          
         </div>
       </Dash>
     )

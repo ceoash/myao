@@ -35,12 +35,12 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                 <div className="font-bold flex gap-2 items-center">
                   <div className="rounded-full p-1 bg-orange-200 text-white">
                     {
-                      message.user.id === session.user.id ? <img src="/images/cat.png" className="w-6 p-[1px]" /> : <img src="/images/dog.png" className="w-6 p-[1px]" />
+                      message.user.id === session?.user?.id ? <img src="/images/cat.png" className="w-6 p-[1px]" /> : <img src="/images/dog.png" className="w-6 p-[1px]" />
                     }
                     
                   </div>
                   <div className="text-gray-500">
-                    {message.user.id === session.user.id
+                    {message.user.id === session?.user?.id
                       ? "You created a offer"
                       : "You received a offer"}
                   </div>
@@ -57,13 +57,13 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
           <div
             ref={ref}
             className={`flex gap-2 w-1/2 ${
-              message.user.id === session.user.id
+              message.user.id === session?.user.id
                 ? "justify-end ml-auto"
                 : "justify-start mr-auto"
             }`}
           >
             <Link
-              href={`/dashboard/profile/${message.user.id}`}
+              href={`/dashboard/profile/${message?.user.id}`}
               className="flex items-center justify-end h-10 w-10 rounded-full text-white flex-shrink-0"
             >
               <img
@@ -76,7 +76,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
             </Link>
             <div
               className={` py-2 px-4 rounded-lg  ${
-                message.user.id === session.user.id
+                message.user.id === session?.user.id
                   ? " bg-orange-200 text-gray-700"
                   : " bg-gray-100 text-gray-700"
               }`}
@@ -118,10 +118,10 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                         </div>
                       </Link>
                       <div className="md:text-lg lg:text-2xl">
-                        £
+                         
                         {message?.listing.bids
-                          ? message.listing.bids[ message.listing.bids.length - 1 ].price
-                          : message.listing.price}
+                          ? `£ ${message.listing.bids[ message.listing.bids.length - 1 ].price}`
+                          : message.listing.price ===  0 ||  message.listing.price ===  "0" ? <span className="text-lg">{message?.listing.userId === session?.user.id ? "Awaiting offer" : "Make an offer"}</span> : `£ ${message.listing.price}`}
                       </div>
                     </div>
                     <div className="flex flex-col h-full justify-between">
@@ -132,7 +132,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                         <div className="flex gap-2 items-center font-bold text-sm">
                           <img
                             src={
-                              message?.listing.sellerId === session.user.id
+                              message?.listing.sellerId === session?.user.id
                                 ? message?.listing.buyer?.profile?.image
                                 : message?.listing.seller?.profile?.image ||
                                   "/images/placeholders/avatar.png"
@@ -140,7 +140,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                             className="rounded-full border border-orange-50 bg-orange-50 p-[1px] w-[30px] h-[30px] obj"
                           />
                           <p>
-                            {message?.listing.sellerId === session.user.id
+                            {message?.listing.sellerId === session?.user.id
                               ? message?.listing.buyer?.username
                               : message?.listing.seller?.username ||
                                 "unkown user"}
@@ -175,7 +175,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
       <div
         ref={ref}
         className={`flex gap-2 w-1/2 ${
-          message.user.id === session.user.id
+          message.user.id === session?.user.id
             ? "justify-end ml-auto"
             : "justify-start mr-auto"
         }`}
@@ -190,13 +190,13 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
         </div>
         <div
           className={` py-2 px-4 rounded-lg  ${
-            message.user.id === session.user.id
+            message.user.id === session?.user.id
               ? " bg-orange-200 text-gray-700"
               : " bg-gray-100 text-gray-700"
           }`}
         >
           <div className="font-bold">
-            {message.user.id === session.user.id ? (
+            {message.user.id === session?.user.id ? (
               "You"
             ) : (
               <Link href={`/dashboard/profile/${message.user?.username}`}>

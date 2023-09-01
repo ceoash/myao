@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import { Listing } from ".prisma/client";
-import { Activity } from "@/interfaces/authenticated";
-import StatusChecker from "@/utils/status";
+import { createActivity } from "@/prisma";
 
 interface ErrorResponse {
   error: string;
@@ -19,7 +18,21 @@ export default async function newOfferMessage(
     try {
       const listing = await prisma.listing.findUnique({
         where: { id: listingId },
-        select: { activities: true, buyer: true, seller: true, status: true },
+        select: {
+          activity: {
+            include: {
+              listingActivity: true,
+              userActivity: true,
+            },
+          },
+          buyer: true,
+          seller: true,
+          status: true,
+          id: true,
+          title: true,
+          buyerId: true,
+          sellerId: true,
+        },
       });
 
       if (!listing) {
@@ -27,45 +40,12 @@ export default async function newOfferMessage(
         return;
       }
 
-      const status = StatusChecker(listing.status || "");
-
-      const newBuyerActivity = {
-        type: "ListingMessage",
-        message: "New listing message",
-        action: "/dashboard/offers/" + listingId,
-        modelId: listingId,
-        createdAt: now,
-        value: listing.status,
-        userId: userId,
-      };
-      const newSellerActivity = {
-        type: "Listing Message",
-        message: "New listing message",
-        action: "/dashboard/offers/" + listingId,
-        modelId: listingId,
-        createdAt: now,
-        value: listing.status,
-        userId: userId,
-      };
-      const newActivity = {
-        type: "ListingMessage",
-        message: "New listing message",
-        action: "/dashboard/offers/" + listingId,
-        modelId: listingId,
-        createdAt: now,
-        value: listing.status,
-        userId: userId,
-      };
-
-      let activities = [listing.activities];
-      activities?.push(newActivity);
-
       const updatedMessage = await prisma.listing.update({
         where: {
           id: listingId,
         },
         data: {
-          activities: activities,
+          updatedAt: new Date(now),
           messages: {
             create: [
               {
@@ -74,6 +54,7 @@ export default async function newOfferMessage(
                 text: message,
                 userId: userId,
                 image: image,
+                read: false,
               },
             ],
           },
@@ -91,48 +72,20 @@ export default async function newOfferMessage(
         },
       });
 
-      if (listing.buyer) {
-        const buyer = await prisma.user.findUnique({
-          where: { id: listing.buyer.id },
-          select: { activities: true },
-        });
-
-        if (!buyer) {
-          res.status(404).json({ error: "buyer not found" });
-          return;
+      const sender = updatedMessage.buyerId === userId ? updatedMessage.buyer : updatedMessage.seller
+      const receiver = updatedMessage.buyerId === userId ? updatedMessage.seller : updatedMessage.buyer
+      
+      if(!sender && !receiver) return res.status(404).json({ error: "sender or receiver not found" });
+      
+      const notification  = await prisma.notification.create({
+        data: {
+          userId: sender?.id || "",
+          message: `Message received from ${sender?.username ? sender.username : "unknown"}}`,
+          action: `/dashboard/conversations?conversationId=${listingId}`,
+          type: "conversation",
+          read: false,
         }
-
-        const buyerActivities = [
-          ...(Array.isArray(buyer.activities) ? buyer.activities : []),
-          newBuyerActivity,
-        ];
-
-        await prisma.user.update({
-          where: { id: buyerId },
-          data: { activities: buyerActivities },
-        });
-      }
-      if (listing.seller) {
-        const seller = await prisma.user.findUnique({
-          where: { id: listing.seller.id },
-          select: { activities: true },
-        });
-
-        if (!seller) {
-          res.status(404).json({ error: "Seller not found" });
-          return;
-        }
-
-        const sellerActivities = [
-          ...(Array.isArray(seller.activities) ? seller.activities : []),
-          newSellerActivity,
-        ];
-
-        await prisma.user.update({
-          where: { id: sellerId },
-          data: { activities: sellerActivities },
-        });
-      }
+      })
 
       res.status(200).json(updatedMessage);
     } catch (error) {

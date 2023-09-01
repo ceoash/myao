@@ -4,17 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  @variants responsive {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+  }
+}
+
 .swiper-thumbs{
   width: 300px!important;
 }
 
-
-
-input[type='radio'] {
-  accent-color: #ffa500;
-  border: white solid 1px;
-  background: white;
-}
 
 @font-face {
   font-family: "nunitoo";

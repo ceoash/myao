@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { createActivityForUser } from "@/prisma";
+import { createActivity } from "@/prisma";
 
 export default async function addFriend(
   req: NextApiRequest,
@@ -12,7 +12,6 @@ export default async function addFriend(
     if (!followerId || !followingId) {
       return res.status(400).json({ error: "Missing necessary parameters." });
     }
-
     try {
       const newFriendship = await prisma.friendship.upsert({
         where: { followerId_followingId: { followerId, followingId } },
@@ -24,77 +23,75 @@ export default async function addFriend(
           followerId,
           followingId,
         },
-        include: {
+        select: {
+          id: true,
+          accepted: true,
+          followerId: true,
+          followingId: true,
           follower: {
-            include: {
-              profile: true,
+            select: {
+              id: true,
+              username: true,
+              profile: {
+                select: {
+                  image: true,
+                },
+              },
+              activity: {
+                take: 4,
+                orderBy: {
+                  createdAt: "desc",
+                }
+              },
             },
           },
           following: {
-            include: {
-              profile: true,
+            select: {
+              id: true,
+              username: true,
+              profile: {
+                select: {
+                  image: true,
+                },
+              },
+              activity: {
+                take: 4,
+                orderBy: {
+                  createdAt: "desc",
+                }
+              },
             },
           },
         },
       });
 
+      if (!newFriendship) {
+        return res.status(400).json({ error: "Could not create friendship." });
+      }
+
       const responseFriendship = {
         ...newFriendship,
-        follower: {
-          ...newFriendship.follower,
-          relationshipStatus: "follower",
-          accepted: newFriendship.accepted,
-          friendshipId: newFriendship.id,
-        },
-        following: {
-          ...newFriendship.following,
-          relationshipStatus: "following",
-          accepted: newFriendship.accepted,
-          friendshipId: newFriendship.id,
-        },
+        follower: { ...newFriendship.follower, relationshipStatus: "follower" },
+      following: { ...newFriendship.following, relationshipStatus: "following" },
+        
       };
 
       const now = Date.now();
 
-      const followerActivity = {
-        type: "FriendAdded",
-        message: `You sent a friend request`,
-        action: "/dashboard/profile/" + newFriendship.followingId,
-        modelId: newFriendship.id,
-        value: newFriendship.following.username,
-        userId: newFriendship.followerId,
-        createdAt: now,
-      };
-      const followingActivity = {
-        type: "FriendRequest",
-        message: `${
-          newFriendship.follower.username + " " + "wants to be your friend"
-        }`,
-        value: newFriendship.follower.username,
-        action: "/dashboard/profile/" + newFriendship.followerId,
-        modelId: newFriendship?.id,
-        userId: newFriendship.followerId,
-        createdAt: now,
-      };
-
-      const followerUpdate = createActivityForUser(
-        newFriendship?.followerId,
-        followerActivity,
-        newFriendship?.follower.activities
-      );
-      const followingUpdate = createActivityForUser(
-        newFriendship.followingId,
-        followingActivity,
-        newFriendship?.following.activities
-      );
-
-      const transactionOperations = [followerUpdate, followingUpdate];
+      const followingNotification = await prisma.notification.create({
+        data: {
+          type: "friend",
+          message: `${responseFriendship.follower.username} wants to be your friend!`,
+          userId: responseFriendship.followingId || "",
+          action: `/dashboard/profile/${responseFriendship.followerId}`,
+          read: false,
+          createdAt: new Date(now),
+          updatedAt: new Date(now),
+        },
+      });
 
       try {
-        const transactionResult = await prisma.$transaction(
-          transactionOperations
-        );
-        res.status(200).json({ responseFriendship, transactionResult });
+        res.status(200).json({ responseFriendship, followingNotification });
       } catch (error) {
         res.status(404).json({ error: "Something went wrong" });
       }

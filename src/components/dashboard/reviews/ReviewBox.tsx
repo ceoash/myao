@@ -18,7 +18,7 @@ interface ReviewProps {
 
 const ReviewBox = ({ review }: ReviewProps) => {
   return (
-    <article className="border-b border-gray-200 pb-4 mb-4">
+    <article className="border-b border-gray-200 pb-4 mb-4 px-4">
       <div className="flex items-center mb-4 space-x-4">
         <Image
           className="w-10 h-10 rounded-full"

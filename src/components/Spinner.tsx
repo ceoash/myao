@@ -9,7 +9,7 @@ const Spinner = ({noMargin}: SpinnerProps) => {
     <div role="status">
       <svg
         aria-hidden="true"
-        className={`w-6 h-6 text-gray-200 animate-spin  fill-orange-400 ${!noMargin && "mr-2"}}`}
+        className={`w-6 h-6 text-gray-200 animate-spin  fill-orange-default ${!noMargin && "mr-2"}}`}
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

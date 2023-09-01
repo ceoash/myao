@@ -14,7 +14,9 @@ interface AlertBannerProps {
   info?: boolean;
   button?: true;
   buttonText?: string;
+  secondaryActionLabel?: string;
   onClick?: () => void;
+  secondaryAction?: () => void;
   children?: React.ReactNode;
 }
 
@@ -28,25 +30,28 @@ const AlertBanner = ({
   button,
   buttonText,
   onClick,
+  secondaryActionLabel,
+  secondaryAction,
   children,
 }: AlertBannerProps) => {
   return (
+    
     <div
       className={`
-        col-span-12
-        flex
+        
         items-center
         justify-between
         p-4
         text-sm
         font-semibold
         rounded-lg
-        mb-6
-        xl:mb-0
-        ${success && "border bg-green-100 border-green-400 text-green-500"}
+        mb-4
+        col-span-12
+       
+        ${success && "border bg-green-100 border-green-200 text-green-500"}
         ${danger && "border border-red-200 text-red-500 bg-red-100"}
         ${info && "border bg-yellow-50 border-yellow-200 text-yellow-400"}
-        ${primary && " border-orange-200 border bg-orange-100 text-orange-400"}
+        ${primary && " border-orange-200 border bg-orange-100 text-orange-default"}
         ${secondary && "text-gray-600 border-gray-300 border bg-gray-100"}
     `}
     >
@@ -57,8 +62,8 @@ const AlertBanner = ({
               ${success && "text-white border-green-300 bg-green-400 border"}
               ${danger && "text-white border-red-300 border bg-red-400"}
               ${info && "text-white border-yellow-300 border "}
-              ${primary && "text-orange-400 border-orange-300 border "}
-              ${secondary && "text-gray-500 border-gray-400 border !bg-gray-100"}
+              ${primary && "text-orange-default border-orange-300 border "}
+              ${secondary && "text-gray-500 border-gray-400 border !bg-white"}
           `}
           >
             {success && <FaCheck />}
@@ -67,13 +72,10 @@ const AlertBanner = ({
             {primary && <FaInfo />}
             {secondary && <FaInfo className="" />}
           </div>
-          <span className="">{text} {children}</span>
+          <div className="w-full">{text} {children}</div>
         </div>
-        { button && (
-          <button className="rounded-full ml-auto bg-white border border-gray-200 px-2 py-1" onClick={onClick} >
-            {buttonText}
-          </button>
-        )}
+       
+     
       </div>
   );
 };

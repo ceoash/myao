@@ -46,7 +46,7 @@ const Button: React.FC<ButtonProps> = ({
      text-center
      border-2 border-orange-500
      ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-     ${outline ? ' bg-transparent text-orange-500' : 'bg-orange-400 text-white'}
+     ${outline ? ' bg-transparent text-orange-500' : 'bg-orange-default text-white'}
      ${small ? 'text-xs px-3 py-2' : 'text-sm px-5 py-2.5'}
      ${small ? 'font-light' : 'font-medium'}
      ${danger && 'bg-red-400 border border-red-500 text-white'}

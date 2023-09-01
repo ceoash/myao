@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import getListingById from "@/actions/getListingById";
 import axios from "axios";
 import { Dash } from "@/templates/dash";
@@ -12,13 +12,12 @@ import { itemCategories } from "@/data/cateories";
 import CategoryInput from "@/components/inputs/CategoryInput";
 import Button from "@/components/dashboard/Button";
 import ImageUpload from "@/components/inputs/ImageUpload";
-import { io } from "socket.io-client";
-import { config } from "@/config";
-import { getSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import PriceInput from "@/components/inputs/PriceInput";
 import TextArea from "@/components/inputs/TextArea";
 import { BiCategory, BiCategoryAlt, BiUserCircle } from "react-icons/bi";
 import { IoPricetagOutline } from "react-icons/io5";
+import { useSocket } from "@/hooks/useSocket";
 
 enum STEPS {
   DESCRIPTION = 0,
@@ -31,29 +30,64 @@ interface EditListingProps {
   listing: any;
 }
 
+enum INPUTS {
+  TITLE = "title",
+  DESCRIPTION = "description",
+  PRICE = "price",
+  CATEGORY = "category",
+  IMAGE = "image",
+  PUBLIC = "public",
+  EMAIL = "email",
+  SELLERID = "sellerId",
+  BUYERID = "buyerId",
+} 
+
+enum LISTINGSTATE {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+}
+
+type INITLISTILNG = {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  email: string;
+  sellerId: string;
+  buyerId: string;
+};
+
 const EditListing: React.FC<EditListingProps> = ({ listing }) => {
-  const [title, setTitle] = useState(listing.title);
-  const [description, setDescription] = useState(listing.description);
-  const [price, setPrice] = useState(listing.price);
-  const [category, setCategory] = useState(listing.category);
-  const [img, setImg] = useState(listing?.image);
-  const [buyerId, setBuyerId] = useState(listing.buyerId);
-  const [location, setLocation] = useState(listing?.location);
-  const [email, setEmail] = useState(listing?.email);
-  const [isPublic, setIsPublic] = useState(listing.public);
-  const [sellerId, setSellerId] = useState(listing.sellerId);
-  const [selectedCategory, setSelectedCategory] = useState(listing.category);
+  const INIT = {
+    title: "",
+    description: "",
+    price: 0,
+    category: "",
+    image: "",
+    buyerId: "",
+    sellerId: "",
+    email: "",
+  };
+
+  const [ currentListing, setCurrentListing ] = useState<INITLISTILNG>(INIT);
+  const [isPublic, setIsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [isBuyer, setIsBuyer] = useState(true);
-  const [isLocation, setIsLocation] = useState(true);
-
   const [step, setStep] = useState(STEPS.DESCRIPTION);
-
   const [disabled, setDisabled] = useState(false);
-  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-  const listingDate = new Date(listing.date).toLocaleDateString;
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { emitEvent } = useSocket(session);
+
+  const { title, price, description, category, image: img, buyerId, sellerId, email } = currentListing;
+
+  useEffect(() => {
+    setCurrentListing(listing);
+  },[listing])
 
   const {
     register,
@@ -194,13 +228,12 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
     });
   };
 
-  const port = config.PORT;
-  const socket = io(port);
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     if (step !== STEPS.REVIEW) {
       return onNext();
     }
+    setIsSubmitting(true);
 
     await axios
       .put(`/api/updateListing/${listing.id}`, data)
@@ -210,8 +243,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         router.push(`/dashboard/offers/${listing.id}`);
         reset();
         setStep(STEPS.DESCRIPTION);
-        // socket.emit("update_listing", listing);
-        socket.emit(
+        // emitEvent("update_listing", listing);
+        emitEvent(
           "updated_activities",
           data.transactionOperations,
           data.listing.sellerId,
@@ -222,7 +255,9 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         console.log("Something went wrong!");
         toast.error("Something went wrong!");
       })
-      .finally(() => {});
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   let bodyContent = (
@@ -235,7 +270,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         id="description"
         label="Description"
         errors={errors}
-        disabled={isLoading}
+        disabled={isLoading || isSubmitting}
         register={register}
         rows={5}
         clearErrors={() => clearErrors("description")}
@@ -248,6 +283,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         formatPrice
         required
         register={register}
+        errors={errors}
+        disabled={isLoading || isSubmitting}
       />
     </div>
   );
@@ -370,7 +407,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
               )}
               <div className="ml-auto">
                 <Button
-                  disabled={disabled}
+                  disabled={disabled || isSubmitting}
+                  isLoading={isSubmitting}
                   label={actionLabel || "Submit"}
                   onClick={handleSubmit(onSubmit)}
                 />

@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import InfoCard from "./InfoCard";
 import Link from "next/link";
-import { Listing } from "@prisma/client";
 import { adviceArray } from "@/data/adviceData";
-import { getTime, set } from "date-fns";
 import { getTimeOfDay } from "@/utils/formatTime";
 
 interface StatsProps {
-  title: string;
+  title: string | React.ReactNode;
   totalStats: number;
   startOffer: () => void;
   friendsCount?: number;
@@ -71,7 +69,7 @@ const Stats = ({
   getTimeOfDay();
 
   return (
-    <div className="col-span-8 mb-8">
+    <div className="col-span-12 mb-8">
       <div className="flex justify-between gap-2 items-start">
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
         <Link href={`/dashboard/friends`} className="font-bold -mb-4 cursor-pointer">
@@ -94,6 +92,7 @@ const Stats = ({
           color={`orange`}
           span={`col-span-1`}
           className="bg-orange-100"
+          link="/dashboard/offers?sent=true"
         />
         <InfoCard
           title={`Offers Received`}
@@ -103,6 +102,7 @@ const Stats = ({
           color={`orange`}
           span={`col-span-1`}
           className="bg-orange-100"
+          link="/dashboard/offers?sent=true"
         />
         <InfoCard
           key={randomAdvice.key + Math.floor(Math.random() * 1000)}

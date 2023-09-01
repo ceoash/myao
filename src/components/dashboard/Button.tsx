@@ -5,7 +5,7 @@ import { FaTimes } from "react-icons/fa";
 import Spinner from "../Spinner";
 
 interface ButtonProps {
-  label?: string;
+  label?: string | React.ReactNode;
   onClick?: () => void;
   submit?: boolean;
   icon?: string;
@@ -20,6 +20,7 @@ interface ButtonProps {
   outline?: boolean;
   primary?: boolean;
   secondary?: boolean;
+  type?: "button" | "submit" | "reset";
   options?: {
     color?: string;
     span?: string;
@@ -51,6 +52,7 @@ const Button = ({
   outline,
   primary,
   secondary,
+  type
 }: ButtonProps) => {
   if (link) {
     return (
@@ -81,7 +83,7 @@ const Button = ({
               ? options?.color
                   ? options.color
                   : options?.primary
-                  ? "bg-white border border-orange-400 text-orange-400 hover:text-white hover:bg-orange-400"
+                  ? "bg-white border border-orange-default text-orange-default hover:text-white hover:bg-orange-default"
                   : options?.secondary
                   ? "bg-white border border-orange-200 text-gray-800 hover:text-white hover:bg-orange-200"
                   : options?.dark
@@ -91,7 +93,7 @@ const Button = ({
                 : options?.color
                 ? options.color
                 : options?.primary
-                ? "bg-orange-400 text-white border border-orange-400 hover:bg-orange-50 hover:text-orange-400"
+                ? "bg-orange-default text-white border border-orange-default hover:bg-orange-50 hover:text-orange-default"
                 : options?.secondary
                 ? "bg-orange-200 text-gray-800 border border-orange-200 hover:bg-white"
                 : options?.dark
@@ -121,7 +123,7 @@ const Button = ({
   return (
     <button
       onClick={onClick}
-      type={submit ? "submit" : "button"}
+      type={submit ? "submit" : type ? type : "button"}
       className={`
             inline-flex 
             items-center
@@ -139,7 +141,7 @@ const Button = ({
                 ? options?.color
                   ? options.color
                   : options?.primary
-                  ? "bg-white border border-orange-400 text-orange-400 hover:text-white hover:bg-orange-400"
+                  ? "bg-white border border-orange-default text-orange-default hover:text-white hover:bg-orange-default"
                   : options?.secondary
                   ? "bg-white border border-orange-200 text-gray-800 hover:text-white hover:bg-orange-200"
                   : options?.dark
@@ -149,7 +151,7 @@ const Button = ({
                 : options?.color
                 ? options.color
                 : options?.primary
-                ? "bg-orange-400 text-white border border-orange-400 hover:bg-orange-50 hover:text-orange-400"
+                ? "bg-orange-default text-white border border-orange-default hover:bg-orange-50 hover:text-orange-400"
                 : options?.secondary
                 ? "bg-orange-200 text-gray-800 border border-orange-200 hover:bg-white"
                 : options?.dark
@@ -163,23 +165,24 @@ const Button = ({
          
             ${
               cancel && outline ? 
-              "text-red-500  border border-red-500 bg-red-50 hover:!bg-red-500 hover:text-red-50 w-full" : 
+              "text-red-500  border border-orange-100  hover:!bg-red-500 hover:text-red-50 w-full" : 
               cancel ? 
               ` border-red-500 !bg-red-400 hover:!bg-red-400 text-white hover:text-red-100 w-full` :
               ""
             }
             ${
               accept && outline ? 
-              "text-green-500  border border-green-500 bg-green-50 hover:!bg-green-500 hover:text-green-50 w-full" : 
+              "text-green-500  border border-green-200 bg-green-50 hover:!bg-green-500 hover:text-green-50 w-full" : 
               accept ? 
               ` border-green-500 !bg-green-400 hover:!bg-green-400 text-white hover:text-green-100 w-full` :
               ""
             }
+            
             ${
               secondary ? 
-              "text-orange-500  border border-orange-500 bg-orange-50 hover:bg-orange-500 hover:text-orange-50" : 
+              "text-white  border border-orange-alt !bg-orange-alt hover:bg-orange-alt hover:text-orange-50" : 
               primary ? 
-              ` border-orange-500 !bg-orange-400 text-white hover:bg-white hover:text-orange-100 ` :
+              `  !bg-orange-default text-white hover:bg-white hover:text-orange-100 ` :
               ""
             }
 

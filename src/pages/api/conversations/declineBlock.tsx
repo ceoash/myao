@@ -10,31 +10,33 @@ export default async function accept(
   req: NextApiRequest,
   res: NextApiResponse<any | ErrorResponse>
 ) {
-      const { userBlockedId, friendBlockedId, conversationId } = req.body;
+      const { userBlockedId, friendBlockedId, conversationId, status } = req.body;
       const now = Date.now()
-      if (!userBlockedId || !friendBlockedId) {
-          return res.status(400).json({ error: "Missing necessary parameters." });
-      }
+      
+      try {
+        const conversation = await prisma.conversation.update({
+          where: { id: conversationId },
+          data: { status: status, updatedAt: new Date(now) },
+        });
+        
+        
+        if (!userBlockedId || !friendBlockedId) {
+          const newFriendshipBlock = await prisma.blocked.upsert({
+            where: { userBlockedId_friendBlockedId: { userBlockedId, friendBlockedId } },
+            update: {
+                userBlockedId,
+                friendBlockedId,
+            },
+            create: {
+                userBlockedId,
+                friendBlockedId,
+            },
+          });
 
-    try {
-      const conversation = await prisma.conversation.update({
-        where: { id: conversationId },
-        data: { status: "declined", updatedAt: new Date(now) },
-      });
+          res.status(200).json({conversation, newFriendshipBlock});
+        }
 
-      const newFriendshipBlock = await prisma.blocked.upsert({
-        where: { userBlockedId_friendBlockedId: { userBlockedId, friendBlockedId } },
-        update: {
-            userBlockedId,
-            friendBlockedId,
-        },
-        create: {
-            userBlockedId,
-            friendBlockedId,
-        },
-      });
-
-      res.status(200).json({conversation, newFriendshipBlock});
+      res.status(200).json({conversation});
     } catch (error) {
       console.error("Error updating conversation:", error);
       res.status(500).json({ error: "Something went wrong" });

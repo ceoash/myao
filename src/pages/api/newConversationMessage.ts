@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import { Conversation } from ".prisma/client";
+import { createActivity } from "@/prisma";
 
-interface ErrorResponse {
-  error: string;
-}
+interface ErrorResponse { error: string }
 
 export default async function ConversationsApi(
   req: NextApiRequest,
@@ -20,7 +19,6 @@ export default async function ConversationsApi(
       text, 
       id, 
       image, 
-      date, 
       type 
     } = req.body;
 
@@ -28,26 +26,19 @@ export default async function ConversationsApi(
       const conversation = await prisma.conversation.findUnique({
         where: { id: id },
         select: { 
-          participant1: true, 
-          participant2: true 
+          participant1: { include: {
+            activity: true
+          }}, 
+          participant2: { include: {
+            activity: true
+          }}, 
         }
       });
 
-     
-      if (!conversation) {
+      if (!conversation) { 
         res.status(404).json({ error: "Conversation not found" });
         return;
       }
-
-      const newActivity = { 
-        type: "New Conversation Message", 
-        message: "You have a message", 
-        action: `/dashboard/conversations?conversationId=${id}`, 
-        modelId: id,
-        userId: userId,
-        createdAt: now,
-        value: `${userId === conversation.participant1.id ? conversation.participant1.username : conversation.participant2.username}`,
-      };
 
       if(userId === conversation.participant1.id){
         const updatedConversation = await prisma.conversation.update({
@@ -60,18 +51,33 @@ export default async function ConversationsApi(
                 text: text,
                 image: image,
                 type: type || "text",
+                read: false,
+                receiverId: conversation.participant2.id
               },
             },
-            participant2: {
-              update: {
-                activities: [
-                  ...(Array.isArray(conversation.participant2.activities) ? conversation.participant2.activities : []), 
-                  newActivity
-                ]
-              }
-            }
           },
-          include: {
+          select: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            participant1Id: true,
+            participant2Id: true,
+            status: true,
+      
+            participant1: {
+              select: {
+                id: true,
+                username: true,
+                options: true,
+                profile: true,
+                activity: {
+                  take: 4,
+                  orderBy: {
+                    createdAt: "desc",
+                  }
+                },
+              },
+            },
             directMessages: {
               include: {
                 user: {
@@ -83,6 +89,17 @@ export default async function ConversationsApi(
             },
           },
         });
+
+        const notification  = await prisma.notification.create({
+          data: {
+            userId: updatedConversation.participant2Id || "",
+            message: `Message received from ${updatedConversation.participant1.username}}`,
+            action: `/dashboard/conversations?conversationId=${updatedConversation.id}`,
+            type: "conversation",
+            read: false,
+          }
+
+        })
         res.status(200).json(updatedConversation);
 
       } else {
@@ -97,35 +114,53 @@ export default async function ConversationsApi(
                 text: text,
                 image: image,
                 type: type || "text",
+                read: false,
+                receiverId: conversation.participant1.id
               },
-            },
-            participant1: {
-              update: {
-                activities: [
-                  ...(Array.isArray(conversation.participant1.activities) ? conversation.participant1.activities : []), 
-                  newActivity
-                ]
-              }
             },
             
           },
           include: {
             directMessages: {
-              include: {
+              select: {
+                id: true,
+                userId: true,
+                text: true,
+                image: true,
+                type: true,
+                createdAt: true,
                 user: {
-                  include: {
+                  select: {
+                    id: true,
+                    username: true,
+                    options: true,
                     profile: true,
                   },
                 },
               },
             },
+            participant2: {
+              select: {
+                id: true,
+                username: true,
+                options: true,
+                profile: true
+              },
+            },
           },
         });
+        const notification  = await prisma.notification.create({
+          data: {
+            userId: updatedConversation.participant1Id || "",
+            message: `Message received from ${updatedConversation.participant2.username}`,
+            action: `/dashboard/conversations?conversationId=${updatedConversation.id}`,
+            type: "conversation",
+            read: false,
+          }
+
+        })
         res.status(200).json(updatedConversation);
       }
-
-      
-
      
     } catch (error) {
       console.error("Error creating message:", error);

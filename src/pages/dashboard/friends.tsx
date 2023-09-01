@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";;
 import { getSession } from "next-auth/react";
 import FriendsWidget from "@/components/widgets/FriendsWidget";
-import getFriendsByUserId from "@/actions/getFriendsByUserId";
 import { User } from "@prisma/client";
+import getCurrentUser from "@/actions/getCurrentUser";
+import reducer from "@/reducer/friends";
+import { useSocketContext } from "@/context/SocketContext";
 
 interface IndexProps {
   friends: User[];
@@ -16,7 +18,36 @@ const Index = ({
   friends,
   session,
 }: IndexProps) => {
-    const [friendsList, setFriendsList] = useState<User[]>(friends);
+  const [state, dispatch] = useReducer(reducer, {
+    friends: []
+  })
+
+  const socket = useSocketContext();
+
+  useEffect(() => {
+    dispatch({ type: "init", payload: friends });
+    
+    socket.on('friend', data => {
+      const { action, friend } = data;
+      // const { id } = friend;
+      // console.log("friend", friend);
+
+      if (action === 'accept') {
+        const participant = friend.followerId === session?.user.id ? friend.followingId : friend.followerId;
+        dispatch({ type: action, payload: participant });
+        return;
+      } else { 
+        dispatch({ type: action, payload: friend });
+        return;
+      }
+    });
+
+    return () => {
+      socket.off('friend');
+    }
+  }, [session?.user.id]);
+
+
   return (
     <Dash
       meta={
@@ -29,12 +60,12 @@ const Index = ({
       <div>
         <div className="w-full mx-auto px-4 sm:px-8">
           <div className="pt-6">
-            <div>
-              <h2 className="text-2xl font-semibold leading-tight">
+            <div className="pb-8">
+              <h3 >
                 Your Friends {}
-              </h2>
+              </h3>
             </div>
-            <FriendsWidget session={session} friendsList={friendsList} setFriendsList={setFriendsList}  />
+            <FriendsWidget session={session} friendsList={state.friends} dispatch={dispatch}  />
           </div>
           <div className="flex justify-center h-full">
             <ul className="flex list-none mb-4">
@@ -60,7 +91,12 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
       };
     }
 
-    const friends = await getFriendsByUserId(session.user.id);
+    const user = await getCurrentUser(session);
+
+    let friends = user?.friends;
+    let blocked = user?.blockedFriends;
+    if(!friends) friends = [];
+    if(!blocked) blocked = [];
 
     return {
       props: {

@@ -24,7 +24,7 @@ const SetExpiryDate = ({id}: any) => {
     <div className="flex">
       <DatePicker selected={selectedDate} onChange={(date) => setSelectedDate(date)} placeholderText="Select expiry date" />
       {selectedDate && (
-        <button onClick={handleSaveDate} className="ml-2 bg-orange-400 px-1 text-sm text-white rounded">
+        <button onClick={handleSaveDate} className="ml-2 bg-orange-default px-1 text-sm text-white rounded">
           Save
         </button>
       )}

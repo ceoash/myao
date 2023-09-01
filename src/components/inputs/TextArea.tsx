@@ -67,6 +67,10 @@ const TextArea: React.FC<TextAreaProps> = ({
           my-2
           rounded-lg
           py-2
+          focus:border-0
+          focus:ring-0
+          focus:ring-offset-0
+          focus:ring-offset-transparent
           ${username && "lowercase"}
           ${formatPrice ? "pl-10" : "pl-4"}
           ${

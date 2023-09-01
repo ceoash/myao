@@ -64,7 +64,6 @@ async function getUsernameSuggestions(username: string): Promise<string[]> {
       username: username[0],
       hashedPassword: hashedPassword,
       updatedAt: new Date(now),
-      activities: [],
       verified: false,
       activated: false,
     };

@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { FieldValues, useForm } from "react-hook-form";
 import axios from "axios";
 import { useRef } from "react";
 import ImageTextArea from "../inputs/ImageTextArea";
 import ChatMessage from "./ChatMessage";
-
-import io, { Socket } from "socket.io-client";
-import { config } from "@/config";
-import { Listing, User } from "@prisma/client";
-import { is } from "date-fns/locale";
+import { useSocketContext } from "@/context/SocketContext";
 
 interface MessageProps {
   buyerId: string;
@@ -18,63 +14,57 @@ interface MessageProps {
   id: string;
 }
 
-interface SafeListing extends Listing{
-  messages: MessageProps[];
-  buyer: User;
-  seller: User;
-}
-
 interface ListingChatProps {
-  listing: SafeListing;
+  id: string;
+  buyerId: string;
+  sellerId: string;
   user: any;
   disabled?: boolean;
   session: any;
   messages: MessageProps[];
   setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
-  socketRef: React.MutableRefObject<Socket | undefined>;
-
 }
 
-const ListingChat = ({ listing, user, disabled, session, messages, setMessages, socketRef }: ListingChatProps) => {
+const ListingChat = ({ id, session, messages, buyerId, sellerId }: ListingChatProps) => {
+  
   const [isLoading, setIsLoading] = useState(false);
-  const now = new Date();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const socket = useSocketContext() 
 
   const {
-    register,
-    formState: { errors },
-    reset,
-  } = useForm<FieldValues>({
-    defaultValues: {
-      message: "",
-      image: "",
-    },
-  });
+    formState: { errors }, reset
+  } = useForm<FieldValues>({ defaultValues: { message: "", image: "" } });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSubmit = async (image: string, text: string) => {
+    setIsSubmitting(true);
+    
     try {
-      // Send message
-      const response = await axios.post("/api/newOfferMessage", {
-        listingId: listing.id,
-        buyerId: listing.buyerId,
-        sellerId: listing.sellerId,
+      const data = {
+        listingId: id,
+        buyerId: buyerId,
+        sellerId: sellerId,
         message: text,
         image: image,
-        userId: session.user.id,
-      });
+        userId: session?.user.id,
+      };
 
-      if (response.status === 200) {
+      await axios.post("/api/newOfferMessage", data).then((response) => {
         const listing = response.data;
-        const newMessage = listing.messages[listing.messages.length - 1];
-        console.log(newMessage);
-        socketRef.current?.emit("new_listing_message", newMessage);
-      }
-
-      reset();
+        const newMessage = response.data.messages[response.data.messages.length - 1];
+        const message = {...newMessage};
+        socket.emit("new_listing_message", message);
+        reset();
+      })
+      .catch((error) => console.log(error))
+      .finally(() => setIsSubmitting(false));
+      
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -82,17 +72,17 @@ const ListingChat = ({ listing, user, disabled, session, messages, setMessages, 
 
   return (
     <>
-    <div className="flex flex-col flex-auto flex-shrink-0  bg-white h-full p-4 pt-6 border border-gray-200 rounded-lg">
-      <div className="flex flex-col h-full mb-4">
-        <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-auto flex-shrink-0  bg-white -mt-6 border border-t-0 border-gray-200">
+      <div className="flex flex-col">
+        <div className="flex flex-col">
           <div className="md:grid md:grid-cols-12 gap-y-2">
-            <div className="col-span-12 flex justify-between items-center my-2">
-              <div className="border-t border-gray-200 h-1 w-full"></div>
-              <div className="lg:w-auto lg:whitespace-nowrap text-center mx-4 text-sm text-gray-500 hidden lg:block">
+            <div className="col-span-12 flex justify-between items-center my-6">
+              <div className="border-t border-gray-200 h-1 flex-1"></div>
+              <div className="lg:w-auto lg:whitespace-nowrap text-center mx-2 text-sm text-gray-500 block  flex-grow">
                 We are here to protect you from fraud please do not share your
                 personal information
               </div>
-              <div className="border-t border-gray-200 w-full hidden lg:block"></div>
+              <div className="border-t border-gray-200 flex-1"></div>
             </div>
             {isLoading ? <div className="col-span-12 flex justify-between items-center"> Loading... </div> : !messages ? (
               <div className="col-span-12 flex justify-between items-center">
@@ -101,8 +91,8 @@ const ListingChat = ({ listing, user, disabled, session, messages, setMessages, 
             ) : (
               <div
                 id="messages"
-                className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white col-span-12 rounded-lg"
-                style={{ height: "calc(100vh - 28rem)" }}
+                className="space-y-4 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white col-span-12 rounded-lg px-4 pb-4"
+                style={{ height: "calc(100vh - 34rem)" }}                
               >
                 {messages.map((message, index) => (
                   <ChatMessage
@@ -119,11 +109,10 @@ const ListingChat = ({ listing, user, disabled, session, messages, setMessages, 
         </div>
       </div>
     </div>
-      <div className="">
-
-      <ImageTextArea onSubmit={handleSubmit} />
+      <div className="px-4 pt-1 bg-gray-50 rounded-b-lg border border-gray-200 border-t-0">
+        <ImageTextArea onSubmit={handleSubmit} isLoading={isSubmitting} />
       </div>
-      </>
+    </>
   );
 };
 

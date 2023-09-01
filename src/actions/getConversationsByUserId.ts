@@ -77,52 +77,7 @@ const transformUser = (user: any): SafeUser => {
 };
 
 const transformConversation = (conversation: any, userId: string): any => {
-  const participantId =
-    conversation.participant1Id === userId
-      ? conversation.participant2Id
-      : conversation.participant1Id;
-
-  if (conversation.participant1Id === userId) {
-    conversation.participant1.followers.map(
-      (follower: { followerId: string }) => friends.push(follower.followerId)
-    );
-    conversation.participant1.followings.map(
-      (following: { followingId: string }) =>
-        friends.push(following.followingId)
-    );
-    conversation.participant1.blockedFriends.map(
-      (blocker: { friendBlockedId: string }) =>
-        blocked.push(blocker.friendBlockedId)
-    );
-  }
-
-  if (conversation.participant2Id === userId) {
-    conversation.participant2.followers.map(
-      (follower: { followerId: string }) => friends.push(follower.followerId)
-    );
-    conversation.participant2.followings.map(
-      (following: { followingId: string }) =>
-        friends.push(following.followingId)
-    );
-    conversation.participant2.blockedFriends.map(
-      (blocker: { friendBlockedId: string }) =>
-        blocked.push(blocker.friendBlockedId)
-    );
-  }
-
-  return {
-    ...conversation,
-    id: conversation.id,
-    participant1Id: conversation.participant1Id,
-    participant2Id: conversation.participant2Id,
-    participant1: transformUser(conversation.participant1),
-    participant2: transformUser(conversation.participant2),
-    createdAt: formatDate(conversation.createdAt),
-    updatedAt: formatDate(conversation.updatedAt),
-    friendStatus: friends.includes(participantId),
-    blockedStatus: blocked.includes(participantId),
-    directMessages: conversation.directMessages.map(transformDirectMessage),
-  };
+  
 };
 
 async function getUser(userId: string): Promise<any> {
@@ -153,7 +108,8 @@ async function getUser(userId: string): Promise<any> {
 
 export default async function getConversationsByUserId(
   userId: string,
-  currentUser?: any
+  currentUser?: any,
+  limit?: number
 ): Promise<SafeConversation[]> {
 
   const user = currentUser ? currentUser : await getUser(userId);
@@ -161,6 +117,8 @@ export default async function getConversationsByUserId(
   if (!user) {
     throw new Error("No user provided");
   }
+
+  
 
   const conversations = await prisma.conversation.findMany({
     where: {
@@ -178,12 +136,28 @@ export default async function getConversationsByUserId(
       },
     },
     orderBy: { updatedAt: "desc" },
+    take: limit || 10,
     include: {
       directMessages: {
         orderBy: { createdAt: "desc" },
-        take: 5,
+        take: limit || 5,
         include: {
-          listing: true,
+          listing: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              price: true,
+              image: true,
+             
+              userId: true,
+              sellerId: true,
+              status: true,
+              buyerId: true,
+              category: true,
+              events: true,
+            }
+          },
           user: {
             select: {
               id: true,
@@ -263,7 +237,72 @@ export default async function getConversationsByUserId(
   });
 
   if (!conversations) return [];
-  return conversations.map((conversation) =>
-    transformConversation(conversation, userId)
-  );
+  const unreadCountsPromises = conversations.map(conversation => 
+    prisma.directMessage.aggregate({
+        _count: {
+            id: true,
+        },
+        where: {
+            conversationId: conversation.id,
+            read: false,
+            userId: { not: userId} 
+            
+        }
+    })
+);
+
+const unreadCountsResults = await Promise.all(unreadCountsPromises);
+
+const transaction = conversations.map((conversation, index) => {
+  const participantId =
+    conversation.participant1Id === userId
+      ? conversation.participant2Id
+      : conversation.participant1Id;
+
+  if (conversation.participant1Id === userId) {
+    conversation.participant1.followers.map(
+      (follower: { followerId: string }) => friends.push(follower.followerId)
+    );
+    conversation.participant1.followings.map(
+      (following: { followingId: string }) =>
+        friends.push(following.followingId)
+    );
+    conversation.participant1.blockedFriends.map(
+      (blocker: { friendBlockedId: string }) =>
+        blocked.push(blocker.friendBlockedId)
+    );
+  }
+
+  if (conversation.participant2Id === userId) {
+    conversation.participant2.followers.map(
+      (follower: { followerId: string }) => friends.push(follower.followerId)
+    );
+    conversation.participant2.followings.map(
+      (following: { followingId: string }) =>
+        friends.push(following.followingId)
+    );
+    conversation.participant2.blockedFriends.map(
+      (blocker: { friendBlockedId: string }) =>
+        blocked.push(blocker.friendBlockedId)
+    );
+  }
+
+  return {
+    ...conversation,
+    id: conversation.id,
+    participant1Id: conversation.participant1Id,
+    participant2Id: conversation.participant2Id,
+    participant1: transformUser(conversation.participant1),
+    participant2: transformUser(conversation.participant2),
+    createdAt: formatDate(conversation.createdAt),
+    updatedAt: formatDate(conversation.updatedAt),
+    friendStatus: friends.includes(participantId),
+    blockedStatus: blocked.includes(participantId),
+    directMessages: conversation.directMessages.map(transformDirectMessage),
+    unreadCount: unreadCountsResults[index]._count.id 
+  };
+
+});
+
+  return transaction
 }

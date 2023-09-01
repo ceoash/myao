@@ -11,6 +11,7 @@ export default async function getConversationIdByParticipantIds(
     res: NextApiResponse<any | ErrorResponse>
 ) {    
     if (req.method === "POST") {
+        
         let { userId, participantId } = req.body;
 
         if (typeof userId !== 'string') {
@@ -19,7 +20,6 @@ export default async function getConversationIdByParticipantIds(
         if (typeof participantId !== 'string') {
             return res.status(400).json({ error: "Invalid participant ID." });
         }
-
 
         try {
             let conversation
@@ -36,9 +36,18 @@ export default async function getConversationIdByParticipantIds(
                 orderBy: { createdAt: 'asc' },
             });
 
-            
+            if(conversation?.id){
 
-            if(!conversation?.id) {
+                conversation = await prisma.conversation.update({
+                    where: { id: conversation.id },
+                    data: { status: "accepted" }
+                })
+
+                res.status(200).json(conversation);
+            }
+
+            else {
+
                 conversation = await prisma.conversation.create({
                     data: {
                         participant1Id: userId,
@@ -49,10 +58,6 @@ export default async function getConversationIdByParticipantIds(
                        },
                 })
 
-               
-                res.status(200).json(conversation);
-            } else {
-               
                 res.status(200).json(conversation);
             }
 

@@ -117,7 +117,7 @@ const Connect = ({ user }: ConnectProps) => {
           <div className="">
             <h2 className="text-center -mb-[1px]">Email Sent</h2>
             <div>
-              <BiCheckCircle className="text-orange-400 text-[120px] mx-auto mb-4 mt-2" />
+              <BiCheckCircle className="text-orange-default text-[120px] mx-auto mb-4 mt-2" />
             </div>
 
             <p className="text-gray-600 text-sm text-center pt-2">

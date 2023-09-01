@@ -5,6 +5,7 @@ import Button from "../Button";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { User } from "@prisma/client";
+import { BiChevronRight, BiEnvelope, BiMailSend } from "react-icons/bi";
 
 interface InviteFriendProps {
   className?: string;
@@ -35,12 +36,12 @@ const InviteFriend = ({ className, user}: InviteFriendProps) => {
   }
   return (
     <div
-      className={`rounded-xl border bg-orange-50 border-orange-100 mb-6  p-6 xl:flex-1 ${
+      className={`rounded-xl border bg-white border-gray-200 mb-6  p-6 xl:flex-1 ${
         className && className
       }`}
     >
-      <div className="  items-center justify-between gap-2 mb-4">
-        <h3>Invite a friend</h3>
+      <div className="items-center justify-between gap-2 mb-4">
+        <h4>Invite a friend</h4>
         <p>Know a friend who'd enjoy our platform? Invite them</p>
       </div>
       <div className="flex flex-nowrap">
@@ -49,10 +50,10 @@ const InviteFriend = ({ className, user}: InviteFriendProps) => {
             id="email"
             type="email"
             register={register}
-            placeholder="Enter the invitees email address"
+            placeholder="joe@myao.life"
             inline={true}
             onClick={handleSubmit(onSubmit)}
-            btnText="Invite"
+            btnText={<BiChevronRight className="text-2xl" />}
           />
          
         </form>

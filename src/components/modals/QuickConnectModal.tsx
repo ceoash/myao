@@ -173,7 +173,7 @@ const QuickConnectModal = () => {
                   radio
                   id="buyer"
                   label="Buyer"
-                  {...register("accountType", { required: true })}
+                  {...register("accountType" )}
                   checked={checked.buyer}
                   onClick={() => handleCheck}
                 />
@@ -182,7 +182,7 @@ const QuickConnectModal = () => {
                   radio
                   id="seller"
                   label="Seller"
-                  {...register("accountType", { required: true })}
+                  {...register("accountType")}
                   checked={checked.seller}
                   onClick={() => handleCheck}
                 />

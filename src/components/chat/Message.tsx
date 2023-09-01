@@ -128,26 +128,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                     <div className="text-sm mt-1">{StatusChecker(message?.listing?.status) }</div>
 
                       
-                      <div className="flex justify-between mb-4 mt-4 lg:mt-auto">
-                        <div className="flex gap-2 items-center font-bold text-sm">
-                          <img
-                            src={
-                              message?.listing.sellerId === session?.user.id
-                                ? message?.listing.buyer?.profile?.image
-                                : message?.listing.seller?.profile?.image ||
-                                  "/images/placeholders/avatar.png"
-                            }
-                            className="rounded-full border border-orange-50 bg-orange-50 p-[1px] w-[30px] h-[30px] obj"
-                          />
-                          <p>
-                            {message?.listing.sellerId === session?.user.id
-                              ? message?.listing.buyer?.username
-                              : message?.listing.seller?.username ||
-                                "unkown user"}
-                          </p>
-                        </div>
                      
-                      </div>
                     </div>
                   </div>
                 )}

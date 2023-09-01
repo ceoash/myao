@@ -179,7 +179,7 @@ export default async function listingsApi(
         const transactionResult = await prisma.$transaction(
           transactionOperations
         );
-        res.status(200).json({ listing, transactionResult });
+        res.status(200).json({ listing, transactionResult, message });
       } catch (error) {
         console.error("Transaction failed: ", error);
         res

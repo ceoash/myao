@@ -287,7 +287,7 @@ const OfferModal = () => {
       return onNext();
     }
     if (status === "authenticated" && session?.user) {
-      data.sellerId = session.user.id;
+      data.sellerId = session?.user.id;
     } else { return }
 
     if (!foundUser) {
@@ -321,6 +321,8 @@ const OfferModal = () => {
         setStep(STEPS.TYPE);
         offerModal.onClose();
 
+        console.log("response", response.data)
+
         socket.emit(
           "new_listing",
           response.data.listing,
@@ -329,6 +331,7 @@ const OfferModal = () => {
         );
 
         if (response.data.message) { 
+          console.log("new", response.data.message)
           socket.emit("new_message", response.data.message, session?.user.id, foundUser.id);
         }
 

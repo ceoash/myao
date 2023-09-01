@@ -19,11 +19,8 @@ import AlertBanner from "@/components/dashboard/AlertBanner";
 import {
   Conversation,
   IDirectMessage,
-  IUser,
 } from "@/interfaces/authenticated";
-import { useSocket } from "@/hooks/useSocket";
 import { useSocketContext } from "@/context/SocketContext";
-import { response } from "express";
 import { useUnreadMessages } from "@/context/UnreadMessagesContext";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import useConfirmationModal from "@/hooks/useConfirmationModal";

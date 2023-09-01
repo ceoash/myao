@@ -100,6 +100,7 @@ export const authOptions: AuthOptions = {
           },
           session: ({ session, token }) => ({
             ...session,
+            name: 'myao_session_v2',
             user: {
               ...session.user,
               id: token.sub,
@@ -117,7 +118,7 @@ export const authOptions: AuthOptions = {
         strategy: "jwt",
     },
 
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: 'temp-secret-myao-v2',
     
 }
 export default NextAuth(authOptions)

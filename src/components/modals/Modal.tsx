@@ -150,6 +150,8 @@ const Modal: React.FC<ModalProps> = ({
                     bg-white
                     outline-none
                     focus:outline-none
+                    overflow-y-auto
+                    z-50
                 ">
                     {/* HEADER */}
                     <div 

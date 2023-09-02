@@ -210,7 +210,7 @@ const Index = ({ listing, session }: PageProps) => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [size, mobileView]);
 
   const handleAddImages = () => {
     edit.onOpen(session?.user, currentListing, "images", {});

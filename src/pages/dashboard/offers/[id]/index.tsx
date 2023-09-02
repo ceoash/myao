@@ -141,6 +141,7 @@ const Index = ({ listing, session }: PageProps) => {
   const { user: sessionUser } = session;
   const router = useRouter();
   const [currentListing, setCurrentListing] = useState<any>({});
+  const [size, setSize] = useState(0);
 
   const edit = useOfferEditModal();
   const now = Date.now();
@@ -189,10 +190,13 @@ const Index = ({ listing, session }: PageProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth <= 768 && window.innerWidth !== size) {
+        if (tab !== "overview") setTab("overview");
         setTab("overview");
-      } else {
+        setSize(window.innerWidth);
+      } else if(window.innerWidth >= 768 && window.innerWidth !== size && tab === "overview"){
         setTab("details");
+        setSize(window.innerWidth);
       }
     }
 

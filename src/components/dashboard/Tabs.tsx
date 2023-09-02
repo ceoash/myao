@@ -45,6 +45,7 @@ const Tabs = ({
         border-t
         rounded-t-lg active
         px-3
+        text-sm
         md:px-4 py-2
         inline-block
         whitespace-nowrap

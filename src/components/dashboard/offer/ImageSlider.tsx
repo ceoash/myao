@@ -42,7 +42,7 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
   }, []);
 
   return (
-    <div className="relative flex-grow h-auto">
+    <div className="relative overflow-auto flex-grow h-auto">
       <Swiper
         spaceBetween={10}
         thumbs={{ swiper: thumbsSwiperRef.current }}
@@ -55,7 +55,6 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
           </SwiperSlide>
         ))}
       </Swiper>
-      <div className="absolute swiper-thumbs bottom-4 flex">
 
       <Swiper
         onSwiper={(swiper) => {
@@ -66,20 +65,20 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
         freeMode={true}
         watchSlidesProgress={true}
         modules={[FreeMode, Navigation, Thumbs]}
-        className="mx-2"
+        className="mx-2  z-50 w-full bottom-0"
       >
+
         {imagesStore.map((image, i) => (
-          <SwiperSlide key={i} className="bg-white rounded-md border border-gry-200" >
+          <SwiperSlide key={i} className="bg-white rounded-md border border-gry-200 z-50" >
             <img src={image} className="" />
           </SwiperSlide>
           
         ))}
-        <SwiperSlide key={"0"} className="bg-white rounded-md border border-gry-200" onClick={handleAddImages} >
+        <SwiperSlide key={"0"} className="bg-white rounded-md border border-gry-200 z-50" onClick={handleAddImages} >
             <Image src={plus} layout="fill" objectFit="cover" alt="plus icon" className="text-gray-300" />
           </SwiperSlide>
       </Swiper>
       </div>
-    </div>
   );
 };
 

@@ -146,13 +146,6 @@ const Index = ({ listing, session }: PageProps) => {
   const now = Date.now();
   const socket = useSocketContext();
 
-
-  
-
-  if (!sessionUser || !listing) return <Loading />;
-
-  console.log("listing", listing);
-
   const [reviews, setReviews] = useState<{
     userReview: IReview;
     participantReview: IReview;
@@ -160,6 +153,27 @@ const Index = ({ listing, session }: PageProps) => {
     userReview: {} as IReview,
     participantReview: {} as IReview,
   });
+
+  if (!sessionUser || !listing) return <Loading />;
+
+  const mainTabs = [
+    { id: "details", label: "Details", primary: true },
+    { id: "chat", label: "Chat", primary: true },
+    { id: "activity", label: "Activity" },
+    { id: "bids", label: "Bid History", primary: true },
+  ];
+
+  const secondaryTabs = [
+    { id: "description", label: "Description", primary: true },
+    { id: "photos", label: "Photos", primary: true },
+    {
+      id: "user",
+      label: `${
+        sessionUser?.id === currentListing.sellerId ? "Buyer" : "Seller"
+      } Details`,
+      primary: true,
+    },
+  ];
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -170,40 +184,31 @@ const Index = ({ listing, session }: PageProps) => {
   useEffect(() => {
     if (isMounted) {
       setCurrentListing(listing);
-      toast.success("Welcome to your offer!");
     }
   }, [isMounted]);
 
-  const options = {
-    pickup: currentListing?.options?.pickup || "",
-    condition: currentListing?.options?.condition || "",
-    location: {
-      city: currentListing?.options?.location?.city || "",
-      region: currentListing?.options?.location?.region || "",
-    },
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setTab("overview");
+      } else {
+        setTab("details");
+      }
+    }
+
+    // Initial check
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const handleAddImages = () => {
     edit.onOpen(session?.user, currentListing, "images", {});
   };
-
-  const mainTabs = [
-    { id: "details", label: "Details" },
-    { id: "chat", label: "Chat" },
-    { id: "activity", label: "Activity" },
-    { id: "bids", label: "Bid History" },
-  ];
-
-  const secondaryTabs = [
-    { id: "description", label: "Description" },
-    { id: "photos", label: "Photos" },
-    {
-      id: "user",
-      label: `${
-        sessionUser?.id === currentListing.sellerId ? "Buyer" : "Seller"
-      } Details`,
-    },
-  ];
 
   useEffect(() => {
     if (activeSubTab === "user") {
@@ -587,7 +592,7 @@ const Index = ({ listing, session }: PageProps) => {
 
   const MainBody = (
     <>
-      <div className="h-full flex flex-col mb-6">
+      <div className="h-full flex flex-col  pt-6">
         <Header
           status={status}
           currentBid={currentBid}
@@ -603,7 +608,7 @@ const Index = ({ listing, session }: PageProps) => {
         />
 
         {activeSubTab === "description" && (
-          <div className="h-full flex flex-col bg-white p-4 pt-0 border rounded-b-lg border-gray-200 border-t-0 transition-all ease-in-out duration-200">
+          <div className="h-full flex flex-col bg-white p-4 pt-0 border rounded-b-lg rounded-tr-lg border-gray-200 border-t-0 transition-all ease-in-out duration-200">
             <p className="mb-auto mt-4 md:mx-1 flex-grow leading-relaxed first-letter:uppercase pb-6 relative">
               {status !== "cancelled" &&
                 status !== "accepted" &&
@@ -621,84 +626,84 @@ const Index = ({ listing, session }: PageProps) => {
                 )}
               {currentListing.description}
             </p>
-            <div className="flex gap-2 justify-between bg-gray-default border border-gray-200 rounded-xl mt-4 p-4 ">
-              <div className="block">
-                {currentBid.currentPrice &&
-                  currentBid.currentPrice !== "" &&
-                  currentBid.currentPrice !== "0" && (
-                    <div className="text-sm">
-                      <div className="">
-                        Start price by
-                        <Link
-                          href={`/dashboard/profile/${currentBid.byUserId}`}
-                          className="underline ml-[2px]"
-                        >
-                          {listing.user.username}
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                <div className="font-extrabold ">
-                  {currentBid.currentPrice &&
-                  currentBid.currentPrice !== "0" &&
-                  currentBid.currentPrice !== "" ? (
-                    `£${Number(currentBid.currentPrice).toLocaleString()}`
-                  ) : listing.price !== "" && listing.price !== "0" ? (
-                    `£${Number(
-                      listing.price === "0" ? "0.00" : listing.price
-                    ).toLocaleString()}`
-                  ) : (
-                    <h5 className="underline mt-2">Open Offer {status}</h5>
-                  )}
-                </div>
-              </div>
-
-              <div className="block">
-                {currentBid.currentPrice &&
-                  currentBid.currentPrice !== "" &&
-                  currentBid.currentPrice !== "0" && (
-                    <div className="text-right text-sm">
-                      {status === "accepted" ? (
-                        <div className="mb-0.5">Agreed price</div>
-                      ) : (
-                        <div className="text-right mb-0.5">
-                          Bid by
-                          <Link
+            {currentBid.currentPrice !== "0" &&
+              currentBid.currentPrice !== "" && (
+                <div
+                  className={`flex gap-2 justify-between bg-gray-default border border-gray-200 rounded-xl mt-4 p-4 `}
+                >
+                  <div className="block">
+                    {currentBid.currentPrice && (
+                      <div className="text-xs font-bold">
+                          Start price by <Link
                             href={`/dashboard/profile/${currentBid.byUserId}`}
-                            className="underline ml-[2px]"
+                            className="underline"
                           >
-                            {currentBid.byUsername}
+                            {listing.user.username}
                           </Link>
+                          
+                      </div>
+                    )}
+                    <div className="font-extrabold ">
+                      {currentBid.currentPrice &&
+                      currentBid.currentPrice !== "0" &&
+                      currentBid.currentPrice !== "" ? (
+                        `£${Number(currentBid.currentPrice).toLocaleString()}`
+                      ) : listing.price !== "" && listing.price !== "0" ? (
+                        `£${Number(
+                          listing.price === "0" ? "0.00" : listing.price
+                        ).toLocaleString()}`
+                      ) : (
+                        <h5 className="underline mt-2">Open Offer {status}</h5>
+                      )}
+                    </div>
+                    
+                  </div>
+
+                  <div className={`block`}>
+                    {currentBid.currentPrice && (
+                      <div className="text-right text-xs font-bold">
+                        {status === "accepted" ? (
+                          <div className="mb-0.5">Agreed price</div>
+                        ) : (
+                          <div className="text-right mb-0.5">
+                            Last bid by
+                            <Link
+                              href={`/dashboard/profile/${currentBid.byUserId}`}
+                              className="underline ml-[2px]"
+                            >
+                              {currentBid.byUsername}
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="font-extrabold text-right">
+                      {currentBid.currentPrice &&
+                      currentBid.currentPrice !== "0" &&
+                      currentBid.currentPrice !== "" ? (
+                        `£${Number(
+                          currentBid.currentPrice === "0" ||
+                            currentBid.currentPrice === ""
+                            ? "0.00"
+                            : currentBid.currentPrice
+                        ).toLocaleString()}`
+                      ) : (listing.price !== "" && listing.price !== "0") ||
+                        status === "cancelled" ||
+                        status === "rejected" ? (
+                        `£${Number(
+                          listing.price === "0" || listing.price === ""
+                            ? "0.00"
+                            : listing.price
+                        ).toLocaleString()}`
+                      ) : (
+                        <div className="p-1 rounded-lg text-sm border-lg border border-gray-200 bg-gray-50 mt-2 text-orange-alt">
+                          Open Offer
                         </div>
                       )}
                     </div>
-                  )}
-                <div className="font-extrabold text-right">
-                  {currentBid.currentPrice &&
-                  currentBid.currentPrice !== "0" &&
-                  currentBid.currentPrice !== "" ? (
-                    `£${Number(
-                      currentBid.currentPrice === "0" ||
-                        currentBid.currentPrice === ""
-                        ? "0.00"
-                        : currentBid.currentPrice
-                    ).toLocaleString()}`
-                  ) : (listing.price !== "" && listing.price !== "0") ||
-                    status === "cancelled" ||
-                    status === "rejected" ? (
-                    `£${Number(
-                      listing.price === "0" || listing.price === ""
-                        ? "0.00"
-                        : listing.price
-                    ).toLocaleString()}`
-                  ) : (
-                    <div className="p-1 rounded-lg text-sm border-lg border border-gray-200 bg-gray-50 mt-2 text-orange-alt">
-                      Open Offer
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </div>
+              )}
           </div>
         )}
         {activeSubTab === "photos" && (
@@ -743,8 +748,14 @@ const Index = ({ listing, session }: PageProps) => {
 
   return (
     listing && (
-      <Dash meta={<Meta title="" description="" />}>
-        <div className=" flex flex-col px-4 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
+      <Dash
+        pageTitle={listing.title}
+        optionalData={
+          <span className="hidden md:block">{StatusChecker(status)}</span>
+        }
+        meta={<Meta title={listing.title} description={listing.description} />}
+      >
+        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
           <OfferAlerts
             handleStatusChange={handleStatusChange}
             session={session}
@@ -754,7 +765,7 @@ const Index = ({ listing, session }: PageProps) => {
             listing={listing}
             handleFinalise={handleFinalise}
           />
-          <div className="w-full col-span-6 xl:col-span-8  flex flex-col">
+          <div className="w-full col-span-6 xl:col-span-8  flex flex-col mt-6 md:mt-0">
             <Tabs
               status={status}
               tabs={mainTabs}
@@ -762,7 +773,6 @@ const Index = ({ listing, session }: PageProps) => {
               tab={tab}
               isListing
               main
-              additionalData={StatusChecker(status)}
             />
             {tab === "chat" && (
               <div className="messages pt-6 mb-6">
@@ -778,9 +788,8 @@ const Index = ({ listing, session }: PageProps) => {
                     setMessages={setMessages}
                   />
                 )}
-
                 {status === "accepted" && (
-                  <div className="w-full  p-4 white border-l-4 border-orange-default">
+                  <div className="bg-white w-full  p-4  rounded-lg border-l-4 border-orange-default">
                     {currentListing.user === sessionUser
                       ? "Your offer was acceped! "
                       : "You accepted the offer! "}{" "}
@@ -793,9 +802,8 @@ const Index = ({ listing, session }: PageProps) => {
                     </span>
                   </div>
                 )}
-
                 {status === "awaiting approval" && (
-                  <div className="w-full  p-4 white border-l-4 border-orange-default flex gap-2 justify-between items-center">
+                  <div className="bg-white w-full  p-4  rounded-lg border-l-4 border-orange-default flex gap-2 justify-between items-center">
                     {currentListing.userId === sessionUser?.id ? (
                       <div>
                         Your offer has been created. A request has been sent to{" "}
@@ -847,23 +855,26 @@ const Index = ({ listing, session }: PageProps) => {
                 )}
               </>
             )}
-            <div className="mt-2">
-              {tab === "activity" &&
-                activities?.map((activity: any, i: number) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 justify-between px-1 pb-2 border-b border-gray-200 mb-2"
-                  >
-                    <div>{activity.message}</div>
-                    <div className="text-gray-500 text-sm italic">
-                      {timeSince(activity.createdAt)}
-                    </div>
+
+            {tab === "activity" &&
+            <div className="mt-4">
+              {activities?.map((activity: any, i: number) => (
+                <div
+                  key={i}
+                  className="flex gap-4 justify-between px-1 pb-2 border-b border-gray-200 mb-2"
+                >
+                  <div>{activity.message}</div>
+                  <div className="text-gray-500 text-sm italic">
+                    {timeSince(activity.createdAt)}
                   </div>
-                ))}
-            </div>
+                </div>
+
+              ))}
+              </div>
+}
 
             {tab === "bids" && (
-              <div className="mb-6">
+              <div className="mb-6  mt-4">
                 <Bids bids={bids} participant={participant} me={me} />
               </div>
             )}

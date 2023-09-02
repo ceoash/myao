@@ -56,7 +56,6 @@ const Index = ({
   const socket = useSocketContext();
   const router = useRouter();
   const alerts = useAlerts();
-  
 
   useEffect(() => {
     setIsMounted(true);
@@ -137,7 +136,10 @@ const Index = ({
       // console.log("friend", friend);
 
       if (action.type === "accept") {
-        const participant = friend.followerId === session?.user.id ? friend.followingId: friend.followerId;
+        const participant =
+          friend.followerId === session?.user.id
+            ? friend.followingId
+            : friend.followerId;
         dispatch({ type: action, payload: participant });
         return;
       } else {
@@ -155,6 +157,18 @@ const Index = ({
   return (
     <Dash
       dashboard
+      optionalData={
+        <Button
+          className="gap-1.5 items-center"
+          onClick={offerModal.onOpen}
+          options={{only: {
+            desktop: true,
+            screen: true
+          }}}
+        >
+          <BiPlus className="text-xl" /> Make an Offer
+        </Button>
+      }
       meta={
         <Meta
           title="Make You An Offer You Can't Refuse"
@@ -162,18 +176,10 @@ const Index = ({
         />
       }
     >
-      <div className="p-4 pt-6 lg:px-8">
-        {/* Header */}
-        <div className="hidden lg:flex items-center justify-between ">
-          <h2 className="text-2xl -mb-0.5">Dashboard</h2>
-          <Button  className=" flex gap-1.5 items-center" onClick={offerModal.onOpen} >
-           <BiPlus className="text-xl"/> Make an Offer
-          </Button>
-        </div>
-
+      <div className="p-4 pt-0 lg:px-8">
         {/* Hero */}
         <hr className="my-0 hidden lg:block lg:mt-4 lg:mb-6 -mx-8" />
-        
+
         {/*`Activities ${userActivities ? userActivities.length : 0}` */}
         <div className="xl:grid grid-cols-12 gap-x-6 mb-6">
           {isLoading ? (
@@ -188,7 +194,9 @@ const Index = ({
           ) : (
             <>
               <Stats
-                title={<div><span className="block lg:hidden">Dashboard</span><span className="hidden lg:block">Overview</span></div>}
+                title={
+                    <span className="block">Overview</span>
+                }
                 totalStats={10}
                 startOffer={offerModal.onOpen}
                 sentOffers={count.sent}
@@ -206,10 +214,10 @@ const Index = ({
 
         <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col">
           <div className=" pt-2 ">
-              <div className="pb-4">
-                <h3>Recent Offers</h3>
-              </div>
-           
+            <div className="pb-4">
+              <h3>Recent Offers</h3>
+            </div>
+
             <Offers
               sent={sentOffers}
               received={receivedOffers}
@@ -233,21 +241,20 @@ const Index = ({
 
           {/* Friends */}
           {state.friends.length > 0 && (
-
-          <div className="flex mb-8">
-            {state.friends.length > 0 && (
-              <div className="flex-1">
-                <div className="py-4  mb-0">
-                  <h3 className="mb-0">Friends</h3>
+            <div className="flex mb-8">
+              {state.friends.length > 0 && (
+                <div className="flex-1">
+                  <div className="py-4  mb-0">
+                    <h3 className="mb-0">Friends</h3>
+                  </div>
+                  <FriendsWidget
+                    session={session}
+                    friendsList={state.friends}
+                    dispatch={dispatch}
+                  />
                 </div>
-                <FriendsWidget
-                  session={session}
-                  friendsList={state.friends}
-                  dispatch={dispatch}
-                />
-              </div>
-            )}
-          </div>
+              )}
+            </div>
           )}
 
           {/* Connect */}

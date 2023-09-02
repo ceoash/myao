@@ -30,62 +30,62 @@ const Sidebar = () => {
           </div>
           <div className="p-4">
             <ul className="space-y-1">
-              <li>
+              <li className={
+                      router.pathname === "/dashboard" ? "text-orange-default" : ""
+                    }>
                 <Link href="/dashboard">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0 $`}
                   >
-                    <AiFillHome className={`text-xl lg:mr-4 ${
-                      router.pathname === "/dashboard" ? "text-orange-default" : ""
-                    }`} />
+                    <AiFillHome className={`text-xl lg:mr-4`} />
                     <span className="hidden lg:block">Dashboard </span>
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={
+                      router.pathname === "/offers" ? "text-orange-default" : ""
+                    }>
                 <Link href="/dashboard/offers">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0`}
                   >
-                    <MdLocalOffer className={`text-xl lg:mr-4 ${
-                      router.pathname === "/dashboard/offers" ? "text-orange-default" : ""
-                    }`} />
+                    <MdLocalOffer className={`text-xl lg:mr-4`} />
                     <span className="hidden lg:block">Offers</span>
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={
+                      router.pathname === "/settings" ? "text-orange-default" : ""
+                    }>
                 <Link href="/dashboard/friends">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0`}
                   >
-                    <FaUserFriends className={`text-xl lg:mr-4 ${
-                      router.pathname === "/dashboard/friends" ? "text-orange-default" : ""
-                    }`} />
+                    <FaUserFriends className={`text-xl lg:mr-4`} />
                     <span className="hidden lg:block">Friends</span>
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={
+                      router.pathname === "/activity" ? "text-orange-default" : ""
+                    }>
                 <Link href="/dashboard/activity">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0 `}
                   >
-                    <MdOutlineTimeline className={`text-xl lg:mr-4 ${
-                      router.pathname === "/dashboard/activity" ? "text-orange-default" : ""
-                    }`} />
+                    <MdOutlineTimeline className={`text-xl lg:mr-4`} />
                     <span className="hidden lg:block">Activity</span>
                   </span>
                 </Link>
               </li>
-              <li>
+              <li className={
+                      router.pathname === "/settings" ? "text-orange-default" : ""
+                    }>
                 <Link href="/dashboard/settings">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-`}
                   >
-                    <BiCog className={`text-xl lg:mr-4 ${
-                      router.pathname === "/dashboard/settings" ? "text-orange-default" : ""
-                    }`} />
+                    <BiCog className={`text-xl lg:mr-4`} />
                     <span className="hidden lg:block">Settings</span>
                   </span>
                 </Link>
@@ -153,7 +153,7 @@ const Sidebar = () => {
             </div>
           </div>
 
-          <div className="flex gap-2 text-md justify-start">
+          <div className="flex gap-2 text-md justify-start pt-1">
             <button className="flex items-center gap-1 border border-gray-200 rounded-lg text-xs p-1 px-2 hover:bg-gray-50" onClick={handleDownloadQR}><FaDownload />Save</button>
             <button className="flex items-center gap-1 border border-gray-200 rounded-lg text-xs p-1 px-2 hover:bg-gray-50" onClick={() => handleCopy(session?.user.username)}><FaCopy />Copy Link</button>
           </div>

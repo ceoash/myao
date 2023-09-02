@@ -44,11 +44,8 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
     setIsOpen(!isOpen);
 };
 
-
   const { setUnreadCount, unreadCount } = useUnreadMessages();
   const socket = useSocketContext();
-
-  
 
   useEffect(() => {
     setIsMounted(true);
@@ -104,7 +101,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
   }, [isMounted, session?.user?.id]);
 
   return (
-    <header className="w-full z-40 antialiased fixed">
+    <header className="w-full z-50 antialiased fixed ">
       <nav className="bg-white border-gray-200 py-2.5 shadow border-b relative">
         <div className="flex flex-wrap items-center justify-between px-4">
           <div className="w-40 lg:w-60">

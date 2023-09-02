@@ -1,35 +1,69 @@
-import { CgEditBlackPoint } from "react-icons/cg";
-
 function StatusChecker(status: string) {
-  
-    switch (status) {
-        case "negotiating":
-            return ( <div className='flex gap-1 items-center text-yellow-500'><CgEditBlackPoint/><span >Haggling</span> </div>)
-            break
-        case "awaiting approval": 
-            return ( <div className='flex gap-1 items-center text-teal-500'><CgEditBlackPoint/><span >Awaiting</span> </div>)
-            break
-        case "accepted":
-            return ( <div className='flex gap-1 items-center text-green-500'><CgEditBlackPoint /><span>Accepted</span></div> )
-            break
-        case "rejected":
-            return ( <div className='flex gap-1 items-center text-red-500'><CgEditBlackPoint /><span>Declined</span></div> )
-            break
-        case "cancelled":
-            return ( <div className='flex gap-1 items-center text-red-500'><CgEditBlackPoint /><span>Terminated</span></div> )
-            break
-        case "completed":
-            return ( <div className='flex gap-1 items-center text-green-500'><CgEditBlackPoint /><span>Paid</span></div> )
-            break
-        case "expired":
-            return ( <div className='flex gap-1 items-center text-red-500'><CgEditBlackPoint /><span>Expired</span></div> )
-            break
-        default:
-            return ( <div className='flex gap-1 items-center text-gray-500'><CgEditBlackPoint /><span>Pending</span> </div>)
-            break
-      }
+  switch (status) {
+    case "negotiating":
+      return (
+        <span className="inline-flex items-center bg-orange-100 text-orange-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
+          <span className="w-2 h-2 mr-1 bg-orange-500 rounded-full"></span>
+          Haggling
+        </span>
+      );
+
+    case "awaiting approval":
+      return (
+        <span className="inline-flex items-center bg-orange-100 text-gray-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
+          <span className="w-2 h-2 mr-1 bg-orange-400 rounded-full"></span>
+          Awaiting response
+        </span>
+      );
+
+    case "accepted":
+      return (
+        <span className="inline-flex items-center bg-yellow-100 text-yellow-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
+          <span className="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
+          Negotiated
+        </span>
+      );
+
+    case "rejected":
+      return (
+        <span className="inline-flex items-center bg-red-100 text-red-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
+          <span className="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>
+          Declined
+        </span>
+      );
+
+    case "cancelled":
+      return (
+        <span className="inline-flex items-center bg-red-100 text-red-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
+          <span className="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>
+          Terminated
+        </span>
+      );
+
+    case "completed":
+      return (
+        <span className="inline-flex items-center bg-green-100 text-green-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full" >
+          <span className="w-2 h-2 mr-1 bg-green-500 rounded-full"></span>
+          Declined
+        </span>
+      );
+
+    case "expired":
+      return (
+        <span className="inline-flex items-center bg-red-100 text-red-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full">
+          <span className="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>
+          Expired
+        </span>
+      );
+
+    default:
+      return (
+        <span className="inline-flex items-center bg-gray-100 text-gray-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full">
+          <span className="w-2 h-2 mr-1 bg-gray-500 rounded-full"></span>
+          Pending
+        </span>
+      );
+  }
 }
 
-
-
-export default StatusChecker
+export default StatusChecker;

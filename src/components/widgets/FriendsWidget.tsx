@@ -144,7 +144,7 @@ const FriendsWidget = ({
                
                     <div className="flex flex-col items-center justify-center h-full text-center rounded-xl bg-white   py-16 ">
                     <div className="text-gray-700 text-lg font-bold  mx-4 mb-2 text-center">
-                      No offers to display{" "}
+                      No friends yet{" "}
                       <p className="text-gray-700 text-sm mt-2 font-normal mb-3">
                         You can get connected with other users by clicking the button below.
                       </p>

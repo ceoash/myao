@@ -31,6 +31,12 @@ interface ButtonProps {
     light?: boolean;
     mute?: boolean;
     outline?: boolean;
+    only?: {
+      mobile?: boolean;
+      tablet?: boolean;
+      desktop?: boolean;
+      screen?: boolean;
+    };
     
   };
 }
@@ -52,14 +58,13 @@ const Button = ({
   outline,
   primary,
   secondary,
-  type
+  type, 
 }: ButtonProps) => {
   if (link) {
     return (
       <Link
         href={link}
         className={`
-            inline-flex 
             items-center
             justify-center
             py-2
@@ -120,12 +125,19 @@ const Button = ({
       </Link>
     );
   }
+
+  const mobile = options?.only?.mobile && `sm:inline-flex`
+  const tablet = options?.only?.tablet && `md:inline-flex`
+  const desktop = options?.only?.desktop && `lg:inline-flex`
+  const xl = options?.only?.screen && `xl:inline-flex`
+  const show = options?.only && mobile || tablet || desktop || xl
+
   return (
     <button
       onClick={onClick}
       type={submit ? "submit" : type ? type : "button"}
       className={`
-            inline-flex 
+            ${show ? `hidden ${show}` : "inline-flex"}
             items-center
             justify-center
             ${options?.size == "lg" ? `px-4 py-4 w-full` : `px-3 py-2`}

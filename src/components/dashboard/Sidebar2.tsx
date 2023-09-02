@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Dispatch, use, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import {
@@ -15,16 +15,14 @@ import { useAlerts } from "@/hooks/AlertHook";
 
 
 interface SidebarProps {
-  conversations: IConversation[];
-  activities: ExtendedActivity[];
-  notifications: INotification[] | [] | undefined;
   mobile?: boolean;
-  toggle: boolean;
-  setToggle: (toggle: boolean) => void;
+  toggle?: boolean;
+  setToggle?: (mobile: boolean) => void;
 }
 const Sidebar2 = ({
-
   mobile,
+  toggle,
+  setToggle,
 }: SidebarProps) => {
   const { data: session } = useSession();
   const [showMobile, setShowMobile] = useState(window.innerWidth <= 768);
@@ -33,14 +31,28 @@ const Sidebar2 = ({
   const conversations = alerts.alerts?.conversations
   const activities = alerts.alerts?.activity;
   const notifications = alerts.alerts?.notifications;
-  
+
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node) && setToggle) {
+        setToggle(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [ref, toggle, setToggle]);
+
+
 useEffect(() => {
   const handleResize = () => {
     setShowMobile(window.innerWidth <= 768);
   };
-
-  
-
 
   window.addEventListener('resize', handleResize);
 
@@ -75,7 +87,7 @@ useEffect(() => {
   ] */
 
   return (
-    <div className="transition-all duration-300 ease-in-out absolute xl:fixed inset-y-0 right-0 h-screen w-full xl:w-auto backdrop-blur-md bg-neutral-800/70 flex xl:bg-transparent xl:backdrop-blur-0 ">
+    <div className="transition-all duration-300 ease-in-out absolute xl:fixed inset-y-0 right-0 h-screen w-full xl:w-auto backdrop-blur-md bg-neutral-800/70 flex xl:bg-transparent xl:backdrop-blur-0 z-40">
       <aside
         className={`transition-all ease-in-out duration-300 h-screen ml-auto w-auto   inset-y-0 right-0 bg-white shadow-md max-h-screen xl:w-60 `}
       >
@@ -109,7 +121,7 @@ useEffect(() => {
         ) : (
           <>
             <div className="flex flex-col flex-nowrap  h-full px-2">
-              <div className=" pt-16 ">
+              <div className=" pt-20 -mt-2 ">
                 <div className="p-4 ">
                   <h5 className="mb-3">Notifications</h5>
                   <div className="space-y-4 flex flex-col">

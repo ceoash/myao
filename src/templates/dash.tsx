@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import UserMenu from "@/components/UserMenu";
 import OfferModal from "@/components/modals/OfferModal";
 import MessageModal from "@/components/modals/MessageModal";
@@ -20,12 +20,16 @@ import SearchComponentModal from "@/components/modals/SearchModal";
 import OfferEditModal from "@/components/modals/OfferEditModal";
 import Sidebar2 from "@/components/dashboard/Sidebar2";
 import { useAlerts } from "@/hooks/AlertHook";
+import Link from "next/link";
+import Breadcrumbs from "@/components/dashboard/Breadcrumbs";
 
 type IDashProps = {
   meta: ReactNode;
+  pageTitle?: string;
   children: ReactNode;
   full?: boolean;
   dashboard?: boolean;
+  optionalData?: any;
 };
 
 export interface ErrorResponse {
@@ -43,16 +47,33 @@ const Dash = (props: IDashProps) => {
   const [toggleMobileSidebar, setToggleMobileSidebar] = useState(false);
 
   const handleToggle = (mobile?: boolean) => {
-      setToggleMobileSidebar((prev) => {
-       
-          return mobile || false;
-        
-      })
-    setToggleSidebar(!toggleSidebar)
-    if(window.innerWidth <= 768){
-    setDisabled(toggleSidebar)
-  }
-  }
+    setToggleMobileSidebar((prev) => {
+      return mobile || false;
+    });
+    setToggleSidebar(!toggleSidebar);
+    if (window.innerWidth <= 768) {
+      setDisabled(toggleSidebar);
+    }
+  };
+
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+
+  const handleClickOutside = (e: any) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+      setToggleSidebar(false);
+    }
+  };
+
+  useEffect(() => {
+    if (toggleSidebar) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [toggleSidebar]);
 
   useEffect(() => {
     const handleStart = () => setLoading(true);
@@ -77,18 +98,18 @@ const Dash = (props: IDashProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-        setToggleSidebar(window.innerWidth >= 1280);
+      setToggleSidebar(window.innerWidth >= 1280);
     };
 
     // Initial check
     handleResize();
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-        window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
-}, []);
+  }, []);
 
   /* if (status === "loading") {
       return (
@@ -145,7 +166,11 @@ const Dash = (props: IDashProps) => {
   } */
 
   return (
-    <div className={`w-full h-screen bg-gray-50 px-1 text-gray-700 antialiased flex flex-col ${disabled && 'overflow-auto xl:overflow-hidden'}`}>
+    <div
+      className={`w-full h-screen bg-gray-50 px-1 text-gray-700 antialiased flex flex-col ${
+        toggleSidebar && "overflow-hidden xl:overflow-auto"
+      }`}
+    >
       {props.meta}
       <Toaster />
       <OfferModal />
@@ -158,7 +183,12 @@ const Dash = (props: IDashProps) => {
       <OfferEditModal />
       <QRModal />
       <SearchComponentModal />
-      <UserMenu session={session} blockedUsers={alerts.alerts?.blockedUsers} setToggle={handleToggle} toggle={toggleSidebar}  />
+      <UserMenu
+        session={session}
+        blockedUsers={alerts.alerts?.blockedUsers}
+        setToggle={handleToggle}
+        toggle={toggleSidebar}
+      />
       <SkeletonTheme highlightColor="#edf2f7">
         <main className="content flex flex-col flex-grow">
           <div className="relative bg-gray-50 overflow-hidden flex-grow pt-16">
@@ -172,15 +202,24 @@ const Dash = (props: IDashProps) => {
               ${toggleSidebar && "xl:mr-60"}
               overflow-y-auto h-full`}
             >
-              <div className="w-full mx-auto bg-gray-50 sm:mt-1 h-full md:px-0">
+              <div className={`flex justify-between gap-2 mx-4 lg:mx-8 mt-6  lg:mt-6 ${props.dashboard ? 'sm:mx-4 mb-4' : 'mx-6 md:mx-6 lg:mx-8'}  lg:mb-0 items-center`}>
+                <Breadcrumbs pageTitle={props.pageTitle} dashboard={props.dashboard} />
+                {props.optionalData}
+              </div>
+              <div className="w-full mx-auto bg-gray-50 flex-grow md:px-0">
                 {props.children}
               </div>
             </div>
-            { toggleSidebar && <Sidebar2 mobile={toggleMobileSidebar} toggle={toggleSidebar} setToggle={handleToggle} activities={alerts.alerts?.activity || []} conversations={alerts.alerts?.conversations || []} notifications={alerts.alerts?.notifications} /> }
+            {toggleSidebar && (
+              <Sidebar2
+                mobile={toggleMobileSidebar}
+                toggle={toggleSidebar}
+                setToggle={setToggleSidebar}
+              />
+            )}
           </div>
         </main>
       </SkeletonTheme>
-      
     </div>
   );
 };

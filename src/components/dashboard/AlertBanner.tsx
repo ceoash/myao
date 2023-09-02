@@ -45,7 +45,7 @@ const AlertBanner = ({
         text-sm
         font-semibold
         rounded-lg
-        mb-4
+        mt-4
         col-span-12
        
         ${success && "border bg-green-100 border-green-200 text-green-500"}

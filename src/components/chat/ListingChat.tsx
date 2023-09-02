@@ -29,12 +29,16 @@ const ListingChat = ({ id, session, messages, buyerId, sellerId }: ListingChatPr
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const socket = useSocketContext() 
+  const socket = useSocketContext();
 
   const {
     formState: { errors }, reset
-  } = useForm<FieldValues>({ defaultValues: { message: "", image: "" } });
+  } = useForm<FieldValues>({ 
+    defaultValues: {
+      message: "", 
+      image: "" 
+    } 
+  });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -56,7 +60,6 @@ const ListingChat = ({ id, session, messages, buyerId, sellerId }: ListingChatPr
       };
 
       await axios.post("/api/newOfferMessage", data).then((response) => {
-        const listing = response.data;
         const newMessage = response.data.messages[response.data.messages.length - 1];
         const message = {...newMessage};
         socket.emit("new_listing_message", message);

@@ -48,7 +48,7 @@ const Header = ({ listing, currentBid, status, session }: HeaderProps) => {
         </div>
       </div>
 
-      <div className=" gap-2 justify-between hidden md:flex">
+      <div className="gap-2 justify-between hidden md:flex">
         <div className="block">
           {currentBid.currentPrice &&
             currentBid.currentPrice !== "" &&

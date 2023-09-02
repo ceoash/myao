@@ -615,7 +615,7 @@ const Index = ({ listing, session }: PageProps) => {
 
         {activeSubTab === "description" && (
           <div className="h-full flex flex-col bg-white p-4 pt-0 border rounded-b-lg rounded-tr-lg border-gray-200 border-t-0 transition-all ease-in-out duration-200">
-            <p className="mb-auto mt-4 md:mx-1 flex-grow leading-relaxed first-letter:uppercase pb-6 relative">
+            <div className="mb-auto mt-4 md:mx-1 flex-grow leading-relaxed first-letter:uppercase pb-6 relative">
               {status !== "cancelled" &&
                 status !== "accepted" &&
                 status !== "completed" &&
@@ -631,7 +631,7 @@ const Index = ({ listing, session }: PageProps) => {
                   />
                 )}
               {currentListing.description}
-            </p>
+            </div>
             {currentBid.currentPrice !== "0" &&
               currentBid.currentPrice !== "" && (
                 <div
@@ -761,7 +761,7 @@ const Index = ({ listing, session }: PageProps) => {
         }
         meta={<Meta title={listing.title} description={listing.description} />}
       >
-        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:p-8 mx-auto xl:grid xl:grid-cols-12 gap-6">
+        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6">
           <OfferAlerts
             handleStatusChange={handleStatusChange}
             session={session}
@@ -771,7 +771,7 @@ const Index = ({ listing, session }: PageProps) => {
             listing={listing}
             handleFinalise={handleFinalise}
           />
-          <div className="w-full col-span-6 xl:col-span-8  flex flex-col mt-6 md:mt-0">
+          <div className="w-full col-span-6 xl:col-span-8  flex flex-col md:mt-4 lg:mt-0 mt-2">
             <Tabs
               status={status}
               tabs={mainTabs}
@@ -839,12 +839,8 @@ const Index = ({ listing, session }: PageProps) => {
                 {MainBody}
                 {status === "completed" && (
                   <div className="hidden md:block">
-                    {reviews.userReview && (
-                      <ReviewBox review={reviews.userReview} />
-                    )}
-                    {reviews.participantReview && (
-                      <ReviewBox review={reviews.participantReview} />
-                    )}
+                    {reviews.userReview && ( <ReviewBox review={reviews.userReview} /> )}
+                    {reviews.participantReview && ( <ReviewBox review={reviews.participantReview} />)}
                     {!reviews.userReview && (
                       <ReviewForm
                         listingId={currentListing.id}
@@ -877,7 +873,7 @@ const Index = ({ listing, session }: PageProps) => {
 
               ))}
               </div>
-}
+            }
 
             {tab === "bids" && (
               <div className="mb-6  mt-4">

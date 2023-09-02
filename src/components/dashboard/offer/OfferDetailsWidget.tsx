@@ -379,9 +379,7 @@ const OfferDetailsWidget = ({
                       </div>
                     </div>
                   )}
-
-                {status === "awaiting approval" &&
-                  listing.userId !== session?.user?.id && (
+                  { status === "awaiting approval" && listing.userId !== session?.user?.id && (
                     <div className="flex justify-center gap-2 mb-4 w-full">
                       <Button
                         options={{ primary: true, size: "lg" }}

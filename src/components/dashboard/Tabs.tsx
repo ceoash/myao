@@ -22,8 +22,6 @@ const Tabs = ({
   setTab,
   tabs,
   status,
-  lg,
-  uppercase,
   tab: activeTab,
   isListing,
   main,

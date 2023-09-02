@@ -142,6 +142,7 @@ const Index = ({ listing, session }: PageProps) => {
   const router = useRouter();
   const [currentListing, setCurrentListing] = useState<any>({});
   const [size, setSize] = useState(0);
+  const [mobileView, setMobileView] = useState(false)
 
   const edit = useOfferEditModal();
   const now = Date.now();
@@ -190,16 +191,17 @@ const Index = ({ listing, session }: PageProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768 && window.innerWidth !== size) {
+      if (window.innerWidth <= 768 && window.innerWidth !== size && !mobileView) {
         if (tab !== "overview") setTab("overview");
         setTab("overview");
         setSize(window.innerWidth);
-      } else if(window.innerWidth >= 768 && window.innerWidth !== size && tab === "overview"){
+        setMobileView(true);
+      } else if(window.innerWidth >= 768 && window.innerWidth !== size && tab === "overview" && mobileView){
         setTab("details");
         setSize(window.innerWidth);
+        setMobileView(false);
       }
     }
-
     // Initial check
     handleResize();
 

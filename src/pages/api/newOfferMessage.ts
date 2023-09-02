@@ -80,7 +80,7 @@ export default async function newOfferMessage(
       const notification  = await prisma.notification.create({
         data: {
           userId: sender?.id || "",
-          message: `Message received from ${sender?.username ? sender.username : "unknown"}}`,
+          message: `Message received from ${sender?.username ? sender.username : "unknown"}`,
           action: `/dashboard/conversations?conversationId=${listingId}`,
           type: "conversation",
           read: false,

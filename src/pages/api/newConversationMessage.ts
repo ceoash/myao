@@ -93,7 +93,7 @@ export default async function ConversationsApi(
         const notification  = await prisma.notification.create({
           data: {
             userId: updatedConversation.participant2Id || "",
-            message: `Message received from ${updatedConversation.participant1.username}}`,
+            message: `Message received from ${updatedConversation.participant1.username}`,
             action: `/dashboard/conversations?conversationId=${updatedConversation.id}`,
             type: "conversation",
             read: false,

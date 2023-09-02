@@ -258,7 +258,7 @@ const Offers = ({
                   <div
                     className={`uppercase cursor-pointer font-bold rounded-lg border border-gray-200 bg-white p-3 py-1 ${
                       activeTab === "sent" &&
-                      "border !bg-orange-300 border-orange-200 text-white"
+                      "border !bg-orange-default border-orange-200 text-white"
                     }`}
                     onClick={() => {
                       activeTab !== "sent" && setActiveTab("sent");

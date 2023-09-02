@@ -87,7 +87,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
           </span>
           <span className={`inline-flex items-center  font-medium text-sm md:text-md md:font-bold ${
             pathParts.length === 3 ? "text-gray-700" : "text-gray-500"
-          }` }>{pathParts.length < 4 && pageTitle ? pageTitle : pathParts[2].split("?")[0]}</span>
+          }` }>{pathParts.length < 4 && pageTitle ? pageTitle : pathParts[2] && typeof pathParts[2] === 'string' && pathParts[2].includes('?') ? pathParts[2].split("?")[0] : pathParts[2]}</span>
         </Link>
       </li>
       

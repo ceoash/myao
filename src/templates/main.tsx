@@ -7,7 +7,7 @@ type IMainProps = {
 };
 
 const Main = (props: IMainProps) => (
-  <div className="w-full px-1 text-gray-700 antialiased  min-h-screen">
+  <div className="w-full text-gray-700 antialiased  min-h-screen">
     
     {props.meta}
     <Toaster />

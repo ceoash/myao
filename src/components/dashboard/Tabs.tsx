@@ -130,7 +130,7 @@ const Tabs = ({
                 ref={ref}
                 style={{ zIndex: 9999 }}
               >
-                <div className="flex flex-col cursor-pointer z-50">
+                <div className="flex flex-col cursor-pointer z-30">
                   <>
                     {tabs &&
                       tabs.map((tab: any, i: number) => {

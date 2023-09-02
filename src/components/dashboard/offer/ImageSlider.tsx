@@ -65,16 +65,16 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
         freeMode={true}
         watchSlidesProgress={true}
         modules={[FreeMode, Navigation, Thumbs]}
-        className="mx-2  z-50 w-full bottom-0"
+        className="mx-2  z-30 w-full bottom-0"
       >
 
         {imagesStore.map((image, i) => (
-          <SwiperSlide key={i} className="bg-white rounded-md border border-gry-200 z-50" >
+          <SwiperSlide key={i} className="bg-white rounded-md border border-gry-200 z-30" >
             <img src={image} className="" />
           </SwiperSlide>
           
         ))}
-        <SwiperSlide key={"0"} className="bg-white rounded-md border border-gry-200 z-50" onClick={handleAddImages} >
+        <SwiperSlide key={"0"} className="bg-white rounded-md border border-gry-200 z-30" onClick={handleAddImages} >
             <Image src={plus} layout="fill" objectFit="cover" alt="plus icon" className="text-gray-300" />
           </SwiperSlide>
       </Swiper>

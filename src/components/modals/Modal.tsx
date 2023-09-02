@@ -108,7 +108,7 @@ const Modal: React.FC<ModalProps> = ({
         overflow-y-auto
         fixed
         inset-0
-        z-50
+        z-40
         outline-none
         focus:outline-none
        ${showModal && 'backdrop-blur-md bg-neutral-800/70'}

@@ -167,7 +167,7 @@ const Dash = (props: IDashProps) => {
 
   return (
     <div
-      className={`w-full h-screen bg-gray-50 px-1 text-gray-700 antialiased flex flex-col ${
+      className={`w-full h-screen bg-gray-50 text-gray-700 antialiased flex flex-col ${
         toggleSidebar && "overflow-hidden xl:overflow-auto"
       }`}
     >

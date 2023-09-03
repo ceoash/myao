@@ -320,7 +320,7 @@ const OfferDetailsWidget = ({
               </div>
             </div>
 
-            <div className="-mt-2 flex justify-center gap-1 ">
+            <div className="-mt-2 flex justify-center gap-1 mb-8 md:mb-14">
               By
               <Link
                 href={`/dashboard/profile/${currentBid.byUserId}`}

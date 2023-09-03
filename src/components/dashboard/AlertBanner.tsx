@@ -30,12 +30,12 @@ const AlertBanner = ({
     <div className={`
         items-center
         justify-between
-        p-4
+        p-2
         text-sm
         font-semibold
         rounded-lg
         col-span-12
-        -mt-2
+       mt-4
         ${success && "border bg-green-100 border-green-200 text-green-500"}
         ${danger && "border border-red-200 text-red-500 bg-red-100"}
         ${info && "border bg-yellow-50 border-yellow-200 text-yellow-400"}

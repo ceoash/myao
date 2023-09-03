@@ -69,7 +69,8 @@ const PreviewPage = ({
     <form action="/api/checkout_sessions" className="w-full" method="POST">
       <input type="hidden" value={listing.price} name="price" />
       <input type="hidden" value={listing.title} name="title" />
-      {/*  <input type="hidden" value={listing.id} name='id' />
+      <input type="hidden" value={listing.id} name='id' />
+      {/*  
       <input type="hidden" value={listing.buyer.id} name='buyerId' />
       <input type="hidden" value={listing.seller.id} name='sellerId' />
       <input type="hidden" value={listing.status} name='status' />

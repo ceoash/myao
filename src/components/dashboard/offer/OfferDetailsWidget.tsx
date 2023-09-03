@@ -111,7 +111,8 @@ const OfferDetailsWidget = ({
   const { options } = listing;
 
   const noBids = !meLastBid && !participantLastBid && status === "negotiating";
-  const rejectedByMe = status === "rejected" && session?.user.id !== completedBy;
+  const rejectedByMe =
+    status === "rejected" && session?.user.id !== completedBy;
   const inNegotiation = status === "negotiating";
 
   const statusController = noBids || rejectedByMe || inNegotiation;
@@ -172,17 +173,20 @@ const OfferDetailsWidget = ({
   }
 
   return (
-    <div className={`
+    <div
+      className={`
         w-full
         rounded-lg
         border
         p-4
         border-gray-200
-        ${ status === "rejected" || status === "cancelled"
+        ${
+          status === "rejected" || status === "cancelled"
             ? "bg-red-100  border-red-50"
             : status === "accepted" || status === "completed"
             ? "bg-green-100 border-green-50"
-            : " bg-orange-default border-gray-200" }
+            : " bg-orange-default border-gray-200"
+        }
         `}
     >
       <div className="relative mx-auto w-full">
@@ -213,7 +217,7 @@ const OfferDetailsWidget = ({
                   objectFit="cover"
                 />
               </div>
-              <p className="ml-2 !container text-gray-800 line-clamp-1 text-lg font-bold">
+              <p className="ml-2 !container text-gray-800 text-md xl:text-md font-bold">
                 You
               </p>
             </div>
@@ -276,7 +280,9 @@ const OfferDetailsWidget = ({
           </div>
 
           <div className="border-t border-gray-200 h-1 shadow-2xl mb-4" />
-          <div className="md:hidden w-full flex justify-center mb-4">{StatusChecker(status)}</div> 
+          <div className="md:hidden w-full flex justify-center mb-4">
+            {StatusChecker(status)}
+          </div>
           <div className="px-6">
             <div className="text-lg -mb-3 font-bold text-center flex flex-col items-center ">
               {status === "rejected" ||
@@ -324,81 +330,89 @@ const OfferDetailsWidget = ({
               </Link>
             </div>
 
-            <div className="py-2 pt-6">
-              <div className=" gap-2 text-sm  font-bold mb-6 items-start">
-                {currentBid.byUserId !== session?.user?.id &&
-                  currentBid.currentPrice !== "0" &&
-                  currentBid.currentPrice !== "" &&
-                  status === "negotiating" && (
+            {currentBid.byUserId !== session?.user?.id &&
+              currentBid.currentPrice !== "0" &&
+              currentBid.currentPrice !== "" && (
+                <div className="py-2 pt-6">
+                  <div className=" gap-2 text-sm  font-bold mb-6 items-start">
                     <div className="w-2/3 flex gap-2 mx-auto justify-center">
-                      <div className="flex flex-col justify-center  items-center gap-4">
-                        <Button
-                          isLoading={loadingState.yes}
-                          accept
-                          onClick={() =>
-                            handleStatusChange("accepted", session?.user.id)
-                          }
-                          className="rounded-xl px-3 py-1 text-center w-10"
-                        >
-                          YES
-                        </Button>
-                        <div className="relative h-16 w-16 mx-6">
-                          <Image
-                            src={
-                              session?.user?.id === listing.sellerId
-                                ? catAccept
-                                : dogAccept
-                            }
-                            alt="user"
-                            className="rounded-xl"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col justify-center items-center  gap-4">
-                        <Button
-                          cancel
-                          isLoading={loadingState.no}
-                          onClick={() =>
-                            handleStatusChange("rejected", session?.user.id)
-                          }
-                          className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
-                        >
-                          NO
-                        </Button>
-                        <div className="relative h-16 w-16 mx-6">
-                          <Image
-                            src={
-                              session?.user?.id === listing.sellerId
-                                ? catTerminate
-                                : dogTerminate
-                            }
-                            alt="user"
-                            className=" rounded-xl"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  { status === "awaiting approval" && listing.userId !== session?.user?.id && (
-                    <div className="flex justify-center gap-2 mb-4 w-full">
-                      <Button
-                        options={{ primary: true, size: "lg" }}
-                        isLoading={loadingState.negotiating}
-                        onClick={() =>
-                          handleStatusChange("negotiating", session?.user.id)
-                        }
-                      >
-                        <div className="flex gap-2 items-center ">
-                          <div>
-                            <FaThumbsUp />
+                      {status === "negotiating" && (
+                        <>
+                          <div className="flex flex-col justify-center  items-center gap-4">
+                            <Button
+                              isLoading={loadingState.yes}
+                              accept
+                              onClick={() =>
+                                handleStatusChange("accepted", session?.user.id)
+                              }
+                              className="rounded-xl px-3 py-1 text-center w-10"
+                            >
+                              YES
+                            </Button>
+                            <div className="relative h-16 w-16 mx-6">
+                              <Image
+                                src={
+                                  session?.user?.id === listing.sellerId
+                                    ? catAccept
+                                    : dogAccept
+                                }
+                                alt="user"
+                                className="rounded-xl"
+                              />
+                            </div>
                           </div>
-                          <div>Let's haggle</div>
-                        </div>
-                      </Button>
+                          <div className="flex flex-col justify-center items-center  gap-4">
+                            <Button
+                              cancel
+                              isLoading={loadingState.no}
+                              onClick={() =>
+                                handleStatusChange("rejected", session?.user.id)
+                              }
+                              className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
+                            >
+                              NO
+                            </Button>
+                            <div className="relative h-16 w-16 mx-6">
+                              <Image
+                                src={
+                                  session?.user?.id === listing.sellerId
+                                    ? catTerminate
+                                    : dogTerminate
+                                }
+                                alt="user"
+                                className=" rounded-xl"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  )}
-              </div>
-            </div>
+
+                    {status === "awaiting approval" &&
+                      listing.userId !== session?.user?.id && (
+                        <div className="flex justify-center gap-2 mb-4 w-full">
+                          <Button
+                            options={{ primary: true, size: "lg" }}
+                            isLoading={loadingState.negotiating}
+                            onClick={() =>
+                              handleStatusChange(
+                                "negotiating",
+                                session?.user.id
+                              )
+                            }
+                          >
+                            <div className="flex gap-2 items-center ">
+                              <div>
+                                <FaThumbsUp />
+                              </div>
+                              <div>Let's haggle</div>
+                            </div>
+                          </Button>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -443,7 +457,7 @@ const OfferDetailsWidget = ({
         </div>
         <Link
           href={`/dashboard/profile/${participant?.id}`}
-          className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform transform hover:-translate-y-2 w-full ${
+          className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform text-md lg:text-lg transform hover:-translate-y-2 w-full ${
             status === "rejected" || status === "cancelled"
               ? "bg-red-50 text-red-500 border-red-100"
               : status === "accepted" || status === "completed"
@@ -467,7 +481,7 @@ const OfferDetailsWidget = ({
                   objectFit="cover"
                 />
               </div>
-              <p className="ml-2 text-gray-800 line-clamp-1 text-lg font-bold">
+              <p className="ml-2 text-gray-800 text-sm xl:text-md font-bold">
                 {participant?.username}
               </p>
             </div>

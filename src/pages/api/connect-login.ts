@@ -1,9 +1,6 @@
 import prisma from "@/libs/prismadb";
 import bcrypt from "bcrypt";
 
-interface IUser {
-  id: string;
-}
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {

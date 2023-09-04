@@ -6,11 +6,9 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { BiCheckCircle, BiChevronsRight, BiStar } from "react-icons/bi";
 import Button from "./dashboard/Button";
-import Input from "./inputs/Input";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Spinner from "./Spinner";
-import { setDate } from "date-fns";
 
 interface ConnectProps {
   user: User;

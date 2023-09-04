@@ -161,8 +161,8 @@ const Index = ({ listing, session }: PageProps) => {
   const mainTabs = [
     { id: "details", label: "Details", primary: true },
     { id: "chat", label: "Chat", primary: true },
-    { id: "activity", label: "Activity" },
-    { id: "bids", label: "Bid History", primary: true },
+    { id: "activity", label: "Activity", primary: true },
+    { id: "bids", label: "Bid History" },
   ];
 
   const secondaryTabs = [
@@ -882,8 +882,7 @@ const Index = ({ listing, session }: PageProps) => {
             )}
           </div>
 
-          <div
-            className={`w-full xl:col-span-4 col-span-4 ${
+          <div className={`w-full xl:col-span-4 col-span-4 ${
               tab === "overview" ? "block" : "hidden md:block"
             }`}
           >

@@ -14,8 +14,11 @@ console.dir(req.body)
     const { 
         title,
         price,
-        id
-     
+        id,
+        senderId,
+        senderUsername,
+        receiverId,
+        receiverUsername,
 
     } = req.body;
 
@@ -40,11 +43,20 @@ console.dir(req.body)
         success_url: `${req.headers.origin}/dashboard/offers/${id}?success=true`,
         cancel_url: `${req.headers.origin}/dashboard/offers/${id}/?canceled=true`,
       });
+
+      const notification  = await prisma.notification.create({
+        data: {
+          userId: receiverId || "",
+          message: `${senderUsername ? senderUsername : "unknown"} has paid you £${price}`,
+          action: `/dashboard/offers/${id}`,
+          type: "conversation",
+          read: false,
+        }
+      })
       
       res.redirect(303, session.url);
 
       
-
     } catch (err) {
         const error = err as StripeError;
         res.status(error.statusCode || 500).json(error.message);

@@ -4,9 +4,9 @@ import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 
 
-export const handleCopy = (userId: string) => {
+export const handleCopy = (username: string) => {
     navigator.clipboard.writeText(
-      `${AppConfig.siteUrl || "http://localhost:3000"}/connect/${userId}`
+      `${AppConfig.siteUrl || "http://localhost:3000"}/connect/${username}`
     );
     toast.success("Link copied to clipboard");
   };

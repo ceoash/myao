@@ -220,7 +220,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
             </div>
             {isOpen && (
               <div
-                className={` rouned-xl shadow-md bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm absolute rounded-b-xl border border-gray-200 `}
+                className={`transition-all ease-in-out duration-200 rouned-xl shadow-md bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm absolute rounded-b-xl border border-gray-200 `}
                 ref={dropdownRef}
                 style={{ zIndex: 9999 }}
               >

@@ -179,7 +179,7 @@ const Button = ({
               cancel && outline ? 
               "text-red-500  border border-orange-100  hover:!bg-red-500 hover:text-red-50 w-full" : 
               cancel ? 
-              ` border-red-500 !bg-red-400 hover:!bg-red-400 text-white hover:text-red-100 w-full` :
+              ` border-red-400 !bg-red-400 hover:!bg-red-400 text-white hover:text-red-100 w-full` :
               ""
             }
             ${

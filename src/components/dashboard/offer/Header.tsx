@@ -19,8 +19,8 @@ const Header = ({ listing, currentBid, status, session }: HeaderProps) => {
   const edit = useOfferEditModal();
   const parsedImage = listing.image && JSON.parse(listing.image);
   return (
-    <div className="flex mb-6 justify-between  relative bg-white rounded-xl border border-gray-200 p-4 overflow-hidden">
-      <div className="flex gap-2">
+    <div className="flex mb-6 justify-between relative bg-white rounded-xl border border-gray-200 p-4 md:pb-0 lg:pb-4 overflow-hidden">
+      <div className="flex gap-2 xl:mb-4">
         <div className=" relative rounded-lg  w-20 h-14 overflow-hidden">
           <div className="transition-transform duration-500 transform ease-in-out hover:scale-110 ">
             <div className="absolute inset-0 bg-black opacity-10"></div>
@@ -38,17 +38,17 @@ const Header = ({ listing, currentBid, status, session }: HeaderProps) => {
           </div>
         </div>
 
-        <div>
+        <div className="">
           <div className="text-gray-900 text-xl  md:text-2xl  font-bold first-letter:uppercase w-full relative">
             {listing.title}
           </div>
-          <div className=" w-full text-gray-500 relative mr-4 text-sm">
+          <div className=" w-full text-gray-500 relative mr-4 text-sm -mt-0.5">
             {listing.category}
           </div>
         </div>
       </div>
 
-      <div className="gap-2 justify-between hidden md:flex">
+      <div className="gap-2 justify-between hidden md:flex mb-6 lg:mb-0">
         <div className="block">
           {currentBid.currentPrice &&
             currentBid.currentPrice !== "" &&
@@ -69,7 +69,7 @@ const Header = ({ listing, currentBid, status, session }: HeaderProps) => {
                 )}
               </div>
             )}
-          <div className="font-extrabold md:text-lg lg:text-xl xl:text-2xl xl:-mt-1.5 text-right ">
+          <div className="font-extrabold md:text-lg lg:text-xl xl:text-2xl text-right -mt-0.5 ">
             {currentBid.currentPrice &&
             currentBid.currentPrice !== "0" &&
             currentBid.currentPrice !== "" ? (

@@ -28,6 +28,8 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, link, url }) 
         gap-2
         items-center
         hover:text-orange-default
+        flex-nowrap
+        w-full
     "
     >
       {icon && <span>{icon}</span>}

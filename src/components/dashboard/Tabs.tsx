@@ -38,21 +38,22 @@ const Tabs = ({
           key={"overview"}
           onClick={() => setTab("overview")}
           className={`
-        cursor-pointer 
-        border-r
-        border-t
-        rounded-t-lg active
-        px-3
-        text-sm
-        md:px-4 py-2
-        inline-block
-        whitespace-nowrap
-        md:hidden
-        border-gray-20
-        font-bold
-        ${activeTab === "overview" ? " bg-orange-400 text-white" : "bg-white"}
-        }`}
-        >
+            cursor-pointer 
+            border-r
+            border-t
+            rounded-t-lg active
+            px-2.5
+            sm:px-3
+            text-sm
+            md:px-4 py-2
+            inline-block
+            whitespace-nowrap
+            md:hidden
+            border-gray-20
+            font-medium
+            md:font-bold
+            ${activeTab === "overview" ? " bg-orange-400 text-white" : "bg-white"}
+          }`}>
           <span>Overview</span>
         </li>
       )}
@@ -74,17 +75,19 @@ const Tabs = ({
             first:border-l rounded-tl-lg
             last:border-l rounded-tr-lg
             md:px-4 py-2
-            px-3 
+            px-2.5
+            sm:px-3
             flex
             flex-nowrap 
             whitespace-nowrap
             rounded-t-lg
             text-sm
             md:text-md
-            font-bold
-        border-gray-200
+            font-medium
+            md:font-bold
+          border-gray-200
         ${
-          tab.label === "Activity" || tab.label === "Bid History"
+          tab.label === "Bid History"
             ? "hidden md:inline-block"
             : "inline-block"
         }
@@ -117,14 +120,13 @@ const Tabs = ({
                 bg-gray-50
                 flex-1
                 w-full
-               
               `}
             >
               <FaChevronRight className="text-[18px]" />
             </div>
             {isOpen && (
               <div
-                className={` rouned-xl shadow-md bg-white overflow-hidden left-0 w-auto top-10 text-sm absolute rounded-b-xl border border-gray-200 `}
+                className={` rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-10 text-sm absolute rounded-b-xl border border-gray-200 flex-nowrap`}
                 ref={ref}
                 style={{ zIndex: 9999 }}
               >

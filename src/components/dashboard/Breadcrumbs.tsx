@@ -9,7 +9,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
   const pathParts = asPath.split("/").filter(Boolean);
 
   return (
-    <ol className="inline-flex items-center space-x-1 md:space-x-3 ">
+    <ol className="inline-flex items-center space-x-1 md:space-x-3">
       <li className="inline-flex items-center">
         <Link
           href={`/dashboard/`}
@@ -56,6 +56,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
               />
             </svg>
           </span>
+    
           <span className="capitalize">{pathParts[1]}</span>
         </Link>
       </li>
@@ -67,7 +68,9 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
           className={`inline-flex items-center capitalize  font-medium text-sm md:text-md md:font-bold ${
             pathParts.length === 3 || pageTitle ? "text-gray-700" : "text-gray-500"
           }`}
-        >
+        >          
+        {!dashboard && pathParts.length > 2 && (
+
          <span>
             <svg
               className="w-3 h-3 mr-1 md:mr-2.5 text-gray-400 mx-1"
@@ -85,6 +88,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
               />
             </svg>
           </span>
+        )}
           <span className={`inline-flex items-center  font-medium text-sm md:text-md md:font-bold ${
             pathParts.length === 3 ? "text-gray-700" : "text-gray-500"
           }` }>{pathParts.length < 4 && pageTitle ? pageTitle : pathParts[2] && typeof pathParts[2] === 'string' && pathParts[2].includes('?') ? pathParts[2].split("?")[0] : pathParts[2]}</span>

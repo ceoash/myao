@@ -339,7 +339,9 @@ const Offer: React.FC<any> = ({
                   border-gray-200
                   rounded-md
                   px-2
-                  bg-gray-100
+                  bg-white
+                  hover:bg-gray-100
+                  hover:text-gray-900
                 "
               >
                 <FaEye />
@@ -371,7 +373,9 @@ const Offer: React.FC<any> = ({
                         text-md border 
                         border-gray-200
                         px-2 
-                        bg-gray-100
+                        bg-white
+                        hover:bg-gray-100
+                        hover:text-gray-900
                       `}
                     >
                       <span>
@@ -391,10 +395,14 @@ const Offer: React.FC<any> = ({
                         items-center 
                         border
                         border-red-200 
-                        bg-red-100
+                        bg-red-200
                         rounded-md 
                         px-2 
-                        text-red-500"
+                        text-red-700
+                        hover:bg-red-400
+                        hover:text-white
+                        "
+                        
                     >
                       <FaTimes />
                       <span className="hidden 2xl:block">Cancel</span>

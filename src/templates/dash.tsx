@@ -202,7 +202,7 @@ const Dash = (props: IDashProps) => {
               ${toggleSidebar && "xl:mr-60"}
               overflow-y-auto h-full`}
             >
-              <div className={`flex justify-between gap-2 mx-4 lg:mx-8 mt-6  lg:mt-6 ${props.dashboard ? 'sm:mx-4 mb-4' : 'mx-6 md:mx-6 lg:mx-8'}  lg:mb-0 items-center`}>
+              <div className={`flex justify-between gap-2 mx-4 lg:mx-8 mt-6  lg:mt-6  ${props.dashboard ? 'sm:mx-4 mb-4' : 'mx-6 md:mx-6 lg:mx-8'}  lg:mb-0 items-center`}>
                 <Breadcrumbs pageTitle={props.pageTitle} dashboard={props.dashboard} />
                 {props.optionalData}
               </div>

@@ -21,7 +21,7 @@ const Inviter = ({inviter}: any) => {
    const {username, profile} = inviter
   return (
         <div className="flex gap-2.5 w-full  bg-gray-100 shadow mb-4 border-2 border-gray-200 rounded-lg p-2">
-          <div className="w-12">
+          <div className="w-12 relative">
             <Image
               alt='=profile image'
               layout='fill'

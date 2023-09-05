@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import axios from "axios";
 import Link from "next/link";
-import React, { use, useEffect, useState } from "react";
+import React, { FC, use, useEffect, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { BiCheckCircle, BiChevronsRight, BiStar } from "react-icons/bi";
@@ -9,16 +9,18 @@ import Button from "./dashboard/Button";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Spinner from "./Spinner";
+import { useSession } from "next-auth/react";
 
 interface ConnectProps {
   user: User;
 }
 
-const Connect = ({ user }: ConnectProps) => {
+const Connect: React.FC<ConnectProps> = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [invitationSent, setInvitationSent] = useState(false);
   const [date, setDate] = useState("");
-  
+
+  const {data: session, status} = useSession();
   const route = useRouter();
 
   useEffect(() => {
@@ -34,6 +36,10 @@ const Connect = ({ user }: ConnectProps) => {
   
   const handleEmailSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     setIsLoading(true);
+    if(session && status === "authenticated") {
+      route.push(`/dashboard/profile/${user.id}`);
+      return null;
+    }
     try {
       const response = await axios.post("/api/email/sendConnectEmail", {
         email: data.email,
@@ -54,6 +60,7 @@ const Connect = ({ user }: ConnectProps) => {
       setIsLoading(false);
     }
   };
+
   return (
     <>
       <div className="text-gray-600  w-full p-4 mt-6 mb-0 text-xs border rounded-lg border-gray-200 bg-white max-w-sm">
@@ -123,7 +130,7 @@ const Connect = ({ user }: ConnectProps) => {
               </>
             ) : (
               <div className="text-center m-auto w-full mb-12">
-<BiCheckCircle className="text-orange-default text-[60px] mx-auto mb-8 mt-2" />
+                <BiCheckCircle className="text-orange-default text-[60px] mx-auto mb-8 mt-2" />
 
                 <div className="mx-auto">
                   <Button

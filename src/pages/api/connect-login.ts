@@ -13,7 +13,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { email, token, connectTo, id } = body;
+    const { email, token, connectTo, id, session } = body;
+
 
     const invitation = await prisma.invitation.findUnique({ where: { token } });
     if (!invitation) {

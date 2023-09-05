@@ -193,10 +193,7 @@ const wizard = ({ session, user }: any) => {
         data.username = data.username.toLowerCase();
         break;
       case STEPS.PROFILE:
-        if (!userType) {
-          validation.isValid = false;
-          setError("userType", { message: "Please select a account type" }); 
-        }
+     
 
         if (data.bio && data.bio.length < 10 && data.bio.length > 100) {
           validation.isValid = false;
@@ -254,6 +251,7 @@ const wizard = ({ session, user }: any) => {
   const onSecondaryAction = () => {
     if (step !== STEPS.PASSWORD) {
       onBack();
+      clearErrors();
     }
   };
 

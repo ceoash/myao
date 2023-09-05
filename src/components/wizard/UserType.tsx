@@ -15,9 +15,11 @@ const UserType = ({
   userType,
   notrade,
 }: UserTypeProps) => {
+  
   const handleSelect = (value: string) => {
     setValue("userType", value);
     setUserType(value);
+    clearErrors && clearErrors("userType");
   };
 
   return (
@@ -27,7 +29,7 @@ const UserType = ({
       } auto-cols-fr gap-2`}
     >
       <div
-        onClick={() => (handleSelect("buyer"), clearErrors && clearErrors("userType"))}
+        onClick={() => (handleSelect("buyer"))}
         className={`${
           userType === "buyer" && "bg-orange-200 !border-orange-400"
         } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}
@@ -40,7 +42,7 @@ const UserType = ({
         </div>
       </div>
       <div
-        onClick={() => (handleSelect("seller"), clearErrors && clearErrors("userType"))}
+        onClick={() => (handleSelect("seller"))}
         className={`${
           userType === "seller" && "bg-orange-200 !border-orange-400"
         } cursor-pointer flex flex-col items-center p-4 border-2 border-gray-200 rounded-md`}

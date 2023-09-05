@@ -325,7 +325,7 @@ const Offers = ({
           </>
         </div>
       </div>
-      <div className="flex flex-col gap-4 min-w-full rounded-lg pt-2">
+      <div className="flex flex-col min-w-full rounded-lg pt-2">
         {activeTab === "sent" && (
           <>
             <div className="transition-all ease-in-out duration-200">
@@ -411,7 +411,7 @@ const Offers = ({
             </div>
 
             {multipage && countReceived > 0 && (
-              <div className="flex " key={activeTab + selectedCategory}>
+              <div className="flex" key={activeTab + selectedCategory}>
                 {receivedListings[selectedCategory] && (
                   <div className="flex gap-2">
                     {Array.from({ length: countReceived / 5 + 1 }).map(

@@ -322,15 +322,6 @@ const profile = ({ user, session, friend }: ProfieProps) => {
 
   const details = (
     <>
-      {user?.profile?.bio && (
-        <div className="col-span-12 lg:col-span-8">
-          <Card title={`Bio`} icon={<RiProfileLine />}>
-            <p>
-              {user?.profile?.bio || <span className="italic">No bio yet</span>}
-            </p>
-          </Card>
-        </div>
-      )}
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6 mb-6 xl:border xl:bg-white xl:p-6 border-gray-200 rounded-lg">
         <div className="flex items-center ">
           <MdHistory className="text-[36px] -mt-4" />
@@ -412,8 +403,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
           <div className="flex flex-col items-center justify-center h-full pb-6">
             <h3 className="mb-4">I am a seller</h3>
             <Image src={catAccept} className="mb-6" alt="" />
-            <p>
-</p>
+            <p></p>
             <Button
               label="Make me a offer"
               onClick={offerModal.onOpen}
@@ -476,7 +466,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
               </p>
             </div>
             <p className="text-sm font-medium text-gray-500 ">
-             0 global ratings
+              0 global ratings
             </p>
             <div className="flex items-center mt-4">
               <a
@@ -491,9 +481,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                   style={{ width: "0%" }}
                 ></div>
               </div>
-              <span className="text-sm font-medium text-gray-500 ">
-                0%
-              </span>
+              <span className="text-sm font-medium text-gray-500 ">0%</span>
             </div>
             <div className="flex items-center mt-4">
               <a
@@ -508,9 +496,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                   style={{ width: "0" }}
                 ></div>
               </div>
-              <span className="text-sm font-medium text-gray-500 ">
-                0%
-              </span>
+              <span className="text-sm font-medium text-gray-500 ">0%</span>
             </div>
             <div className="flex items-center mt-4">
               <a
@@ -525,9 +511,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                   style={{ width: "0" }}
                 ></div>
               </div>
-              <span className="text-sm font-medium text-gray-500 ">
-                0%
-              </span>
+              <span className="text-sm font-medium text-gray-500 ">0%</span>
             </div>
             <div className="flex items-center mt-4">
               <a
@@ -542,9 +526,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                   style={{ width: "0" }}
                 ></div>
               </div>
-              <span className="text-sm font-medium text-gray-500 ">
-                0%
-              </span>
+              <span className="text-sm font-medium text-gray-500 ">0%</span>
             </div>
             <div className="flex items-center mt-4">
               <a
@@ -559,9 +541,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                   style={{ width: "0" }}
                 ></div>
               </div>
-              <span className="text-sm font-medium text-gray-500 ">
-                0%
-              </span>
+              <span className="text-sm font-medium text-gray-500 ">0%</span>
             </div>
           </div>
         </Card>
@@ -581,7 +561,16 @@ const profile = ({ user, session, friend }: ProfieProps) => {
   );
 
   return (
-    <Dash noBreadcrumbs pageTitle={session?.user.username} meta={<Meta title={session?.user.username} description={`${session?.user.username} user profile`} />}>
+    <Dash
+      noBreadcrumbs
+      pageTitle={session?.user.username}
+      meta={
+        <Meta
+          title={session?.user.username}
+          description={`${session?.user.username} user profile`}
+        />
+      }
+    >
       <div className="xl:hidden">
         <UserCard
           header
@@ -656,6 +645,17 @@ const profile = ({ user, session, friend }: ProfieProps) => {
               messageModal.onOpen(session?.user?.id, recipientId)
             }
           />
+          {user?.profile?.bio && (
+            <div className="col-span-12 lg:col-span-8">
+              <Card title={`Bio`} icon={<RiProfileLine />}>
+                <p>
+                  {user?.profile?.bio || (
+                    <span className="italic">No bio yet</span>
+                  )}
+                </p>
+              </Card>
+            </div>
+          )}
           <Card
             className="p-6 text-sm text-gray-600"
             title={`More Info`}

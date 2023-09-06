@@ -175,7 +175,7 @@ useEffect(() => {
                               profilePicture:
                                 conversation.participant2?.profile?.image,
                             }}
-                            message={conversation.directMessages[0].text}
+                            message={conversation.directMessages[0] ? conversation.directMessages[0].text : "No messages yet"}
                           />
                         ))
                       : "No messages yet"}

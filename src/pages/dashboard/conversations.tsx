@@ -649,7 +649,7 @@ const Conversations = ({
   };
 
   return (
-    <Dash full={true} meta={<title>Conversation</title>}>
+    <Dash noBreadcrumbs full={true} meta={<title>Conversation</title>}>
       <div className="flex border border-gray-200 relative flex- -mt-1 flex-grow h-full overscroll-none">
         {conversations.length > 0 ? (
           <>

@@ -358,7 +358,7 @@ const Offers = ({
               )}
             </div>
             {multipage && countSent > 0 && (
-              <div className="flex mt-6" key={activeTab + selectedCategory}>
+              <div className="flex" key={activeTab + selectedCategory}>
                 {sentListings[selectedCategory] && (
                   <div className="flex gap-2">
                     {Array.from({ length: countSent / 5 + 1 }).map(

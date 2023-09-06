@@ -13,7 +13,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
       <li className="inline-flex items-center">
         <Link
           href={`/dashboard/`}
-          className={`inline-flex items-center font-medium hover:text-orange-600 text-sm md:text-md md:font-bold ${
+          className={`inline-flex items-center font-medium hover:text-orange-400 text-sm md:text-md md:font-bold ${
             pathParts.length === 1 ? "text-gray-700" : "text-gray-500"
           }`}
         >
@@ -35,7 +35,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
       <li className="inline-flex items-center">
         <Link
           href={`/dashboard/${pathParts[1]}`}
-          className={`inline-flex items-center text-sm md:text-md md:font-bold font-medium hover:text-orange-600 ${
+          className={`inline-flex items-center text-sm md:text-md md:font-bold font-medium hover:text-orange-400 ${
             pathParts.length === 2 ? "text-gray-700" : "text-gray-500"
           }`}
         >

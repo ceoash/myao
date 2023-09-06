@@ -56,10 +56,10 @@ const UserCard = ({
   return (
     <div
       id="profile-card"
-      className={`w-full py-6  px-6 lg:py-12 mb-6 bg-white  ${!header ? "rounded-xl border " : " border-b -mt-2"} border-gray-200`}
+      className={`w-full py-6  px-6 lg:py-12 xl:py-6 mb-6 bg-white  ${!header ? "rounded-xl border " : " border-b -mt-2"} border-gray-200`}
     >
       <div className="flex gap-4 lg:flex-col items-center mb-4">
-        <div className={`flex relative w-24 h-24 lg:h-32 lg:w-32 rounded-full border-4 border-gray-200 p-2 `}>
+        <div className={`flex relative w-24 h-24 lg:h-32 lg:w-32 xl:w-24 xl:h-24 rounded-full border-4 border-gray-200 p-2 `}>
             <Image
               src={
                 currentUser?.profile?.image || "/images/placeholders/avatar.png"

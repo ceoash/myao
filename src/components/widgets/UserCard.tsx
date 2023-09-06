@@ -11,6 +11,7 @@ import { User } from "@/types";
 import Button from "../dashboard/Button";
 import { Session } from "next-auth";
 import { FaUserCheck, FaUserMinus } from "react-icons/fa";
+import Image from "next/image";
 
 interface UserCardProps {
   onMessageClick?: () => void;
@@ -55,18 +56,19 @@ const UserCard = ({
   return (
     <div
       id="profile-card"
-      className={`w-full py-6  px-6  mb-6 bg-white  ${!header ? "rounded-xl border " : " border-b -mt-2"} border-gray-200`}
+      className={`w-full py-6  px-6 lg:py-12 mb-6 bg-white  ${!header ? "rounded-xl border " : " border-b -mt-2"} border-gray-200`}
     >
       <div className="flex gap-4 lg:flex-col items-center mb-4">
-        <div className={`flex ${header ? "max-w-[140px]" : "w-1/3  md:w-1/5 lg:w-full" }  `}>
-          <div className=" mx-auto">
-            <img
+        <div className={`flex relative w-24 h-24 lg:h-32 lg:w-32 rounded-full border-4 border-gray-200 p-2 `}>
+            <Image
               src={
                 currentUser?.profile?.image || "/images/placeholders/avatar.png"
               }
-              className={`w-full rounded-full border border-gray-200 p-2 ${header ? "max-w-[100px]" : "max-w-[200px]" } shadow`}
+              alt={currentUser?.username || "No name"}
+              objectFit="cover"
+              layout="fill"
+              className="rounded-full"
             />
-          </div>
         </div>
 
         <div className="flex flex-col  mb-2 lg:text-center ">

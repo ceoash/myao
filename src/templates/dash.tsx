@@ -209,7 +209,7 @@ const Dash = (props: IDashProps) => {
                 {props.optionalData}
               </div>
               )}
-              <div className="w-full mx-auto bg-gray-50 flex-grow md:px-0">
+              <div className="w-full mx-auto bg-gray-50 h-full md:px-0">
                 {props.children}
               </div>
             </div>

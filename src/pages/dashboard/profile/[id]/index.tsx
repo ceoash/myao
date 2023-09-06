@@ -581,7 +581,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
   );
 
   return (
-    <Dash pageTitle={session?.user.username} meta={<Meta title={session?.user.username} description={`${session?.user.username} user profile`} />}>
+    <Dash noBreadcrumbs pageTitle={session?.user.username} meta={<Meta title={session?.user.username} description={`${session?.user.username} user profile`} />}>
       <div className="xl:hidden">
         <UserCard
           header

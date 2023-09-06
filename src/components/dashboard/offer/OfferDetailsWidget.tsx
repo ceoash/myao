@@ -204,7 +204,7 @@ const OfferDetailsWidget = ({
           <div className="grid grid-cols-2 my-4 mx-4">
             <div className="flex items-center">
               <div className="relative">
-                <div className="rounded-full w-6 h-6 md:w-8 md:h-8 bg-white"></div>
+                <div className="rounded-full w-6 h-6 md:w-8 md:h-8 bg-white">
                 <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                 <Image
                   src={
@@ -212,10 +212,12 @@ const OfferDetailsWidget = ({
                       ? listing.seller.profile?.image
                       : dog
                   }
+                  className="rounded-full"
                   alt=""
                   layout="fill"
                   objectFit="cover"
                 />
+                </div>
               </div>
               <p className="ml-2 !container text-gray-800 text-md xl:text-md font-bold">
                 You
@@ -468,7 +470,7 @@ const OfferDetailsWidget = ({
           <div className="grid grid-cols-2 my-4 mx-4">
             <div className="flex items-center">
               <div className="relative">
-                <div className="rounded-full w-6 h-6 md:w-8 md:h-8 "></div>
+                <div className="rounded-full w-6 h-6 md:w-8 md:h-8 ">
                 <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                 <Image
                   src={
@@ -480,6 +482,7 @@ const OfferDetailsWidget = ({
                   layout="fill"
                   objectFit="cover"
                 />
+                </div>
               </div>
               <p className="ml-2 text-gray-800 text-sm xl:text-md font-bold">
                 {participant?.username}

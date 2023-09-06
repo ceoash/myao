@@ -155,7 +155,7 @@ useEffect(() => {
               </div>
               <div className="">
                 <div className="p-4">
-                  <h5 className="mb-3">Messages</h5>
+                  <h5 className="mb-3">Conversations</h5>
                   <div className="space-y-1">
                     {conversations && conversations.length > 0
                       ? conversations.map((conversation) => (

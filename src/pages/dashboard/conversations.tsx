@@ -16,14 +16,13 @@ import Sidebar from "@/components/dashboard/conversations/Sidebar";
 import Header from "@/components/dashboard/conversations/Header";
 import Button from "@/components/dashboard/Button";
 import AlertBanner from "@/components/dashboard/AlertBanner";
-import {
-  Conversation,
-  IDirectMessage,
-} from "@/interfaces/authenticated";
+import { Conversation, IDirectMessage } from "@/interfaces/authenticated";
 import { useSocketContext } from "@/context/SocketContext";
 import { useUnreadMessages } from "@/context/UnreadMessagesContext";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
+import { title } from "process";
+import { Meta } from "@/layouts/meta";
 
 const Conversations = ({
   safeConversations,
@@ -203,9 +202,11 @@ const Conversations = ({
           conversationId: activeConversationState?.id,
         })
         .then((res) => res.data);
+        const reversed = response.messages.reverse();
       setSkipIndex((prevSkipIndex) => prevSkipIndex + 5);
-      const reversed = response.messages.reverse();
       setMessages((prevMessages) => [...reversed, ...prevMessages]);
+      if (response.messages.length < 5) setNoMoreMessages(true);
+      messagesStartRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       console.log(error);
     }
@@ -393,12 +394,11 @@ const Conversations = ({
         conversationId: activeConversationState?.id,
         status: status,
       });
-      if (status === "accepted"){
+      if (status === "accepted") {
         toast.success(status);
-        console.log("res", response.data)
+        console.log("res", response.data);
         socket.emit("accept_conversation", response.data.conversation);
-      }
-      else if (status === "declined"){
+      } else if (status === "declined") {
         socket.emit("decline_conversation", response.data.conversation);
       }
     } catch (error) {
@@ -545,7 +545,7 @@ const Conversations = ({
 
           return updatedConversations;
         });
-        if(activeConversationState?.id === newMessage.conversationId){
+        if (activeConversationState?.id === newMessage.conversationId) {
           setUnreadCount((prev: number) => prev - 1);
         }
         setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -613,7 +613,7 @@ const Conversations = ({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages[messages.length - 1]?.id]);
 
   const handleSubmit = async (image: string, text: string) => {
     setSubmitting(true);
@@ -649,7 +649,11 @@ const Conversations = ({
   };
 
   return (
-    <Dash noBreadcrumbs full={true} meta={<title>Conversation</title>}>
+    <Dash
+      noBreadcrumbs
+      full={true}
+      meta={<Meta title="Messages" description="View messages" />}
+    >
       <div className="flex border border-gray-200 relative flex- -mt-1 flex-grow h-full overscroll-none">
         {conversations.length > 0 ? (
           <>
@@ -708,93 +712,102 @@ const Conversations = ({
                 isBlocked={isBlocked || false}
                 setActiveConversationState={setActiveConversationState}
               />
-              
+
               <div
                 key={activeConversationState?.id}
                 id="messages"
-                className="flex flex-col flex-grow space-y-4 p-3 overflow-y-auto scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white relative"
+                className="flex flex-col flex-grow space-y-4 p-3 overflow-none scrollbar-thumb-orange scrollbar-thumb-rounded scrollbar-track-orange-lighter scrollbar-w-2 scrolling-touch bg-white relative"
                 style={{ height: "calc(100vh - 34rem)" }}
               >
-                <div className="p-4 pb-0 bg-gradient-to-b from-white to-transparent absolute top-0 left-0 w-full">
-                {activeConversationState?.status === "none" &&
-                  !activeConversationState?.blockedStatus && (
-                    <div className=" ">
-                      <AlertBanner key={activeConversationState?.id} secondary>
-                        <div className="flex justify-between items-center w-full">
-                          <div>
-                            {activeConversationState?.participant1Id ===
-                            session?.user?.id
-                              ? `Your message is awaiting approval from ${participantUsername}`
-                              : `Accept this message request to start chatting with ${participantUsername} `}
-                          </div>
-                          {activeConversationState?.participant2Id ===
-                            session?.user?.id && (
-                            <div className="flex gap-1 ml-auto">
-                              <button
-                                className="flex ml-auto items-center gap-1 border border-gray-200  bg-white rounded-lg text-xs p-1 px-2 hover:bg-gray-50"
-                                onClick={() => handleStatusUpdate("accepted")}
-                              >
-                                <FaCheck className="" /> Accept
-                              </button>
-                              {activeConversationState && (
+                <div className="p-4 bg-gradient-to-b from-white to-transparent  top-0 left-0 w-full absolute">
+                  {activeConversationState?.status === "none" &&
+                    !activeConversationState?.blockedStatus && (
+                      <div className=" ">
+                        <AlertBanner
+                          key={activeConversationState?.id}
+                          secondary
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <div>
+                              {activeConversationState?.participant1Id ===
+                              session?.user?.id
+                                ? `Your message is awaiting approval from ${participantUsername}`
+                                : `Accept this message request to start chatting with ${participantUsername} `}
+                            </div>
+                            {activeConversationState?.participant2Id ===
+                              session?.user?.id && (
+                              <div className="flex gap-1 ml-auto">
                                 <button
                                   className="flex ml-auto items-center gap-1 border border-gray-200  bg-white rounded-lg text-xs p-1 px-2 hover:bg-gray-50"
-                                  onClick={() =>
-                                    confirm.onOpen(
-                                      "Are you sure you want to decline this message request?",
-                                      async () => {
-                                        await handleStatusUpdate("declined");
-                                        confirm.onClose();
-                                      }
-                                    )
-                                  }
+                                  onClick={() => handleStatusUpdate("accepted")}
                                 >
-                                  <FaTimes className="" /> Decline
+                                  <FaCheck className="" /> Accept
                                 </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                                {activeConversationState && (
+                                  <button
+                                    className="flex ml-auto items-center gap-1 border border-gray-200  bg-white rounded-lg text-xs p-1 px-2 hover:bg-gray-50"
+                                    onClick={() =>
+                                      confirm.onOpen(
+                                        "Are you sure you want to decline this message request?",
+                                        async () => {
+                                          await handleStatusUpdate("declined");
+                                          confirm.onClose();
+                                        }
+                                      )
+                                    }
+                                  >
+                                    <FaTimes className="" /> Decline
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </AlertBanner>
+                      </div>
+                    )}
+                  {activeConversationState?.status === "accepted" && (
+                    <div className="col-span-12 -mx-2">
+                      <div className="flex justify-between items-center pt-1 bg-white">
+                      <div className="border-t border-gray-200 h-1 w-full hidden md:block bg-white"></div>
+                      <div className="md:w-auto md:whitespace-nowrap text-center mx-4 text-sm text-gray-500 bg-whire p-1 px-3">
+                        We are here to protect you from fraud please do not
+                        share your personal information
+                      </div>
+                      <div className="border-t border-gray-200 w-full hidden md:block bg-white"></div>
+
+                      </div>
+                      <div className="h-6 bg-gradient-to-b from-white to-transparent"></div>
+                    </div>
+                  )}
+
+                  {activeConversationState?.blockedStatus && (
+                    <div className="max-w-xl mx-auto">
+                      <AlertBanner
+                        key={activeConversationState?.id}
+                        danger
+                        onClick={handleBlocked}
+                      >
+                        You blocked this user
                       </AlertBanner>
                     </div>
                   )}
-                {activeConversationState?.status === "accepted" && (
-                  <div className="col-span-12 flex justify-between items-center">
-                    <div className="border-t border-gray-200 h-1 w-full hidden md:block"></div>
-                    <div className="md:w-auto md:whitespace-nowrap text-center mx-4 text-sm text-gray-500">
-                      We are here to protect you from fraud please do not share
-                      your personal information
+                  {status === "declined" && (
+                    <div className="max-w-xl mx-auto">
+                      <AlertBanner key={activeConversationState?.id} danger>
+                        {activeConversationState?.participant1Id ===
+                        session?.user?.id
+                          ? `Your message request to ${participantUsername} has been declined`
+                          : `You have declined the message request from ${participantUsername} `}
+                      </AlertBanner>
                     </div>
-                    <div className="border-t border-gray-200 w-full hidden md:block"></div>
-                  </div>
-                )}
-
-                {activeConversationState?.blockedStatus && (
-                  <div className="max-w-xl mx-auto">
-                    <AlertBanner
-                      key={activeConversationState?.id}
-                      danger
-                      onClick={handleBlocked}
-                    >
-                      You blocked this user
-                    </AlertBanner>
-                  </div>
-                )}
-                {status === "declined" && (
-                  <div className="max-w-xl mx-auto">
-                    <AlertBanner key={activeConversationState?.id} danger>
-                      {activeConversationState?.participant1Id ===
-                      session?.user?.id
-                        ? `Your message request to ${participantUsername} has been declined`
-                        : `You have declined the message request from ${participantUsername} `}
-                    </AlertBanner>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+                
+                <div className=" flex flex-col gap-4 overflow-y-auto pt-10">
                 {!noMoreMessages &&
                   status === "accepted" &&
                   messages.length > 3 && (
-                    <div ref={messagesStartRef} className="flex justify-center">
+                    <div ref={messagesStartRef} className="flex justify-center bg-transparent">
                       <Button
                         onClick={onLoadMore}
                         options={{ size: "sx", mute: true }}
@@ -803,20 +816,19 @@ const Conversations = ({
                       </Button>
                     </div>
                   )}
-
-                {messages.map((message, index) => {
-                  if (message.text == "" && message.image == "") return null;
-                  return (
-                    <MessageComponent
-                      key={message?.id}
-                      message={message}
-                      session={session}
-                      ref={
-                        index === messages.length - 1 ? messagesEndRef : null
-                      }
-                    />
-                  );
-                })}
+                  {messages.map((message, index) => {
+                    if (message.text == "" && message.image == "") return null;
+                    return (
+                      <MessageComponent
+                        key={message?.id}
+                        message={message}
+                        session={session}
+                        ref={null}
+                      />
+                    );
+                  })}
+                  <div ref={messagesEndRef}></div>
+                </div>
               </div>
               <div className="border-t-2 mt-auto bg-gray-50 border-gray-200 px-4 mb-2 sm:mb-0">
                 <ImageTextArea

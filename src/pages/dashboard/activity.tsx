@@ -42,7 +42,7 @@ const Index = ({ session, activities }: IIndexProps) => {
   };
 
   return (
-    <Dash meta={<Meta title="" description="" />}>
+    <Dash meta={<Meta title="Activity" description="View your offer activity" />}>
       <div>
         <div className="w-full mx-auto px-4 sm:px-8">
           <div className="pt-6">

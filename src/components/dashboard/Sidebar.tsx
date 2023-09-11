@@ -25,10 +25,10 @@ const Sidebar = () => {
     <aside className="hidden md:block md:fixed inset-y-0 left-0 bg-white shadow-md max-h-screen lg:w-60">
       <div className="flex flex-col justify-between h-full">
         <div className="flex-grow">
-          <div className="px-4 pt-2 text-center border-b">
+          <div className=" pt-2 text-center border-b">
             <img src="/images/cat.png" className="w-12 pb-3 mx-auto" />
           </div>
-          <div className="p-4">
+          <div className="px-2 py-4">
             <ul className="space-y-1">
               <li className={
                       router.pathname === "/dashboard" ? "text-orange-default" : ""

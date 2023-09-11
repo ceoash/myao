@@ -124,6 +124,24 @@ interface PageProps {
   session: Session;
 }
 
+const generateStats = (stats: {
+  sentCount: number;
+  receivedCount: number;
+  cancelledSentCount: number;
+  cancelledReceivedCount: number;
+  completedSentCount: number;
+  completedReceivedCount: number;
+}) => {
+  const totalListings = stats.sentCount + stats.receivedCount;
+  const totalCancelledListings =
+    stats.cancelledSentCount + stats.cancelledReceivedCount;
+  const totalCompletedListings =
+    stats.completedSentCount + stats.completedReceivedCount;
+  return Math.trunc(
+    ((totalCompletedListings - totalCancelledListings) / totalListings) * 100
+  );
+};
+
 const Index = ({ listing, session }: PageProps) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("description");
@@ -142,7 +160,7 @@ const Index = ({ listing, session }: PageProps) => {
   const router = useRouter();
   const [currentListing, setCurrentListing] = useState<any>({});
   const [size, setSize] = useState(0);
-  const [mobileView, setMobileView] = useState(false)
+  const [mobileView, setMobileView] = useState(false);
 
   const edit = useOfferEditModal();
   const now = Date.now();
@@ -191,17 +209,26 @@ const Index = ({ listing, session }: PageProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768 && window.innerWidth !== size && !mobileView) {
+      if (
+        window.innerWidth <= 768 &&
+        window.innerWidth !== size &&
+        !mobileView
+      ) {
         if (tab !== "overview") setTab("overview");
         setTab("overview");
         setSize(window.innerWidth);
         setMobileView(true);
-      } else if(window.innerWidth >= 768 && window.innerWidth !== size && tab === "overview" && mobileView){
+      } else if (
+        window.innerWidth >= 768 &&
+        window.innerWidth !== size &&
+        tab === "overview" &&
+        mobileView
+      ) {
         setTab("details");
         setSize(window.innerWidth);
         setMobileView(false);
       }
-    }
+    };
     // Initial check
     handleResize();
 
@@ -230,19 +257,8 @@ const Index = ({ listing, session }: PageProps) => {
             userId,
             sessionId: sessionUser?.id,
           });
-
           const stats = response.data;
-          const totalListings = stats.sentCount + stats.receivedCount;
-          const totalCancelledListings =
-            stats.cancelledSentCount + stats.cancelledReceivedCount;
-          const totalCompletedListings =
-            stats.completedSentCount + stats.completedReceivedCount;
-          const trustScore = Math.trunc(
-            ((totalCompletedListings - totalCancelledListings) /
-              totalListings) *
-              100
-          );
-
+          const trustScore = generateStats(stats);
           setParticipant((prev) => ({ ...prev, ...stats, trustScore }));
           setLoadingState((prev) => ({ ...prev, user: false }));
         } catch (error) {
@@ -352,15 +368,6 @@ const Index = ({ listing, session }: PageProps) => {
       console.log("Received new message: ", data);
       setMessages((prevMessages) => [...prevMessages, data]);
     });
-    socket.on("updated_listing", (data) => {
-      console.log("Received listing updates: ", data);
-      setCurrentListing((prev: any) => {
-        return {
-          ...prev,
-          ...data.listing,
-        };
-      });
-    });
 
     socket.on("updated_bid", (data) => {
       const { price, userId, username, listingId, previous } = data;
@@ -407,6 +414,25 @@ const Index = ({ listing, session }: PageProps) => {
           `Received status update for listing ${listingId}: ${newStatus}`
         );
       setStatus(newStatus);
+    });
+    socket.on("updated_listing", (data) => {
+      const { listing } = data;
+
+      console.log("Received updated listing: ", listing)
+
+      setCurrentListing((prev: any) => {
+        return {
+          ...prev,
+          description: listing.description,
+          title: listing.title,
+          image: listing.image,
+          updatedAt: listing.updatedAt,
+          status: listing.status,
+          options: listing.options,
+         
+        };
+      });
+      
     });
 
     return () => {
@@ -640,13 +666,13 @@ const Index = ({ listing, session }: PageProps) => {
                   <div className="block">
                     {currentBid.currentPrice && (
                       <div className="text-xs font-bold">
-                          Start price by <Link
-                            href={`/dashboard/profile/${currentBid.byUserId}`}
-                            className="underline"
-                          >
-                            {listing.user.username}
-                          </Link>
-                          
+                        Start price by{" "}
+                        <Link
+                          href={`/dashboard/profile/${currentBid.byUserId}`}
+                          className="underline"
+                        >
+                          {listing.user.username}
+                        </Link>
                       </div>
                     )}
                     <div className="font-extrabold ">
@@ -662,7 +688,6 @@ const Index = ({ listing, session }: PageProps) => {
                         <h5 className="underline mt-2">Open Offer {status}</h5>
                       )}
                     </div>
-                    
                   </div>
 
                   <div className={`block`}>
@@ -724,10 +749,10 @@ const Index = ({ listing, session }: PageProps) => {
             ) : (
               <div className="flex flex-col items-center my-12">
                 <p className="font-bold my-6 ">No photos available</p>
-                <div className=" flex gap-2 items-center justify-center p-2 border border-gray-200 rounded-lg">
-                  <FaImage className="text-xl text-gray-400" />
+                <Button onClick={handleAddImages} >
+                  <FaImage className="text-xl text-gray-400 mr-1" />
                   <p className="font-bold text-gray-500">Add photos</p>
-                </div>
+                </Button>
               </div>
             )}
           </>
@@ -839,8 +864,12 @@ const Index = ({ listing, session }: PageProps) => {
                 {MainBody}
                 {status === "completed" && (
                   <div className="hidden md:block">
-                    {reviews.userReview && ( <ReviewBox review={reviews.userReview} /> )}
-                    {reviews.participantReview && ( <ReviewBox review={reviews.participantReview} />)}
+                    {reviews.userReview && (
+                      <ReviewBox review={reviews.userReview} />
+                    )}
+                    {reviews.participantReview && (
+                      <ReviewBox review={reviews.participantReview} />
+                    )}
                     {!reviews.userReview && (
                       <ReviewForm
                         listingId={currentListing.id}
@@ -858,22 +887,21 @@ const Index = ({ listing, session }: PageProps) => {
               </>
             )}
 
-            {tab === "activity" &&
-            <div className="mt-4">
-              {activities?.map((activity: any, i: number) => (
-                <div
-                  key={i}
-                  className="flex gap-4 justify-between px-1 pb-2 border-b border-gray-200 mb-2"
-                >
-                  <div>{activity.message}</div>
-                  <div className="text-gray-500 text-sm italic">
-                    {timeSince(activity.createdAt)}
+            {tab === "activity" && (
+              <div className="mt-4">
+                {activities?.map((activity: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex gap-4 justify-between px-1 pb-2 border-b border-gray-200 mb-2"
+                  >
+                    <div>{activity.message}</div>
+                    <div className="text-gray-500 text-sm italic">
+                      {timeSince(activity.createdAt)}
+                    </div>
                   </div>
-                </div>
-
-              ))}
+                ))}
               </div>
-            }
+            )}
 
             {tab === "bids" && (
               <div className="mb-6  mt-4">
@@ -882,7 +910,8 @@ const Index = ({ listing, session }: PageProps) => {
             )}
           </div>
 
-          <div className={`w-full xl:col-span-4 col-span-4 ${
+          <div
+            className={`w-full xl:col-span-4 col-span-4 ${
               tab === "overview" ? "block" : "hidden md:block"
             }`}
           >

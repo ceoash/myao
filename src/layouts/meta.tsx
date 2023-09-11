@@ -63,7 +63,7 @@ const Meta = (props: IMetaProps) => {
         strategy="afterInteractive"
         src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"
       />
-      <Script
+      {/* <Script
         id="google-analytics"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
@@ -76,9 +76,9 @@ const Meta = (props: IMetaProps) => {
           });
         `,
         }}
-      />
+      /> */}
       <NextSeo
-        title={`MYAO | ${props.title}`}
+        title={`${props.title ? `${props.title} | ` : ""}${AppConfig.site_name}`}
         description={props.description}
         canonical={props.canonical}
         openGraph={{

@@ -10,7 +10,7 @@ import QuickConnectModal from "@/components/modals/QuickConnectModal";
 import PendingConversationModal from "@/components/modals/PendingConversationModal";
 import RejectConversationModal from "@/components/modals/RejectConversationModal";
 import Sidebar from "@/components/dashboard/Sidebar";
-
+import { usePathname } from "next/navigation";
 import { Router } from "next/router";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -18,7 +18,7 @@ import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import QRModal from "@/components/modals/QRModal";
 import SearchComponentModal from "@/components/modals/SearchModal";
 import OfferEditModal from "@/components/modals/OfferEditModal";
-import Sidebar2 from "@/components/dashboard/Sidebar2";
+import ActivitySidebar from "@/components/dashboard/ActivitySidebar";
 import { useAlerts } from "@/hooks/AlertHook";
 import Link from "next/link";
 import Breadcrumbs from "@/components/dashboard/Breadcrumbs";
@@ -38,15 +38,14 @@ export interface ErrorResponse {
 }
 
 const Dash = (props: IDashProps) => {
-  const nextrouter = Router;
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const alerts = useAlerts();
-
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const [toggleMobileSidebar, setToggleMobileSidebar] = useState(false);
-
+  const nextrouter = Router;
+  const router = useRouter();
+  const pathname = usePathname();
   const handleToggle = (mobile?: boolean) => {
     setToggleMobileSidebar((prev) => {
       return mobile || false;
@@ -99,14 +98,13 @@ const Dash = (props: IDashProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setToggleSidebar(window.innerWidth >= 1280);
+      if (pathname === "/dashboard") {
+        setToggleSidebar(window.innerWidth >= 1280);
+      }
     };
-
     // Initial check
     handleResize();
-
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -200,24 +198,32 @@ const Dash = (props: IDashProps) => {
               transition-all duration-200 ease-in-out
               bg-gray-50
               ${props.full ? "" : "md:ml-20 lg:ml-60"} 
-              ${toggleSidebar && "xl:mr-60"}
+              ${props.dashboard && toggleSidebar && "xl:mr-60"}
               overflow-y-auto h-full`}
             >
               {!props.noBreadcrumbs && (
-              <div className={`flex justify-between gap-2 mx-4 lg:mx-8 mt-6  lg:mt-6  ${props.dashboard ? 'sm:mx-4 mb-4' : 'mx-6 md:mx-6 lg:mx-8'}  lg:mb-0 items-center`}>
-                <Breadcrumbs pageTitle={props.pageTitle} dashboard={props.dashboard} />
-                {props.optionalData}
-              </div>
+                <div
+                  className={`flex justify-between gap-2 mx-4 lg:mx-8 mt-6  lg:mt-6  ${
+                    props.dashboard ? "sm:mx-4 mb-4" : "mx-6 md:mx-6 lg:mx-8"
+                  }  lg:mb-0 items-center`}
+                >
+                  <Breadcrumbs
+                    pageTitle={props.pageTitle}
+                    dashboard={props.dashboard}
+                  />
+                  {props.optionalData}
+                </div>
               )}
               <div className="w-full mx-auto bg-gray-50 h-full md:px-0">
                 {props.children}
               </div>
             </div>
             {toggleSidebar && (
-              <Sidebar2
+              <ActivitySidebar
                 mobile={toggleMobileSidebar}
                 toggle={toggleSidebar}
                 setToggle={setToggleSidebar}
+                dashboard={props.dashboard === true ? true : false}
               />
             )}
           </div>

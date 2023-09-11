@@ -36,8 +36,8 @@ const Index = ({
     <Dash
       meta={
         <Meta
-          title="Make You An Offer You Can't Refuse"
-          description="This is the Make You An Offer Web App"
+          title="Offers"
+          description="View your offers and manage them"
         />
       }
     >

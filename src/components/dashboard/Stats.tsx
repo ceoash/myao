@@ -104,14 +104,14 @@ const Stats = ({
           className="bg-orange-100"
           link="/dashboard/offers?sent=true"
         />
-        <InfoCard
+        {/* <InfoCard
           key={randomAdvice.key + Math.floor(Math.random() * 1000)}
           title={randomAdvice.key}
           text={randomAdvice?.value?.advice || "Loading..."}
           color={`purple`}
           className="bg-purple-100"
           button={{label: "Learn More", onClick: () => {setRandomAdvice(getRandomAdvice())}}}
-        />
+        /> */}
       </div>
     </div>
   );

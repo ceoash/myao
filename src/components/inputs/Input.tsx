@@ -66,6 +66,7 @@ const Input: React.FC<InputProps> = ({
             type={type || "text"}
             value={value}
             style={{ zIndex: 0 }}
+            required={required}
             className={`
           peer
           w-full

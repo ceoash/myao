@@ -75,7 +75,7 @@ const ReviewForm = ({
     
   };
   return (
-    <div className="p-4 bg-white border rounded-lg border-gray-200 mb-6 lg:mb-0">
+    <div className="p-4 bg-white border rounded-lg border-gray-200  lg:mb-6  mt-6">
       <h4 className="mb-2">Leave a review</h4>
       <p className="mb-2">How would you rate your experience?</p>
       <form onChange={() => clearErrors}>

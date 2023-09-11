@@ -1,11 +1,6 @@
 import React, { Dispatch, use, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
-import {
-  ExtendedActivity,
-  IConversation,
-  INotification,
-} from "@/interfaces/authenticated";
 import ActivityCard from "./ActivityCard";
 import MessageCard from "./cards/MessageCard";
 import NotificationCard from "./cards/NotificationCard";
@@ -18,11 +13,13 @@ interface SidebarProps {
   mobile?: boolean;
   toggle?: boolean;
   setToggle?: (mobile: boolean) => void;
+  dashboard?: boolean;
 }
-const Sidebar2 = ({
+const Sidebar = ({
   mobile,
   toggle,
   setToggle,
+  dashboard
 }: SidebarProps) => {
   const { data: session } = useSession();
   const [showMobile, setShowMobile] = useState(window.innerWidth <= 768);
@@ -87,12 +84,43 @@ useEffect(() => {
   ] */
 
   return (
-    <div className="transition-all duration-300 ease-in-out absolute xl:fixed inset-y-0 right-0 h-screen w-full xl:w-auto backdrop-blur-md bg-neutral-800/70 flex xl:bg-transparent xl:backdrop-blur-0 z-40">
+    <div className={`transition-all
+    duration-300
+    ease-in-out
+    absolute
+    xl:fixed
+    inset-y-0
+    right-0
+    h-screen
+    w-full
+    backdrop-blur-md
+    bg-neutral-800/70
+    flex
+    z-40
+    ${dashboard === true && "xl:bg-transparent xl:backdrop-blur-0 xl:w-auto"}`}>
       <aside
-        className={`transition-all ease-in-out duration-300 h-screen ml-auto w-auto   inset-y-0 right-0 bg-white shadow-md max-h-screen xl:w-60 `}
+        className={`transition-all
+        ease-in-out
+        duration-300
+        h-screen
+        ml-auto
+        w-auto
+        inset-y-0
+        right-0
+        bg-white
+        shadow-md
+        max-h-screen
+        ${dashboard === true && "xl:w-60 "}`}
       >
         {mobile && showMobile ? (
-          <div className="flex flex-col cursor-pointer z-50 w-[250px] pt-20 px-2">
+          <div className="flex
+          flex-col
+          cursor-pointer
+          z-50
+          w-[250px]
+          pt-20
+          px-2
+          ">
           <div className=" md:hidden">
             <MenuItem label="Home" link url={"/"} />
             <MenuItem label="Offers" link url={"/dashboard/offers"} />
@@ -190,4 +218,4 @@ useEffect(() => {
   );
 };
 
-export default Sidebar2;
+export default Sidebar;

@@ -123,7 +123,7 @@ const Settings = ({ user }: {
   };
 
   return (
-    <Dash meta={<Meta title="" description="" />}>
+    <Dash meta={<Meta title="Settings" description="Manage and upate your profile and settings" />}>
       <div className="container px-4 mx-auto">
         <div className="lg:flex flex-col lg:flex-wrap mt-10 gap-6 ">
           <h2 className="px-6">Settings</h2>

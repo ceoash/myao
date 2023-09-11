@@ -171,7 +171,7 @@ const Index = ({
       }
       meta={
         <Meta
-          title="Make You An Offer You Can't Refuse"
+          title="Dashboard"
           description="This is the Make You An Offer Web App"
         />
       }
@@ -208,6 +208,21 @@ const Index = ({
               />
             </>
           )}
+             {/* Connect */}
+
+             <div className="pb-6 col-span-12 -mt-10">
+           {/*  <h3>Make Connections</h3> */}
+          </div>
+          <div className="lg:grid lg:grid-cols-2 gap-4 items-stretch auto-cols-fr md:col-span-12">
+            <InviteFriend user={user} />
+            <div className="rounded-xl bg-white border border-gray-200 xl:flex-1 mb-6 ">
+              <QuickConnect
+                session={session}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Offers */}
@@ -257,21 +272,7 @@ const Index = ({
             </div>
           )}
 
-          {/* Connect */}
-
-          <div className="pb-6">
-            <h3>Make Connections</h3>
-          </div>
-          <div className="lg:grid lg:grid-cols-2 gap-4 items-stretch auto-cols-fr">
-            <InviteFriend user={user} />
-            <div className="rounded-xl bg-white border border-gray-200 xl:flex-1 mb-6 ">
-              <QuickConnect
-                session={session}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-              />
-            </div>
-          </div>
+       
         </div>
       </div>
     </Dash>

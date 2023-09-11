@@ -15,7 +15,7 @@ interface ConnectProps {
 const Connect = ({ user, session }: ConnectProps) => {
   return (
     <div className="h-screen bg-gray-50">
-      <Meta title="Connect" description={`Connect with ${user.username}`} />
+      <Meta title={`Connect`} description={`Connect with ${user.username}`} />
       <div className="flex flex-col items-center">
       <Link href="/dashboard" className="flex items-center mt-12">
         <img src="/images/cat.png" className="h-[30px]  pr-2" />

@@ -28,7 +28,7 @@ const profile = ({ user, session, sent, received }: myProfileProps) => {
   const friends = [];
 
   return (
-    <Dash meta={<Meta title="" description="" />}>
+    <Dash meta={<Meta title="My Profile" description="View and update your profile" />}>
       <div className="my-10 px-6">
         <h3>My Profile</h3>
       </div>

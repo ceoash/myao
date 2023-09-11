@@ -29,7 +29,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
       return (
         <>
           {message.listingId && (
-            <div className="col-span-12 flex justify-center items-center py-4">
+            <div className="col-span-12 flex justify-center items-center py-4 overflow-y-auto">
               <div className="hidden lg:block border-b border-b-gray-200 h-2 flex-1"></div>
               <div className="px-4">
                 <div className="font-bold flex gap-2 items-center">

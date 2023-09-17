@@ -1,11 +1,11 @@
 import Link from "next/link";
 import axios from "axios";
+import useQuickConnect from "@/hooks/useQuickConnect";
+import Button from "../dashboard/Button";
 import { User } from "@prisma/client";
 import { toast } from "react-hot-toast";
 import { FaUserCheck, FaUserMinus } from "react-icons/fa";
 import { useSocketContext } from "@/context/SocketContext";
-import useQuickConnect from "@/hooks/useQuickConnect";
-import Button from "../dashboard/Button";
 
 interface FriendsWidgetProps {
   session: any;

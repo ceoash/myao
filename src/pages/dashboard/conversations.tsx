@@ -1,11 +1,3 @@
-import axios from "axios";
-import { GetServerSideProps } from "next";
-import { useState, useEffect } from "react";
-import { useRef } from "react";
-import { getSession } from "next-auth/react";
-import { Dash } from "@/templates/dash";
-import { FieldValues, useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
 import getConversationsByUserId from "@/actions/getConversationsByUserId";
 import MessageComponent from "@/components/chat/Message";
 import ImageTextArea from "@/components/inputs/ImageTextArea";
@@ -16,19 +8,25 @@ import Sidebar from "@/components/dashboard/conversations/Sidebar";
 import Header from "@/components/dashboard/conversations/Header";
 import Button from "@/components/dashboard/Button";
 import AlertBanner from "@/components/dashboard/AlertBanner";
+import axios from "axios";
+import useConfirmationModal from "@/hooks/useConfirmationModal";
+import { GetServerSideProps } from "next";
+import { useState, useEffect } from "react";
+import { useRef } from "react";
+import { getSession } from "next-auth/react";
+import { Dash } from "@/templates/dash";
+import { FieldValues, useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import { Conversation, IDirectMessage } from "@/interfaces/authenticated";
 import { useSocketContext } from "@/context/SocketContext";
 import { useUnreadMessages } from "@/context/UnreadMessagesContext";
 import { FaCheck, FaTimes } from "react-icons/fa";
-import useConfirmationModal from "@/hooks/useConfirmationModal";
-import { title } from "process";
 import { Meta } from "@/layouts/meta";
 
 const Conversations = ({
   safeConversations,
   session,
   conversationId,
-  currentUser,
 }: any) => {
   const offerModal = useOfferModal();
   const [skipIndex, setSkipIndex] = useState<number>(5);

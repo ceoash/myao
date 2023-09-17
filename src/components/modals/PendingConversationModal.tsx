@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
 import Modal from "./Modal";
-import Heading from "./Heading";
 import axios from "axios";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { User } from "@prisma/client";
-import useConversationModal from "@/hooks/usePendingConversationModal";
-import { time } from "console";
 import { formatDistanceToNow } from "date-fns";
+import useConversationModal from "@/hooks/usePendingConversationModal";
+
 export interface ErrorResponse {
   error: string;
 }
@@ -20,7 +16,6 @@ const PendingConversationModal = ({}) => {
   const router = useRouter();
 
   const {
-    register,
     handleSubmit,
     formState: { errors },
     reset,

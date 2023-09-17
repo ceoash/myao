@@ -1,10 +1,8 @@
+import { useEffect, useState } from "react";
 import { ExtendedActivity } from "@/interfaces/authenticated";
-import { AppConfig } from "@/utils/AppConfig";
 import { notificationIcon } from "@/utils/checkers";
-import { timeInterval, timeSince } from "@/utils/formatTime";
+import { timeInterval } from "@/utils/formatTime";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import { CiChat1, CiCreditCard1, CiInboxIn, CiSettings, CiShoppingTag, CiUser } from "react-icons/ci";
 
 interface ActivityCardProps {
   className?: string;
@@ -14,7 +12,7 @@ interface ActivityCardProps {
   page?: boolean
 }
 
-const ActivityCard = ({ activity, className, tall, icon, page }: ActivityCardProps) => {
+const ActivityCard = ({ activity, page }: ActivityCardProps) => {
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
 
   useEffect(() => {

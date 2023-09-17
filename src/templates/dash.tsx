@@ -1,27 +1,26 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import UserMenu from "@/components/UserMenu";
 import OfferModal from "@/components/modals/OfferModal";
 import MessageModal from "@/components/modals/MessageModal";
 import StartConversation from "@/components/modals/StartConversation";
-import { useSession } from "next-auth/react";
-import { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import QuickConnectModal from "@/components/modals/QuickConnectModal";
 import PendingConversationModal from "@/components/modals/PendingConversationModal";
 import RejectConversationModal from "@/components/modals/RejectConversationModal";
 import Sidebar from "@/components/dashboard/Sidebar";
-import { usePathname } from "next/navigation";
-import { Router } from "next/router";
-import { SkeletonTheme } from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import QRModal from "@/components/modals/QRModal";
 import SearchComponentModal from "@/components/modals/SearchModal";
 import OfferEditModal from "@/components/modals/OfferEditModal";
 import ActivitySidebar from "@/components/dashboard/ActivitySidebar";
-import { useAlerts } from "@/hooks/AlertHook";
-import Link from "next/link";
 import Breadcrumbs from "@/components/dashboard/Breadcrumbs";
+import { useSession } from "next-auth/react";
+import { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useAlerts } from "@/hooks/AlertHook";
+import { usePathname } from "next/navigation";
+import { Router } from "next/router";
+import { SkeletonTheme } from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type IDashProps = {
   meta: ReactNode;
@@ -223,7 +222,7 @@ const Dash = (props: IDashProps) => {
                 mobile={toggleMobileSidebar}
                 toggle={toggleSidebar}
                 setToggle={setToggleSidebar}
-                dashboard={props.dashboard === true ? true : false}
+                dashboard={false}
               />
             )}
           </div>

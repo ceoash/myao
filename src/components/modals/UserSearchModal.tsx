@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Modal from "./Modal";
-import useSearchModal from "@/hooks/useSearchModal";
-import Heading from "./Heading";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import Input from "../inputs/Input";
 import axios from "axios";
+import Heading from "./Heading";
+import useSearchModal from "@/hooks/useSearchModal";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-
 import { User } from "@prisma/client";
 import { BiChevronRight } from "react-icons/bi";
 
@@ -201,8 +200,6 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
       title="Search for a user"
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={handleSubmit(onSubmit)}
-      actionLabel={"Search"}
       body={bodyContent}
     />
   );

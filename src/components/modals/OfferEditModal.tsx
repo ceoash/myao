@@ -1,23 +1,26 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
 import Modal from "./Modal";
-import useOfferModal from "@/hooks/useOfferModal";
-import { itemCategories } from "@/data/cateories";
 import Heading from "./Heading";
 import CategoryInput from "../inputs/CategoryInput";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import axios from "axios";
+import Skeleton from "react-loading-skeleton";
+import TextArea from "../inputs/TextArea";
 import Input from "../inputs/Input";
 import ImageUpload from "../inputs/ImageUpload";
-import axios from "axios";
+import CityAutocomplete from "../dashboard/AutoComplete";
+import useOfferEditModal from "@/hooks/useOfferEditModal";
+import { useEffect, useState } from "react";
+import { useSocketContext } from "@/context/SocketContext";
+import { itemCategories } from "@/data/cateories";
+import { CustomListing } from "@/interfaces/authenticated";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import TextArea from "../inputs/TextArea";
-import CityAutocomplete from "../dashboard/AutoComplete";
-import { useSocketContext } from "@/context/SocketContext";
-import useOfferEditModal from "@/hooks/useOfferEditModal";
-import { CustomListing } from "@/interfaces/authenticated";
-import Skeleton from "react-loading-skeleton";
+import { 
+  FieldValues,
+  SubmitHandler,
+  useForm
+} from "react-hook-form";
 
 enum SECTIONS {
   DEFAULT = "default",

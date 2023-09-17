@@ -1,8 +1,5 @@
-import useOfferEditModal from "@/hooks/useOfferEditModal";
-import { Session } from "next-auth";
 import Link from "next/link";
-import { Dispatch } from "react";
-import { FaPencilAlt } from "react-icons/fa";
+import { Session } from "next-auth";
 
 interface HeaderProps {
   listing: any;
@@ -16,7 +13,6 @@ interface HeaderProps {
 }
 
 const Header = ({ listing, currentBid, status, session }: HeaderProps) => {
-  const edit = useOfferEditModal();
   const parsedImage = listing.image && JSON.parse(listing.image);
   return (
     <div className="flex mb-6 justify-between relative bg-white rounded-xl border border-gray-200 p-4 md:pb-0 lg:pb-4 overflow-hidden">

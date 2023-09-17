@@ -1,17 +1,3 @@
-import { GetServerSideProps } from "next";
-import { useEffect, useRef, useState } from "react";
-import { getSession } from "next-auth/react";
-import { Dash } from "@/templates/dash";
-import { Meta } from "@/layouts/meta";
-import { timeInterval, timeSince } from "@/utils/formatTime";
-import {
-  ExtendedActivity,
-  EventsProps,
-  ProfileUser,
-} from "@/interfaces/authenticated";
-import { Bid, Profile, Review, User } from "@prisma/client";
-import { useRouter } from "next/navigation";
-import { useSocketContext } from "@/context/SocketContext";
 import axios from "axios";
 import getListingById from "@/actions/getListingById";
 import ListingChat from "@/components/chat/ListingChat";
@@ -28,12 +14,25 @@ import Tabs from "@/components/dashboard/Tabs";
 import Button from "@/components/dashboard/Button";
 import Header from "@/components/dashboard/offer/Header";
 import useOfferEditModal from "@/hooks/useOfferEditModal";
+import StatusChecker from "@/utils/status";
+import Link from "next/link";
+import { Bid, Profile, Review, User } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useSocketContext } from "@/context/SocketContext";
 import { FaImage, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { Session } from "next-auth";
 import { tempId } from "@/utils/generate";
-import { toast } from "react-hot-toast";
-import StatusChecker from "@/utils/status";
-import Link from "next/link";
+import { GetServerSideProps } from "next";
+import { useEffect, useState } from "react";
+import { getSession } from "next-auth/react";
+import { Dash } from "@/templates/dash";
+import { Meta } from "@/layouts/meta";
+import { timeInterval, timeSince } from "@/utils/formatTime";
+import {
+  ExtendedActivity,
+  EventsProps,
+  ProfileUser,
+} from "@/interfaces/authenticated";
 // import OfferDetailsWidgetOld from "@/components/dashboard/offer/OfferDetailsWidgetOld";
 
 interface MessageProps {
@@ -671,21 +670,18 @@ const Index = ({ listing, session }: PageProps) => {
                           href={`/dashboard/profile/${currentBid.byUserId}`}
                           className="underline"
                         >
-                          {listing.user.username}
+                          {listing.user.id === sessionUser.id ? 'You' : listing.user.username || ''}
                         </Link>
                       </div>
                     )}
                     <div className="font-extrabold ">
-                      {currentBid.currentPrice &&
-                      currentBid.currentPrice !== "0" &&
-                      currentBid.currentPrice !== "" ? (
-                        `£${Number(currentBid.currentPrice).toLocaleString()}`
-                      ) : listing.price !== "" && listing.price !== "0" ? (
+                      { listing.price &&
+                      listing.price !== "" && listing.price !== "0" ? (
                         `£${Number(
                           listing.price === "0" ? "0.00" : listing.price
                         ).toLocaleString()}`
                       ) : (
-                        <h5 className="underline mt-2">Open Offer {status}</h5>
+                       'none'
                       )}
                     </div>
                   </div>
@@ -702,7 +698,7 @@ const Index = ({ listing, session }: PageProps) => {
                               href={`/dashboard/profile/${currentBid.byUserId}`}
                               className="underline ml-[2px]"
                             >
-                              {currentBid.byUsername}
+                              {currentBid.byUsername === sessionUser.username ? 'You' : currentBid.byUsername || ''}
                             </Link>
                           </div>
                         )}
@@ -727,9 +723,7 @@ const Index = ({ listing, session }: PageProps) => {
                             : listing.price
                         ).toLocaleString()}`
                       ) : (
-                        <div className="p-1 rounded-lg text-sm border-lg border border-gray-200 bg-gray-50 mt-2 text-orange-alt">
-                          Open Offer
-                        </div>
+                        "No bids yet"
                       )}
                     </div>
                   </div>
@@ -781,9 +775,6 @@ const Index = ({ listing, session }: PageProps) => {
     listing && (
       <Dash
         pageTitle={listing.title}
-        optionalData={
-          <span className="hidden md:block">{StatusChecker(status)}</span>
-        }
         meta={<Meta title={listing.title} description={listing.description} />}
       >
         <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6">
@@ -804,6 +795,8 @@ const Index = ({ listing, session }: PageProps) => {
               tab={tab}
               isListing
               main
+              additionalData={<span className="hidden md:block">{StatusChecker(status)}</span>}
+
             />
             {tab === "chat" && (
               <div className="messages pt-6 mb-6">

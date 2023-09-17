@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import { Conversation } from ".prisma/client";
-import { createActivity } from "@/prisma";
 
 interface ErrorResponse { error: string }
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { ChangeEvent, FC, useEffect, useState } from "react";
 import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 import { BiPound } from "react-icons/bi";
 import { RegisterOptions } from "react-hook-form";
@@ -15,9 +15,7 @@ interface InputProps {
   sm?: boolean;
   value?: string;
   modal?: boolean;
-  register: UseFormRegister<FieldValues>;
   registerOptions?: RegisterOptions;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   pattern?: {
     value: RegExp;
     message: string;
@@ -25,30 +23,30 @@ interface InputProps {
   optional?: boolean;
   sidebar?: boolean;
   status?: string;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  register: UseFormRegister<FieldValues>;
 }
 
 
-const PriceInput: React.FC<InputProps> = ({
+const PriceInput: FC<InputProps> = ({
   id,
+  sm,
   label,
   type,
   placeholder = "",
-  modal,
   disabled,
   formatPrice,
   required,
   errors,
-  value,
-  register,
   registerOptions,
-  onChange,
-  sm,
   optional,
   sidebar,
-  status
+  status,
+  onChange,
+  register
 }) => {
-  const [inputValue, setInputValue] = React.useState('');
-  const [classes, setClasses] = React.useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [classes, setClasses] = useState('');
  useEffect(() => {
   if (inputValue.startsWith(".")) {
    setInputValue(`0${inputValue}`);
@@ -73,7 +71,7 @@ const PriceInput: React.FC<InputProps> = ({
       }
   }, [status]);
   
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     let inputValue = event.target.value;
     const regex = /^[0-9]*[.,]?[0-9]{0,2}$/;
 

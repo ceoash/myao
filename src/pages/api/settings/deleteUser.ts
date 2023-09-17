@@ -1,9 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { User } from ".prisma/client";
 import bcrypt from "bcrypt";
 import axios from "axios";
 import { AppConfig } from "@/utils/AppConfig";
+import { NextApiRequest, NextApiResponse } from "next";
 
 interface ErrorResponse {
   error: string;

@@ -13,13 +13,13 @@ interface TextAreaProps {
   errors?: FieldErrors<FieldValues>;
   sm?: boolean;
   value?: string;
-  register: UseFormRegister<FieldValues>;
   registerOptions?: RegisterOptions;
   username?: boolean;
   rows?: number;
   children?: React.ReactNode;
-  clearErrors?: (name?: string | string[]) => void;
   optional?: boolean;
+  clearErrors?: (name?: string | string[]) => void;
+  register: UseFormRegister<FieldValues>;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -32,12 +32,12 @@ const TextArea: React.FC<TextAreaProps> = ({
   required,
   errors,
   value,
-  register,
   registerOptions,
   username,
   children,
-  clearErrors,
-  optional
+  optional,
+  register,
+  clearErrors
 }) => {
   return (
     <div>

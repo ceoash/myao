@@ -1,32 +1,30 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import Modal from "./Modal";
 import useOfferModal from "@/hooks/useOfferModal";
-import { itemCategories } from "@/data/cateories";
 import Heading from "./Heading";
 import CategoryInput from "../inputs/CategoryInput";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import Input from "../inputs/Input";
 import ImageUpload from "../inputs/ImageUpload";
-import axios from "axios";
-import { toast } from "react-hot-toast";
-import { useSession } from "next-auth/react";
-import { config } from "@/config";
+import Button from "../dashboard/Button";
+import TextArea from "../inputs/TextArea";
+import UserType from "../wizard/UserType";
+import PriceInput from "../inputs/PriceInput";
+import CityAutocomplete from "../dashboard/AutoComplete";
 import {
   BiCategory,
   BiCategoryAlt,
   BiChevronRight,
   BiUserCircle,
 } from "react-icons/bi";
-import Button from "../dashboard/Button";
-import TextArea from "../inputs/TextArea";
+import { toast } from "react-hot-toast";
+import { useSession } from "next-auth/react";
+import { itemCategories } from "@/data/cateories";
 import { IoPricetagOutline } from "react-icons/io5";
-import UserType from "../wizard/UserType";
-import PriceInput from "../inputs/PriceInput";
-import CityAutocomplete from "../dashboard/AutoComplete";
-import { useSocket } from "@/hooks/useSocket";
 import { useSocketContext } from "@/context/SocketContext";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
 enum STEPS {
   TYPE = 0,
@@ -59,7 +57,6 @@ const OfferModal = () => {
   );
   // console.log("foundUser", foundUser);
   // console.log("session", session);
-
 
   useEffect(() => {
     setFoundUser(offerModal?.participant || null);

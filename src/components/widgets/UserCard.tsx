@@ -1,23 +1,17 @@
-import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import Button from "../dashboard/Button";
+import { User } from "@/types";
+import { Session } from "next-auth";
+import { FaUserCheck, FaUserMinus } from "react-icons/fa";
+
 import {
   BiBlock,
   BiCheck,
   BiMessageAdd,
   BiStar,
-  BiUserCheck,
-  BiUserMinus,
 } from "react-icons/bi";
-import { User } from "@/types";
-import Button from "../dashboard/Button";
-import { Session } from "next-auth";
-import { FaUserCheck, FaUserMinus } from "react-icons/fa";
-import Image from "next/image";
 
 interface UserCardProps {
-  onMessageClick?: () => void;
-  handleBlock?: () => void;
-  handleAccept?: () => void;
-  handleFollow?: () => void;
   session: Session;
   status?: string;
   currentUser: User;
@@ -31,13 +25,13 @@ interface UserCardProps {
   isBlocked?: boolean;
   isAccepted?: boolean;
   header?: boolean;
+  onMessageClick?: () => void;
+  handleBlock?: () => void;
+  handleAccept?: () => void;
+  handleFollow?: () => void;
 }
 
 const UserCard = ({
-  onMessageClick,
-  handleFollow,
-  handleBlock,
-  handleAccept,
   header,
   currentUser,
   sales,
@@ -51,6 +45,10 @@ const UserCard = ({
   isPublic,
   session,
   status,
+  onMessageClick,
+  handleFollow,
+  handleBlock,
+  handleAccept,
 }: UserCardProps) => {
 
   return (

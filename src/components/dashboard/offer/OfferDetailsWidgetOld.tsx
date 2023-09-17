@@ -1,13 +1,11 @@
-import { Bid, Profile, Review, User } from "@prisma/client";
+import { Bid, Profile, User } from "@prisma/client";
 import Link from "next/link";
 import Button from "../Button";
 import PriceWidget from "@/components/widgets/PriceWidget";
 import StatusChecker from "@/utils/status";
-import { BiCalendar, BiCategoryAlt } from "react-icons/bi";
 import { FaThumbsUp } from "react-icons/fa";
-import React, {
+import {
   Dispatch,
-  Key,
   SetStateAction,
   useEffect,
   useState,
@@ -15,21 +13,16 @@ import React, {
 import cat from "@/images/cat-neutral.png";
 import dog from "@/images/dog-neutral.png";
 import dogAccept from "@/images/dog-accept.png";
-import dogReject from "@/images/dog-reject.png";
 import dogTerminate from "@/images/dog-terminate.png";
 import catAccept from "@/images/cat-accept.png";
-import catReject from "@/images/cat-reject.png";
 import catTerminate from "@/images/cat-reject.png";
 import avatar from "@/images/avatar.png";
 import Image from "next/image";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
   MdOutlineCalendarMonth,
-  MdOutlineSignpost,
   MdOutlineSyncAlt,
 } from "react-icons/md";
-import { useSocket } from "@/hooks/useSocket";
 import { CustomListing } from "@/interfaces/authenticated";
 
 interface SafeUser extends User {

@@ -1,15 +1,16 @@
-import { User } from "@prisma/client";
+import { useEffect, useState } from "react";
+
 import axios from "axios";
-import Link from "next/link";
-import React, { FC, use, useEffect, useState } from "react";
+import Button from "./dashboard/Button";
+import Spinner from "./Spinner";
+
+import { User } from "@prisma/client";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { BiCheckCircle, BiChevronsRight, BiStar } from "react-icons/bi";
-import Button from "./dashboard/Button";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import Spinner from "./Spinner";
 import { useSession } from "next-auth/react";
+import { BiCheckCircle,BiStar } from "react-icons/bi";
+import { FaChevronRight } from "react-icons/fa";
 
 interface ConnectProps {
   user: User;

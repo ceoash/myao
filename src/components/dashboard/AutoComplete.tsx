@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { cities } from "@/data/locations";
 import Button from "./Button";
+import { useState } from "react";
+import { cities } from "@/data/locations";
 import { CiLocationOn } from "react-icons/ci";
 
 interface CityProps {

@@ -1,11 +1,9 @@
 import Input from "@/components/inputs/Input";
-import React from "react";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import Button from "../Button";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { User } from "@prisma/client";
-import { BiChevronRight, BiEnvelope, BiMailSend } from "react-icons/bi";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { BiChevronRight } from "react-icons/bi";
 
 interface InviteFriendProps {
   className?: string;
@@ -26,7 +24,7 @@ const InviteFriend = ({ className, user}: InviteFriendProps) => {
 
       data.username = user?.username
       data.userId = user?.id
-  
+
       await axios.post('/api/email/sendInviteEmail', data)
       toast.success("Inviation sent")
       reset

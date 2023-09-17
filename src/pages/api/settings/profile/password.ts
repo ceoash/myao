@@ -1,7 +1,7 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { User } from ".prisma/client";
 import bcrypt from "bcrypt";
+import { User } from ".prisma/client";
+import { NextApiRequest, NextApiResponse } from "next";
 
 
 interface ErrorResponse {

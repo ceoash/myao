@@ -1,6 +1,4 @@
 import { mailOptions, transporter } from "@/utils/nodemailer";
-import crypto from "crypto";
-import prisma from "@/libs/prismadb";
 import { NextApiRequest, NextApiResponse } from "next";
 import { AppConfig } from "@/utils/AppConfig";
 

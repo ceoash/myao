@@ -1,4 +1,3 @@
-import React from 'react'
 import AlertBanner from '../AlertBanner'
 import { Session } from 'next-auth';
 import { ProfileUser } from '@/interfaces/authenticated';

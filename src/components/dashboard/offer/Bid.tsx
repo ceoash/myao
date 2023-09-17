@@ -1,6 +1,6 @@
-import { timeInterval } from "@/utils/formatTime";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import { timeInterval } from "@/utils/formatTime";
+import { useEffect, useState } from "react";
 
 interface BidProps {
   bid: any;

@@ -1,8 +1,9 @@
 "use client";
-import { CldUploadWidget } from "next-cloudinary";
+
 import Image from "next/image";
+import { CldUploadWidget } from "next-cloudinary";
 import { useCallback } from "react";
-import { BiImageAdd, BiPlus } from "react-icons/bi";
+import { BiPlus } from "react-icons/bi";
 
 declare global {
   var cloudinary: any;

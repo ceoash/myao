@@ -1,6 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { createActivity } from "@/prisma";
+import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function acceptFriendship(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {

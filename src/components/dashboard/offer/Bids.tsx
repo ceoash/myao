@@ -1,5 +1,5 @@
-import { Bid } from "@prisma/client";
 import BidContainer from "./Bid";
+import { Bid } from "@prisma/client";
 
 interface BidsProps {
   bids: Bid[];

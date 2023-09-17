@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import axios from "axios";
@@ -21,7 +21,7 @@ export interface ErrorResponse {
 const QuickConnectModal = () => {
   const { isOpen, onClose, foundUser } = useQuickConnect();
   const [foundUserStore, setFoundUserStore] = useState<User | null>(null);
-  const [search, setSearch] = React.useState("");
+  const [search, setSearch] = useState("");
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -231,6 +231,7 @@ const QuickConnectModal = () => {
     <Modal
       title="Quick Connect"
       isOpen={isOpen}
+      onClose={onClose}
       body={bodyContent}
       disabled={!isFormValid || isLoading}
       isLoading={isLoading}

@@ -1,8 +1,7 @@
 import Image from "next/image";
-import React from "react";
-import { BiStar } from "react-icons/bi";
 import Skeleton from "react-loading-skeleton";
 import Button from "./Button";
+import { BiStar } from "react-icons/bi";
 
 interface UserStatsProps {
     userLoading: boolean;

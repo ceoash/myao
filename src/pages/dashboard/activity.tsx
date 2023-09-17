@@ -1,14 +1,9 @@
-import getUserActivity from "@/actions/dashboard/getActivity";
-import getCurrentUser from "@/actions/getCurrentUser";
-import ActivityCard from "@/components/dashboard/ActivityCard";
 import Button from "@/components/dashboard/Button";
-import Card from "@/components/dashboard/Card";
+import ActivityCard from "@/components/dashboard/ActivityCard";
+import getUserActivity from "@/actions/dashboard/getActivity";
 import { ExtendedActivity } from "@/interfaces/authenticated";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
-import { timeInterval } from "@/utils/formatTime";
-import { User } from "@prisma/client";
-import { set } from "date-fns";
 import { GetServerSideProps } from "next";
 import { Session } from "next-auth";
 import { getSession } from "next-auth/react";

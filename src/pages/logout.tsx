@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Loading from '@/components/LoadingScreen';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 
 const Logout = () => {

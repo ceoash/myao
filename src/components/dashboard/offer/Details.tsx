@@ -1,5 +1,3 @@
-import React from 'react'
-
 const Details = () => {
   return (<div className="grid grid-cols-2 grid-rows-2 gap-4 mt-8">
     <p className="inline-flex flex-col xl:flex-row xl:items-center text-gray-800">

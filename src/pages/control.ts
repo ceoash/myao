@@ -1,7 +1,5 @@
-import getConversationsByUserId from "@/actions/getConversationsByUserId";
 import prisma from "@/libs/prismadb";
 import { GetServerSideProps } from "next";
-import { getSession } from "next-auth/react";
 
 const Control = ({}) => {
 }

@@ -1,4 +1,3 @@
-import React from "react";
 import { FaCheck, FaInfo } from "react-icons/fa";
 import { BiBlock } from "react-icons/bi";
 

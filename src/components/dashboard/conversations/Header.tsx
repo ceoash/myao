@@ -1,10 +1,10 @@
+import Link from "next/link";
 import Button from "@/components/dashboard/Button";
+import { Dispatch, useEffect, useState } from "react";
 import { IUser } from "@/interfaces/authenticated";
 import { DirectMessage } from "@prisma/client";
-import Link from "next/link";
-import React, { Dispatch, useEffect, useState } from "react";
 import { BiBlock, BiDotsVerticalRounded } from "react-icons/bi";
-import { FaCheck, FaPlus, FaTimes, FaUserMinus, FaUserPlus } from "react-icons/fa";
+import { FaPlus, FaUserMinus, FaUserPlus } from "react-icons/fa";
 
 interface Conversation {
   id: string;
@@ -24,16 +24,16 @@ interface HeaderProps {
   participant: any;
   username: string;
   activeConversationState: any;
-  handleAccept: () => void;
   session: any;
   reject: any;
   toggleDropdown: any;
   offerModal: any;
-  setToggleDropdown: () => void;
-  handleFollow: () => void;
   isFriend: any;
-  handleBlocked: () => void;
   isBlocked: boolean;
+  handleAccept: () => void;
+  handleFollow: () => void;
+  handleBlocked: () => void;
+  setToggleDropdown: () => void;
   setActiveConversationState: Dispatch<React.SetStateAction<Conversation | null>>;
 }
 
@@ -41,16 +41,13 @@ const Header = ({
   participant,
   username,
   activeConversationState,
-  handleAccept,
   session,
-  reject,
   toggleDropdown,
   offerModal,
-  setToggleDropdown,
-  handleFollow,
   isFriend,
+  handleFollow,
   handleBlocked,
-  setActiveConversationState
+  setToggleDropdown,
 }: HeaderProps) => {
   const [statusState, setStatusState] = useState("");
 

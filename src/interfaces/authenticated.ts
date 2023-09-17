@@ -132,6 +132,7 @@ export interface dashboardProps {
   session: any;
   conversations: IConversation[];
   activities: ExtendedActivity[];
+  listings: Listing[];
   sent?: Listing[];
   received?: Listing[];
   listingsCount?: number;

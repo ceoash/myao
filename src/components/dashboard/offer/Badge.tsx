@@ -1,5 +1,3 @@
-import React from "react";
-
 interface OfferTypeBadgeProps {
   noBg?: boolean;
   children: React.ReactNode;

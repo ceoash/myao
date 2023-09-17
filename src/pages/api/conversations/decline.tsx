@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
+import { NextApiRequest, NextApiResponse } from "next";
 import { Conversation } from ".prisma/client";
 
 interface ErrorResponse {
@@ -11,9 +11,7 @@ export default async function accept(
   res: NextApiResponse<Conversation | ErrorResponse>
 ) {
       const { conversationId } = req.body;
-
-      const now = Date.now()
-
+      
     try {
       const listing = await prisma.conversation.update({
         where: { id: conversationId },

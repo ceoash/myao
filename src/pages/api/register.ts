@@ -55,6 +55,8 @@ export default async function handler(req: any, res: any) {
       },
     });
 
+
+
     return res.status(200).json(user);
   } catch (err) {
     console.error(err);

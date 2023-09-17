@@ -2,13 +2,11 @@ import prisma from "@/libs/prismadb";
 import { NextApiRequest, NextApiResponse } from "next";
 import { msToTime } from "@/utils/formatTime"
 
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const { userId, sessionId } = req.body;
-
   const sessionUser = sessionId || null
 
   if (!userId ) {

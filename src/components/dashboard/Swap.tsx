@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
 import cat from "@/images/cat-neutral.png";
 import dog from "@/images/dog-neutral.png";
 import avatar from "@/images/avatar.png";
+import {useState } from 'react'
 import { Session } from 'next-auth';
 
 interface ISwap{

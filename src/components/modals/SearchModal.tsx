@@ -1,14 +1,13 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal";
-
-import SearchComponent from "../SearchComponent";
-import useSearchComponentModal from "@/hooks/useSearchComponentModal";
-import axios from "axios";
-import { BiSearch } from "react-icons/bi";
 import Link from "next/link";
 import Image from "next/image";
+import axios from "axios";
+import useSearchComponentModal from "@/hooks/useSearchComponentModal";
+import { BiSearch } from "react-icons/bi";
 import { Profile, User } from "@prisma/client";
+import { IoClose } from "react-icons/io5";
 
 export interface ErrorResponse {
   error: string;
@@ -29,8 +28,7 @@ const SearchComponentModal = () => {
     setSearch("");
     setUser(null);
     onClose();
-  }
-
+  };
 
   const handleClickOutside = (event: any) => {
     if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -45,7 +43,6 @@ const SearchComponentModal = () => {
     };
   });
 
-
   const onSearch = () => {
     axios
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
@@ -57,11 +54,10 @@ const SearchComponentModal = () => {
       });
   };
   
-
   let bodyContent = (
     <div className="border border-gray-200 rounded-lg mb-4 flex justify-center">
-      <div className={`relative w-full  `}>
-      <div className="flex flex-grow flex-nowrap">
+      <div className={`md:relative w-full`}>
+      <div className={`flex-grow flex-nowrap  ${user ? 'hidden' : 'flex'}`}>
         <input
           type="text"
           placeholder="Search user"
@@ -78,13 +74,13 @@ const SearchComponentModal = () => {
       </div>
       {user && (
         <div
-          className="absolute rouned-xl shadow-md bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm rounded-b-md"
+          className="md:absolute rounded-xl border border-gray-200 bg-white overflow-hidden right-0 w-full top-14 -mt-1 text-sm rounded-b-md"
           ref={searchRef}
         >
-          <div className="flex flex-col cursor-pointer px-4 py-2">
+          <div className="flex flex-col cursor-pointer px-4 py-4 bg-slate-50">
             <Link onClick={close} href={`/dashboard/profile/${user.id}`}>
               <div className="flex items-center gap-2">
-                <div className="flex gap-2 h-10 w-10 relative">
+                <div className="flex gap-2 h-8 w-8 relative">
                   <Image
                     alt="profile image"
                     layout="fill"
@@ -95,7 +91,8 @@ const SearchComponentModal = () => {
                     }
                   />
                 </div>
-                  <div className="text-md">{user.username}</div>
+                <div className="text-md">{user.username}</div>
+                <IoClose className="ml-auto" onClick={() => setUser(null)} />
               </div>
             </Link>
           </div>
@@ -111,9 +108,7 @@ const SearchComponentModal = () => {
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={() => {}}
-      actionLabel={"Search"}
       secondaryAction={() => {}}
-      secondaryActionLabel={"Back"}
       body={bodyContent}
       auto
     />

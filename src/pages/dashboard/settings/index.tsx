@@ -1,19 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Button from "@/components/dashboard/Button";
 import AvatarUpload from "@/components/inputs/AvatarUpload";
 import getCurrentUser from "@/actions/getCurrentUser";
-import getListingsByUserId from "@/actions/getListingsByUserId";
 import { GetServerSideProps } from "next";
 import { getSession, signOut } from "next-auth/react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import axios from "axios";
-import Button from "@/components/dashboard/Button";
 import { FaCog, FaLock, FaUser } from "react-icons/fa";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
-import getUserById from "@/actions/getUserById";
-import { User } from "@/types";
 
 const Settings = ({ user }: {
   user: any

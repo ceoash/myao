@@ -1,7 +1,6 @@
-import { Session } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
-import React, {FC }from "react";
+import { Session } from "next-auth";
 
 interface MessageCardProps {
     id: string;

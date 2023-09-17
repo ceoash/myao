@@ -1,19 +1,17 @@
-import React, { useState } from "react";
-
 interface UserTypeProps {
-  setValue: (id: any, value: string) => void;
-  setUserType: (value: string) => void;
   userType: string;
   notrade?: boolean;
+  setValue: (id: any, value: string) => void;
+  setUserType: (value: string) => void;
   clearErrors?: (id: string) => void;
 }
 
 const UserType = ({
+  userType,
+  notrade,
   setValue,
   setUserType,
   clearErrors,
-  userType,
-  notrade,
 }: UserTypeProps) => {
   
   const handleSelect = (value: string) => {

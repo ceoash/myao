@@ -1,20 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FieldErrors, FieldValues, set } from "react-hook-form";
-import { IoClose, IoWarningOutline } from "react-icons/io5";
-import Button from "@/components/dashboard/Button";
+import { FieldErrors, FieldValues } from "react-hook-form";
+import { IoWarningOutline } from "react-icons/io5";
 
 interface ModalProps {
   isOpen?: boolean;
-  onClose?: () => void;
-  onSubmit?: () => void;
   title?: string;
   body?: React.ReactNode;
   footer?: string;
   actionLabel?: string | React.ReactNode;
   disabled?: boolean;
-  secondaryAction?: () => void;
   secondaryActionLabel?: string | React.ReactNode;
   listingId?: string;
   children?: React.ReactNode;
@@ -23,26 +19,23 @@ interface ModalProps {
   auto?: boolean;
   confirmation?: boolean;
   buttonsLeft?: boolean;
+  onClose?: () => void;
+  onSubmit?: () => void;
+  secondaryAction?: () => void;
 }
 
 const Alert: React.FC<ModalProps> = ({
+  auto,
+  body,
+  title,
   isOpen,
+  errors,
+  disabled,
   onClose,
   onSubmit,
-  title,
-  body,
-  footer,
-  actionLabel,
-  disabled,
   secondaryAction,
-  secondaryActionLabel,
-  listingId,
-  errors,
-  isLoading,
-  auto,
-  confirmation,
-  buttonsLeft,
 }) => {
+  
   const [showModal, setShowModal] = useState(isOpen);
 
   useEffect(() => {

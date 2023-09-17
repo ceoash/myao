@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
+import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function blockFriend(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {

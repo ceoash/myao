@@ -1,18 +1,22 @@
-import React from "react";
-import { BiSearch } from "react-icons/bi";
 import Spinner from "../Spinner";
+import { BiSearch } from "react-icons/bi";
 
 interface SearchInputProps {
     search: string;
+    isLoading?: boolean;
+    placeholder?: string;
     setSearch: (search: string) => void;
     onSearch: () => void;
-    placeholder?: string;
-    isLoading?: boolean;
 }
 
-const SearchInput = ({search, setSearch, onSearch, placeholder, isLoading}: SearchInputProps) => {
+const SearchInput = ({
+  search, 
+  isLoading,
+  placeholder, 
+  setSearch, 
+  onSearch, 
+}: SearchInputProps) => {
   
-
   return (
     <div className="flex border border-gray-200 rounded-lg ring-0 focus:ring-0 focus:ring-white ring-orange-500 focus:border-0 ">
       <input

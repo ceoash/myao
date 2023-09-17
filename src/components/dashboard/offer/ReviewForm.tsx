@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Button from "../Button";
 import TextArea from "@/components/inputs/TextArea";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import axios from "axios";
-import { error } from "console";
 import { toast } from "react-hot-toast";
-import { RegisterOptions } from "react-hook-form";
 import { Profile, Review, User } from "@prisma/client";
 
 interface IUser extends User {

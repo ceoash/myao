@@ -1,65 +1,70 @@
-import NextAuth, { AuthOptions } from "next-auth"
+import NextAuth, { AuthOptions } from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import prisma from "@/libs/prismadb"
+import prisma from "@/libs/prismadb";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { User as NextAuthUser } from 'next-auth';
-
 
 export const authOptions: AuthOptions = {
-    adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma),
 
-    
-    
-    providers: [
-        CredentialsProvider({
-            // The name to display on the sign in form (e.g. "Sign in with...")
-            name: "Credentials",
-            // `credentials` is used to generate a form on the sign in page.
-            // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-            // e.g. domain, username, password, 2FA token, etc.
-            // You can pass any HTML attribute to the <input> tag through the object.
-            credentials: {
-                email: {
-                    label: "Email",
-                    type: "text",
-                    placeholder: "Enter email",
-                },
-                password: {
-                    label: "Password",
-                    type: "password",
-                    placeholder: "Enter Password",
-                },
+  providers: [
+    CredentialsProvider({
+      // The name to display on the sign in form (e.g. "Sign in with...")
+      name: "Credentials",
+      // `credentials` is used to generate a form on the sign in page.
+      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
+      // e.g. domain, username, password, 2FA token, etc.
+      // You can pass any HTML attribute to the <input> tag through the object.
+      credentials: {
+        email: {
+          label: "Email",
+          type: "text",
+          placeholder: "Enter email",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "Enter Password",
+        },
+      },
+
+      async authorize(credentials) {
+        const now = Date.now();
+
+        // Add logic here to look up the user from the credentials supplied
+        if (!credentials?.email || !credentials?.password)
+          throw new Error("Invalid credentials");
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            hashedPassword: true,
+            options: true,
+          },
+        });        
+
+        if (user) {
+          user.username = user.username || "defaultUsername";
+          await prisma.notification.createMany({
+            data: {
+              userId: user.id,
+              type: "alert",
+              message: `Your last login was ${now.toLocaleString()}`,
+              action: "/dashboard/offers?tab=sent",
+              read: false,
             },
+          });
+        }
 
-            async authorize(credentials) {
+        if (!user || !user.hashedPassword) {
+          throw new Error("Invalid credentials");
+        }
 
-                const now = Date.now();
-
-                // Add logic here to look up the user from the credentials supplied
-                if(!credentials?.email || !credentials?.password) throw new Error("Invalid credentials")
-                const user = await prisma.user.findUnique({
-                    where: {
-                        email: credentials.email
-                    },
-                    select: {
-                        id: true,
-                        username: true,
-                        email: true,
-                        hashedPassword: true,
-                        options: true,
-                    },
-                });
-
-                if(user) {
-                    user.username = user.username || 'defaultUsername';
-                }
-
-                if (!user || !user.hashedPassword) {
-                    throw new Error("Invalid credentials")
-                };
-
-               /*  prisma.user.update({
+        /*  prisma.user.update({
                     where: {
                         id: user.id,
                     },
@@ -78,47 +83,48 @@ export const authOptions: AuthOptions = {
                     },
                 }); */
 
-                const isValid = await bcrypt.compare(credentials.password, user.hashedPassword)
-                if (!isValid) {
-                    throw new Error("Invalid credentials")
-                };
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.hashedPassword
+        );
+        if (!isValid) {
+          throw new Error("Invalid credentials");
+        }
 
-                return user;
-            },
-        }),
-        // ...add more providers here
-    ],
-    callbacks: {
-        jwt({ token, account, user }) {
-            if (account) {
-              token.accessToken = account.access_token
-              token.id = user?.id
-              token.email = user?.email
-              token.username = user?.username
-            }
-            return token
-          },
-          session: ({ session, token }) => ({
-            ...session,
-            name: 'myao_session_v2',
-            user: {
-              ...session.user,
-              id: token.sub,
-              email: token.email,
-                username: token.username,
-
-            },
-          }),
-      },  
-    pages: {    
-        signIn: '/login',
+        return user;
+      },
+    }),
+    // ...add more providers here
+  ],
+  callbacks: {
+    jwt({ token, account, user }) {
+      if (account) {
+        token.accessToken = account.access_token;
+        token.id = user?.id;
+        token.email = user?.email;
+        token.username = user?.username;
+      }
+      return token;
     },
-    debug: process.env.NODE_ENV === "development",
-    session: {
-        strategy: "jwt",
-    },
+    session: ({ session, token }) => ({
+      ...session,
+      name: "myao_session_v2",
+      user: {
+        ...session.user,
+        id: token.sub,
+        email: token.email,
+        username: token.username,
+      },
+    }),
+  },
+  pages: {
+    signIn: "/login",
+  },
+  debug: process.env.NODE_ENV === "development",
+  session: {
+    strategy: "jwt",
+  },
 
-    secret: 'temp-secret-myao-v2',
-    
-}
-export default NextAuth(authOptions)
+  secret: "temp-secret-myao-v2",
+};
+export default NextAuth(authOptions);

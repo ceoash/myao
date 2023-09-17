@@ -1,12 +1,8 @@
 'use client'
 
 import { useRouter } from "next/navigation";
-import React from "react";
 import Heading from "./modals/Heading";
-import OfferModal from "./modals/OfferModal";
 import useOfferModal from "@/hooks/useOfferModal";
-import { BiPlus } from "react-icons/bi";
-
 
 interface EmptyStateProps {
   title?: string;

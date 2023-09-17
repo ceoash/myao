@@ -1,20 +1,20 @@
 "use client";
 import Button from "@/components/Button";
-import React, { useEffect } from "react";
+import Loading from "@/components/LoadingScreen";
+import Link from "next/link";
 import axios from "axios";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { BiCheckCircle } from "react-icons/bi";
+import { useEffect } from "react";
 import { useState } from "react";
+import { checkUsernameAvailability, getUsernameSuggestions } from "@/utils/user";
 import {
   FieldValues,
   useForm,
   SubmitHandler,
   Controller,
 } from "react-hook-form";
-import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { BiCheckCircle } from "react-icons/bi";
-import Loading from "@/components/LoadingScreen";
-import Link from "next/link";
-import { checkUsernameAvailability, getUsernameSuggestions } from "@/utils/user";
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +27,6 @@ const Register = () => {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     setError,
     setValue,
     control,

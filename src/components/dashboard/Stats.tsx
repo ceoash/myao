@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
 import InfoCard from "./InfoCard";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { adviceArray } from "@/data/adviceData";
 import { getTimeOfDay } from "@/utils/formatTime";
 
@@ -69,7 +69,7 @@ const Stats = ({
   getTimeOfDay();
 
   return (
-    <div className="col-span-12 mb-8">
+    <div className="col-span-12 ">
       <div className="flex justify-between gap-2 items-start">
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
         <Link href={`/dashboard/friends`} className="font-bold -mb-4 cursor-pointer">
@@ -80,11 +80,11 @@ const Stats = ({
       <div className="grid grid-cols-2 gap-4">
         <InfoCard
           title={`${timeOfDay ? timeOfDay : "Welcome to your dashboard"}, ${username}`}
-          button={{ label: "Create Offer", onClick: startOffer }}
-          color={`green`}
-          className="bg-green-100"
+          button={{ label: "Create Offer", onClick: startOffer, options: {primary: true} }}
+          color={`orange`}
+          className="bg-orange-100 flex justify-between"
         />
-        <InfoCard
+        {/* <InfoCard
           title={`Offers sent`}
           number={sent}
           icon={`/icons/cat-accept.png`}
@@ -103,7 +103,7 @@ const Stats = ({
           span={`col-span-1`}
           className="bg-orange-100"
           link="/dashboard/offers?sent=true"
-        />
+        /> */}
         {/* <InfoCard
           key={randomAdvice.key + Math.floor(Math.random() * 1000)}
           title={randomAdvice.key}

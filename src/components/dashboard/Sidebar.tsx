@@ -1,5 +1,4 @@
-import React from "react";
-import Button from "./Button";
+
 import Link from "next/link";
 
 import { AppConfig } from "@/utils/AppConfig";

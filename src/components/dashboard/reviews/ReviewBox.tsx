@@ -1,8 +1,5 @@
-import { Profile, Review, User } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
-import React from "react";
-import { BiStar } from "react-icons/bi";
+import { Profile, Review, User } from "@prisma/client";
 import { BsFillStarFill } from "react-icons/bs";
 
 interface IUser extends User {

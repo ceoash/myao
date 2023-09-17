@@ -1,19 +1,15 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Modal from "./Modal";
 import Heading from "./Heading";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import Input from "../inputs/Input";
 import axios from "axios";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-
 import { User } from "@prisma/client";
-import { BiArrowToRight, BiChevronRight } from "react-icons/bi";
 import useStartConversation from "@/hooks/useStartConversation";
-import { set } from "date-fns";
 
 export interface ErrorResponse {
   error: string;

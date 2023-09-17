@@ -1,9 +1,8 @@
-import React, { useCallback, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
-import { BiImageAdd, BiPaperclip } from "react-icons/bi";
 import Button from "../dashboard/Button";
+import { useCallback, useState } from "react";
+import { CldUploadWidget } from "next-cloudinary";
+import { BiImageAdd } from "react-icons/bi";
 
 
 interface ImageTextAreaProps {

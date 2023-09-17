@@ -1,11 +1,10 @@
-import { Bid, Profile, Review, User } from "@prisma/client";
 import Link from "next/link";
 import Button from "../Button";
 import PriceWidget from "@/components/widgets/PriceWidget";
+import { Bid } from "@prisma/client";
 import { FaPencilAlt, FaThumbsUp } from "react-icons/fa";
-import React, {
+import {
   Dispatch,
-  Key,
   SetStateAction,
   useEffect,
   useState,
@@ -86,22 +85,21 @@ interface OfferDetailsWidgetProps {
   setBids: Dispatch<SetStateAction<Bid[]>>;
 }
 const OfferDetailsWidget = ({
+  bids,
   listing,
   status,
   session,
-  handleStatusChange,
+  isLoading,
   currentBid,
-  setCurrentBid,
+  completedBy,
+  loadingState,
+  participant,
   setBids,
   setStatus,
-  isLoading,
-  completedBy,
+  setCurrentBid,
   setLoadingState,
-  loadingState,
-  me,
-  participant,
-  bids,
   handleFinalise,
+  handleStatusChange,
 }: OfferDetailsWidgetProps) => {
   const [meLastBid, setMeLastBid] = useState<any>();
   const [participantLastBid, setParticipantLastBid] = useState<any>();
@@ -110,12 +108,6 @@ const OfferDetailsWidget = ({
   const edit = useOfferEditModal();
   const { options } = listing;
 
-  const noBids = !meLastBid && !participantLastBid && status === "negotiating";
-  const rejectedByMe =
-    status === "rejected" && session?.user.id !== completedBy;
-  const inNegotiation = status === "negotiating";
-
-  const statusController = noBids || rejectedByMe || inNegotiation;
 
   useEffect(() => {
     if (!session || !session?.user?.id) {
@@ -322,7 +314,7 @@ const OfferDetailsWidget = ({
               </div>
             </div>
 
-            <div className="-mt-2 flex justify-center gap-1 mb-8 md:mb-14">
+            <div className="-mt-2 flex justify-center gap-1 ">
               By
               <Link
                 href={`/dashboard/profile/${currentBid.byUserId}`}
@@ -334,7 +326,7 @@ const OfferDetailsWidget = ({
 
             {currentBid.byUserId !== session?.user?.id &&
               currentBid.currentPrice !== "0" &&
-              currentBid.currentPrice !== "" && (
+              currentBid.currentPrice !== "" ? (
                 <div className="py-2 pt-6">
                   <div className=" gap-2 text-sm  font-bold mb-6 items-start">
                     <div className="w-2/3 flex gap-2 mx-auto justify-center">
@@ -414,7 +406,7 @@ const OfferDetailsWidget = ({
                       )}
                   </div>
                 </div>
-              )}
+              ) : <div className="mb-8 md:mb-14"></div>}
           </div>
         </div>
       </div>
@@ -482,7 +474,7 @@ const OfferDetailsWidget = ({
                   layout="fill"
                   objectFit="cover"
                 />
-                </div>
+                </div>  
               </div>
               <p className="ml-2 text-gray-800 text-sm xl:text-md font-bold">
                 {participant?.username}
@@ -508,7 +500,7 @@ const OfferDetailsWidget = ({
         </Link>
       </div>
 
-      {statusController && (
+      {status === 'rejected' && completedBy !== session?.user?.id && (
         <div className="border border-orange-300 bg-orange-default px-4 pb-4 pt-1 rounded-xl shadow mt-6">
           <PriceWidget
             listing={listing}

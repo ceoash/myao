@@ -1,11 +1,11 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
-import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import Button from '../dashboard/Button';
+import PriceInput from '../inputs/PriceInput';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Bid } from '@prisma/client';
-import PriceInput from '../inputs/PriceInput';
+import { useSession } from 'next-auth/react';
 import { useSocketContext } from '@/context/SocketContext';
 
 interface PriceWidgetProps {

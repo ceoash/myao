@@ -1,5 +1,3 @@
-import React from 'react'
-
 function Partners() {
   return (
     <section className="bg-partners bg-cover">

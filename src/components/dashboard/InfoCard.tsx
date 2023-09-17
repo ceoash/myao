@@ -1,7 +1,7 @@
-import React from "react";
 import Button from "./Button";
 import Skeleton from "react-loading-skeleton";
 import { useRouter } from "next/navigation";
+
 interface ICardProps {
   title?: string;
   text?: string;
@@ -9,15 +9,16 @@ interface ICardProps {
   number?: number;
   badge?: string;
   link?: string;
-  button?: {
-    label: string;
-    onClick: () => void;
-  };
   color: string;
   span?: string;
   className?: string;
   isLoading?: boolean;
   center?: boolean;
+  button?: {
+    label: string;
+    onClick: () => void;
+    options: any;
+  };
 }
 
 const InfoCard = ({
@@ -74,7 +75,7 @@ const InfoCard = ({
           <div className={`mt-2 ${isLoading ?  <Skeleton /> : center && 'text-center'}`}>{text ? text : !button && title}</div>
           {button && (
             <div className="mt-5 mr-auto">
-            {isLoading ? <Skeleton /> : <Button label={button.label} onClick={button.onClick} options={{}} /> }
+            {isLoading ? <Skeleton /> : <Button label={button.label} onClick={button.onClick} options={button.options} /> }
               
             </div>
           )}

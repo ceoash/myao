@@ -1,10 +1,8 @@
-import { Prisma } from '@prisma/client';
-import { GetServerSideProps } from 'next';
-import React, { useEffect } from 'react'
 import axios from 'axios';
+import Loading from '@/components/LoadingScreen';
+import { useEffect } from 'react'
 import { toast } from 'react-hot-toast';
 import { signIn } from 'next-auth/react';
-import Loading from '@/components/LoadingScreen';
 
 const Connect = ({}) => {
     useEffect(() => {

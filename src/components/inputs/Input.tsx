@@ -1,8 +1,6 @@
-import React from "react";
-import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
-import { BiPound } from "react-icons/bi";
-import { RegisterOptions } from "react-hook-form";
 import Button from "../dashboard/Button";
+import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
+import { RegisterOptions } from "react-hook-form";
 
 interface InputProps {
   id: string;

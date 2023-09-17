@@ -1,12 +1,10 @@
-import React from "react";
-import InfoCard from "./InfoCard";
 import Link from "next/link";
-import { FaTimes } from "react-icons/fa";
 import Spinner from "../Spinner";
+import { FaTimes } from "react-icons/fa";
 
 interface ButtonProps {
-  label?: string | React.ReactNode;
   onClick?: () => void;
+  label?: string | React.ReactNode;
   submit?: boolean;
   icon?: string;
   disabled?: boolean;
@@ -42,12 +40,11 @@ interface ButtonProps {
 }
 
 const Button = ({
-  label,
   onClick,
+  label,
   options,
   disabled,
   submit,
-  icon,
   children,
   link,
   className,

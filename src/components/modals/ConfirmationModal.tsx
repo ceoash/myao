@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-import Modal from "./Modal";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 import Alert from "./Alert";
 
@@ -9,9 +7,6 @@ export interface ErrorResponse {
   error: string;
 }
 
-interface ConfirmationModalProps {
-  listingId: string;
-}
 const ConfirmationModal = () => {
     const { isOpen, onClose, confirmAction, text } = useConfirmationModal();
   

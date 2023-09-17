@@ -1,20 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useState } from "react";
-import { FieldErrors, FieldValues, set } from "react-hook-form";
-import { IoClose } from "react-icons/io5"
 import Button from "@/components/dashboard/Button";
+import { useCallback, useEffect, useState } from "react";
+import { FieldErrors, FieldValues } from "react-hook-form";
+import { IoClose } from "react-icons/io5"
 
 interface ModalProps {
     isOpen?: boolean;
-    onClose?: () => void;
-    onSubmit?: () => void;
     title?: string;
     body?: React.ReactNode;
     footer?: string;
     actionLabel?: string | React.ReactNode;
     disabled?: boolean;
-    secondaryAction?: () => void;
     secondaryActionLabel?: string | React.ReactNode;
     listingId?: string;
     children?: React.ReactNode;
@@ -23,34 +20,33 @@ interface ModalProps {
     auto?: boolean;
     confirmation?: boolean;
     buttonsLeft?: boolean
-
+    onClose?: () => void;
+    onSubmit?: () => void;
+    secondaryAction?: () => void; 
 }
 
 const Modal: React.FC<ModalProps> = ({
     isOpen,
-    onClose,
-    onSubmit,
     title,
     body,
     footer,
-    actionLabel,
-    disabled,
-    secondaryAction,
-    secondaryActionLabel,
-    listingId,
     errors,
     isLoading,
     auto,
+    disabled,
+    actionLabel,
+    secondaryActionLabel,
     confirmation,
-    buttonsLeft
+    buttonsLeft,
+    onClose,
+    onSubmit,
+    secondaryAction,
 }) => {
     const [showModal, setShowModal] = useState(isOpen);
 
     useEffect(() => {
         setShowModal(isOpen)
     }, [isOpen]);
-
-   
 
     const handleClose = useCallback(() => {
         setShowModal(false);
@@ -103,25 +99,27 @@ const Modal: React.FC<ModalProps> = ({
         justify-center
         items-end
         md:items-center
-        flex
         overflow-x-hidden
         overflow-y-auto
+        flex
         fixed
         inset-0
-        z-40
+        
         outline-none
         focus:outline-none
-       ${showModal && 'backdrop-blur-md bg-neutral-800/70'}
+       ${showModal && 'backdrop-blur-md bg-neutral-800/70 backdrop-filter'}
         `}
+        style={{zIndex: 9999}}
     >
         <div 
             className={`
             relative
             ${auto ? 'w-full md:w-auto' : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
             mx-auto
-            h-full pt-32
+            flex-grow
             lg:h-auto
-            md:h-auto        
+            md:h-auto   
+
     `}>
             {/* CONTENT */}
             <div
@@ -150,7 +148,8 @@ const Modal: React.FC<ModalProps> = ({
                     bg-white
                     outline-none
                     focus:outline-none
-                    overflow-y-auto
+                    overflow-none
+                    overflow-y-none
                     z-50
                 ">
                     {/* HEADER */}
@@ -188,7 +187,7 @@ const Modal: React.FC<ModalProps> = ({
                         </button>
                     </div>
                     {/* BODY */}
-                    <div className="relative p-6 flex-auto">
+                    <div className="relative p-6 h-full">
                         {body}
                     </div>
                     {/* FOOTER */}

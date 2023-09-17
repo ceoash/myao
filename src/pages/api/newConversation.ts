@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
+import { NextApiRequest, NextApiResponse } from "next";
 import { createActivity } from "@/prisma";
 
 interface ErrorResponse { error: string; }

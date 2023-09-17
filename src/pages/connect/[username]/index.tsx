@@ -1,18 +1,18 @@
 "use client";
 import Link from "next/link";
-import { Meta } from "@/layouts/meta";
+import getUserByUsername from "@/actions/getUserByUsername";
 import ConnectComponent from "@/components/Connect";
+import { Meta } from "@/layouts/meta";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { User } from "@prisma/client";
-import getUserByUsername from "@/actions/getUserByUsername";
 
 interface ConnectProps {
   user: User;
   session: any;
 }
 
-const Connect = ({ user, session }: ConnectProps) => {
+const Connect = ({ user }: ConnectProps) => {
   return (
     <div className="h-screen bg-gray-50">
       <Meta title={`Connect`} description={`Connect with ${user.username}`} />

@@ -1,8 +1,8 @@
-import { Session } from "next-auth";
-import { toast } from "react-hot-toast";
-import React, { useEffect, useState } from "react";
 import Button from "./dashboard/Button";
 import axios from "axios";
+import { Session } from "next-auth";
+import { toast } from "react-hot-toast";
+import { useEffect, useState } from "react";
 import { FaCreditCard } from "react-icons/fa";
 
 interface PreviewPageProps {

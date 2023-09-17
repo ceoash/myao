@@ -1,15 +1,11 @@
-import React from "react";
 import Card from "../ActivityCard";
-import Button from "../Button";
-import { ExtendedActivity } from "@/interfaces/authenticated";
 import Link from "next/link";
+import { ExtendedActivity } from "@/interfaces/authenticated";
 
 interface ActivityWidgetProps {
   title?: string;
   activities?: ExtendedActivity[];
 }
-
-
 
 const ActivityWidget = ({ title, activities }: ActivityWidgetProps) => {
   

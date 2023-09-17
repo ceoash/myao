@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
-import { Listing, DirectMessage, User } from ".prisma/client";
+import { NextApiRequest, NextApiResponse } from "next";
+import { Listing, DirectMessage } from ".prisma/client";
 import { createActivity } from "@/prisma";
 import { ExtendedActivity } from "@/interfaces/authenticated";
 

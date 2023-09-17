@@ -1,6 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
@@ -10,18 +8,13 @@ import { FaEye, FaPencilAlt, FaTimes, FaUser } from "react-icons/fa";
 import { BiCalendar } from "react-icons/bi";
 import { ImPriceTag } from "react-icons/im";
 import { toast } from "react-hot-toast";
-import { Bid, Listing } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useSocketContext } from "@/context/SocketContext";
 
 import useConfirmationModal from "@/hooks/useConfirmationModal";
-import { IUser } from "@/interfaces/authenticated";
-import { useSocketContext } from "@/context/SocketContext";
 import useOfferEditModal from "@/hooks/useOfferEditModal";
-
-interface OfferProps extends Listing {
-  seller?: IUser;
-  buyer?: IUser;
-  bids?: Bid[];
-}
+import { CgArrowRight } from "react-icons/cg";
 
 const Offer: React.FC<any> = ({
   id,
@@ -72,6 +65,14 @@ const Offer: React.FC<any> = ({
   const edit = useOfferEditModal();
 
   const confirmation = useConfirmationModal();
+
+  const participant = session?.user?.id === sellerId ? buyer : seller;
+  const sessionUser = session?.user?.id === sellerId ? seller : buyer;
+
+  const buyerIcon =
+    type === "buyerOffer" ? "/images/cat.png" : "/images/dog.png";
+  const sellerIcon =
+    type === "buyerOffer" ? "/images/dog.png" : "/images/cat.png";
 
   const formatStatus = (status: string) => {
     switch (status) {
@@ -214,8 +215,8 @@ const Offer: React.FC<any> = ({
             "
           >
             <div className=" block md:hidden absolute top-4 left-4 z-10 items-center text-xs xl:text-sm">
-                {StatusChecker(statusState)}
-              </div>
+              {StatusChecker(statusState)}
+            </div>
             <div className="absolute inset-0 bg-black hover:bg-white opacity-10"></div>
             <Image
               src={img[0] || "/images/cat.png"}
@@ -262,13 +263,13 @@ const Offer: React.FC<any> = ({
                   {bids && bids.length > 0
                     ? "Bid by "
                     : price !== "0" && price !== ""
-                    ? "Starting price by "
+                    ? "Starting price "
                     : "Open offer by "}
                   <span className="underline">
                     {bids &&
                     bids.length > 0 &&
-                    bids[bids.length - 1].userId === sellerId
-                      ? seller?.username
+                    bids[bids.length - 1].userId === session?.user?.id
+                      ? "You"
                       : userId === sellerId
                       ? seller?.username
                       : buyer?.username}
@@ -295,6 +296,7 @@ const Offer: React.FC<any> = ({
                     </h4>
                   )}
                 </div>
+                
               </div>
             </div>
           </div>
@@ -303,26 +305,71 @@ const Offer: React.FC<any> = ({
               <div className=" hidden md:block items-center text-xs xl:text-sm">
                 {StatusChecker(statusState)}
               </div>
-              <Link
-                href={`/dashboard/profile/${
-                  sellerId === session?.user.id ? buyerId : sellerId
-                } `}
-              >
-                <div className=" gap-1.5 items-center text-xs xl:text-sm flex">
-                  <FaUser />
-                  <div>
-                    {seller.id === session?.user.id
-                      ? buyer?.username
-                      : seller?.username || "unknown user"}
-                  </div>
+
+              <div className="flex gap-2 items-center">
+                  <Link href={`/dashboard/profile/${userId} `}>
+                    <div className=" gap-1.5 items-center text-xs xl:text-sm flex">
+                      <div className="relative rounded-full border border-gray-200 h-4 w-4">
+                        <Image
+                          src={
+                            userId === sessionUser.id
+                              ? sessionUser?.profile?.image ||
+                                userId === sellerId
+                                ? sellerIcon
+                                : buyerIcon
+                              : participant?.profile?.image ||
+                                userId === sellerId
+                              ? sellerIcon
+                              : buyerIcon
+                          }
+                          alt=""
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                      </div>
+                      <div>
+                        {userId === sessionUser.id
+                          ? "You"
+                          : participant?.username || "unknown user"}
+                      </div>
+                    </div>
+                  </Link>
+                  <CgArrowRight />
+                  <Link href={`/dashboard/profile/${userId} `}>
+                    <div className=" gap-1.5 items-center text-xs xl:text-sm flex">
+                      <div className="relative rounded-full border border-gray-200 h-4 w-4">
+                        <Image
+                          src={
+                            userId !== sessionUser.id
+                              ? sessionUser?.profile?.image ||
+                                userId === sellerId
+                                ? buyerIcon
+                                : sellerIcon
+                              : participant?.profile?.image ||
+                                userId === sellerId
+                              ? buyerIcon
+                              : sellerIcon
+                          }
+                          alt=""
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                      </div>
+                      <div>
+                        {userId !== sessionUser.id
+                          ? "You"
+                          : participant?.username || "unknown user"}
+                      </div>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
+
               <div className=" items-center gap-1.5 text-xs xl:text-sm hidden 2xl:flex">
                 <ImPriceTag />
                 <span>{type === "sellerOffer" ? "Sale" : "Buy"}</span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs xl:text-sm">
+              <div className="ml-auto sm:ml-0 flex items-center gap-1.5 text-xs xl:text-sm">
                 <BiCalendar />
                 <span>{timeSinceCreated}</span>
               </div>
@@ -331,7 +378,8 @@ const Offer: React.FC<any> = ({
               <Link
                 href={`/dashboard/offers/${id}`}
                 className="
-                  flex
+                hidden
+                sm:flex
                   gap-2
                   items-center
                   text-md
@@ -366,7 +414,8 @@ const Offer: React.FC<any> = ({
                         font-medium 
                         rounded-lg 
                         text-center
-                        flex
+                        hidden
+                        sm:flex
                         p-1
                         gap-2
                         items-center
@@ -389,7 +438,8 @@ const Offer: React.FC<any> = ({
                         handleStatusChange("cancelled", session?.user.id)
                       }
                       className="
-                        flex
+                      hidden
+                      sm:flex
                         p-1 
                         gap-1 
                         items-center 
@@ -402,7 +452,6 @@ const Offer: React.FC<any> = ({
                         hover:bg-red-400
                         hover:text-white
                         "
-                        
                     >
                       <FaTimes />
                       <span className="hidden 2xl:block">Cancel</span>

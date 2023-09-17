@@ -1,7 +1,7 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import bcrypt from "bcrypt";
 import { createActivity } from "@/prisma";
+import { NextApiRequest, NextApiResponse } from "next";
 
 interface ErrorResponse {
   error: string;

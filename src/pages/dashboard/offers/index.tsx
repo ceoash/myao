@@ -1,19 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
 import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { DashListing } from "@/interfaces/authenticated";
-
-import getOffersByUserId from "@/actions/dashboard/getOffersByUserId";
 import Offers from "@/components/offers/Offers";
-import { useSocket } from "@/hooks/useSocket";
-import { useSocketContext } from "@/context/SocketContext";
+import getAllOffersByUserId from "@/actions/dashboard/getAllOffersByUserId";
 
 interface IndexProps {
   session: any;
-  sent: DashListing[];
-  received: DashListing[];
+  listings: DashListing[];
   countSent: number;
   countReceived: number;
   countPendingSent: number;
@@ -22,8 +17,7 @@ interface IndexProps {
 }
 
 const Index = ({
-  sent,
-  received,
+  listings,
   session,
   countSent,
   countReceived,
@@ -50,8 +44,7 @@ const Index = ({
               </h3>
             </div>
             <Offers
-              sent={sent}
-              received={received}
+              offers={listings}
               session={session}
               countSent={countSent}
               countReceived={countReceived}
@@ -84,41 +77,34 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
 
     const PAGE_SIZE = 5;
 
-    const listings = await getOffersByUserId(session, PAGE_SIZE);
-
-    if (!listings) return { props: { sent: [], received: [], session } };
-
-    const defaultTab = context.query?.received ? 'received' : 'sent';
+    const fetchListings = await getAllOffersByUserId(session, PAGE_SIZE);
+    if (!fetchListings) return { props: { sent: [], received: [], session } };
 
 
     const {
-      sent,
-      received,
+     listings,
       countSent,
       countReceived,
       countPendingSent,
       countPendingReceived,
-    } = listings;
+    } = fetchListings;
 
     return {
       props: {
-        sent,
-        received,
+        listings,
         session,
         countSent,
         countReceived,
         countPendingSent,
         countPendingReceived,
         id,
-        defaultTab
       },
     };
   } catch (error) {
     console.error("Error fetching listings:", error);
     return {
       props: {
-        received: [],
-        sent: [],
+        listings: [],
         
       },
     };

@@ -1,12 +1,12 @@
-import React, { useEffect, useReducer, useState } from "react";
-import { Meta } from "@/layouts/meta";
-import { Dash } from "@/templates/dash";
-import { GetServerSideProps } from "next";;
-import { getSession } from "next-auth/react";
 import FriendsWidget from "@/components/widgets/FriendsWidget";
-import { User } from "@prisma/client";
 import getCurrentUser from "@/actions/getCurrentUser";
 import reducer from "@/reducer/friends";
+import { useEffect, useReducer } from "react";
+import { Meta } from "@/layouts/meta";
+import { Dash } from "@/templates/dash";
+import { getSession } from "next-auth/react";
+import { User } from "@prisma/client";
+import { GetServerSideProps } from "next";;
 import { useSocketContext } from "@/context/SocketContext";
 
 interface IndexProps {

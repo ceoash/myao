@@ -1,9 +1,14 @@
 "use client";
-import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
-import { useCallback } from "react";
-import { BiImageAdd } from "react-icons/bi";
 import sha256 from "crypto-js/sha256";
+import Button from "../dashboard/Button";
+import axios from "axios";
+import useConfirmationModal from "@/hooks/useConfirmationModal";
+import { useCallback } from "react";
+import { CldUploadWidget } from "next-cloudinary";
+import { FaTimes, FaUpload } from "react-icons/fa";
+import { toast } from "react-hot-toast";
+
 declare global {
   var cloudinary: any;
 }
@@ -11,14 +16,6 @@ interface ImageUploadProps {
   onChange: (value: string) => void;
   value?: string;
 }
-import React from "react";
-import { FaTimes, FaUpload } from "react-icons/fa";
-import Button from "../dashboard/Button";
-import axios from "axios";
-import useConfirmationModal from "@/hooks/useConfirmationModal";
-import { toast } from "react-hot-toast";
-import { error } from "console";
-
 
 
 

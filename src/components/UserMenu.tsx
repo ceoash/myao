@@ -1,18 +1,18 @@
-import React, { use, useEffect, useRef, useState } from "react";
-import { AiOutlineMenu } from "react-icons/ai";
-import { BiBell, BiCog, BiMessage, BiNotification, BiSearch } from "react-icons/bi";
 import Avatar from "./Avatar";
 import Link from "next/link";
-import { SafeUser } from "@/types";
+import MenuItem from "./MenuItem";
 import axios from "axios";
 import SearchComponent from "./SearchComponent";
 import useQRModal from "@/hooks/useQRModal";
 import useSearchComponentModal from "@/hooks/useSearchComponentModal";
+import { BiBell, BiMessage, BiSearch } from "react-icons/bi";
+import { useEffect, useRef, useState } from "react";
+import { AiOutlineMenu } from "react-icons/ai";
+import { SafeUser } from "@/types";
 import { useUnreadMessages } from "@/context/UnreadMessagesContext";
 import { useSocketContext } from "@/context/SocketContext";
 import { Session } from "next-auth";
 import { ImQrcode } from "react-icons/im";
-import MenuItem from "./MenuItem";
 import { signOut } from "next-auth/react";
 
 interface IUserMenuProps {

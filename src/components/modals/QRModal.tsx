@@ -1,12 +1,12 @@
 "use client";
-import React from "react";
+
 import Modal from "./Modal";
+import Image from "next/image";
 import useQRModal from "@/hooks/useQRModal";
 import { handleCopy, handleDownloadQR } from "@/utils/canvas";
 import { useQRCode } from "next-qrcode";
 import { useSession } from "next-auth/react";
 import { AppConfig } from "@/utils/AppConfig";
-import Image from "next/image";
 import { FaCopy, FaDownload } from "react-icons/fa";
 
 export interface ErrorResponse {
@@ -14,7 +14,7 @@ export interface ErrorResponse {
 }
 
 const QRModal = () => {
-  const { isOpen, onClose, image, username } = useQRModal();
+  const { isOpen, onClose, image } = useQRModal();
   const { Canvas } = useQRCode();
   const { data: session } = useSession();
 

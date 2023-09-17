@@ -1,19 +1,18 @@
 "use client";
 import Button from "@/components/dashboard/Button";
 import React from "react";
+import Input from "@/components/inputs/Input";
+import Link from "next/link";
+import Spinner from "@/components/Spinner";
 import { useState } from "react";
 import { FieldValues, useForm, SubmitHandler } from "react-hook-form";
 import { Toaster, toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getProviders, getSession, signIn } from "next-auth/react";
-import Input from "@/components/inputs/Input";
-import Link from "next/link";
-import Spinner from "@/components/Spinner";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const [invalidCredentials, setInvalidCredentials] = useState(false);
   const router = useRouter();
 
   const {

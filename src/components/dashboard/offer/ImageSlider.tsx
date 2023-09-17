@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react";
 
@@ -12,10 +12,8 @@ import "swiper/css/thumbs";
 import plus from "@/images/plus.svg";
 
 // import required modules
-import SwiperCore, { Pagination, Thumbs, Navigation, FreeMode } from "swiper";
+import SwiperCore, { Thumbs, Navigation, FreeMode } from "swiper";
 import Image from "next/image";
-import { OfferModalStore } from "@/interfaces/authenticated";
-import { FaPlus } from "react-icons/fa";
 
 interface ImageSliderProps {
   images: string;

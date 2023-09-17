@@ -1,27 +1,25 @@
-import { timeSince } from "@/utils/formatTime";
 import Image from "next/image";
-import React from "react";
+import { timeSince } from "@/utils/formatTime";
 import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
 
 interface SidebarProps {
   isOpen: boolean;
-  handleSidebarToggle: () => void;
-  filterBlockedConversation: any;
-  handleSetActiveConversation: (conversation: any) => void;
-  activeConversationState: any;
   session: any;
+  activeConversationState: any;
+  filterBlockedConversation: any;
+  handleSidebarToggle: () => void;
+  handleSetActiveConversation: (conversation: any) => void;
 }
 
 const Sidebar = ({
   isOpen,
-  handleSidebarToggle,
-  filterBlockedConversation,
-  handleSetActiveConversation,
-  activeConversationState,
   session,
+  activeConversationState,
+  filterBlockedConversation,
+  handleSidebarToggle,
+  handleSetActiveConversation,
 }: SidebarProps) => {
   
-
   return (
     <>
       <div className={`py-5 px-4 absolute ${isOpen ? "-right-8" : "-left-8"} `}>

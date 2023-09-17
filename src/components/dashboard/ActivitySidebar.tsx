@@ -1,13 +1,11 @@
-import React, { Dispatch, use, useEffect, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
-import { signOut } from "next-auth/react";
 import ActivityCard from "./ActivityCard";
 import MessageCard from "./cards/MessageCard";
 import NotificationCard from "./cards/NotificationCard";
 import MenuItem from "../MenuItem";
+import { useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useAlerts } from "@/hooks/AlertHook";
-
-
 
 interface SidebarProps {
   mobile?: boolean;
@@ -31,20 +29,24 @@ const Sidebar = ({
 
   const ref = useRef<HTMLDivElement | null>(null);
 
+  const handleClickOutside = (e: any) => {
+    if (ref.current && !ref.current.contains(e.target)) {
+      setToggle && setToggle(false);
+    }
+  };
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node) && setToggle) {
-        setToggle(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
+    if (toggle) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [ref, toggle, setToggle]);
+  }, [toggle]);
 
+ 
 
 useEffect(() => {
   const handleResize = () => {
@@ -113,7 +115,9 @@ useEffect(() => {
         ${dashboard === true && "xl:w-60 "}`}
       >
         {mobile && showMobile ? (
-          <div className="flex
+          <div 
+          ref={ref}
+          className="flex
           flex-col
           cursor-pointer
           z-50
@@ -148,7 +152,7 @@ useEffect(() => {
         </div>
         ) : (
           <>
-            <div className="flex flex-col flex-nowrap  h-full px-2">
+            <div ref={ref} className="flex flex-col flex-nowrap  h-full px-2">
               <div className=" pt-20 -mt-2 ">
                 <div className="p-4 ">
                   <h5 className="mb-3">Notifications</h5>

@@ -1,9 +1,6 @@
-import StatusChecker from "@/utils/status";
-import { useRef, useState } from "react";
-import { BiChevronRight } from "react-icons/bi";
-import { FaChevronRight } from "react-icons/fa";
 import MenuItem from "../MenuItem";
-import { signOut } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
+import { FaChevronRight } from "react-icons/fa";
 
 interface TabsProps {
   setTab: (tab: string) => void;
@@ -22,7 +19,7 @@ const Tabs = ({
   setTab,
   tabs,
   status,
-  tab: activeTab,
+tab: activeTab,
   isListing,
   main,
   additionalData,
@@ -30,6 +27,25 @@ const Tabs = ({
 }: TabsProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const handleClickOutside = (e: any) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   return (
     <ul className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative">
@@ -100,7 +116,7 @@ const Tabs = ({
           </div>
         );
       })}
-      <div className="relative">
+      <div  className="relative">
         {tabs.some((tab) => !tab.primary) && (
           <div className="flex w-full">
             <div
@@ -127,7 +143,7 @@ const Tabs = ({
             {isOpen && (
               <div
                 className={` rouned-xl shadow-md bg-white overflow-hidden right-0 w-auto top-10 text-sm absolute rounded-b-xl border border-gray-200 flex-nowrap`}
-                ref={ref}
+                ref={dropdownRef}
                 style={{ zIndex: 9999 }}
               >
                 <div className="flex flex-col cursor-pointer z-30">

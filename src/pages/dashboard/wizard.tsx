@@ -4,12 +4,12 @@ import Loading from "@/components/LoadingScreen";
 import Button from "@/components/dashboard/Button";
 import AvatarUpload from "@/components/inputs/AvatarUpload";
 import UserType from "@/components/wizard/UserType";
-import {BiCheckShield, BiImageAdd, BiUserPin, BiBadge, BiCheck} from 'react-icons/bi'
 import axios from "axios";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import { BiCheckShield, BiImageAdd, BiUserPin, BiBadge, BiCheck} from 'react-icons/bi'
+import { useEffect, useMemo, useState } from "react";
 import {
   Controller,
   FieldValues,

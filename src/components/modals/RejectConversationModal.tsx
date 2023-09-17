@@ -1,13 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Modal from "./Modal";
-import useRejectConversationModal from "@/hooks/useRejectConversationModal";
 import axios from "axios";
-import { toast } from "react-hot-toast";
-import { useSocket } from "@/hooks/useSocket";
 import { useSocketContext } from "@/context/SocketContext";
-import { stat } from "fs";
+import useRejectConversationModal from "@/hooks/useRejectConversationModal";
 
 export interface ErrorResponse {
   error: string;

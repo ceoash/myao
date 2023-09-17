@@ -1,18 +1,15 @@
-import React from "react";
-
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 
 import getCurrentUser from "@/actions/getCurrentUser";
 import listingsCount from "@/actions/listingsCount";
+import Card from "@/components/dashboard/Card";
+import UserCard from "@/components/widgets/UserCard";
 
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
 import { User } from "@prisma/client";
 import { Session } from "next-auth";
-
-import Card from "@/components/dashboard/Card";
-import UserCard from "@/components/widgets/UserCard";
 
 import { BsFillStarFill } from "react-icons/bs";
 

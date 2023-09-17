@@ -2,8 +2,6 @@
 
 import { IconType } from "react-icons/lib";
 import { UseFormRegister } from "react-hook-form";
-import { BiCheck, BiCheckbox, BiCheckboxChecked } from "react-icons/bi";
-import { IoCheckbox } from "react-icons/io5";
 import { ImCheckboxChecked, ImCheckboxUnchecked } from "react-icons/im";
 
 type FormData = {

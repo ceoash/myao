@@ -1,7 +1,7 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import { User } from ".prisma/client";
-import { Prisma } from "@prisma/client";
+import { NextApiRequest, NextApiResponse } from "next";
+
 
 interface ErrorResponse {
   error: string;

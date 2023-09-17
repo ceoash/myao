@@ -1,4 +1,3 @@
-import React from "react";
 import SwiperCore, { Navigation, Pagination, Autoplay } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 

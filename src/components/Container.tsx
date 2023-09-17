@@ -3,7 +3,6 @@ interface ContainerProps {
     isFlexGrow?: boolean;
 }
 
-
 const Container = ({ children, isFlexGrow }: ContainerProps) => {
   return (
     <div className={`container 

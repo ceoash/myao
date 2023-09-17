@@ -1,14 +1,11 @@
-import React from "react";
-import { BiChevronRight, BiSearch } from "react-icons/bi";
-import { User } from "@prisma/client";
 import axios from "axios";
 import useQuickConnect from "@/hooks/useQuickConnect";
-import { FieldValues, useForm } from "react-hook-form";
+import { useState } from "react";
+import { BiChevronRight } from "react-icons/bi";
 import { toast } from "react-hot-toast";
-import { IoShareSocialOutline } from "react-icons/io5";
 
 const QuickConnect = ({ session }: any) => {
-  const [search, setSearch] = React.useState("");
+  const [search, setSearch] = useState("");
   const connect = useQuickConnect();
   const username = search.toLowerCase();
 

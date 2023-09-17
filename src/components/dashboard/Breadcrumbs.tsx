@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-
-
 const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boolean}) => {
   const router = useRouter();
   const { asPath } = router;

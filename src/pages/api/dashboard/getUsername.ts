@@ -22,8 +22,6 @@ export default async function handler(
     
       },
     });
-
-    console.log(username);
     
     return res.status(200).json({ username: username });
   } catch (error) {

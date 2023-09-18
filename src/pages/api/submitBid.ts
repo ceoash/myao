@@ -32,6 +32,7 @@ export default async function submitBid(
           id,
         },
         select: {
+          status: true,
           seller: {
             select: {
               id: true,
@@ -67,6 +68,7 @@ export default async function submitBid(
         },
         data: {
           updatedAt: new Date(now),
+          status: updateListing.status === "rejected" ? "negotiating" : updateListing.status || "",
           bids: {
             create: [
               {

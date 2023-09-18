@@ -109,7 +109,7 @@ const Connect: React.FC<ConnectProps> = ({ user }) => {
                       type="email"
                       {...register("email")}
                       className="w-full border bg-gray-50 border-gray-300 text-gray-700 rounded-l-lg px-3 py-2 flex-1 h-18"
-                      placeholder="Email"
+                      placeholder="Your Email"
                     />
                     <button
                       onClick={handleSubmit(handleEmailSubmit)}

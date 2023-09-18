@@ -317,8 +317,16 @@ const OfferModal = () => {
         reset();
         setStep(STEPS.TYPE);
         offerModal.onClose();
+        const email = axios.post("/api/email/emailNotification", {
+          listing: { ...response.data.listing},
+          name: foundUser?.name,
+          email: foundUser?.email,
+          title: "New Offer",
+          body: `You have a new offer from ${session?.user?.username}`,
+          linkText: "View Offer",
+          url: `/dashboard/offers/${response.data.listing.id}`,
+        });
 
-        console.log("response", response.data)
 
         socket.emit(
           "new_listing",

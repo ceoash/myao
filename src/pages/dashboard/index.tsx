@@ -77,6 +77,7 @@ const Index = ({
           activity: activities,
           notifications: notifications,
           conversations: conversations,
+          unreadNotifications: user?.unreadNotifications || 0,
           blockedUsers: user?.blockedFriends.map(
             (friend) => friend.friendBlockedId
           ),

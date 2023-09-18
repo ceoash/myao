@@ -5,6 +5,7 @@ interface Alert {
   activity: ExtendedActivity[];
   notifications: INotification[];
   conversations?: IConversation[];
+  unreadNotifications?: number;
   blockedUsers?: string[];
 }
 

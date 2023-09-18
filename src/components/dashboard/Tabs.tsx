@@ -1,10 +1,16 @@
+import { randomUUID } from "crypto";
 import MenuItem from "../MenuItem";
 import { useEffect, useRef, useState } from "react";
 import { FaChevronRight } from "react-icons/fa";
 
 interface TabsProps {
   setTab: (tab: string) => void;
-  tabs: { id: string; label: string, primary?: boolean }[];
+  tabs: {
+    id: string;
+    label: string;
+    primary?: boolean;
+    notificationsCount?: number;
+  }[];
   lg?: boolean;
   uppercase?: boolean;
   status?: string;
@@ -19,7 +25,7 @@ const Tabs = ({
   setTab,
   tabs,
   status,
-tab: activeTab,
+  tab: activeTab,
   isListing,
   main,
   additionalData,
@@ -48,7 +54,7 @@ tab: activeTab,
   }, [isOpen]);
 
   return (
-    <ul className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative">
+    <ul key={tabs[0].label + tabs[tabs.length - 1].id} className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative">
       {main && (
         <li
           key={"overview"}
@@ -68,8 +74,13 @@ tab: activeTab,
             border-gray-20
             font-medium
             md:font-bold
-            ${activeTab === "overview" ? " bg-orange-400 text-white" : "bg-white"}
-          }`}>
+            ${
+              activeTab === "overview"
+                ? " bg-orange-400 text-white"
+                : "bg-white"
+            }
+          }`}
+        >
           <span>Overview</span>
         </li>
       )}
@@ -81,10 +92,17 @@ tab: activeTab,
         )
           return null;
         return (
-          <div
-            key={i}
-            onClick={() => setTab(tab.id)}
-            className={`
+          <div key={i} className="relative ">
+            {tab.notificationsCount && tab.notificationsCount > 0 ? (
+              <div className="absolute -top-1 -right-1 bg-orange-default text-white px-1.5 text-xs font-bold rounded-full z-20">
+              {tab.notificationsCount}
+            </div>
+            ) : ""}
+
+            <div
+              
+              onClick={() => setTab(tab.id)}
+              className={`
             cursor-pointer 
             border-r
             border-t
@@ -102,6 +120,7 @@ tab: activeTab,
             font-medium
             md:font-bold
           border-gray-200
+          
         ${
           tab.label === "Bid History"
             ? "hidden md:inline-block"
@@ -111,12 +130,13 @@ tab: activeTab,
         
         ${activeTab === tab.id ? " bg-orange-400 text-white" : "bg-white"}
         }`}
-          >
-            {tab.label}
+            >
+              {tab.label}
+            </div>
           </div>
         );
       })}
-      <div  className="relative">
+      <div className="relative">
         {tabs.some((tab) => !tab.primary) && (
           <div className="flex w-full">
             <div
@@ -150,13 +170,15 @@ tab: activeTab,
                   <>
                     {tabs &&
                       tabs.map((tab: any, i: number) => {
-                        if(tab.primary) return null;
-                        return <MenuItem
-                          key={i}
-                          label={tab.label}
-                          onClick={() => setTab(tab.id)}
-                        />
-                    })}
+                        if (tab.primary) return null;
+                        return (
+                          <MenuItem
+                            key={i}
+                            label={tab.label}
+                            onClick={() => setTab(tab.id)}
+                          />
+                        );
+                      })}
                   </>
                 </div>
               </div>

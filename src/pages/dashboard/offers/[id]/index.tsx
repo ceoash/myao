@@ -41,6 +41,7 @@ interface MessageProps {
   listingId: string;
   text: string;
   id: string;
+  read: boolean;
 }
 
 interface IUser extends User {
@@ -177,7 +178,8 @@ const Index = ({ listing, session }: PageProps) => {
 
   const mainTabs = [
     { id: "details", label: "Details", primary: true },
-    { id: "chat", label: "Chat", primary: true },
+   /*  { id: "chat", label: "Chat", primary: true, notificationsCount: messages.filter(message => !message.read).length || 0 }, */
+     { id: "chat", label: "Chat", primary: true },
     { id: "activity", label: "Activity", primary: true },
     { id: "bids", label: "Bid History" },
   ];
@@ -336,10 +338,10 @@ const Index = ({ listing, session }: PageProps) => {
 
     setReviews({
       userReview: currentListing.reviews.find(
-        (item: IReview) => item.userId === sessionUser.id
+        (item: IReview) => item.userId === sessionUser?.id
       ),
       participantReview: currentListing.reviews.find(
-        (item: IReview) => item.userId !== sessionUser.id
+        (item: IReview) => item.userId !== sessionUser?.id
       ),
     });
 
@@ -352,6 +354,21 @@ const Index = ({ listing, session }: PageProps) => {
     currentListing.reviews,
     currentListing.activities,
   ]);
+
+  useEffect(() => {
+    if(tab === "chat") {
+      const markAsRead = async () => {
+        const url = "/api/dashboard/markAllAsRead?listingId=" + currentListing.id + "&userId=" + session?.user.id;
+        const ids = messages.map((message) => message.id);
+        try {
+          await axios.put(url);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      markAsRead();
+    }
+  },[tab])
 
   useEffect(() => {
     socket.emit("join_listing", currentListing.id);
@@ -407,12 +424,22 @@ const Index = ({ listing, session }: PageProps) => {
     });
 
     socket.on("update_status", (data) => {
-      const { listingId, newStatus } = data;
+      const { listingId, newStatus, userId } = data;
       if (listingId === currentListing.id)
         console.log(
           `Received status update for listing ${listingId}: ${newStatus}`
         );
       setStatus(newStatus);
+      setEvents((prev) => {
+        const newEvent = {
+          id: tempId(),
+          event: newStatus,
+          price: currentBid.currentPrice,
+          date: new Date(now).toISOString(),
+          userId: userId,
+        };
+        return [newEvent ,...prev];
+      })
     });
     socket.on("updated_listing", (data) => {
       const { listing } = data;
@@ -523,22 +550,42 @@ const Index = ({ listing, session }: PageProps) => {
       setLoadingState((prev) => {
         return { ...prev, completed: true };
       });
-
+      
       await axios
         .put(`/api/updateListing/status`, {
           status: status,
           listingId: currentListing.id,
-          userId: userId,
-          completedById: sessionUser.id,
+          userId: session?.user?.id,
+          completedById: userId,
         })
         .then((response) => {
-          setStatus(status);
-          setEvents(response.data.listing.events);
-
           socket.emit("update_status", {
             newStatus: status,
             listingId: currentListing.id,
+            userId: userId,
           });
+
+          const receiver = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.buyer?.username : response.data.listing.seller?.username;
+          const sender = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.seller?.username : response.data.listing.buyer?.username;
+          const sellerEmail = axios.post("/api/email/emailNotification", {
+            listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
+            name: response.data.listing.seller.name,
+            email: response.data.listing.seller.email,
+            title: response.data.listing.buyer?.username + " has paid you " + response.data.listing.events[response.data.listing.events.length - 1].price,
+            body: `Your offer has been paid by ${response.data.listing.buyer.username}. Log in and arrange the transfer of the item(s).`,
+            linkText: "Make Payment",
+            url: `/dashboard/offers/${response.data.listing.id}`,
+          });
+          const buyerEmail = axios.post("/api/email/emailNotification", {
+            listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
+            name: response.data.listing.buyer.name,
+            email: response.data.listing.buyer.email,
+            title: "Your payment was successful",
+            body: `Your payment of ${response.data.listing.events[ response.data.listing.events - 1].price} was successful. Log in and arrange the transfer of the item(s).`,
+            linkText: "Log in",
+            url: `/dashboard/offers/${response.data.listing.id}`,
+          });
+
 
           const { sellerId, buyerId, transactionResult } = response.data;
 
@@ -590,16 +637,43 @@ const Index = ({ listing, session }: PageProps) => {
             status: status,
             listingId: currentListing.id,
             userId: userId,
-            completedById: sessionUser.id,
+            completedById: userId,
           })
           .then((response) => {
             setStatus(status);
-            setEvents(response.data.listing.events);
 
             socket.emit("update_status", {
               newStatus: status,
               listingId: currentListing.id,
+              userId: userId,
             });
+
+            if(response.data.listing.status === "accepted" ) {
+              const receiver = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.buyer : response.data.listing.seller;
+              const sender = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.seller : response.data.listing.buyer;
+              const email = axios.post("/api/email/emailNotification", {
+                listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
+                name: response.data.listing?.buyer.username,
+                email: response.data.listing?.buyer.email,
+                title: response.data.listing?.sellerId === sender.id ? "You have a deal!" : "You accepted the offer!",
+                body: response.data.listing?.sellerId === sender.id ? `Your offer has been accepted by ${listing.buyer.username}`: `You accepted your offer with ${listing.seller.username}.`,
+                description: "Login to make payment and complete the negotiation.",
+                linkText: "Make Payment",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
+            } else{
+              const receiver = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.buyer : response.data.listing.seller;
+              const sender = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.seller : response.data.listing.buyer;
+              const email = axios.post("/api/email/emailNotification", {
+                listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
+                name: receiver.username,
+                email: receiver.email,
+                title: `Your offer has been ${status}`,
+                body: `Your offer has been ${status} by ${sender.username}.`,
+                linkText: "Manage Offer",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
+            }
 
             const { sellerId, buyerId, transactionResult } = response.data;
 
@@ -670,7 +744,7 @@ const Index = ({ listing, session }: PageProps) => {
                           href={`/dashboard/profile/${currentBid.byUserId}`}
                           className="underline"
                         >
-                          {listing.user.id === sessionUser.id ? 'You' : listing.user.username || ''}
+                          {listing.user.id === sessionUser?.id ? 'You' : listing.user.username || ''}
                         </Link>
                       </div>
                     )}
@@ -698,7 +772,7 @@ const Index = ({ listing, session }: PageProps) => {
                               href={`/dashboard/profile/${currentBid.byUserId}`}
                               className="underline ml-[2px]"
                             >
-                              {currentBid.byUsername === sessionUser.username ? 'You' : currentBid.byUsername || ''}
+                              {currentBid.byUsername === sessionUser?.username ? 'You' : currentBid.byUsername || ''}
                             </Link>
                           </div>
                         )}
@@ -753,7 +827,7 @@ const Index = ({ listing, session }: PageProps) => {
         )}
         {activeSubTab === "user" && (
           <div className=" justify-center z-10 mb-6">
-            {sessionUser.id && (
+            {sessionUser?.id && (
               <div>
                 <UserStats
                   userLoading={loadingState.user}
@@ -912,6 +986,7 @@ const Index = ({ listing, session }: PageProps) => {
               listing={listing}
               status={status || "pending"}
               session={session}
+              events={events}
               currentBid={currentBid}
               setCurrentBid={setCurrentBid}
               bids={bids}
@@ -922,7 +997,6 @@ const Index = ({ listing, session }: PageProps) => {
               setLoadingState={setLoadingState}
               timeSinceCreated={timeSinceCreated}
               participant={participant}
-              completedBy={events[0]?.userId || null}
               setStatus={setStatus}
               handleFinalise={handleFinalise}
               me={me}

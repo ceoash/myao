@@ -14,6 +14,7 @@ import { useSocketContext } from "@/context/SocketContext";
 import { Session } from "next-auth";
 import { ImQrcode } from "react-icons/im";
 import { signOut } from "next-auth/react";
+import { useAlerts } from "@/hooks/AlertHook";
 
 interface IUserMenuProps {
   currentUser?: SafeUser | null;
@@ -87,7 +88,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
     };
   }, [isMounted]);
 
-  console.log("blockedUsers", blockedUsers);
+  const alerts = useAlerts();
 
   useEffect(() => {
     socket.on("message_sent", (newMessage: any) => {
@@ -165,6 +166,28 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
               <div onClick={() => setToggle(false)}>
                 <BiBell className="h-[20px] text-gray-600" />
               </div>
+              {/* { alerts.alerts?.unreadNotifications && 
+                alerts.alerts?.unreadNotifications > 0 && (
+                  <div className="
+                  -top-1
+                  -right-1
+                  flex
+                  absolute
+                  justify-center
+                  items-center
+                  p-0.5
+                  w-4
+                  text-xs
+                  font-bold
+                  text-white
+                  bg-orange-default
+                  rounded-full
+                  h-[16px]
+                  ">
+                    {alerts.alerts?.unreadNotifications}
+                  </div>
+                )} */}
+              
             </div>
             <div
               onClick={handleToggle}

@@ -113,6 +113,39 @@ const Offer: React.FC<any> = ({
               response.data.listing.sellerId,
               response.data.listing.buyerId
             );
+            if(response.data.listing.status === "accepted" ) {
+              const receiver = response.data.listing?.events[response.data.listing?.events.length - 1].userId === sellerId ? buyer?.username : seller?.username;
+              const email = axios.post("/api/email/emailNotification", {
+                listing: { ...response.data.listing},
+                name: receiver.name,
+                email: receiver.email,
+                title: "Your offer has been accepted",
+                body: `Your offer has been accepted by ${receiver}. You can now view the offer and complete the transaction.`,
+                linkText: "Make Payment",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
+            }
+            if(response.data.listing.status === "completed" ) {
+              const receiver = response.data.listing?.events[response.data.listing?.events.length - 1].userId === sellerId ? buyer?.username : seller?.username;
+              const sellerEmail = axios.post("/api/email/emailNotification", {
+                listing: { ...response.data.listing},
+                name: seller.name,
+                email: seller.email,
+                title: buyer?.username + " has paid you " + response.data.listing.price,
+                body: `Your offer has been accepted by ${receiver}. You can now view the offer and complete the transaction.`,
+                linkText: "Make Payment",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
+              const buyerEmail = axios.post("/api/email/emailNotification", {
+                listing: { ...response.data.listing},
+                name: buyer.name,
+                email: buyer.email,
+                title: "Your offer has been accepted",
+                body: `Your offer has been accepted by ${receiver}. You can now view the offer and complete the transaction.`,
+                linkText: "Make Payment",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
+            }
             setStatusState(response.data.listing.status);
             toast.success("Offer" + " " + response.data.listing.status);
           })

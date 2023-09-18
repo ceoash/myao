@@ -11,6 +11,7 @@ interface MessageProps {
   listingId: string;
   text: string;
   id: string;
+  read: boolean;
 }
 
 interface ListingChatProps {

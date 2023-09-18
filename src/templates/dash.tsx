@@ -21,6 +21,9 @@ import { usePathname } from "next/navigation";
 import { Router } from "next/router";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import axios from "axios";
+import { Notification } from "@prisma/client";
+import { INotification } from "@/interfaces/authenticated";
 
 type IDashProps = {
   meta: ReactNode;
@@ -46,6 +49,45 @@ const Dash = (props: IDashProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const handleToggle = (mobile?: boolean) => {
+   /*  const markAllAsRead = async (ids: string[]) => {
+      
+      try {
+        await axios
+          .post(`/api/dashboard/markNotificationsAsRead`, [...ids])
+          .then((res) => {
+            alerts.setAlerts((prev: any) => ({
+              ...prev,
+              notifications: {
+                ...prev.notifications,
+                notifications: prev.notifications.map((notification: any) => {
+                  if (ids.includes(notification.id)) {
+                    return {
+                      ...notification,
+                      read: true,
+                    };
+                  }
+                  return notification;
+                }), 
+              },
+            }));
+          }
+          );
+      
+      } catch (error) {
+        console.log("error:", error);
+      }
+    };
+
+    if(!toggleSidebar){
+      const ids = Array.isArray(alerts.alerts?.notifications)
+      ? alerts.alerts?.notifications.map((notification: INotification) => notification.id)
+      : [];
+    
+    if (ids && ids.length > 0) {
+      markAllAsRead(ids);
+    }
+
+    } */
     setToggleMobileSidebar((prev) => {
       return mobile || false;
     });

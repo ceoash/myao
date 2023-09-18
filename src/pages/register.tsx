@@ -15,6 +15,7 @@ import {
   SubmitHandler,
   Controller,
 } from "react-hook-form";
+import { set } from "date-fns";
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -205,6 +206,11 @@ const Register = () => {
         .catch((err) => {
           console.log(err);
           toast.error(err.response.data.message);
+          setError("email", {
+            message: err.response.data.message,
+          });
+          setIsLoading(false);
+          setDisabled(false);
         });
     }
 

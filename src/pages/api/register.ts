@@ -1,44 +1,30 @@
+import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import bcrypt from "bcrypt";
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    return res.status(405).end(); // Method not allowed
-  }
+const registerUser = async (email: string, password: string) => {
+  // Check if a user with the provided email exists
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
 
-  try {
-    const body = req.body;
-    const { email, name, password, username } = body;
-
+  if (existingUser) {
+    throw new Error("Email already exists.");
+  } else {
+    // Create the user account
     const hashedPassword = await bcrypt.hash(password, 10);
-    const formattedUsername = username.toLowerCase().replace(/\s/g, "");
-    const now = Date.now();
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
-        email,
-        name,
-        hashedPassword,
-        username: formattedUsername,
-        activated: true,
-        activity: {
-          create: {
-            type: "settings",
-            message: `Account created`,
-            userActivity: {
-              create: {
-                message: `Welcome to your new account!`,
-                type: "created",
-                action: "/dashboard/profile/" + formattedUsername,
-              },
-            },
-          },
-        },
+        email: email,
+        hashedPassword: hashedPassword,
       },
     });
 
-     await prisma.notification.create({
+    await prisma.notification.create({
       data: {
-        userId: user.id,
+        userId: newUser.id,
         type: "profile",
         message: `update your profile`,
         action: "/dashboard/settings/",
@@ -47,7 +33,7 @@ export default async function handler(req: any, res: any) {
     });
      await prisma.notification.create({
       data: {
-        userId: user.id,
+        userId: newUser.id,
         type: "payment",
         message: `Add payment method`,
         action: "/dashboard/settings/",
@@ -55,15 +41,35 @@ export default async function handler(req: any, res: any) {
       },
     });
 
-
-
-    return res.status(200).json(user);
-  } catch (err) {
-    console.error(err);
-    if (err instanceof Error) {
-      return res.status(500).json({ message: err.message });
-    } else {
-      return res.status(500).json({ message: "An unexpected error occurred" });
-    }
+    return newUser;
   }
 }
+
+
+export default async function handler(  req: NextApiRequest,
+  res: NextApiResponse) {
+
+  const { email, name, password, username } = req.body;
+  if (!email || !name || !password || !username) {
+    return res.status(400).json({ message: "Missing necessary parameters" });
+  }
+
+  try {
+    // Attempt to register the user
+    const newUser = await registerUser(email, password);
+
+    if (newUser) {
+      return res.status(201).json({ message: "Registration successful!" });
+    } else {
+      return res.status(400).json({ message: "Registration failed." });
+    }
+  } catch (error) {
+    if ((error as any)?.message as string === "Email already exists.") {
+      return res.status(409).json({ message: "This email address already registered with us. Reset your password" });
+    }
+    console.error("Registration error:", error);
+    return res.status(500).json({ message: "An error occurred. Please try again later." });
+  }
+}
+
+

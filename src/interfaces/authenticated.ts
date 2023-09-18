@@ -57,6 +57,7 @@ export interface IUser extends User {
   blockedBy: any[];
   buyer: any[];
   seller: any[];
+  unreadNotifications?: number;
 }
 
 export interface Conversation {
@@ -245,3 +246,21 @@ export interface DashListing extends Listing {
 export type ListingsMap = {
   [status in ListingStatus]?: DashListing[];
 };
+
+export interface IEmailTemplate {
+  title: string, 
+  name: string, 
+  url: string, 
+  linkText: string, 
+  listing?: { 
+    id: string, 
+    title: string, 
+    price: string, 
+    category: string,
+    image: string | null, 
+    user: { 
+      username: string, 
+      id: string}}, 
+  body?: React.ReactNode
+  description?: string
+}

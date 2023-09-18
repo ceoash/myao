@@ -188,7 +188,6 @@ const Offers = ({
     socket.on("new_listing", (data) => {
       const { listing } = data;
 
-      console.log("new", listing);
 
       if (session?.user.id !== listing.userId) {
         setAllOffers((prevListings: any) => {

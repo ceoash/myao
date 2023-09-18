@@ -106,7 +106,7 @@ const PriceInput: FC<InputProps> = ({
           status === "negotiating" ? ' border-gray-200' :
           status === "awaiting approval" ? ' border-gray-200' :
           'bg-white border-gray-100' : ' border-gray-200'} 
-          ${sm ? 'px-2 py-3' : 'p-3'} h-full`}>
+          ${sm ? 'px-2 -py-3' : 'p-3'} h-full`}>
           {formatPrice && (
             <BiPound
               className={`left-2 ${sidebar ? 
@@ -141,7 +141,7 @@ const PriceInput: FC<InputProps> = ({
             focus:bg-white
             active:bg-white
             transition-all
-            h-14
+            h-12
             ${sm ? 'pl-4' : formatPrice ? "pl-6" : "pl-4"}
             ${errors && errors[id] && "!border-red-500" }
             ${errors && errors[id] ? "!text-red-500" : "text-gray-700"}

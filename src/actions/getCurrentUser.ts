@@ -24,9 +24,14 @@ export default async function getCurrentUser(session: Session) {
       createdAt: true,
       updatedAt: true,
       notifications: {
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy: [
+          {
+              read: "asc"
+          },
+          {
+              createdAt: "desc"
+          }
+      ],
         take: 4,
       },
       activity: {
@@ -153,13 +158,22 @@ export default async function getCurrentUser(session: Session) {
       accepted: friendship.accepted,
       friendshipId: friendship.id,
     };
-    friends.push(friendObj);
+    friends.push
+    (friendObj);
+  });
+
+  const unreadNotifications = await prisma.notification.count({
+    where: {
+      userId: currentUser.id,
+      read: false,
+    },
   });
 
   return {
     ...currentUser,
     createdAt: currentUser.createdAt.toISOString(),
     updatedAt: currentUser.updatedAt.toISOString(),
+    unreadNotifications,
     friends: friends,
     followings: currentUser.followings.map((friendship) => ({
       ...friendship.following,

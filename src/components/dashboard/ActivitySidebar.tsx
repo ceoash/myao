@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { useAlerts } from "@/hooks/AlertHook";
+import axios from "axios";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -84,6 +85,8 @@ useEffect(() => {
     },
 
   ] */
+
+  
 
   return (
     <div className={`transition-all

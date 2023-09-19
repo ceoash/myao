@@ -210,7 +210,6 @@ const Offers = ({
             };
             return newCount;
           });
-        console.log("count sent", countSent);
       }
 
       if (session?.user.id === listing.userId) {

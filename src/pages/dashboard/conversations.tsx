@@ -233,11 +233,8 @@ const Conversations = ({
           conversation.participant1Id === participantId)
     );
 
-    console.log("Found conversationAction:", conversationAction);
-
     if (conversationAction) {
       setConversations((prev) => {
-        console.log("In setConversations, prev:", prev);
         return prev.map((conversation) => {
           if (conversation.id === conversationAction.id) {
             return {
@@ -263,7 +260,6 @@ const Conversations = ({
 
       if (conversationAction.id === activeConversationStateProp?.id) {
         setActiveConversationState((prev) => {
-          console.log("In setActiveConversationState, prev:", prev);
           if (!prev) return null;
           const newActiveConversation = {
             ...prev,
@@ -293,7 +289,6 @@ const Conversations = ({
           followingId: participant,
         });
 
-        console.log("response", response.data.responseFriendship);
         toast.success("Friend request sent to " + participantUsername);
         socket.emit("friend", response.data.responseFriendship, "add");
 
@@ -394,7 +389,6 @@ const Conversations = ({
       });
       if (status === "accepted") {
         toast.success(status);
-        console.log("res", response.data);
         socket.emit("accept_conversation", response.data.conversation);
       } else if (status === "declined") {
         socket.emit("decline_conversation", response.data.conversation);
@@ -565,7 +559,6 @@ const Conversations = ({
 
     socket.on("friend", (data) => {
       const { action, friend } = data;
-      console.log(action + "friend");
       if (action === "accept") return;
       conversationAction(
         friend.id,

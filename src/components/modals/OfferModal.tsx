@@ -336,7 +336,6 @@ const OfferModal = () => {
         );
 
         if (response.data.message) { 
-          console.log("new", response.data.message)
           socket.emit("new_message", response.data.message, session?.user.id, foundUser.id);
         }
 

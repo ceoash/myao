@@ -217,7 +217,7 @@ const OfferDetailsWidget = ({
             </div>
 
             <div className="flex justify-end">
-              <p className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
+              <div className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
                 <span className="text-sm">
                   {meLastBid?.price ? (
                     <div className="text-right">
@@ -230,7 +230,7 @@ const OfferDetailsWidget = ({
                     <span className="text-xs text-gray-800">no offers yet</span>
                   )}
                 </span>
-              </p>
+              </div>
             </div>
           </div>
         </Link>
@@ -529,7 +529,7 @@ const OfferDetailsWidget = ({
               </p>
             </div>
             <div className="flex justify-end">
-              <p className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
+              <div className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
                 <span className="text-sm">
                   {participantLastBid?.price ? (
                     <div className="text-right">
@@ -542,7 +542,7 @@ const OfferDetailsWidget = ({
                     <span className="text-xs text-gray-800">no offers yet</span>
                   )}
                 </span>
-              </p>
+              </div>
             </div>
           </div>
         </Link>

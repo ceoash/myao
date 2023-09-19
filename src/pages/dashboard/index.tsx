@@ -155,6 +155,7 @@ const Index = ({
   return (
     <Dash
       dashboard
+      noBreadcrumbs
       optionalData={
         <Button
           className="gap-1.5 items-center"
@@ -176,10 +177,9 @@ const Index = ({
     >
       <div className="p-4 pt-0 lg:px-8">
         {/* Hero */}
-        <hr className="my-0 hidden lg:block lg:mt-4 lg:mb-6 -mx-8" />
 
         {/*`Activities ${userActivities ? userActivities.length : 0}` */}
-        <div className="xl:grid grid-cols-12 gap-x-6 mb-6">
+        <div className="xl:grid grid-cols-12 gap-x-6 mb-6 mt-4  lg:mt-6">
           {isLoading ? (
             <>
               <div className="col-span-6">
@@ -193,7 +193,7 @@ const Index = ({
             <>
               <Stats
                 title={
-                    <span className="block">Overview</span>
+                    <span className="block title">Overview</span>
                 }
                 totalStats={10}
                 startOffer={offerModal.onOpen}
@@ -215,7 +215,7 @@ const Index = ({
         <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col">
           <div className=" pt-2 ">
             <div className="pb-4">
-              <h3>Recent Offers</h3>
+              <span className="title">Recent Offers</span>
             </div>
 
             <Offers
@@ -236,7 +236,7 @@ const Index = ({
                   link="/dashboard/offers"
                 />
               </div>
-            ) : null}
+            ) : ""}
           </div>
 
           {/* Friends */}
@@ -245,7 +245,7 @@ const Index = ({
               {state.friends.length > 0 && (
                 <div className="flex-1">
                   <div className="py-4  mb-0">
-                    <h3 className="mb-0">Friends</h3>
+                    <span className="title">Friends</span>
                   </div>
                   <FriendsWidget
                     session={session}

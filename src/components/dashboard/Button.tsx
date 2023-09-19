@@ -74,6 +74,8 @@ const Button = ({
                 ? "text-lg"
                 : options?.size == "xl"
                 ? "text-xl"
+                : options?.size == "2xl"
+                ? "text-2xl"
                 : "text-sm"
             }
             font-semibold

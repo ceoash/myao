@@ -159,31 +159,21 @@ const OfferDetailsWidget = ({
 
   let parsedImage;
 
-  const sessionUser =
-    listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
-  const nonSessionUser =
-    listing.sellerId === session?.user.id ? listing.buyer : listing.seller;
+  const sessionUser = listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
 
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
   }
 
-  let showButton = false;
-
-// Condition 1: Check if the current user's ID matches the user ID of the first bid
-
-
 
   return (
-    <div
-      className={`
+    <div className={`
         w-full
         rounded-lg
         border
         p-4
         border-gray-200
-        ${
-          status === "rejected" || status === "cancelled"
+        ${ status === "rejected" || status === "cancelled"
             ? "bg-red-100  border-red-50"
             : status === "accepted" || status === "completed"
             ? "bg-green-100 border-green-50"
@@ -248,7 +238,7 @@ const OfferDetailsWidget = ({
         <div className="w-full flex justify-center">
           {bids &&
             bids[bids.length - 1]?.userId &&
-            bids[bids.length - 1]?.userId !== session?.user.id && (
+            bids[bids.length - 1]?.userId === session?.user.id && (
               <MdArrowCircleDown
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full ${
                   status === "rejected" || status === "cancelled"
@@ -310,14 +300,14 @@ const OfferDetailsWidget = ({
               {status === "rejected" ||
               status === "cancelled" ||
               status === "expired"
-                ? "Last"
+                ? "Last" + " "
                 : status === "completed" || status === "accepted"
-                ? "Ageeed"
+                ? "Ageeed" + " "
                 : !currentBid.currentPrice ||
                   currentBid.currentPrice == "" ?
                   ( currentBid.currentPrice == "0" &&
                     (listing.price === "" || listing.price === "0"
-                      && "Open"
+                      && "Open" + " "
                       )): "Current" + " " }
               offer
             </div>
@@ -372,7 +362,7 @@ const OfferDetailsWidget = ({
                 ) : ( status === "negotiating"  ? (
                   <p className="block w-full mt-4 italic">
                     Awaiting response from {participant?.username || ""}
-                  </p>) : null
+                  </p>) : ""
                 )}
             </div>
 
@@ -478,12 +468,12 @@ const OfferDetailsWidget = ({
           </div>
         </div>
       </div>
-
+    
       <div className="relative inline-block  w-full  rounded-lg mt-4 ">
         <div className="w-full flex justify-center">
-          {bids &&
-            bids[bids.length - 1]?.userId &&
-            bids[bids.length - 1]?.userId === session?.user.id && (
+          {currentBid &&
+            currentBid.byUserId &&
+            currentBid.byUserId === participant.id && (
               <MdArrowCircleUp
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full  ${
                   status === "rejected" || status === "cancelled"

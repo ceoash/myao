@@ -146,7 +146,7 @@ export const emailTemplate = (data: IEmailTemplate) => {
 			color: #000000;
 			font-family: sans-serif;" class="paragraph">
               Hi ${data.name}, ${data.body}
-              ${data.description ? `<br /> <span style="font-size: 12px;color: #999999;">${data.description }</span>` : null}
+              ${data.description ? `<br /> <span style="font-size: 12px;color: #999999;">${data.description }</span>` : ""}
             </td>
           </tr>
 					<tr>

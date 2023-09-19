@@ -139,8 +139,23 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
         />
       </div>
       <div className='flex justify-center'>
-
-      <Button primary={status === 'rejected' ? false : true} cancel={status === 'rejected' ? true : false} className={'!border-0 flex'} options={{ size: "lg"}}  isLoading={isLoading} label={currentBid && currentBid.currentPrice && currentBid.currentPrice !== "0" &&currentBid.currentPrice !== "" && currentBid.byUserId === session?.user.id ? "UPDATE BID" : "BID"} onClick={handleSubmit(onSubmit)} disabled={isSubmitting}   />
+        <Button 
+          primary={ status === 'rejected' ? false : true } 
+          cancel={ status === 'rejected' ? true : false } 
+          className={'!border-0 flex'} 
+          options={{ 
+            size: "lg" 
+          }}  
+          isLoading={isLoading} 
+          label={ 
+            currentBid && 
+            currentBid.currentPrice && 
+            currentBid.currentPrice !== "0" && 
+            currentBid.currentPrice !== "" && 
+            currentBid.byUserId === session?.user.id ? "UPDATE OFFER" : "MAKE OFFER" 
+          } 
+          onClick={handleSubmit(onSubmit)} 
+          disabled={isSubmitting}   />
       </div>
     </div>
   );

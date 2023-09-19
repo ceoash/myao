@@ -22,9 +22,11 @@ interface IUserMenuProps {
   blockedUsers?: string[];
   toggle?: boolean;
   setToggle: (mobile?: boolean) => void;
+  sidebarOpen?: boolean;
+  buttonRef?: any;
 }
 
-const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }) => {
+const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle, toggle, sidebarOpen, buttonRef }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -163,9 +165,10 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
             </div>
 
             <div className="relative cursor-pointer">
-              <div onClick={() => setToggle(false)}>
+              <div ref={buttonRef} onClick={() => setToggle(false)}>
                 <BiBell className="h-[20px] text-gray-600" />
               </div>
+            
               {/* { alerts.alerts?.unreadNotifications && 
                 alerts.alerts?.unreadNotifications > 0 && (
                   <div className="
@@ -190,7 +193,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
               
             </div>
             <div
-              onClick={handleToggle}
+              ref={buttonRef} onClick={handleToggle}
               className="
                 py-2 px-3
                 md:py-1
@@ -217,6 +220,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle }
               <AiOutlineMenu className="text-gray-600 md:text-gray-400" />
             </div>
             <div
+              ref={buttonRef}
               onClick={() => setToggle(true)}
               className="
                 py-2 px-3

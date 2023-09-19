@@ -484,6 +484,7 @@ const Conversations = ({
                 return prevConversation;
               })
             );
+            handleSidebarToggle();
           });
       } catch (error) {
         console.log("error:", error);
@@ -493,6 +494,7 @@ const Conversations = ({
         const obj = { ...conversation };
         return obj;
       });
+      handleSidebarToggle();
     }
 
     const setUser =
@@ -674,7 +676,7 @@ const Conversations = ({
             <div
               className={`absolute z-10 lg:hidden   ${
                 isOpen
-                  ? "w-full h-full bg-neutral-800/70"
+                  ? "w-full h-full bg-neutral-800/70  backdrop-filter backdrop-blur-md"
                   : "w-0 h-0 bg-transparent"
               }`}
             >

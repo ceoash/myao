@@ -61,6 +61,9 @@ h5{
   @apply font-nunito text-lg font-bold text-gray-900;
 }
 
+.title {
+  @apply text-[22px] font-nunito lg:text-2xl font-bold text-gray-900;
+}
 section{
   @apply px-4 py-8 lg:py-24 lg:px-6;
 }

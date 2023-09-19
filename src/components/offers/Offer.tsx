@@ -346,15 +346,13 @@ const Offer: React.FC<any> = ({
                         <Image
                           src={
                             userId === sessionUser.id
-                              ? sessionUser?.profile?.image ||
-                                userId === sellerId
+                              ? userId === sellerId
                                 ? sellerIcon
                                 : buyerIcon
-                              : participant?.profile?.image ||
-                                userId === sellerId
-                              ? sellerIcon
-                              : buyerIcon
-                          }
+                              : userId === sellerId
+                                ? sellerIcon
+                                : buyerIcon
+                            }
                           alt=""
                           layout="fill"
                           objectFit="cover"
@@ -374,15 +372,13 @@ const Offer: React.FC<any> = ({
                         <Image
                           src={
                             userId !== sessionUser.id
-                              ? sessionUser?.profile?.image ||
-                                userId === sellerId
+                              ? userId === sellerId
                                 ? buyerIcon
                                 : sellerIcon
-                              : participant?.profile?.image ||
-                                userId === sellerId
-                              ? buyerIcon
-                              : sellerIcon
-                          }
+                              : userId === sellerId
+                                ? buyerIcon
+                                : sellerIcon
+                            }
                           alt=""
                           layout="fill"
                           objectFit="cover"

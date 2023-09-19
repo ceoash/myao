@@ -14,10 +14,12 @@ interface ICardProps {
   className?: string;
   isLoading?: boolean;
   center?: boolean;
+  inline?: boolean;
   button?: {
     label: string;
     onClick: () => void;
     options: any;
+    lg: boolean;
   };
 }
 
@@ -33,7 +35,8 @@ const InfoCard = ({
   className,
   isLoading,
   center,
-  link
+  link, 
+  inline
 }: ICardProps) => {
 
   const router = useRouter();
@@ -53,7 +56,7 @@ const InfoCard = ({
             />
           </div>
         )}
-        <div className="flex-1">
+        <div className={`flex-1`}>
           <div className="flex justify-between">
             {icon && (
               <div className="font-bold text-2xl leading-none -mb-2">
@@ -73,12 +76,19 @@ const InfoCard = ({
             )}
           </div>
           <div className={`mt-2 ${isLoading ?  <Skeleton /> : center && 'text-center'}`}>{text ? text : !button && title}</div>
-          {button && (
+          {button && button.lg ? (
+            <div className="mt-5 mr-auto">
+              {isLoading ? <Skeleton /> : 
+              <button onClick={button.onClick} className="rounded-xl text-2xl font-bold bg-orange-default p-2 px-4 pt-1">
+                <span className="text-xl font-bold text-white"> {button.label} </span>
+              </button> }
+            </div>
+          ) : button ? (
             <div className="mt-5 mr-auto">
             {isLoading ? <Skeleton /> : <Button label={button.label} onClick={button.onClick} options={button.options} /> }
               
             </div>
-          )}
+          ) : ""}
         </div>
       </div>
     </div>

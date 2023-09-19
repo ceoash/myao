@@ -70,7 +70,7 @@ const Tabs = ({
             md:px-4 py-2
             inline-block
             whitespace-nowrap
-            md:hidden
+            xl:hidden
             border-gray-20
             font-medium
             md:font-bold

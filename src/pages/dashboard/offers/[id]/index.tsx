@@ -211,7 +211,7 @@ const Index = ({ listing, session }: PageProps) => {
   useEffect(() => {
     const handleResize = () => {
       if (
-        window.innerWidth <= 768 &&
+        window.innerWidth <= 1280 &&
         window.innerWidth !== size &&
         !mobileView
       ) {
@@ -220,7 +220,7 @@ const Index = ({ listing, session }: PageProps) => {
         setSize(window.innerWidth);
         setMobileView(true);
       } else if (
-        window.innerWidth >= 768 &&
+        window.innerWidth >= 1280 &&
         window.innerWidth !== size &&
         tab === "overview" &&
         mobileView
@@ -565,8 +565,7 @@ const Index = ({ listing, session }: PageProps) => {
             userId: userId,
           });
 
-          const receiver = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.buyer?.username : response.data.listing.seller?.username;
-          const sender = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.seller?.username : response.data.listing.buyer?.username;
+          
           const sellerEmail = axios.post("/api/email/emailNotification", {
             listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
             name: response.data.listing.seller.name,
@@ -979,7 +978,7 @@ const Index = ({ listing, session }: PageProps) => {
 
           <div
             className={`w-full xl:col-span-4 col-span-4 ${
-              tab === "overview" ? "block" : "hidden md:block"
+              tab === "overview" ? "block" : "hidden xl:block"
             }`}
           >
             <OfferDetailsWidget
@@ -1024,6 +1023,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   try {
     const listing = await getListingById({ offerId });
+
+    if (!listing) {
+      return {
+        notFound: true,
+      };
+    }
+
+    if(session.user.id !== listing.sellerId || session.user.id !== listing.buyerId) {
+      return {
+        redirect: {
+          destination: "/dashboard/offers",
+          permanent: false,
+        },
+      };
+    }
     return {
       props: {
         listing,

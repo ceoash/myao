@@ -48,6 +48,8 @@ const Dash = (props: IDashProps) => {
   const nextrouter = Router;
   const router = useRouter();
   const pathname = usePathname();
+  const buttonRef = useRef(null);
+
   const handleToggle = (mobile?: boolean) => {
    /*  const markAllAsRead = async (ids: string[]) => {
       
@@ -91,7 +93,7 @@ const Dash = (props: IDashProps) => {
     setToggleMobileSidebar((prev) => {
       return mobile || false;
     });
-    setToggleSidebar(!toggleSidebar);
+    setToggleSidebar((prev) => !prev);
     if (window.innerWidth <= 768) {
       setDisabled(toggleSidebar);
     }
@@ -99,22 +101,9 @@ const Dash = (props: IDashProps) => {
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  const handleClickOutside = (e: any) => {
-    if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-      setToggleSidebar(false);
-    }
-  };
+  
 
-  useEffect(() => {
-    if (toggleSidebar) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [toggleSidebar]);
+
 
   useEffect(() => {
     const handleStart = () => setLoading(true);
@@ -137,19 +126,7 @@ const Dash = (props: IDashProps) => {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (pathname === "/dashboard") {
-        setToggleSidebar(window.innerWidth >= 1280);
-      }
-    };
-    // Initial check
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  
 
   /* if (status === "loading") {
       return (
@@ -228,6 +205,8 @@ const Dash = (props: IDashProps) => {
         blockedUsers={alerts.alerts?.blockedUsers}
         setToggle={handleToggle}
         toggle={toggleSidebar}
+        sidebarOpen={toggleSidebar || toggleMobileSidebar} 
+        buttonRef={buttonRef}
       />
       <SkeletonTheme highlightColor="#edf2f7">
         <main className="content flex flex-col flex-grow">

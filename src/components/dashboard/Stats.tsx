@@ -80,7 +80,7 @@ const Stats = ({
       <div className="grid grid-cols-2 gap-4">
         <InfoCard
           title={`${timeOfDay ? timeOfDay : "Welcome to your dashboard"}, ${username}`}
-          button={{ label: "Create Offer", onClick: startOffer, options: {primary: true} }}
+          button={{ label: "Create Offer", onClick: startOffer, options: {primary: true, size: "2xl"}, lg: true }}
           color={`orange`}
           className="bg-orange-100 flex justify-between"
         />

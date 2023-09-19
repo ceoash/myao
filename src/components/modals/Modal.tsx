@@ -1,7 +1,7 @@
 'use client';
 
 import Button from "@/components/dashboard/Button";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FieldErrors, FieldValues } from "react-hook-form";
 import { IoClose } from "react-icons/io5"
 
@@ -43,6 +43,26 @@ const Modal: React.FC<ModalProps> = ({
     secondaryAction,
 }) => {
     const [showModal, setShowModal] = useState(isOpen);
+
+    const ref = useRef<HTMLDivElement>(null);
+
+    const handleClickOutside = (event: any) => {
+        if (ref.current && !ref.current.contains(event.target)) {
+            setShowModal(false);
+            if (onClose) onClose();
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        } else {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         setShowModal(isOpen)
@@ -112,11 +132,12 @@ const Modal: React.FC<ModalProps> = ({
         style={{zIndex: 9999}}
     >
         <div 
+            ref={ref}
             className={`
             relative
             ${auto ? 'w-full md:w-auto' : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
             mx-auto
-            flex-grow
+           
             lg:h-auto
             md:h-auto   
 

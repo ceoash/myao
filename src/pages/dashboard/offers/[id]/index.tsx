@@ -1030,7 +1030,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    if(session.user.id !== listing.sellerId || session.user.id !== listing.buyerId) {
+    if(session.user.id !== listing.sellerId && session.user.id !== listing.buyerId) {
       return {
         redirect: {
           destination: "/dashboard/offers",
@@ -1038,6 +1038,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
+
     return {
       props: {
         listing,

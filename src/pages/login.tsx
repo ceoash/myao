@@ -9,6 +9,7 @@ import { FieldValues, useForm, SubmitHandler } from "react-hook-form";
 import { Toaster, toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getProviders, getSession, signIn } from "next-auth/react";
+import { FaGoogle } from "react-icons/fa";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -122,21 +123,20 @@ const Login = () => {
             href="/"
             className="flex items-center mb-6 text-2xl font-semibold text-gray-900 "
           >
-            <img src="/images/cat.png" className="h-[30px] mr-2" />{" "}
+            <img src="/images/cat.png" className="h-[40px] mr-2" />{" "}
             <span className="self-center text-xl font-semibold whitespace-nowrap">
               MYAO 
             </span>
           </Link>
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
+              <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center">
                 Sign in to your account
-              </h1>
+              </h2>
               <form className="space-y-4 md:space-y-6">
                 
-                
 
-                <div>
+                <div className="-mb-4">
                   <Input
                     id="email"
                     type="email"
@@ -181,19 +181,18 @@ const Login = () => {
                       </label>
                     </div>
                   </div>
-                  <Link
+                  <Link 
                     href="#"
                     className="text-sm font-medium text-orange-600 hover:underline"
                   >
                     Forgot password?
                   </Link>
                 </div>
-                <Button
-                  label={`Sign in`}
-                  disabled={disabled}
-                  isLoading={isLoading}
-                  onClick={handleSubmit(onSubmit)}
-                />
+                <button className="flex border bg-orange-400 text-white border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center hover:opacity-90">
+                  <div className="mx-auto flex gap-2 items-center">
+                  <span>Login</span></div>
+                  
+                </button>
 
                 <p className="text-sm font-light text-gray-500">
                   Don’t have an account yet?{" "}
@@ -205,6 +204,18 @@ const Login = () => {
                   </Link>
                 </p>
               </form>
+              <div className="flex items-center">
+                <div className="border-b border flex-grow w-full"></div>
+                <div className="text-gray-500 text-sm mx-4 font-bold text-center">OR</div>
+                <div className="border-b border flex-grow w-full"></div>
+              </div>
+              <div>
+                <button onClick={() => signIn("google", { callbackUrl: "/api/auth/callback/google" })} className="flex border border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center">
+                  <div className="mx-auto flex gap-2 items-center"><FaGoogle className="w-3 h-3" />
+                  <span>Continue with Google</span></div>
+                  
+                </button>
+              </div>
             </div>
           </div>
         </div>

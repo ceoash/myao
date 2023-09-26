@@ -69,9 +69,9 @@ const Offer: React.FC<any> = ({
   const participant = session?.user?.id === sellerId ? buyer : seller;
   const sessionUser = session?.user?.id === sellerId ? seller : buyer;
 
-  const buyerIcon =
-    type === "buyerOffer" ? "/images/cat.png" : "/images/dog.png";
   const sellerIcon =
+    type === "buyerOffer" ? "/images/cat.png" : "/images/dog.png";
+  const buyerIcon =
     type === "buyerOffer" ? "/images/dog.png" : "/images/cat.png";
 
   const formatStatus = (status: string) => {

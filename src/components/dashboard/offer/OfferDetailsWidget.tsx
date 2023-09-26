@@ -200,9 +200,9 @@ const OfferDetailsWidget = ({
                   <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                   <Image
                     src={
-                      listing.seller.profile?.image
-                        ? listing.seller.profile?.image
-                        : dog
+                      sessionUser.id === listing.sellerId
+                        ? listing.seller.profile?.image || dog
+                        : listing.buyer.profile?.image || cat
                     }
                     className="rounded-full"
                     alt=""
@@ -236,9 +236,7 @@ const OfferDetailsWidget = ({
         </Link>
 
         <div className="w-full flex justify-center">
-          {bids &&
-            bids[bids.length - 1]?.userId &&
-            bids[bids.length - 1]?.userId === session?.user.id && (
+          { Number(currentBid?.currentPrice) > 0 && currentBid?.byUserId === session?.user.id && (
               <MdArrowCircleDown
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full ${
                   status === "rejected" || status === "cancelled"
@@ -320,8 +318,8 @@ const OfferDetailsWidget = ({
                   status === "rejected" && "text-red-500 line-through"
                 }`}
               >
-                {currentBid.currentPrice &&
-                  currentBid.currentPrice !== "0" &&
+                {currentBid?.currentPrice &&
+                  Number(currentBid.currentPrice) > 0 &&
                   `£${Number(currentBid.currentPrice).toLocaleString()}`}
               </div>
               <div
@@ -344,19 +342,16 @@ const OfferDetailsWidget = ({
                     : currentBid.byUsername || ""}
                 </Link>
               </div>
+      
 
-
-
-              {!currentBid.currentPrice ||
-                currentBid.currentPrice == "" ||
-                currentBid.currentPrice == "0" ? ( listing.price === "" ||
-                listing.price === "0" && (
+              {!currentBid?.currentPrice ||
+                Number(currentBid?.currentPrice) < 1 ? (
                   <p className="block w-full mt-4 italic">
                     {listing.userId === session?.user?.id
                       ? `Awaiting bid from ${participant?.username || ""}`
                       : "Enter a bid to start negotiating"}
                   </p>
-                )) : currentBid.byUserId !== session?.user?.id && status === "negotiating" ? (
+                ) : currentBid.byUserId !== session?.user?.id && status === "negotiating" ? (
                   <p className="block w-full mt-4 italic">Would you like to accept?</p>
 
                 ) : ( status === "negotiating"  ? (
@@ -366,8 +361,7 @@ const OfferDetailsWidget = ({
                 )}
             </div>
 
-            { bids && bids.length > 0 && bids[bids.length - 1]?.userId !== session?.user?.id
-            && (
+            { Number(currentBid?.currentPrice) > 0 && currentBid?.byUserId !== session?.user?.id && (
               <>
               <div className="py-2 ">
                 <div className=" gap-2 text-sm  font-bold mb-2 items-start">
@@ -405,45 +399,7 @@ const OfferDetailsWidget = ({
               </div>
               </>
             ) }
-            {!bids && listing.userId !== session?.user?.id && listing.price !== "" && listing.price !== "0" 
-            && (
-              <>
-              <div className="py-2 ">
-                <div className=" gap-2 text-sm  font-bold mb-2 items-start">
-                  <div className="w-2/3 flex gap-2 mx-auto justify-center">
-                    {status === "negotiating" && (
-                      <>
-                        <div className="flex flex-col justify-center  items-center gap-4">
-                          <Button
-                            isLoading={loadingState.yes}
-                            accept
-                            onClick={() =>
-                              handleStatusChange("accepted", session?.user.id)
-                            }
-                            className="rounded-xl px-3 py-1 text-center w-10"
-                          >
-                            YES
-                          </Button>
-                        </div>
-                        <div className="flex flex-col justify-center items-center  gap-4">
-                          <Button
-                            cancel
-                            isLoading={loadingState.no}
-                            onClick={() =>
-                              handleStatusChange("rejected", session?.user.id)
-                            }
-                            className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
-                          >
-                            NO
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-              </>
-            ) }
+           
             { status === "awaiting approval" &&
               listing.userId !== session?.user?.id ? (
               <div className="flex justify-center gap-2 mb-8 w-full mt-4">
@@ -471,9 +427,7 @@ const OfferDetailsWidget = ({
     
       <div className="relative inline-block  w-full  rounded-lg mt-4 ">
         <div className="w-full flex justify-center">
-          {currentBid &&
-            currentBid.byUserId &&
-            currentBid.byUserId === participant.id && (
+          { Number(currentBid?.currentPrice) > 0 && currentBid?.byUserId === participant.id && (
               <MdArrowCircleUp
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full  ${
                   status === "rejected" || status === "cancelled"
@@ -484,8 +438,7 @@ const OfferDetailsWidget = ({
                 } border  shadow`}
               />
             )}
-          {!bids ||
-            (bids.length === 0 && (
+          { !currentBid?.currentPrice || Number(currentBid.currentPrice) < 1 && (
               <MdOutlineSwapVerticalCircle
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  ${
                   status === "rejected" || status === "cancelled"
@@ -495,7 +448,7 @@ const OfferDetailsWidget = ({
                     : "bg-gray-50 border-gray-200 text-orange-default"
                 } border shadow`}
               />
-            ))}
+            )}
         </div>
         <Link
           href={`/dashboard/profile/${participant?.id}`}
@@ -514,9 +467,9 @@ const OfferDetailsWidget = ({
                   <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                   <Image
                     src={
-                      listing.buyer.profile?.image
-                        ? listing.buyer.profile?.image
-                        : cat
+                      participant?.profile?.image
+                        ? participant?.profile?.image 
+                        : participant.id === listing.sellerId ? dog : cat
                     }
                     alt=""
                     layout="fill"

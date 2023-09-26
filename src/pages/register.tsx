@@ -424,16 +424,11 @@ const Register = () => {
                   </div>
                 </div>
 
-                <Button label={`Register`} disabled={disabled} type="submit" />
-                <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                  Already have an account?{" "}
-                  <Link
-                    href="/login"
-                    className="font-medium text-primary-600 hover:underline text-primary-alt"
-                  >
-                    Login
-                  </Link>
-                </p>
+                <button className="flex border bg-orange-400 text-white border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center hover:opacity-90">
+                  <div className="mx-auto flex gap-2 items-center">
+                  <span>Register</span></div>
+                  
+                </button>
               </form>
             </div>
           </div>

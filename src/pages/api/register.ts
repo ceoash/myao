@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/libs/prismadb";
 import bcrypt from "bcrypt";
 
-const registerUser = async (email: string, password: string) => {
+const registerUser = async (name: string, email: string, password: string, username: string) => {
   // Check if a user with the provided email exists
   const existingUser = await prisma.user.findUnique({
     where: {
@@ -17,8 +17,11 @@ const registerUser = async (email: string, password: string) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
       data: {
+        name: name,
         email: email,
         hashedPassword: hashedPassword,
+        username: username,
+        activated: true,
       },
     });
 
@@ -56,7 +59,7 @@ export default async function handler(  req: NextApiRequest,
 
   try {
     // Attempt to register the user
-    const newUser = await registerUser(email, password);
+    const newUser = await registerUser(name, email, password, username );
 
     if (newUser) {
       return res.status(201).json({ message: "Registration successful!" });

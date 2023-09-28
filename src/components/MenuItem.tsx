@@ -35,7 +35,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, link, url }) 
       {label}
     </div>
   ) : (
-    <div className="
+    <Link href={url || "#"} className="
     px-4
     pt-2
     pb-2
@@ -49,8 +49,8 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onClick, link, url }) 
     items-center
     hover:text-orange-default
 ">
-    <Link href={url || '#'}>{label}</Link>
-    </div>
+    <span>{label}</span>
+    </Link>
   );
 };
 

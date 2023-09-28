@@ -5,13 +5,30 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 
+
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
 
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET as string,
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          username: profile.email.split("@")[0],
+          activated: true,
+          verified: true,
+          profile: {
+            create: {
+              image: profile.picture,
+
+            }
+          }
+        };
+      }
     }),
     CredentialsProvider({
       // The name to display on the sign in form (e.g. "Sign in with...")
@@ -28,7 +45,6 @@ export const authOptions: AuthOptions = {
           placeholder: "Enter Password",
         },
       },
-
       async authorize(credentials) {
         const now = Date.now();
 
@@ -48,41 +64,9 @@ export const authOptions: AuthOptions = {
           },
         });        
 
-        if (user) {
-          user.username = user.username || "defaultUsername";
-          await prisma.notification.createMany({
-            data: {
-              userId: user.id,
-              type: "alert",
-              message: `Your last login was ${now.toLocaleString()}`,
-              action: "/dashboard/offers?tab=sent",
-              read: false,
-            },
-          });
-        }
-
         if (!user || !user.hashedPassword) {
           throw new Error("Invalid credentials");
         }
-
-        /*  prisma.user.update({
-                    where: {
-                        id: user.id,
-                    },
-                    data: {
-                        options: {
-                                create: {
-                                    current: now,
-                                    previous: user?.options?.,
-                                },
-                                update: {
-                                    currentLogin: now,
-                                    previous: now,
-                                },
-                            
-                        },
-                    },
-                }); */
 
         const isValid = await bcrypt.compare(
           credentials.password,
@@ -95,7 +79,6 @@ export const authOptions: AuthOptions = {
         return user;
       },
     }),
-    // ...add more providers here
   ],
   callbacks: {
     jwt({ token, account, user }) {
@@ -126,6 +109,6 @@ export const authOptions: AuthOptions = {
     strategy: "jwt",
   },
 
-  secret: "temp-secret-myao-v2",
+  secret: process.env.NEXTAUTH_SECRET as string,
 };
 export default NextAuth(authOptions);

@@ -359,14 +359,14 @@ const OfferModal = () => {
   let bodyContent = (
     <div className="flex flex-col">
       <Heading
-        title="What do they want to buy?"
-        description="Name and describe your thing"
+        title={userType === "buyer" ? "What would you like to buy" : "What would you like to sell"}
+        description="Name and describe the item"
         nounderline
       />
       <div className="mb-5">
         <Input
           id="title"
-          label="Name of thing"
+          label="Name of item"
           type="text"
           register={register}
           errors={errors}
@@ -658,7 +658,7 @@ const OfferModal = () => {
   }
   return (
     <Modal
-      title="Show your thing"
+      title="Make an offer"
       isOpen={offerModal.isOpen}
       onClose={onClose}
       onSubmit={handleSubmit(onSubmit)}

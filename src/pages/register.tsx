@@ -8,7 +8,10 @@ import { useRouter } from "next/navigation";
 import { BiCheckCircle } from "react-icons/bi";
 import { useEffect } from "react";
 import { useState } from "react";
-import { checkUsernameAvailability, getUsernameSuggestions } from "@/utils/user";
+import {
+  checkUsernameAvailability,
+  getUsernameSuggestions,
+} from "@/utils/user";
 import {
   FieldValues,
   useForm,
@@ -16,6 +19,8 @@ import {
   Controller,
 } from "react-hook-form";
 import { set } from "date-fns";
+import { signIn } from "next-auth/react";
+import { FaGoogle } from "react-icons/fa";
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -54,13 +59,13 @@ const Register = () => {
       validation.isValid = false;
       setError("password", {
         message: "Password must be at least 8 characters",
-      }); 
+      });
     }
     if (data.password.length > 20) {
       validation.isValid = false;
       setError("password", {
         message: "Password must be less than 20 characters",
-      }); 
+      });
     }
     if (data.password) {
       validation.isValid = true; // isValidPassword(data.password);
@@ -185,7 +190,7 @@ const Register = () => {
       });
     } */
     data.username = data.username.toLowerCase();
- 
+
     if (data.password !== data.confirmPassword) {
       toast.error("Passwords do not match");
       setIsLoading(false);
@@ -195,127 +200,127 @@ const Register = () => {
         message: "Passwords do not match",
       });
     }
-      axios
-        .post("/api/register", data)
-        .then((res) => {
-          setIsLoading(false);
-          setDisabled(false);
-          toast.success(res.data.message);
-          router.push("/login");
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.error(err.response.data.message);
-          setError("email", {
-            message: err.response.data.message,
-          });
-          setIsLoading(false);
-          setDisabled(false);
+    axios
+      .post("/api/register", data)
+      .then((res) => {
+        setIsLoading(false);
+        setDisabled(false);
+        toast.success(res.data.message);
+        router.push("/login");
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.message);
+        setError("email", {
+          message: err.response.data.message,
         });
-    }
+        setIsLoading(false);
+        setDisabled(false);
+      });
+  };
 
-    if (isLoading) {
-      return <Loading />;
-    }
+  if (isLoading) {
+    return <Loading />;
+  }
 
-    return (
-      <div className="bg-gray-50">
-        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-          <Link
-            href="/"
-            className="flex items-center mb-6 text-2xl font-semibold text-gray-900 "
-          >
-            <img src="/images/cat.png" className="h-[30px] mr-2" />{" "}
-            <span className="self-center text-xl font-semibold whitespace-nowrap">
-              MYAO
-            </span>
-          </Link>
-          <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
-            <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-                Create Account
-              </h1>
-              <form
-                className="space-y-4 md:space-y-6"
-                onSubmit={handleSubmit(onSubmit)}
-              >
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block mb-2 text-sm font-medium text-gray-900"
-                  >
-                    Your name
-                  </label>
-                  <input
-                    {...register("name", {
-                      required: "This field is required",
-                    })}
-                    type="text"
-                    name="name"
-                    id="name"
-                    className="bg-gray-50 border capitalize border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                    placeholder="joe bloggs"
+  return (
+    <div className="bg-gray-50">
+      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <Link
+          href="/"
+          className="flex items-center mb-6 text-2xl font-semibold text-gray-900 "
+        >
+          <img src="/images/cat.png" className="h-[30px] mr-2" />{" "}
+          <span className="self-center text-xl font-semibold whitespace-nowrap">
+            MYAO
+          </span>
+        </Link>
+        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
+          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
+              Create Account
+            </h1>
+            <form
+              className="space-y-4 md:space-y-6"
+              onSubmit={handleSubmit(onSubmit)}
+            >
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  Your name
+                </label>
+                <input
+                  {...register("name", {
+                    required: "This field is required",
+                  })}
+                  type="text"
+                  name="name"
+                  id="name"
+                  className="bg-gray-50 border capitalize border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                  placeholder="joe bloggs"
+                />
+                {errors.name && errors.name.message && (
+                  <span className="text-red-500">
+                    {errors.name.message as String}
+                  </span>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  MYAO name
+                </label>
+                <div className="relative">
+                  <Controller
+                    control={control}
+                    name="username"
+                    render={({ field }) => (
+                      <input
+                        type="text"
+                        id="username"
+                        className={`lowercase bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none ${
+                          usernameIsAvailable
+                            ? "focus:border-green-500 focus:ring-green-600"
+                            : "focus:border-red-500 focus:ring-red-600"
+                        } block w-full p-2.5 `}
+                        placeholder="johnbaker79"
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setNewUsername(e.target.value);
+                        }}
+                        value={field.value}
+                      />
+                    )}
+                    rules={{ required: "A valid username is required" }}
                   />
-                  {errors.name && errors.name.message && (
-                    <span className="text-red-500">
-                      {errors.name.message as String}
-                    </span>
+                  {usernameIsAvailable && (
+                    <div className="absolute top-0 right-0 flex items-center h-full mr-2">
+                      <BiCheckCircle className="text-green-500" />
+                    </div>
                   )}
                 </div>
-                <div>
-                  <label
-                    htmlFor="username"
-                    className="block mb-2 text-sm font-medium text-gray-900"
-                  >
-                    MYAO name
-                  </label>
-                  <div className="relative">
-                    <Controller
-                      control={control}
-                      name="username"
-                      render={({ field }) => (
-                        <input
-                          type="text"
-                          id="username"
-                          className={`lowercase bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg outline-none ${
-                            usernameIsAvailable
-                              ? "focus:border-green-500 focus:ring-green-600"
-                              : "focus:border-red-500 focus:ring-red-600"
-                          } block w-full p-2.5 `}
-                          placeholder="johnbaker79"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setNewUsername(e.target.value);
-                          }}
-                          value={field.value}
-                        />
-                      )}
-                      rules={{ required: "A valid username is required" }}
-                    />
-                    {usernameIsAvailable && (
-                      <div className="absolute top-0 right-0 flex items-center h-full mr-2">
-                        <BiCheckCircle className="text-green-500" />
-                      </div>
-                    )}
-                  </div>
 
-                  {errors.username ? (
-                    errors.username.message && (
-                      <span className="text-red-500">
-                        {errors.username.message as String}
-                      </span>
-                    )
-                  ) : (
-                    <div className="w-full mt-4 flex gap-2">
-                      {newUsername &&
-                        suggestions.map((suggestion) => (
-                          <div
-                            key={suggestion}
-                            onClick={() => {
-                              setValue("username", suggestion);
-                              setNewUsername(suggestion);
-                            }}
-                            className="
+                {errors.username ? (
+                  errors.username.message && (
+                    <span className="text-red-500">
+                      {errors.username.message as String}
+                    </span>
+                  )
+                ) : (
+                  <div className="w-full mt-4 flex gap-2">
+                    {newUsername &&
+                      suggestions.map((suggestion) => (
+                        <div
+                          key={suggestion}
+                          onClick={() => {
+                            setValue("username", suggestion);
+                            setNewUsername(suggestion);
+                          }}
+                          className="
                                 bg-gray-100 
                                 border-2 
                                 border-gray-200 
@@ -325,117 +330,134 @@ const Register = () => {
                                 px-2
                                 cursor-pointer  
                             "
-                          >
-                            {suggestion}
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-gray-900"
-                  >
-                    Your email
-                  </label>
-                  <input
-                    {...register("email", { required: "Enter your email" })}
-                    type="email"
-                    name="email"
-                    id="email"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                    placeholder="name@company.com"
-                  />
-                  {errors.email && errors.email.message && (
-                    <span className="text-red-500">
-                      {errors.email.message as String}
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block mb-2 text-sm font-medium text-gray-900"
-                  >
-                    Password
-                  </label>
-                  <input
-                    {...register("password", { required: "Enter a password" })}
-                    type="password"
-                    name="password"
-                    id="password"
-                    placeholder="••••••••"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  />
-                  {errors.password && errors.password.message && (
-                    <span className="text-red-500">
-                      {errors.password.message as String}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <label
-                    htmlFor="confirm-password"
-                    className="block mb-2 text-sm font-medium text-gray-900"
-                  >
-                    Confirm password
-                  </label>
-                  <input
-                    {...register("confirmPassword", {
-                      required: "Enter a password",
-                    })}
-                    type="password"
-                    name="confirmPassword"
-                    id="confirmPassword"
-                    placeholder="••••••••"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  />
-                  {errors.confirmPassword && errors.confirmPassword.message && (
-                    <span className="text-red-500">
-                      {errors.confirmPassword.message as String}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="terms"
-                      aria-describedby="terms"
-                      type="checkbox"
-                      className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
-                      required
-                    />
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
                   </div>
-                  <div className="ml-3 text-sm">
-                    <label
-                      htmlFor="terms"
-                      className="font-light text-gray-500 dark:text-gray-300"
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  Your email
+                </label>
+                <input
+                  {...register("email", { required: "Enter your email" })}
+                  type="email"
+                  name="email"
+                  id="email"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                  placeholder="name@company.com"
+                />
+                {errors.email && errors.email.message && (
+                  <span className="text-red-500">
+                    {errors.email.message as String}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  Password
+                </label>
+                <input
+                  {...register("password", { required: "Enter a password" })}
+                  type="password"
+                  name="password"
+                  id="password"
+                  placeholder="••••••••"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                />
+                {errors.password && errors.password.message && (
+                  <span className="text-red-500">
+                    {errors.password.message as String}
+                  </span>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="confirm-password"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  Confirm password
+                </label>
+                <input
+                  {...register("confirmPassword", {
+                    required: "Enter a password",
+                  })}
+                  type="password"
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  placeholder="••••••••"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                />
+                {errors.confirmPassword && errors.confirmPassword.message && (
+                  <span className="text-red-500">
+                    {errors.confirmPassword.message as String}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-start">
+                <div className="flex items-center h-5">
+                  <input
+                    id="terms"
+                    aria-describedby="terms"
+                    type="checkbox"
+                    className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
+                    required
+                  />
+                </div>
+                <div className="ml-3 text-sm">
+                  <label
+                    htmlFor="terms"
+                    className="font-light text-gray-500 dark:text-gray-300"
+                  >
+                    I accept the{" "}
+                    <Link
+                      className="font-medium text-primary-600 hover:underline dark:text-primary-500"
+                      href="#"
                     >
-                      I accept the{" "}
-                      <Link
-                        className="font-medium text-primary-600 hover:underline dark:text-primary-500"
-                        href="#"
-                      >
-                        Terms and Conditions
-                      </Link>
-                    </label>
-                  </div>
+                      Terms and Conditions
+                    </Link>
+                  </label>
                 </div>
+              </div>
 
-                <button className="flex border bg-orange-400 text-white border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center hover:opacity-90">
-                  <div className="mx-auto flex gap-2 items-center">
-                  <span>Register</span></div>
-                  
-                </button>
-              </form>
+              <button className="flex border bg-orange-400 text-white border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center hover:opacity-90">
+                <div className="mx-auto flex gap-2 items-center">
+                  <span>Register</span>
+                </div>
+              </button>
+            </form>
+            <div className="flex items-center">
+              <div className="border-b border flex-grow w-full"></div>
+              <div className="text-gray-500 text-sm mx-4 font-bold text-center">
+                OR
+              </div>
+              <div className="border-b border flex-grow w-full"></div>
+            </div>
+            <div>
+              <button
+                onClick={() => signIn("google")}
+                className="flex border border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center"
+              >
+                <div className="mx-auto flex gap-2 items-center">
+                  <FaGoogle className="w-3 h-3" />
+                  <span>Continue with Google</span>
+                </div>
+              </button>
             </div>
           </div>
         </div>
       </div>
-    );
-  };
-
+    </div>
+  );
+};
 
 export default Register;

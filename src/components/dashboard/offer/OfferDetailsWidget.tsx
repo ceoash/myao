@@ -469,7 +469,7 @@ const OfferDetailsWidget = ({
                     src={
                       participant?.profile?.image
                         ? participant?.profile?.image 
-                        : participant.id === listing.sellerId ? dog : cat
+                        : participant?.id === listing.sellerId ? dog : cat
                     }
                     alt=""
                     layout="fill"
@@ -753,7 +753,7 @@ const OfferDetailsWidget = ({
           options={{ size: "lg" }}
           isLoading={loadingState.contact}
           onClick={() => (
-            handleFinalise(session?.user.id, participant.id),
+            handleFinalise(session?.user.id, participant?.id),
             setLoadingState((prev) => {
               return {
                 ...prev,

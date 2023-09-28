@@ -23,8 +23,8 @@ model User {
   hashedPassword            String?
   type                      String?
   activated                 Boolean           @default(false)
-  inviter   User?           @relation("UserToUser", fields: [inviterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   inviterId String?         @db.ObjectId
+  inviter   User?           @relation("UserToUser", fields: [inviterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   invitees  User[]          @relation("UserToUser")
   options                   Json?
   profile                   Profile?
@@ -47,6 +47,7 @@ model User {
   listings                  Listing[]         @relation("listings")
   reviews                   Review[]          @relation("reviews")
   notifications             Notification[]
+  
   @@unique([email, username])
 }
 

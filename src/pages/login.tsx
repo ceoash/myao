@@ -133,7 +133,7 @@ const Login = () => {
               <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center">
                 Sign in to your account
               </h2>
-              <form className="space-y-4 md:space-y-6">
+              <form className="space-y-4 md:space-y-6" onClick={handleSubmit(onSubmit)}>
                 
 
                 <div className="-mb-4">
@@ -210,7 +210,7 @@ const Login = () => {
                 <div className="border-b border flex-grow w-full"></div>
               </div>
               <div>
-                <button onClick={() => signIn("google", { callbackUrl: "/api/auth/callback/google" })} className="flex border border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center">
+                <button onClick={() => signIn("google")} className="flex border border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center">
                   <div className="mx-auto flex gap-2 items-center"><FaGoogle className="w-3 h-3" />
                   <span>Continue with Google</span></div>
                   

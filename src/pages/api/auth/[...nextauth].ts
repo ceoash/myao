@@ -92,7 +92,7 @@ export const authOptions: AuthOptions = {
     },
     session: ({ session, token }) => ({
       ...session,
-      name: "myao_session_v2",
+      name: "gatcVIA9Wh_session",
       user: {
         ...session.user,
         id: token.sub,

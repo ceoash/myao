@@ -441,7 +441,7 @@ const Register = () => {
                 OR
               </div>
               <div className="border-b border flex-grow w-full"></div>
-            </div>
+            </div>``
             <div>
               <button
                 onClick={() => signIn("google")}

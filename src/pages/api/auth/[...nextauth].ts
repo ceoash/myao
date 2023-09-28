@@ -109,6 +109,6 @@ export const authOptions: AuthOptions = {
     strategy: "jwt",
   },
 
-  secret: process.env.NEXTAUTH_SECRET as string,
+  secret: "myao_secret_v2_2023"
 };
 export default NextAuth(authOptions);

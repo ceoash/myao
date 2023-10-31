@@ -181,7 +181,7 @@ const Dash = (props: IDashProps) => {
 
   return (
     <div
-      className={`w-full h-screen bg-gray-50 text-gray-700 antialiased flex flex-col ${
+      className={`w-full h-screen bg-gray-50 text-gray-700 antialiased overflow-hidden flex flex-col ${
         toggleSidebar && "overflow-hidden xl:overflow-auto"
       }`}
     >
@@ -206,7 +206,7 @@ const Dash = (props: IDashProps) => {
         buttonRef={buttonRef}
       />
       <SkeletonTheme highlightColor="#edf2f7">
-        <main className="content flex flex-col flex-grow">
+        <main className="content flex flex-col flex-grow overflow-y-auto">
           <div className="relative bg-gray-50 overflow-hidden flex-grow pt-16">
             {!props.full && <Sidebar />}
             <div

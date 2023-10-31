@@ -7,11 +7,11 @@ type IMainProps = {
 };
 
 const Main = (props: IMainProps) => (
-  <div className="w-full text-gray-700 antialiased  min-h-screen">
+  <div className="w-full text-gray-700 antialiased  min-h-screen overflow-hidden">
     
     {props.meta}
     <Toaster />
-    <div className="mx-auto max-w-screen-4xl z-50">
+    <div className="mx-auto max-w-screen-4xl z-50 overflow-hidden">
       <header className="fixed w-full z-50">
         <nav className="bg-white border-gray-200 py-2.5 shadow border-b">
           <div className="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
@@ -39,7 +39,7 @@ const Main = (props: IMainProps) => (
         </nav>
       </header>
 
-      <main className="content flex-grow">{props.children}</main>
+      <main className="content flex-grow overflow-y-auto">{props.children}</main>
 
       <footer className="bg-primary-default ">
         <div className="mx-auto w-full max-w-screen-xl px-4 pt-6 lg:pt-10">

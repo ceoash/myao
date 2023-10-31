@@ -50,7 +50,7 @@ const OfferModal = () => {
   const [userType, setUserType] = useState("sellerOffer");
   const [selectedCity, setSelectedCity] = useState<{
     region: string;
-    city?: string | '';
+    city?: string | "";
   }>({ city: "", region: "" });
   const [foundUser, setFoundUser] = useState<any | null>(
     offerModal?.participant || null
@@ -59,7 +59,9 @@ const OfferModal = () => {
   // console.log("session", session);
 
   useEffect(() => {
+    if(foundUser === null && offerModal?.participant) {
     setFoundUser(offerModal?.participant || null);
+    }
   }, [offerModal?.participant]);
 
   const {
@@ -86,7 +88,7 @@ const OfferModal = () => {
         region: "",
         city: "",
       },
-      condition: ''
+      condition: "",
     },
   });
   const onSearchUser = () => {
@@ -118,8 +120,6 @@ const OfferModal = () => {
         setIsLoading(false);
       });
   };
-
-
 
   const validateStep = (step: any, data: any) => {
     const validation = {
@@ -153,7 +153,6 @@ const OfferModal = () => {
         }
         break;
       case STEPS.ITEM:
-       
         break;
       case STEPS.CATEGORY:
         if (selectedCategory.length === 0) {
@@ -188,7 +187,7 @@ const OfferModal = () => {
         region: "",
         city: "",
       },
-      condition: ''
+      condition: "",
     });
     setSelectedCity({ city: "", region: "" });
     setFoundUser(null);
@@ -201,20 +200,19 @@ const OfferModal = () => {
   };
 
   const onBack = () => {
-    
-    if (step === STEPS.REVIEW && userType === "buyer" || step === STEPS.CATEGORY && userType === "buyer") {
+    if (
+      (step === STEPS.REVIEW && userType === "buyer") ||
+      (step === STEPS.CATEGORY && userType === "buyer")
+    ) {
       setStep(step - 2);
-    }
-    else{
+    } else {
       setStep(step - 1);
     }
   };
   const onNext = () => {
- 
     handleSubmit((data, event) => {
       event?.preventDefault();
       event?.stopPropagation();
-      
 
       if (step !== STEPS.REVIEW) {
         const stepValidationResult = validateStep(step, data);
@@ -239,7 +237,7 @@ const OfferModal = () => {
     if (step === STEPS.ITEM && userType === "buyer") {
       onNext();
     }
-  },[step])
+  }, [step]);
 
   const actionLabel = useMemo(() => {
     switch (step) {
@@ -296,7 +294,7 @@ const OfferModal = () => {
     });
   };
 
-  const socket = useSocketContext()
+  const socket = useSocketContext();
 
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
     if (step !== STEPS.REVIEW) {
@@ -304,7 +302,9 @@ const OfferModal = () => {
     }
     if (status === "authenticated" && session?.user) {
       data.sellerId = session?.user.id;
-    } else { return }
+    } else {
+      return;
+    }
 
     if (!foundUser) {
       toast.error("Please select a user to send the offer to");
@@ -320,24 +320,23 @@ const OfferModal = () => {
     data.userId = session?.user.id;
     data.sellerId = userType === "seller" ? session?.user.id : foundUser?.id;
     data.buyerId = userType === "buyer" ? session?.user.id : foundUser?.id;
-    
+
     data.options = {
       location: selectedCity,
       condition: data.condition ? data.condition : "Unknown",
-      pickup: data.pickup ? data.pickup : 'Unknown',
+      pickup: data.pickup ? data.pickup : "Unknown",
       public: false,
     };
 
     await axios
       .post("/api/listings", data)
       .then((response) => {
-
         toast.success("Offer created successfully!");
         reset();
         setStep(STEPS.TYPE);
         offerModal.onClose();
         const email = axios.post("/api/email/emailNotification", {
-          listing: { ...response.data.listing},
+          listing: { ...response.data.listing },
           name: foundUser?.name,
           email: foundUser?.email,
           title: "New Offer",
@@ -346,7 +345,6 @@ const OfferModal = () => {
           url: `/dashboard/offers/${response.data.listing.id}`,
         });
 
-
         socket.emit(
           "new_listing",
           response.data.listing,
@@ -354,8 +352,13 @@ const OfferModal = () => {
           foundUser?.id
         );
 
-        if (response.data.message) { 
-          socket.emit("new_message", response.data.message, session?.user.id, foundUser.id);
+        if (response.data.message) {
+          socket.emit(
+            "new_message",
+            response.data.message,
+            session?.user.id,
+            foundUser.id
+          );
         }
 
         socket.emit(
@@ -364,7 +367,6 @@ const OfferModal = () => {
           response.data.listing.sellerId,
           response.data.listing.buyerId
         );
-
       })
       .catch((err) => {
         console.log(err);
@@ -378,7 +380,11 @@ const OfferModal = () => {
   let bodyContent = (
     <div className="flex flex-col">
       <Heading
-        title={userType === "buyer" ? "What would you like to buy" : "What would you like to sell"}
+        title={
+          userType === "buyer"
+            ? "What would you like to buy"
+            : "What would you like to sell"
+        }
         description="Name and describe the item"
         nounderline
       />
@@ -419,50 +425,67 @@ const OfferModal = () => {
           optional
         />
       </div>
-     
-   </div>
+    </div>
   );
   if (step === STEPS.ITEM) {
     bodyContent = (
-    <div className="flex flex-col">
-      <Heading
-        title="Item Details"
-        description="Important infortmation about your thing"
-        nounderline
-      />
-      <div className="mb-5">
-        <CityAutocomplete selectedCity={selectedCity} setSelectedCity={setSelectedCity} />
-      </div>
-      
+      <div className="flex flex-col">
+        <Heading
+          title="Item Details"
+          description="Important infortmation about your thing"
+          nounderline
+        />
+        <div className="mb-5">
+          <CityAutocomplete
+            selectedCity={selectedCity}
+            setSelectedCity={setSelectedCity}
+          />
+        </div>
 
         <div className="mb-4">
-        <label className="block mb-3">
-          Condition <span className="italic text-gray-500 text-sm "> (Optional)</span>
-        </label>
-        <select defaultValue={'Select'} className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0 active:ring-0 active:border-0 " {...register('condition')}>
-          <option value="Select" disabled className="text-gray-600">Select</option>
-          <option value="new">New</option>
-          <option value="used">Used</option>
-          <option value="damaged">Damaged</option>
-        </select>
-
+          <label className="block mb-3">
+            Condition{" "}
+            <span className="italic text-gray-500 text-sm "> (Optional)</span>
+          </label>
+          <select
+            defaultValue={"Select"}
+            className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0 active:ring-0 active:border-0 "
+            {...register("condition")}
+          >
+            <option value="Select" disabled className="text-gray-600">
+              Select
+            </option>
+            <option value="new">New</option>
+            <option value="used">Used</option>
+            <option value="damaged">Damaged</option>
+          </select>
         </div>
         <div className="mb-4">
-        <label className="block mb-3">
-          Pickup <span className="italic text-gray-500 text-sm "> (Optional)</span>
-        </label>
-        <select defaultValue={'Select'} className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0" {...register('pickup')}>
-          <option value="Select" disabled className="text-gray-600">Select</option>
-          <option className=" focus:border-orange-300 focus:ring-0" value="collection">Collection Only</option>
-          <option value="pickup">Pickup Only</option>
-          <option value="both">Collection or Pickup</option>
-        </select>
-
+          <label className="block mb-3">
+            Pickup{" "}
+            <span className="italic text-gray-500 text-sm "> (Optional)</span>
+          </label>
+          <select
+            defaultValue={"Select"}
+            className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+            {...register("pickup")}
+          >
+            <option value="Select" disabled className="text-gray-600">
+              Select
+            </option>
+            <option
+              className=" focus:border-orange-300 focus:ring-0"
+              value="collection"
+            >
+              Collection Only
+            </option>
+            <option value="pickup">Pickup Only</option>
+            <option value="both">Collection or Pickup</option>
+          </select>
         </div>
-    
       </div>
     );
-  };
+  }
 
   if (step === STEPS.CATEGORY) {
     const updateCategory = (category: string) => {
@@ -626,48 +649,53 @@ const OfferModal = () => {
         />
         <div>
           <h5 className="mb-5">Review Details</h5>
-          <div className="flex gap-4">
-            <div className="w-1/5">
-              <img
-                src={`${im && im[0] ? im[0] : "/images/cat.png"}`}
-                alt="offer"
-                className="object-cover rounded-md"
-              />
-            </div>
-
+          <div className="md:flex gap-4">
             <div className="flex-1">
-              <div className="font-medium first-letter:uppercase">{title}</div>
-              <div className="flex justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium flex">
-                    <BiCategory />
-                  </span>
-                  {category}
+              <div className="flex gap-2 md:gap-3 mb-2">
+                <div className="w-1/3 md:w-1/5 border rounded">
+                  <img
+                    src={`${im && im[0] ? im[0] : "/images/cat.png"}`}
+                    alt="offer"
+                    className="object-cover rounded-md"
+                  />
                 </div>
-                <div className="flex items-center gap-2 capitalize">
-                  <span className="font-medium flex">
-                    <BiCategoryAlt />
-                  </span>
-                  {userType}
+                <div>
+                  <div className="first-letter:uppercase title-sm font-bold">
+                    {title}
+                  </div>
+                  <div className="flex items-center gap-2 text-[16px] text-[#979797]">
+              
+                    {category}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium flex">
-                    <BiUserCircle />
-                  </span>
-                  {foundUser?.username}
-                </div>
+              </div>
+              <div className="md:flex justify-between border-t pt-2 mt-3">
+                <div className="flex  gap-3">
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">Price: {" "}</span>
+              
+                    {!price || price === "0" ? "Open Offer" : `£ ${price}`}
+                  </div>
+                  <span className="border-l"></span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">Sent to: {" "}</span>
+                    
+                    {foundUser?.username} - ({userType})
+                  </div>
+                  <span className="border-l"></span>
+                  <div className="flex items-center gap-2 capitalize">
+                    <span className="font-bold">Type: {" "}</span>
+                    
+                    {userType}
+                    </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    <IoPricetagOutline />
-                  </span>
-                  {!price ? "Not set" : `£ ${price}`}
                 </div>
               </div>
               <hr className="mt-2 mb-2" />
               <div className="">
                 <div className="font-medium">Description</div>
-                <p>{description}</p>
+                <p className="text-[#979797]">{description}</p>
               </div>
             </div>
           </div>

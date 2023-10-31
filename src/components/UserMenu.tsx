@@ -140,7 +140,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle, 
 
             <div className="hidden md:block relative cursor-pointer">
               <Link href={`/dashboard/conversations`} className="relative">
-                {unreadCount > 0 && (
+               {unreadCount > 0 && (
                   <div className="
                   -top-1
                   -right-1
@@ -159,7 +159,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle, 
                   ">
                     {unreadCount}
                   </div>
-                )}
+                )} 
                 <BiMessage className="h-[19px] text-gray-600" />
               </Link>
             </div>

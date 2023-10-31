@@ -70,6 +70,10 @@ const PreviewPage = ({
       <input type="hidden" value={listing.price} name="price" />
       <input type="hidden" value={listing.title} name="title" />
       <input type="hidden" value={listing.id} name='id' />
+      <input type="hidden" value={listing.buyer.id} name='buyerId' />
+      <input type="hidden" value={listing.seller.id} name='sellerId' />
+      <input type="hidden" value={listing.buyer.username} name='buyerUsername' />
+      <input type="hidden" value={listing.seller.username} name='sellerUsername' />
       {/*  
       <input type="hidden" value={listing.buyer.id} name='buyerId' />
       <input type="hidden" value={listing.seller.id} name='sellerId' />

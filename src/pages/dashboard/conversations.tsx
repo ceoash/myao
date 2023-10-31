@@ -23,11 +23,7 @@ import { useUnreadMessages } from "@/context/UnreadMessagesContext";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { Meta } from "@/layouts/meta";
 
-const Conversations = ({
-  safeConversations,
-  session,
-  conversationId,
-}: any) => {
+const Conversations = ({ safeConversations, session, conversationId }: any) => {
   const offerModal = useOfferModal();
   const [skipIndex, setSkipIndex] = useState<number>(5);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -42,8 +38,12 @@ const Conversations = ({
   const messagesStartRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false);
-
+  const [screenWidth, setScreenWidth] = useState<number>(0);
   const { setUnreadCount, unreadCount } = useUnreadMessages();
+
+  useEffect(() => {
+    setScreenWidth(window.innerWidth);
+  }, []);
 
   const markAllAsRead = async (conversation: Conversation) => {
     try {
@@ -200,7 +200,7 @@ const Conversations = ({
           conversationId: activeConversationState?.id,
         })
         .then((res) => res.data);
-        const reversed = response.messages.reverse();
+      const reversed = response.messages.reverse();
       setSkipIndex((prevSkipIndex) => prevSkipIndex + 5);
       setMessages((prevMessages) => [...reversed, ...prevMessages]);
       if (response.messages.length < 5) setNoMoreMessages(true);
@@ -444,6 +444,26 @@ const Conversations = ({
   };
 
   const handleSetActiveConversation = async (conversation: Conversation) => {
+    setActiveConversationState(() => {
+      const obj = { ...conversation, unreadCount: 0 };
+      return obj;
+    });
+    setMessages((prevMessages) => conversation.directMessages);
+    setConversations((prevConversations) =>
+      prevConversations.map((prevConversation) => {
+        if (prevConversation.id === conversation.id) {
+          return {
+            ...prevConversation,
+            unreadCount: 0,
+            directMessages: prevConversation.directMessages.map((message) => ({
+              ...message,
+              read: true,
+            })),
+          };
+        }
+        return prevConversation;
+      })
+    );
     if (conversation.unreadCount !== 0) {
       try {
         await axios
@@ -452,33 +472,11 @@ const Conversations = ({
           )
           .then((response) => {
             setUnreadCount((prevCount) => {
-              return (
+              const count =
                 prevCount -
-                (conversation?.unreadCount ? conversation?.unreadCount : 0)
-              );
+                (conversation?.unreadCount ? conversation?.unreadCount : 0);
+              return count < 0 ? 0 : count;
             });
-            setActiveConversationState(() => {
-              const obj = { ...conversation, unreadCount: 0 };
-              return obj;
-            });
-            setConversations((prevConversations) =>
-              prevConversations.map((prevConversation) => {
-                if (prevConversation.id === conversation.id) {
-                  return {
-                    ...prevConversation,
-                    unreadCount: 0,
-                    directMessages: prevConversation.directMessages.map(
-                      (message) => ({
-                        ...message,
-                        read: true,
-                      })
-                    ),
-                  };
-                }
-                return prevConversation;
-              })
-            );
-            handleSidebarToggle();
           });
       } catch (error) {
         console.log("error:", error);
@@ -488,7 +486,7 @@ const Conversations = ({
         const obj = { ...conversation };
         return obj;
       });
-      handleSidebarToggle();
+      screenWidth < 1024 && handleSidebarToggle();
     }
 
     const setUser =
@@ -715,7 +713,7 @@ const Conversations = ({
                 <div className="p-4 bg-gradient-to-b from-white to-transparent  top-0 left-0 w-full absolute">
                   {activeConversationState?.status === "none" &&
                     !activeConversationState?.blockedStatus && (
-                      <div className=" ">
+                      <div className=" mt-4">
                         <AlertBanner
                           key={activeConversationState?.id}
                           secondary
@@ -759,15 +757,14 @@ const Conversations = ({
                       </div>
                     )}
                   {activeConversationState?.status === "accepted" && (
-                    <div className="col-span-12 -mx-2">
+                    <div className={`col-span-12 -mx-2`}>
                       <div className="flex justify-between items-center pt-1 bg-white">
-                      <div className="border-t border-gray-200 h-1 w-full hidden md:block bg-white"></div>
-                      <div className="md:w-auto md:whitespace-nowrap text-center mx-4 text-sm text-gray-500 bg-whire p-1 px-3">
-                        We are here to protect you from fraud please do not
-                        share your personal information
-                      </div>
-                      <div className="border-t border-gray-200 w-full hidden md:block bg-white"></div>
-
+                        <div className="border-t border-gray-200 h-1 w-full hidden md:block bg-white"></div>
+                        <div className="md:w-auto md:whitespace-nowrap text-center mx-4 text-sm text-gray-500 bg-whire p-1 px-3">
+                          We are here to protect you from fraud please do not
+                          share your personal information
+                        </div>
+                        <div className="border-t border-gray-200 w-full hidden md:block bg-white"></div>
                       </div>
                       <div className="h-6 bg-gradient-to-b from-white to-transparent"></div>
                     </div>
@@ -795,29 +792,37 @@ const Conversations = ({
                     </div>
                   )}
                 </div>
-                
-                <div className=" flex flex-col gap-4 overflow-y-auto pt-10">
-                {!noMoreMessages &&
-                  status === "accepted" &&
-                  messages.length > 3 && (
-                    <div ref={messagesStartRef} className="flex justify-center bg-transparent">
-                      <Button
-                        onClick={onLoadMore}
-                        options={{ size: "sx", mute: true }}
+
+                <div
+                  className=" flex flex-col gap-4 overflow-y-auto pt-10"
+                  key={activeConversationState?.id}
+                >
+                  {!noMoreMessages &&
+                    status === "accepted" &&
+                    messages.length > 3 && (
+                      <div
+                        ref={messagesStartRef}
+                        className="flex justify-center bg-transparent"
                       >
-                        Load More
-                      </Button>
-                    </div>
-                  )}
+                        <Button
+                          onClick={onLoadMore}
+                          options={{ size: "sx", mute: true }}
+                        >
+                          Load More
+                        </Button>
+                      </div>
+                    )}
                   {messages.map((message, index) => {
                     if (message.text == "" && message.image == "") return null;
                     return (
+                      <div className="mt-3">
                       <MessageComponent
                         key={message?.id}
                         message={message}
                         session={session}
                         ref={null}
                       />
+                      </div>
                     );
                   })}
                   <div ref={messagesEndRef}></div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Modal from "./Modal";
 import useOfferModal from "@/hooks/useOfferModal";
@@ -119,6 +119,8 @@ const OfferModal = () => {
       });
   };
 
+
+
   const validateStep = (step: any, data: any) => {
     const validation = {
       isValid: true,
@@ -199,12 +201,20 @@ const OfferModal = () => {
   };
 
   const onBack = () => {
-    setStep(step - 1);
+    
+    if (step === STEPS.REVIEW && userType === "buyer" || step === STEPS.CATEGORY && userType === "buyer") {
+      setStep(step - 2);
+    }
+    else{
+      setStep(step - 1);
+    }
   };
   const onNext = () => {
+ 
     handleSubmit((data, event) => {
       event?.preventDefault();
       event?.stopPropagation();
+      
 
       if (step !== STEPS.REVIEW) {
         const stepValidationResult = validateStep(step, data);
@@ -221,6 +231,15 @@ const OfferModal = () => {
       }
     })();
   };
+
+  useEffect(() => {
+    if (step === STEPS.IMAGES) {
+      onNext();
+    }
+    if (step === STEPS.ITEM) {
+      onNext();
+    }
+  },[step])
 
   const actionLabel = useMemo(() => {
     switch (step) {

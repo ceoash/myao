@@ -110,9 +110,18 @@ const OfferDetailsWidget = ({
   const edit = useOfferEditModal();
   const { options } = listing;
 
-  const owner = bids.length > 0 && bids[bids.length - 1].userId === session?.user.id || listing.sellerId === listing.userId ? listing.seller : listing.buyer;
-  const receiver = bids.length > 0 && bids[bids.length - 1].userId === listing.sellerId ? listing.buyer : listing.seller || listing.sellerId === listing.userId ? listing.buyer : listing.seller;
- 
+  const owner =
+    (bids.length > 0 && bids[bids.length - 1].userId === session?.user.id) ||
+    listing.sellerId === listing.userId
+      ? listing.seller
+      : listing.buyer;
+  const receiver =
+    bids.length > 0 && bids[bids.length - 1].userId === listing.sellerId
+      ? listing.buyer
+      : listing.seller || listing.sellerId === listing.userId
+      ? listing.buyer
+      : listing.seller;
+  console.log("listing", listing);
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -159,21 +168,23 @@ const OfferDetailsWidget = ({
 
   let parsedImage;
 
-  const sessionUser = listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
+  const sessionUser =
+    listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
 
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
   }
 
-
   return (
-    <div className={`
+    <div
+      className={`
         w-full
         rounded-lg
         border
         p-4
         border-gray-200
-        ${ status === "rejected" || status === "cancelled"
+        ${
+          status === "rejected" || status === "cancelled"
             ? "bg-red-100  border-red-50"
             : status === "accepted" || status === "completed"
             ? "bg-green-100 border-green-50"
@@ -212,7 +223,18 @@ const OfferDetailsWidget = ({
                 </div>
               </div>
               <p className="ml-2 !container text-gray-800 text-md xl:text-md font-bold">
-                You {/*  {session?.user?.id} - {events && events[0]?.userId} */} {session?.user.id === listing.sellerId ? <span className="!font-medium text-gray-600 text-sm"> (seller)</span> : <span className="!font-medium text-gray-600 text-sm"> (buyer)</span>}
+                You {/*  {session?.user?.id} - {events && events[0]?.userId} */}{" "}
+                {session?.user.id === listing.sellerId ? (
+                  <span className="!font-medium text-gray-600 text-sm">
+                    {" "}
+                    (seller)
+                  </span>
+                ) : (
+                  <span className="!font-medium text-gray-600 text-sm">
+                    {" "}
+                    (buyer)
+                  </span>
+                )}
               </p>
             </div>
 
@@ -236,7 +258,8 @@ const OfferDetailsWidget = ({
         </Link>
 
         <div className="w-full flex justify-center">
-          { Number(currentBid?.currentPrice) > 0 && currentBid?.byUserId === session?.user.id && (
+          {Number(currentBid?.currentPrice) > 0 &&
+            currentBid?.byUserId === session?.user.id && (
               <MdArrowCircleDown
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full ${
                   status === "rejected" || status === "cancelled"
@@ -288,26 +311,25 @@ const OfferDetailsWidget = ({
           </div>
 
           <div className="border-t border-gray-200 h-1 shadow-2xl mb-4 lg:mt-4 lg:border-0" />
-         
+
           <div className="md:hidden w-full flex justify-center mb-4">
             {StatusChecker(status)}
-          
           </div>
           <div className="px-6">
             <div className="text-lg -mb-3 font-bold text-center flex flex-col items-center ">
               {status === "rejected" ||
               status === "cancelled" ||
               status === "expired"
-                ? "Last" + " "
-                : status === "completed" || status === "accepted"
-                ? "Ageeed" + " "
-                : !currentBid.currentPrice ||
-                  currentBid.currentPrice == "" ?
-                  ( currentBid.currentPrice == "0" &&
-                    (listing.price === "" || listing.price === "0"
-                      && "Open" + " "
-                      )): "Current" + " " }
-              offer
+                ? "Last Offer" + " "
+                : status === "completed"
+                ? "Paid"
+                : status === "accepted"
+                ? "Agreed Offer" + " "
+                : !currentBid.currentPrice || currentBid.currentPrice == ""
+                ? currentBid.currentPrice == "0" &&
+                  (listing.price === "" ||
+                    (listing.price === "0" && "Open Offer"))
+                : "Current Offer"}
             </div>
 
             <div
@@ -342,66 +364,76 @@ const OfferDetailsWidget = ({
                     : currentBid.byUsername || ""}
                 </Link>
               </div>
-      
 
               {!currentBid?.currentPrice ||
-                Number(currentBid?.currentPrice) < 1 ? (
-                  <p className="block w-full mt-4 italic">
-                    {listing.userId === session?.user?.id
-                      ? `Awaiting bid from ${participant?.username || ""}`
-                      : "Enter a bid to start negotiating"}
-                  </p>
-                ) : currentBid.byUserId !== session?.user?.id && status === "negotiating" ? (
-                  <p className="block w-full mt-4 italic">Would you like to accept?</p>
-
-                ) : ( status === "negotiating"  ? (
-                  <p className="block w-full mt-4 italic">
-                    Awaiting response from {participant?.username || ""}
-                  </p>) : ""
-                )}
+              Number(currentBid?.currentPrice) < 1 ? (
+                <p className="block w-full mt-4 italic">
+                  {listing.userId === session?.user?.id
+                    ? `Awaiting bid from ${participant?.username || ""}`
+                    : "Enter a bid to start negotiating"}
+                </p>
+              ) : currentBid.byUserId !== session?.user?.id &&
+                status === "negotiating" ? (
+                <p className="block w-full mt-4 italic">
+                  Would you like to accept?
+                </p>
+              ) : status === "negotiating" ? (
+                <p className="block w-full mt-4 italic">
+                  Awaiting response from {participant?.username || ""}
+                </p>
+              ) : (
+                ""
+              )}
             </div>
 
-            { Number(currentBid?.currentPrice) > 0 && currentBid?.byUserId !== session?.user?.id && (
-              <>
-              <div className="py-2 ">
-                <div className=" gap-2 text-sm  font-bold mb-2 items-start">
-                  <div className="w-2/3 flex gap-2 mx-auto justify-center">
-                    {status === "negotiating" && (
-                      <>
-                        <div className="flex flex-col justify-center  items-center gap-4">
-                          <Button
-                            isLoading={loadingState.yes}
-                            accept
-                            onClick={() =>
-                              handleStatusChange("accepted", session?.user.id)
-                            }
-                            className="rounded-xl px-3 py-1 text-center w-10"
-                          >
-                            YES
-                          </Button>
-                        </div>
-                        <div className="flex flex-col justify-center items-center  gap-4">
-                          <Button
-                            cancel
-                            isLoading={loadingState.no}
-                            onClick={() =>
-                              handleStatusChange("rejected", session?.user.id)
-                            }
-                            className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
-                          >
-                            NO
-                          </Button>
-                        </div>
-                      </>
-                    )}
+            {Number(currentBid?.currentPrice) > 0 &&
+              currentBid?.byUserId !== session?.user?.id && (
+                <>
+                  <div className="py-2 ">
+                    <div className=" gap-2 text-sm  font-bold mb-2 items-start">
+                      <div className="w-2/3 flex gap-2 mx-auto justify-center">
+                        {status === "negotiating" && (
+                          <>
+                            <div className="flex flex-col justify-center  items-center gap-4">
+                              <Button
+                                isLoading={loadingState.yes}
+                                accept
+                                onClick={() =>
+                                  handleStatusChange(
+                                    "accepted",
+                                    session?.user.id
+                                  )
+                                }
+                                className="rounded-xl px-3 py-1 text-center w-10"
+                              >
+                                YES
+                              </Button>
+                            </div>
+                            <div className="flex flex-col justify-center items-center  gap-4">
+                              <Button
+                                cancel
+                                isLoading={loadingState.no}
+                                onClick={() =>
+                                  handleStatusChange(
+                                    "rejected",
+                                    session?.user.id
+                                  )
+                                }
+                                className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
+                              >
+                                NO
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              </>
-            ) }
-           
-            { status === "awaiting approval" &&
-              listing.userId !== session?.user?.id ? (
+                </>
+              )}
+
+            {status === "awaiting approval" &&
+            listing.userId !== session?.user?.id ? (
               <div className="flex justify-center gap-2 mb-8 w-full mt-4">
                 <Button
                   options={{ primary: true, size: "lg" }}
@@ -424,10 +456,11 @@ const OfferDetailsWidget = ({
           </div>
         </div>
       </div>
-    
+
       <div className="relative inline-block  w-full  rounded-lg mt-4 ">
         <div className="w-full flex justify-center">
-          { Number(currentBid?.currentPrice) > 0 && currentBid?.byUserId === participant.id && (
+          {Number(currentBid?.currentPrice) > 0 &&
+            currentBid?.byUserId === participant.id && (
               <MdArrowCircleUp
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full  ${
                   status === "rejected" || status === "cancelled"
@@ -438,7 +471,8 @@ const OfferDetailsWidget = ({
                 } border  shadow`}
               />
             )}
-          { !currentBid?.currentPrice || Number(currentBid.currentPrice) < 1 && (
+          {!currentBid?.currentPrice ||
+            (Number(currentBid.currentPrice) < 1 && (
               <MdOutlineSwapVerticalCircle
                 className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  ${
                   status === "rejected" || status === "cancelled"
@@ -448,7 +482,7 @@ const OfferDetailsWidget = ({
                     : "bg-gray-50 border-gray-200 text-orange-default"
                 } border shadow`}
               />
-            )}
+            ))}
         </div>
         <Link
           href={`/dashboard/profile/${participant?.id}`}
@@ -468,8 +502,10 @@ const OfferDetailsWidget = ({
                   <Image
                     src={
                       participant?.profile?.image
-                        ? participant?.profile?.image 
-                        : participant?.id === listing.sellerId ? dog : cat
+                        ? participant?.profile?.image
+                        : participant?.id === listing.sellerId
+                        ? dog
+                        : cat
                     }
                     alt=""
                     layout="fill"
@@ -503,8 +539,7 @@ const OfferDetailsWidget = ({
 
       {events &&
         events.length > 0 &&
-        ((status === "rejected" &&
-          events[0].userId === session?.user?.id) ||
+        ((status === "rejected" && events[0].userId === session?.user?.id) ||
           (events[0].event !== "completed" &&
             events[0].event !== "accepted" && (
               <div
@@ -533,6 +568,38 @@ const OfferDetailsWidget = ({
         <Button primary={toggleMenu.events} onClick={() => setToggleMenu({description: false, events: true, summary: false})} label="Events" options={{size: "xs"}} />
       </div> 
  */}
+      {status === "accepted" &&
+        listing.buyerId === session?.user.id &&
+        status === "accepted" && (
+          <div className="flex flex-col items-center gap-4 mt-4 w-full">
+            <StripeCheckout
+              session={session}
+              listing={{
+                id: listing.id,
+                price: Number(
+                  currentBid.currentPrice
+                    ? currentBid.currentPrice
+                    : listing.price
+                ),
+                title: listing.title,
+                buyer: {
+                  id: listing.buyerId,
+                  username: listing.buyer.username,
+                },
+                seller: {
+                  id: listing.sellerId,
+                  username: listing.seller.username,
+                },
+                status: status,
+                image:
+                  parsedImage && parsedImage[0]
+                    ? parsedImage[0]
+                    : "/images/cat.png",
+              }}
+              handleStatusChange={handleStatusChange}
+            />
+          </div>
+        )}
       {toggleMenu.events && events && events.length > 0 && (
         <Card className="mt-6">
           {events.map((event) => (
@@ -542,11 +609,7 @@ const OfferDetailsWidget = ({
                   <div className="rounded-full w-6 h-6 md:w-8 md:h-8 bg-white">
                     <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                     <Image
-                      src={
-                        event.userId === listing.seller.id
-                          ?  dog
-                          :  cat
-                      }
+                      src={event.userId === listing.seller.id ? dog : cat}
                       alt=""
                       layout="fill"
                       objectFit="cover"
@@ -715,38 +778,7 @@ const OfferDetailsWidget = ({
             />
           </div>
         )}
-      {status === "accepted" && (
-        <div className="flex flex-col items-center gap-4 mt-4 w-full">
-          {listing.buyerId === session?.user.id && status === "accepted" && (
-            <StripeCheckout
-              session={session}
-              listing={{
-                id: listing.id,
-                price: Number(
-                  currentBid.currentPrice
-                    ? currentBid.currentPrice
-                    : listing.price
-                ),
-                title: listing.title,
-                buyer: {
-                  id: listing.buyerId,
-                  username: listing.buyer.username,
-                },
-                seller: {
-                  id: listing.sellerId,
-                  username: listing.seller.username,
-                },
-                status: status,
-                image:
-                  parsedImage && parsedImage[0]
-                    ? parsedImage[0]
-                    : "/images/cat.png",
-              }}
-              handleStatusChange={handleStatusChange}
-            />
-          )}
-        </div>
-      )}
+
       {status === "completed" && (
         <Button
           primary

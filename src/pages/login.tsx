@@ -133,7 +133,7 @@ const Login = () => {
               <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center">
                 Sign in to your account
               </h2>
-              <form className="space-y-4 md:space-y-6" onClick={handleSubmit(onSubmit)}>
+              <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit(onSubmit)}>
                 
 
                 <div className="-mb-4">

@@ -101,8 +101,10 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
         const price = data.price
         const listingId = listing.id
         const previous = currentBid.currentPrice
+        const sellerId = listing.sellerId
+        const buyerId = listing.buyerId
 
-        socket.emit('update_bid', { price, userId, username, listingId, previous });
+        socket.emit('update_bid', { price, userId, username, listingId, previous, buyerId, sellerId });
         socket.emit('update_activities', 
           transactions,
           updatedListing.sellerId,

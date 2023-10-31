@@ -21,9 +21,6 @@ import { usePathname } from "next/navigation";
 import { Router } from "next/router";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import axios from "axios";
-import { Notification } from "@prisma/client";
-import { INotification } from "@/interfaces/authenticated";
 
 type IDashProps = {
   meta: ReactNode;

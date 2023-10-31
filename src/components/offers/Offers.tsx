@@ -68,6 +68,10 @@ const Offers = ({
   const [selectedCategory, setSelectedCategory] = useState("negotiating");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  console.log("offers", offers);
+  console.log("allOffers", allOffers);
+  console.log("categorisedOffers", categorisedOffers);
+
   const [skip, setSkip] = useState(5);
   const [isMounted, setIsMounted] = useState(false);
   const create = useOfferModal();
@@ -188,7 +192,6 @@ const Offers = ({
     socket.on("new_listing", (data) => {
       const { listing } = data;
 
-
       if (session?.user.id !== listing.userId) {
         setAllOffers((prevListings: any) => {
           return [listing, ...prevListings];
@@ -222,8 +225,82 @@ const Offers = ({
       }
     });
 
+    socket.on("updated_bid", (data) => {
+      const { price, userId, username, listingId, previous } = data;
+
+      setAllOffers((prev: any) => {
+        const updatedOffers = prev.map((offer: any, i: number) => {
+          if (offer.id === listingId) {
+            const newOffer = {
+              ...offer,
+              bids: [
+                {
+                  id: i.toString(),
+                  price: price,
+                  userId: userId,
+                  listingId: listingId,
+                  previous: previous,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                },
+                ...offer.bids,
+              ],
+            };
+            return newOffer;
+          }
+          return offer;
+        });
+        return updatedOffers;
+      });
+
+      setCategorisedOffers((prev: any) => {
+        const categories = [
+          "all",
+          "rejected",
+          "negotiating",
+          "awaiting",
+          "cancelled",
+          "accepted",
+        ];
+
+        categories.forEach((category) => {
+          if (prev?.[category] && prev?.[category].length > 0) {
+            prev[category] = prev[category].map((offer: any, i: number) => {
+              if (offer.id === listingId) {
+                const newBid = {
+                  id: i.toString(),
+                  price: price,
+                  userId: userId,
+                  listingId: listingId,
+                  previous: previous,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                };
+
+                // For 'all' and 'rejected', the new bid is added at the beginning
+                const bidsOrder =
+                  category === "all" || category === "rejected"
+                    ? [newBid, ...offer.bids]
+                    : [newBid, ...offer.bids];
+
+                return {
+                  ...offer,
+                  bids: bidsOrder,
+                };
+              }
+              return offer;
+            });
+          }
+        });
+
+        return prev;
+      });
+    });
+
     return () => {
       socket.off("new_listing");
+      socket.off("updated_bid");
+      
     };
   }, [session?.user.id]);
 
@@ -234,7 +311,7 @@ const Offers = ({
           <>
             <div className="flex pb-4 gap-2">
               <div
-                className={`uppercase cursor-pointer font-bold rounded-lg border border-gray-200 bg-white p-3 py-1 ${
+                className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-3 py-1 ${
                   selectedCategory === "negotiating" &&
                   "border !bg-orange-default border-orange-200 text-white"
                 }`}
@@ -253,7 +330,7 @@ const Offers = ({
                 }}
               >
                 <span
-                  className={`uppercase cursor-pointer font-bold rounded-lg border border-gray-200 bg-white p-3 py-1 ${
+                  className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-3 py-1 ${
                     selectedCategory === "awaiting approval" &&
                     "border !bg-orange-default border-orange-200 text-white"
                   }`}
@@ -267,18 +344,63 @@ const Offers = ({
                   </span>
                 )} */}
               </div>
+              <div
+                className={`uppercase cursor-pointer font-bold items-start flex`}
+                onClick={() => {
+                  selectedCategory !== "accepted" &&
+                    setSelectedCategory("accepted");
+                }}
+              >
+                <span
+                  className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-3 py-1 ${
+                    selectedCategory === "accepted" &&
+                    "border !bg-orange-default border-orange-200 text-white"
+                  }`}
+                >
+                  Accepted
+                </span>
+
+                {/* {allRequests.length > 0 && (
+                  <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
+                    {allRequests.length} new
+                  </span>
+                )} */}
+              </div>
+              <div
+                className={`uppercase cursor-pointer font-bold items-start flex`}
+                onClick={() => {
+                  selectedCategory !== "completed" &&
+                    setSelectedCategory("completed");
+                }}
+              >
+                <span
+                  className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-3 py-1 ${
+                    selectedCategory === "completed" &&
+                    "border !bg-orange-default border-orange-200 text-white"
+                  }`}
+                >
+                  Paid
+                </span>
+
+                {/* {allRequests.length > 0 && (
+                  <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
+                    {allRequests.length} new
+                  </span>
+                )} */}
+              </div>
             </div>
             <div className="">
               <button
                 id="dropdownDefaultButton"
+                className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-1 py-1`}
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 type="button"
               >
-                <BiFilterAlt className="text-gray-500 mx-2 " />
+                <BiFilterAlt size={16} className="text-gray-500 mx-2 " />
               </button>
               {dropdownOpen && (
                 <div
-                ref={ref}
+                  ref={ref}
                   id="dropdown"
                   className="absolute z-10 right-0 bg-white divide-y divide-gray-100 rounded-lg shadow w-auto"
                 >
@@ -288,7 +410,7 @@ const Offers = ({
                   >
                     <li onClick={() => handleCategoryChange("accepted")}>
                       <div className="block px-4 py-2 hover:bg-gray-50">
-                        Awaiting
+                        Accepted
                       </div>
                     </li>
                     <li onClick={() => handleCategoryChange("completed")}>

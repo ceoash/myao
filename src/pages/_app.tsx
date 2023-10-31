@@ -6,7 +6,6 @@ const queryClient = new QueryClient();
 import dotenv from "dotenv";
 import { initializeSocket, SocketProvider } from "@/context/SocketContext";
 import { UnreadMessagesProvider } from "@/context/UnreadMessagesContext";
-import Stripe from "stripe";
 import { StripeProvider } from "@/context/StripeContext";
 import { AlertProvider } from "@/providers/AlertProvider";
 

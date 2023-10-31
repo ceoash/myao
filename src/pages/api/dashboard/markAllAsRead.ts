@@ -9,7 +9,7 @@ export default async function handler(
   const listingId = req.query.listingId as string;
   const userId = req.query.userId as string;
   console.dir(req.query);
-  if (!conversationId || !listingId) {
+  if (!conversationId) {
     return res.status(400).json({ error: "Missing necessary parameters." });
   }
   try {

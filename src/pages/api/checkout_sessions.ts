@@ -1,27 +1,34 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/libs/prismadb';
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+import { NextApiRequest, NextApiResponse } from "next";
+import prisma from "@/libs/prismadb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./auth/[...nextauth]";
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-interface StripeError{
-    statusCode: number;
-    message: string;
+interface StripeError {
+  statusCode: number;
+  message: string;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-console.dir(req.body)
-  if (req.method === 'POST') {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const session = await getServerSession(req, res, authOptions);
 
-    const { 
-        title,
-        price,
-        id,
-        senderId,
-        senderUsername,
-        receiverId,
-        receiverUsername,
-
+  if (req.method === "POST") {
+    const {
+      title,
+      price,
+      id,
+      senderUsername,
+      sellerId,
+      receiverUsername,
+      buyerId,
+      sellerUsername,
+      buyerUsername,
     } = req.body;
 
+    console.log(id, price);
 
     const now = Date.now();
 
@@ -30,7 +37,7 @@ console.dir(req.body)
         line_items: [
           {
             price_data: {
-              currency: 'gbp',
+              currency: "gbp",
               product_data: {
                 name: `${title}`,
               },
@@ -39,30 +46,42 @@ console.dir(req.body)
             quantity: 1,
           },
         ],
-        mode: 'payment',
+        mode: "payment",
         success_url: `${req.headers.origin}/dashboard/offers/${id}?success=true`,
         cancel_url: `${req.headers.origin}/dashboard/offers/${id}/?canceled=true`,
       });
 
-      const notification  = await prisma.notification.create({
+      await prisma.notification.create({
         data: {
-          userId: receiverId || "",
-          message: `${senderUsername ? senderUsername : "unknown"} has paid you £${price}`,
+          userId: buyerId || "",
+          message: `You paid £${price} to ${
+            sellerUsername ? sellerUsername : "unknown"
+          }`,
           action: `/dashboard/offers/${id}`,
-          type: "conversation",
+          type: "listing",
           read: false,
-        }
-      })
-      
-      res.redirect(303, session.url);
+        },
+      });
 
-      
+      await prisma.notification.create({
+        data: {
+          userId: sellerId || "",
+          message: `${
+            buyerUsername ? buyerUsername : "unknown"
+          } has paid you £${price}`,
+          action: `/dashboard/offers/${id}`,
+          type: "listing",
+          read: false,
+        },
+      });
+
+      res.redirect(303, session.url);
     } catch (err) {
-        const error = err as StripeError;
-        res.status(error.statusCode || 500).json(error.message);
+      const error = err as StripeError;
+      res.status(error.statusCode || 500).json(error.message);
     }
   } else {
-    res.setHeader('Allow', 'POST');
-    res.status(405).end('Method Not Allowed');
+    res.setHeader("Allow", "POST");
+    res.status(405).end("Method Not Allowed");
   }
 }

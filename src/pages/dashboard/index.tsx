@@ -20,7 +20,7 @@ import { Dash } from "@/templates/dash";
 import { useRouter } from "next/router";
 import { INotification, dashboardProps } from "@/interfaces/authenticated";
 import { useSocketContext } from "@/context/SocketContext";
-import { randomUUID } from "crypto";
+import { uuid } from 'uuidv4';
 import { useAlerts } from "@/hooks/AlertHook";
 import { BiPlus } from "react-icons/bi";
 import getAllOffersByUserId from "@/actions/dashboard/getAllOffersByUserId";
@@ -146,6 +146,7 @@ const Index = ({
       }
     });
 
+
     return () => {
       socket.off("update_activities");
       socket.off("friend");
@@ -160,10 +161,12 @@ const Index = ({
         <Button
           className="gap-1.5 items-center"
           onClick={offerModal.onOpen}
-          options={{only: {
-            desktop: true,
-            screen: true
-          }}}
+          options={{
+            only: {
+              desktop: true,
+              screen: true,
+            },
+          }}
         >
           <BiPlus className="text-xl" /> Make an Offer
         </Button>
@@ -192,9 +195,7 @@ const Index = ({
           ) : (
             <>
               <Stats
-                title={
-                    <span className="block title">Overview</span>
-                }
+                title={<span className="block title">Overview</span>}
                 totalStats={10}
                 startOffer={offerModal.onOpen}
                 sentOffers={count.sent}
@@ -206,8 +207,7 @@ const Index = ({
               />
             </>
           )}
-             {/* Connect */}
-
+          {/* Connect */}
         </div>
 
         {/* Offers */}
@@ -226,7 +226,9 @@ const Index = ({
               countPendingReceived={count.pendingReceived}
               countPendingSent={count.pendingSent}
               setCount={setCount}
-              blockedIds={user?.blockedFriends.map((friend) => friend.friendBlockedId)}
+              blockedIds={user?.blockedFriends.map(
+                (friend) => friend.friendBlockedId
+              )}
             />
             {countSent || countReceived ? (
               <div className="-mt-3 mb-6 md:mb-8">
@@ -236,7 +238,9 @@ const Index = ({
                   link="/dashboard/offers"
                 />
               </div>
-            ) : ""}
+            ) : (
+              ""
+            )}
           </div>
 
           {/* Friends */}
@@ -256,8 +260,6 @@ const Index = ({
               )}
             </div>
           )}
-
-       
         </div>
       </div>
     </Dash>
@@ -270,7 +272,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const session = await getSession(context);
 
-    
     if (!session) {
       return {
         redirect: {
@@ -280,7 +281,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
     const now = new Date();
-    
+
     const PAGE_SIZE = 5;
     const user = await getCurrentUser(session);
 
@@ -291,7 +292,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     // const listings = await getOffersByUserId(session, PAGE_SIZE, blocked);
 
-    const fetchListings = await getAllOffersByUserId(session, PAGE_SIZE, blocked);
+    const fetchListings = await getAllOffersByUserId(
+      session,
+      PAGE_SIZE,
+      blocked
+    );
     if (!fetchListings) return { props: { sent: [], received: [], session } };
 
     const {
@@ -308,7 +313,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     if (countPendingReceived > 0) {
       notifications.push({
-        id: randomUUID(),
+        id: uuid(),
         type: "offer",
         message: `You have ${countPendingReceived} pending offers`,
         userId: session?.user.id,

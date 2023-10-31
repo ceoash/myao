@@ -76,9 +76,7 @@ const transformUser = (user: any): SafeUser => {
   };
 };
 
-const transformConversation = (conversation: any, userId: string): any => {
-  
-};
+const transformConversation = (conversation: any, userId: string): any => {};
 
 async function getUser(userId: string): Promise<any> {
   const user = await prisma.user.findUnique({
@@ -111,19 +109,19 @@ export default async function getConversationsByUserId(
   currentUser?: any,
   limit?: number
 ): Promise<SafeConversation[]> {
-
   const user = currentUser ? currentUser : await getUser(userId);
 
   if (!user) {
     throw new Error("No user provided");
   }
 
-  
-
   const conversations = await prisma.conversation.findMany({
     where: {
-      OR: [{ participant1Id: userId, status: { not: "declined"} }, { participant2Id: userId, status: { not: "declined"} }, ],
-      
+      OR: [
+        { participant1Id: userId, status: { not: "declined" } },
+        { participant2Id: userId, status: { not: "declined" } },
+      ],
+
       participant1Id: {
         notIn: user.blockedFriends.map(
           (blocker: { friendBlockedId: string }) => blocker.friendBlockedId
@@ -149,14 +147,14 @@ export default async function getConversationsByUserId(
               description: true,
               price: true,
               image: true,
-             
+
               userId: true,
               sellerId: true,
               status: true,
               buyerId: true,
               category: true,
               events: true,
-            }
+            },
           },
           user: {
             select: {
@@ -236,73 +234,75 @@ export default async function getConversationsByUserId(
     },
   });
 
+  const blocked = user.blockedFriends.map(
+    (blocker: { friendBlockedId: string }) => blocker.friendBlockedId
+  );
+
   if (!conversations) return [];
-  const unreadCountsPromises = conversations.map(conversation => 
+  const unreadCountsPromises = conversations.map((conversation) =>
     prisma.directMessage.aggregate({
-        _count: {
-            id: true,
-        },
-        where: {
-            conversationId: conversation.id,
-            read: false,
-            userId: { not: userId} 
-            
-        }
+      _count: {
+        id: true,
+      },
+      where: {
+        conversationId: conversation.id,
+        read: false,
+        userId: { notIn: [userId, ...blocked] },
+      },
     })
-);
+  );
 
-const unreadCountsResults = await Promise.all(unreadCountsPromises);
+  const unreadCountsResults = await Promise.all(unreadCountsPromises);
 
-const transaction = conversations.map((conversation, index) => {
-  const participantId =
-    conversation.participant1Id === userId
-      ? conversation.participant2Id
-      : conversation.participant1Id;
+  const transaction = conversations.map((conversation, index) => {
+    const participantId =
+      conversation.participant1Id === userId
+        ? conversation.participant2Id
+        : conversation.participant1Id;
 
-  if (conversation.participant1Id === userId) {
-    conversation.participant1.followers.map(
-      (follower: { followerId: string }) => friends.push(follower.followerId)
-    );
-    conversation.participant1.followings.map(
-      (following: { followingId: string }) =>
-        friends.push(following.followingId)
-    );
-    conversation.participant1.blockedFriends.map(
-      (blocker: { friendBlockedId: string }) =>
-        blocked.push(blocker.friendBlockedId)
-    );
-  }
+    if (conversation.participant1Id === userId) {
+      conversation.participant1.followers.map(
+        (follower: { followerId: string }) => friends.push(follower.followerId)
+      );
+      conversation.participant1.followings.map(
+        (following: { followingId: string }) =>
+          friends.push(following.followingId)
+      );
+      conversation.participant1.blockedFriends.map(
+        (blocker: { friendBlockedId: string }) =>
+          blocked.push(blocker.friendBlockedId)
+      );
+    }
 
-  if (conversation.participant2Id === userId) {
-    conversation.participant2.followers.map(
-      (follower: { followerId: string }) => friends.push(follower.followerId)
-    );
-    conversation.participant2.followings.map(
-      (following: { followingId: string }) =>
-        friends.push(following.followingId)
-    );
-    conversation.participant2.blockedFriends.map(
-      (blocker: { friendBlockedId: string }) =>
-        blocked.push(blocker.friendBlockedId)
-    );
-  }
+    if (conversation.participant2Id === userId) {
+      conversation.participant2.followers.map(
+        (follower: { followerId: string }) => friends.push(follower.followerId)
+      );
+      conversation.participant2.followings.map(
+        (following: { followingId: string }) =>
+          friends.push(following.followingId)
+      );
+      conversation.participant2.blockedFriends.map(
+        (blocker: { friendBlockedId: string }) =>
+          blocked.push(blocker.friendBlockedId)
+      );
+    }
 
-  return {
-    ...conversation,
-    id: conversation.id,
-    participant1Id: conversation.participant1Id,
-    participant2Id: conversation.participant2Id,
-    participant1: transformUser(conversation.participant1),
-    participant2: transformUser(conversation.participant2),
-    createdAt: formatDate(conversation.createdAt),
-    updatedAt: formatDate(conversation.updatedAt),
-    friendStatus: friends.includes(participantId),
-    blockedStatus: blocked.includes(participantId),
-    directMessages: conversation.directMessages.map(transformDirectMessage),
-    unreadCount: unreadCountsResults[index]._count.id 
-  };
+    return {
+      ...conversation,
+      id: conversation.id,
+      participant1Id: conversation.participant1Id,
+      participant2Id: conversation.participant2Id,
+      participant1: transformUser(conversation.participant1),
+      participant2: transformUser(conversation.participant2),
+      createdAt: formatDate(conversation.createdAt),
+      updatedAt: formatDate(conversation.updatedAt),
+      friendStatus: friends.includes(participantId),
+      blockedStatus: blocked.includes(participantId),
+      directMessages: conversation.directMessages.map(transformDirectMessage),
+      unreadCount: unreadCountsResults[index]._count.id,
+    };
+  });
 
-});
-
-  return transaction
+  return transaction;
 }

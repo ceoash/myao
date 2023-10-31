@@ -1,6 +1,3 @@
-// import usePendingConversationModal from "@/hooks/usePendingConversationModal";
-// import getOffersByUserId from "@/actions/dashboard/getOffersByUserId";
-
 import getCurrentUser from "@/actions/getCurrentUser";
 import useOfferModal from "@/hooks/useOfferModal";
 import QuickConnect from "@/components/widgets/QuickConnect";

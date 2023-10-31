@@ -8,6 +8,7 @@ import { useSocketContext } from "@/context/SocketContext";
 import { BiFilterAlt } from "react-icons/bi";
 import { Listing } from "@prisma/client";
 import useOfferModal from "@/hooks/useOfferModal";
+import toast from "react-hot-toast";
 
 type CountState = {
   countSent: number;
@@ -112,6 +113,45 @@ const Offers = ({
     setIsLoading(false);
   }, [offers, isMounted]);
 
+  const orderOffers = async ({
+    status,
+    userId,
+    from,
+    to,
+    listingId,
+    buyerId,
+    sellerId,
+    userType,
+  }: {
+    status: string;
+    userId: string;
+    from: string;
+    to: string;
+    listingId: string;
+    buyerId: string;
+    sellerId: string;
+    userType: string;
+  }) => {
+    let params = new URLSearchParams();
+
+    if (status) params.append("status", status);
+    if (userId) params.append("userId", userId);
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    if (listingId) params.append("listingId", listingId);
+    if (buyerId) params.append("buyerId", buyerId);
+    if (sellerId) params.append("sellerId", sellerId);
+    if (userType) params.append("userType", userType);
+
+    const url = `/api/dashboard/filterListings?${params.toString()}`;
+
+    try {
+      const ordered = await axios.get(url);
+      console.log("ordered", ordered);
+    } catch (error) {
+      toast.error("Failed to order offers");
+    }
+  };
   const fetchListingsByCategory = async (
     category: string,
     userId: string,
@@ -300,7 +340,6 @@ const Offers = ({
     return () => {
       socket.off("new_listing");
       socket.off("updated_bid");
-      
     };
   }, [session?.user.id]);
 
@@ -322,6 +361,8 @@ const Offers = ({
               >
                 HAGGLING
               </div>
+              
+
               <div
                 className={`uppercase cursor-pointer font-bold items-start flex`}
                 onClick={() => {
@@ -381,6 +422,22 @@ const Offers = ({
                 >
                   Paid
                 </span>
+               {/*  <button
+                onClick={() =>
+                  orderOffers({
+                    status: "accepted",
+                    userId: session?.user.id,
+                    from: "",
+                    to: "",
+                    listingId: "",
+                    buyerId: "",
+                    sellerId: "",
+                    userType: "",
+                  })
+                }
+              >
+                Order
+              </button> */}
 
                 {/* {allRequests.length > 0 && (
                   <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
@@ -389,7 +446,7 @@ const Offers = ({
                 )} */}
               </div>
             </div>
-            <div className="">
+            <div className="hidden md:block">
               <button
                 id="dropdownDefaultButton"
                 className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-1 py-1`}
@@ -408,24 +465,24 @@ const Offers = ({
                     className="py-2 text-sm text-gray-700"
                     aria-labelledby="dropdownDefaultButton"
                   >
-                    <li onClick={() => handleCategoryChange("accepted")}>
+                    <li onClick={() => {}}>
                       <div className="block px-4 py-2 hover:bg-gray-50">
-                        Accepted
+                        Most Recent
                       </div>
                     </li>
-                    <li onClick={() => handleCategoryChange("completed")}>
+                    <li onClick={() => {}}>
                       <div className="block px-4 py-2 hover:bg-gray-50">
-                        Paid
+                        Oldest
                       </div>
                     </li>
-                    <li onClick={() => handleCategoryChange("rejected")}>
+                    <li onClick={() => {}}>
                       <div className="block px-4 py-2 hover:bg-gray-50">
-                        Rejected
+                        Higest Price
                       </div>
                     </li>
-                    <li onClick={() => handleCategoryChange("cancelled")}>
+                    <li onClick={() => {}}>
                       <div className="block px-4 py-2 hover:bg-gray-50">
-                        Cancelled
+                        Lowest Price
                       </div>
                     </li>
                   </ul>

@@ -233,10 +233,10 @@ const OfferModal = () => {
   };
 
   useEffect(() => {
-    if (step === STEPS.IMAGES) {
+    if (step === STEPS.IMAGES && userType === "buyer") {
       onNext();
     }
-    if (step === STEPS.ITEM) {
+    if (step === STEPS.ITEM && userType === "buyer") {
       onNext();
     }
   },[step])

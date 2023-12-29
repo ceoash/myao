@@ -11,20 +11,31 @@ export default async function handler(
   res: NextApiResponse<any | { error: string }>
 ) {
   if (req.method === "POST") {
-    const { listing, name, body, url, linkText, title, email, description } = req.body;
-    if(!body || !url || !title || !linkText || !name || !email) {
-        return res.status(400).json({ error: "Missing necessary parameters." });
-        }
+    const {
+      listing,
+      name,
+      body,
+      url,
+      linkText,
+      title,
+      email,
+      description,
+      image,
+    } = req.body;
+    if (!body || !url || !title || !linkText || !name || !email) {
+      return res.status(400).json({ error: "Missing necessary parameters." });
+    }
 
     const data: IEmailTemplate = {
       listing: listing || null,
       name: name as string,
-      body: body ,
-    description: description,
-      url: url ,
-      linkText: linkText ,
-      title: title ,
-    } ;
+      body: body,
+      image: image || null,
+      description: description,
+      url: url,
+      linkText: linkText,
+      title: title,
+    };
 
     try {
       await transporter.sendMail({

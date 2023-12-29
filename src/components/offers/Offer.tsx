@@ -4,7 +4,7 @@ import Image from "next/image";
 import axios from "axios";
 import StatusChecker from "@/utils/status";
 import { timeInterval } from "@/utils/formatTime";
-import { FaEye, FaPencilAlt, FaTimes, FaUser } from "react-icons/fa";
+import { FaEnvelope, FaEye, FaPencilAlt, FaTimes, FaUser } from "react-icons/fa";
 import { BiCalendar } from "react-icons/bi";
 import { ImPriceTag } from "react-icons/im";
 import { toast } from "react-hot-toast";
@@ -308,6 +308,7 @@ const Offer: React.FC<any> = ({
                       : buyer?.username}
                   </span>
                 </div>
+               
                 <div className="font-extrabold md:text-2xl text-right">
                   {bids && bids.length > 0 ? (
                     `£${Number(bids[0].price).toLocaleString()}`
@@ -397,7 +398,10 @@ const Offer: React.FC<any> = ({
                 <ImPriceTag />
                 <span>{type === "sellerOffer" ? "Sale" : "Buy"}</span>
               </div>
-
+              <div className="flex jus">
+                  <FaEnvelope className="mr-2" size={16}/>
+                  0
+                </div>
               <div className="ml-auto sm:ml-0 flex items-center gap-1.5 text-xs xl:text-sm">
                 <BiCalendar />
                 <span>{timeSinceCreated}</span>

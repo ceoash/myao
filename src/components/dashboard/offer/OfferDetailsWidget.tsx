@@ -257,7 +257,7 @@ const OfferDetailsWidget = ({
           </div>
         </Link>
 
-        <div className="w-full flex justify-center">
+        <div className="w-full flex justify-center mb-4 -mt-4 md:mt-0 md:mb-0">
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === session?.user.id && (
               <MdArrowCircleDown
@@ -458,7 +458,7 @@ const OfferDetailsWidget = ({
       </div>
 
       <div className="relative inline-block  w-full  rounded-lg mt-4 ">
-        <div className="w-full flex justify-center">
+        <div className="w-full flex justify-center ">
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === participant.id && (
               <MdArrowCircleUp
@@ -539,8 +539,8 @@ const OfferDetailsWidget = ({
 
       {events &&
         events.length > 0 &&
-        ((status === "rejected" && events[0].userId === session?.user?.id) ||
-          (events[0].event !== "completed" &&
+        (
+          (events[0].event !== "cancelled" && events[0].event !== "completed" &&
             events[0].event !== "accepted" && (
               <div
                 className={`border ${

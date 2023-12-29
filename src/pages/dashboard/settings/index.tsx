@@ -9,17 +9,16 @@ import { Meta } from "@/layouts/meta";
 import { Dash } from "@/templates/dash";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { FaCog, FaLock, FaUser } from "react-icons/fa";
+import { FaClock, FaCog, FaIdBadge, FaLock, FaUser } from "react-icons/fa";
 import useConfirmationModal from "@/hooks/useConfirmationModal";
+import Image from "next/image";
 
-const Settings = ({ user }: {
-  user: any
-}) => {
+const Settings = ({ user }: { user: any }) => {
   const [activeTab, setActiveTab] = useState("profile");
 
- const [currentUser, setCurrentUser] = useState<any>(null);
- const [password, setPassword] = useState("");
- const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
 
   useEffect(() => {
     setCurrentUser(user);
@@ -80,13 +79,12 @@ const Settings = ({ user }: {
             .then((response) => {
               signOut();
               toast.success("You have deleted your account");
-              console.log("respnse", response)
+              console.log("respnse", response);
             })
             .catch((error) => {
               toast.error("failed to delete your account");
-            console.log("error", error)
-            })
-            
+              console.log("error", error);
+            });
         }
       );
     } catch (error) {
@@ -120,7 +118,14 @@ const Settings = ({ user }: {
   };
 
   return (
-    <Dash meta={<Meta title="Settings" description="Manage and upate your profile and settings" />}>
+    <Dash
+      meta={
+        <Meta
+          title="Settings"
+          description="Manage and upate your profile and settings"
+        />
+      }
+    >
       <div className="container px-4 mx-auto">
         <div className="lg:flex flex-col lg:flex-wrap mt-10 gap-6 ">
           <h2 className="px-6">Settings</h2>
@@ -155,7 +160,46 @@ const Settings = ({ user }: {
               <FaCog />
               <span>Preferences</span>
             </div>
+            <div
+              className={`pr-3.5 mr-4 pl-1 cursor-pointer flex gap-2 items-center py-1.5 pb-3 ${
+                activeTab === "preferences" &&
+                "border-b-4 border-orange-default text-orange-default"
+              }`}
+              onClick={() => setActiveTab("verification")}
+            >
+              <FaIdBadge />
+              <span>Verification</span>
+            </div>
           </div>
+          <div>
+            <div>
+              {activeTab === "verification" && (
+                <>
+                <h3>Update KYC</h3>
+                  <p>
+                    Upload a proof of your identification to get full access to
+                    your MYAO account
+                  </p>
+                  <div className=" gap-4">
+                    <div className="flex gap-2 align-items-center">
+                      <FaClock /> Complete in less than <span className="text-orange-default">5 minutes</span> 
+                    </div>
+                    Simply upload the required documents based on your selection
+                    and that's all. Select ID Type
+                    <div>
+                      <Image
+                        alt="text"
+                        src={"/assets/kyc.jpeg"}
+                        width={60}
+                        height={60}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
           {activeTab === "profile" && (
             <div className="flex-1 p-6 rounded-lg mb-6 border-b ">
               <form action="">
@@ -660,64 +704,75 @@ const Settings = ({ user }: {
                 <div className="lg:col-span-9 pt-4">
                   <form action="">
                     <div className="   border-opacity-20">
-                    <div className="w-full  px-4 md:mb-8">
+                      <div className="w-full  px-4 md:mb-8">
                         <label htmlFor="" className="text-sm font-medium mb-4">
                           {" "}
                         </label>
                       </div>
-                   
-                      
+
                       <div className="w-full px-4 mt-2 ">
                         <div className="">
                           <div className="flex  items-center -mx-3">
                             <div className="w-full  px-3 mb-3 sm:mb-0 flex lg:block gap-8 justify-between items-center">
-                            <label className="relative inline-flex  items-center cursor-pointer">
-                              Offers </label>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" value="" className="sr-only peer" checked />
-                              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-orange-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-orange-400"></div>
-                              <span className="ml-3 text-sm font-medium text-gray-900">On</span>
-                            </label>
+                              <label className="relative inline-flex  items-center cursor-pointer">
+                                Offers{" "}
+                              </label>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  value=""
+                                  className="sr-only peer"
+                                  checked
+                                />
+                                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-orange-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-orange-400"></div>
+                                <span className="ml-3 text-sm font-medium text-gray-900">
+                                  On
+                                </span>
+                              </label>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
-                    
                   </form>
                 </div>
                 <div className="col-span-3 w-full px-4 mb-5 sm:mb-0">
-                 
                   <p className="text-sm mb-6 hidden lg:block">Messages</p>
                 </div>
                 <div className="col-span-9">
                   <form action="">
                     <div className=" pb-4 mb-4  border-opacity-20">
-                    <div className="w-full  px-4 mb-0">
+                      <div className="w-full  px-4 mb-0">
                         <label htmlFor="" className="text-sm font-medium mb-4">
                           {" "}
                         </label>
                       </div>
-                   
-                      
+
                       <div className="w-full px-4 mt-6 ">
                         <div className="">
                           <div className="flex  items-center -mx-3 ">
                             <div className="w-full  px-3  sm:mb-0 flex lg:block gap-8 justify-between items-center">
-                            <label className="relative inline-flex  items-center cursor-pointer">
-                              Messages </label>
-                            <label className="relative flex items-center cursor-pointer">
-                              <input type="checkbox" value="" className="sr-only peer" checked />
-                              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-orange-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-orange-400"></div>
-                              <span className="ml-3 text-sm font-medium text-gray-900">On</span>
-                            </label>
+                              <label className="relative inline-flex  items-center cursor-pointer">
+                                Messages{" "}
+                              </label>
+                              <label className="relative flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  value=""
+                                  className="sr-only peer"
+                                  checked
+                                />
+                                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-orange-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-orange-400"></div>
+                                <span className="ml-3 text-sm font-medium text-gray-900">
+                                  On
+                                </span>
+                              </label>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="mt-6 flex justify-end px-2">
                       <Button
                         onClick={handleSubmit(onPasswordSubmit)}
@@ -728,7 +783,6 @@ const Settings = ({ user }: {
                   </form>
                 </div>
               </div>
-  
             </div>
           )}
         </div>
@@ -739,10 +793,9 @@ const Settings = ({ user }: {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
-
     const session = await getSession(context);
 
-    if(!session) {
+    if (!session) {
       return {
         redirect: {
           destination: "/login",

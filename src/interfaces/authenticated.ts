@@ -251,6 +251,7 @@ export interface IEmailTemplate {
   title: string, 
   name: string, 
   url: string, 
+  image?: string,
   linkText: string, 
   listing?: { 
     id: string, 

@@ -1,14 +1,12 @@
 import { IEmailTemplate } from "@/interfaces/authenticated";
 import { AppConfig } from "@/utils/AppConfig";
 
-
-
 export const emailTemplate = (data: IEmailTemplate) => {
   const stringData = Object.entries(data).reduce(
     (str, [key, val]) => (str += `${[key]}: \n${val} \n \n`),
     ""
   );
-  const email =`
+  const email = `
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
@@ -128,7 +126,9 @@ export const emailTemplate = (data: IEmailTemplate) => {
 			padding-top: 25px;
 			color: #4A4A4A;
 			font-family: sans-serif;" class="header">
-			<a href="${AppConfig.siteUrl}" style="font-family: sans-serif; color: #eaeaea; text-decoration: none; font-weight: bold" class="header">
+			<a href="${
+        AppConfig.siteUrl
+      }" style="font-family: sans-serif; color: #eaeaea; text-decoration: none; font-weight: bold" class="header">
               <img border="0" vspace="0" hspace="0" src="https://myao.vercel.app/images/cat.png" width="40" height="30" alt="MYAO" style="" title="MYAO" />
 				<span style="font-size: 36px">MYAO</span>
             </a>
@@ -145,8 +145,15 @@ export const emailTemplate = (data: IEmailTemplate) => {
 			padding-top: 25px; 
 			color: #000000;
 			font-family: sans-serif;" class="paragraph">
-              Hi ${data.name}, ${data.body}
-              ${data.description ? `<br /> <span style="font-size: 12px;color: #999999;">${data.description }</span>` : ""}
+              Hi ${data.name},
+              <p style="font-size: 14px; font-weight: 400; line-height: 160%; margin: 0;">${
+                data.body
+              }</p>
+              ${
+                data.description
+                  ? `<br /> <span style="font-size: 12px;color: #999999;">${data.description}</span>`
+                  : ""
+              }
             </td>
           </tr>
 					<tr>
@@ -158,16 +165,19 @@ export const emailTemplate = (data: IEmailTemplate) => {
 								<table style="font-family: sans-serif;">
 									<tr style="padding: 4px">
 										<td style="; padding: 6px 6px;">
-											<img src="${data.
-                        listing?.image ||
-                        "https://www.pulsecarshalton.co.uk/wp-content/uploads/2016/08/jk-placeholder-image.jpg"
+											<img src="${
+                        data?.image || "https://myao.vercel.app/images/cat.png"
                       }" height="40px" width="60px" style="border: 1px solid #F0F0F0; border-radius: 6px" />
 											
 										</td>
 										
 										<td style="width: 100%; padding: 0 6px">
-											<p style="margin: 0; margin-bottom: 2px; padding: 0; font-family: sans-serif; " class="paragraph">${data.listing?.title}</p>
-											<p style="margin: 0; padding: 0; font-family: sans-serif; font-size: 13px; color: gray;">${data.listing?.category}</p>
+											<p style="margin: 0; margin-bottom: 2px; padding: 0; font-family: sans-serif; " class="paragraph">${
+                        data.listing?.title
+                      }</p>
+											<p style="margin: 0; padding: 0; font-family: sans-serif; font-size: 13px; color: gray;">${
+                        data.listing?.category
+                      }</p>
 											
 										</td>
 										<td syle="padding: 6px"><p style="margin: 0; padding: 2px 6px 0; font-size: 11px; color: gray; text-align: right; margin-bottom: 2px;">
@@ -175,7 +185,11 @@ export const emailTemplate = (data: IEmailTemplate) => {
 											Price
 											</p>
 											<p style="margin: 0; padding: 0 6px;">
-												${data.listing?.price && data.listing?.price !== "0" ? `£${data.listing?.price}` : "Open offer"}
+												${
+                          data.listing?.price && data.listing?.price !== "0"
+                            ? `£${data.listing?.price}`
+                            : "Open offer"
+                        }
 											</p>
 										</td>
 										<tr>
@@ -234,9 +248,9 @@ export const emailTemplate = (data: IEmailTemplate) => {
 </body>
 </html>`;
 
-return {
-  html: email,
-  text: stringData,
-  subject: data.title || "MYAO Notification",
-}
-}
+  return {
+    html: email,
+    text: stringData,
+    subject: data.title || "MYAO Notification",
+  };
+};

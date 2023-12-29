@@ -154,7 +154,7 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
             currentBid.currentPrice && 
             currentBid.currentPrice !== "0" && 
             currentBid.currentPrice !== "" && 
-            currentBid.byUserId === session?.user.id ? "UPDATE OFFER" : "MAKE OFFER" 
+            currentBid.byUserId === session?.user.id ? "UPDATE OFFER" : currentBid && currentBid.byUserId !== session?.user.id ? "COUNTER OFFER" : "PLACE BID"
           } 
           onClick={handleSubmit(onSubmit)} 
           disabled={isSubmitting}   />

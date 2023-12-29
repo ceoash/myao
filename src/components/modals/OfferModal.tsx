@@ -59,8 +59,8 @@ const OfferModal = () => {
   // console.log("session", session);
 
   useEffect(() => {
-    if(foundUser === null && offerModal?.participant) {
-    setFoundUser(offerModal?.participant || null);
+    if (foundUser === null && offerModal?.participant) {
+      setFoundUser(offerModal?.participant || null);
     }
   }, [offerModal?.participant]);
 
@@ -312,6 +312,8 @@ const OfferModal = () => {
       return;
     }
 
+    //console.log("data", data);
+
     setIsLoading(true);
     data.category = selectedCategory;
     data.participantId = foundUser?.id;
@@ -334,12 +336,40 @@ const OfferModal = () => {
         toast.success("Offer created successfully!");
         reset();
         setStep(STEPS.TYPE);
+        reset({
+          title: "",
+          description: "",
+          price: "0",
+          category: "",
+          image: "",
+          buyerId: "",
+          sellerId: "",
+          public: false,
+          userType: "",
+          location: {
+            region: "",
+            city: "",
+          },
+          condition: "",
+        });
         offerModal.onClose();
-        const email = axios.post("/api/email/emailNotification", {
+        setSelectedCity({ city: "", region: "" });
+        setFoundUser(null);
+        setSearch("");
+        setSelectedCategory("");
+        setUserType("");
+        setPrice("0");
+        setStep(STEPS.TYPE);
+
+        let urlArray = JSON.parse(data.image || "[]");
+        let firstImageUrl = urlArray[0];
+        console.log("firstImageUrl", firstImageUrl);
+        axios.post("/api/email/emailNotification", {
           listing: { ...response.data.listing },
           name: foundUser?.name,
           email: foundUser?.email,
           title: "New Offer",
+          image: firstImageUrl || "/images/cat.png",
           body: `You have a new offer from ${session?.user?.username}`,
           linkText: "View Offer",
           url: `/dashboard/offers/${response.data.listing.id}`,
@@ -664,32 +694,28 @@ const OfferModal = () => {
                     {title}
                   </div>
                   <div className="flex items-center gap-2 text-[16px] text-[#979797]">
-              
                     {category}
                   </div>
                 </div>
               </div>
               <div className="md:flex justify-between border-t pt-2 mt-3">
                 <div className="flex  gap-3">
-                  
                   <div className="flex items-center gap-2">
-                    <span className="font-bold">Price: {" "}</span>
-              
+                    <span className="font-bold">Price: </span>
+
                     {!price || price === "0" ? "Open Offer" : `£ ${price}`}
                   </div>
                   <span className="border-l"></span>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold">Sent to: {" "}</span>
-                    
+                    <span className="font-bold">Sent to: </span>
                     {foundUser?.username} - ({userType})
                   </div>
                   <span className="border-l"></span>
                   <div className="flex items-center gap-2 capitalize">
-                    <span className="font-bold">Type: {" "}</span>
-                    
-                    {userType}
-                    </div>
+                    <span className="font-bold">Type: </span>
 
+                    {userType}
+                  </div>
                 </div>
               </div>
               <hr className="mt-2 mb-2" />

@@ -237,12 +237,14 @@ const Offers = ({
           return [listing, ...prevListings];
         });
 
-        setCategorisedOffers((prevListings: any) => {
+        console.log("listing", listing);
+
+        /* setCategorisedOffers((prevListings: any) => {
           return {
             ...prevListings,
-            [listing.status]: [listing, ...prevListings[listing.status]],
+            [listing.status]: [listing, ...prevListings[listing?.status]],
           };
-        });
+        }); */
 
         if (setCount)
           setCount((prevCount: any) => {

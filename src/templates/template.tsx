@@ -6,8 +6,7 @@ export const emailTemplate = (data: IEmailTemplate) => {
     (str, [key, val]) => (str += `${[key]}: \n${val} \n \n`),
     ""
   );
-  const email = `
-<html xmlns="http://www.w3.org/1999/xhtml">
+  const email = `<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -157,10 +156,7 @@ export const emailTemplate = (data: IEmailTemplate) => {
             </td>
           </tr>
 					<tr>
-            <td align="left" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%;
-			padding-top: 25px;
-			padding-bottom: 5px;" class="button">
-							
+            <td align="left" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 25px; padding-bottom: 5px;" class="button">
 							<div style="border: 1px solid #F0F0F0; background: #F6F6F6; border-radius: 6px;">
 								<table style="font-family: sans-serif;">
 									<tr style="padding: 4px">
@@ -168,29 +164,22 @@ export const emailTemplate = (data: IEmailTemplate) => {
 											<img src="${
                         data?.image || "https://myao.vercel.app/images/cat.png"
                       }" height="40px" width="60px" style="border: 1px solid #F0F0F0; border-radius: 6px" />
-											
 										</td>
-										
 										<td style="width: 100%; padding: 0 6px">
-											<p style="margin: 0; margin-bottom: 2px; padding: 0; font-family: sans-serif; " class="paragraph">${
+											<p style="margin: 0; margin-bottom: 2px; padding: 0; font-family: sans-serif;" class="paragraph">${
                         data.listing?.title
                       }</p>
 											<p style="margin: 0; padding: 0; font-family: sans-serif; font-size: 13px; color: gray;">${
                         data.listing?.category
                       }</p>
-											
 										</td>
-										<td syle="padding: 6px"><p style="margin: 0; padding: 2px 6px 0; font-size: 11px; color: gray; text-align: right; margin-bottom: 2px;">
-											
-											Price
-											</p>
-											<p style="margin: 0; padding: 0 6px;">
-												${
-                          data.listing?.price && data.listing?.price !== "0"
-                            ? `£${data.listing?.price}`
-                            : "Open offer"
-                        }
-											</p>
+										<td syle="padding: 6px">
+                      <p style="margin: 0; padding: 2px 6px 0; font-size: 11px; color: gray; text-align: right; margin-bottom: 2px;">Price</p>
+											<p style="margin: 0; padding: 0 6px;">${
+                        data.listing?.price && data.listing?.price !== "0"
+                          ? `£${data.listing?.price}`
+                          : "Open offer"
+                      }</p>
 										</td>
 										<tr>
 									
@@ -199,9 +188,7 @@ export const emailTemplate = (data: IEmailTemplate) => {
 						</td>
 					</tr>
           <tr>
-            <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%;
-			padding-top: 25px;
-			padding-bottom: 5px;" class="button">
+            <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 25px; padding-bottom: 5px;" class="button">
               <a href="/" style="text-decoration: none;" target="_blank" >
                 <table border="0" cellpadding="0" cellspacing="0" align="center" style="max-width: 240px; min-width: 120px; border-collapse: collapse; border-spacing: 0; padding: 0;">
                   <tr>

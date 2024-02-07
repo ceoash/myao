@@ -1,8 +1,5 @@
 import prisma from "@/libs/prismadb";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { Social } from "@prisma/client";
 import { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
 
 export default async function getCurrentUser(session: Session) {
   if (!session?.user?.email) {

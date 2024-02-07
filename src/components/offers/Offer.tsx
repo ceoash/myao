@@ -463,10 +463,10 @@ const Offer: React.FC<any> = ({
                 <ImPriceTag />
                 <span>{type === "sellerOffer" ? "Sale" : "Buy"}</span>
               </div>
-              <div className="flex jus">
+              {/* <div className="flex jus">
                   <FaEnvelope className="mr-2" size={16}/>
                   {0}
-                </div>
+                </div> */}
               <div className="ml-auto sm:ml-0 flex items-center gap-1.5 text-xs xl:text-sm">
                 <BiCalendar />
                 <span>{timeSinceCreated}</span>
@@ -500,7 +500,7 @@ const Offer: React.FC<any> = ({
                 statusState !== "accepted" &&
                 statusState !== "cancelled" && (
                   <>
-                    <button
+                    {/* <button
                       onClick={() =>
                         edit.onOpen(session?.user?.id, 
                           {
@@ -581,7 +581,7 @@ const Offer: React.FC<any> = ({
                         <FaPencilAlt />
                       </span>
                       <span className="hidden 2xl:block">Edit</span>
-                    </button>
+                    </button> */}
 
                     <button
                       onClick={() =>

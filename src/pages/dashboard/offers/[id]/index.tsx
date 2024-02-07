@@ -1,3 +1,4 @@
+import prisma from "@/libs/prismadb";
 import axios from "axios";
 import getListingById from "@/actions/getListingById";
 import ListingChat from "@/components/chat/ListingChat";
@@ -28,6 +29,7 @@ import { getSession } from "next-auth/react";
 import { Dash } from "@/templates/dash";
 import { Meta } from "@/layouts/meta";
 import { timeInterval, timeSince } from "@/utils/formatTime";
+
 import {
   ExtendedActivity,
   EventsProps,
@@ -122,6 +124,7 @@ interface Listing {
 interface PageProps {
   listing: Listing;
   session: Session;
+  messagesCount: number;
 }
 
 const generateStats = (stats: {
@@ -142,7 +145,7 @@ const generateStats = (stats: {
   );
 };
 
-const Index = ({ listing, session }: PageProps) => {
+const Index = ({ listing, session, messagesCount }: PageProps) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("description");
   const [activities, setActivities] = useState<ExtendedActivity[]>([]);
@@ -710,6 +713,7 @@ const Index = ({ listing, session }: PageProps) => {
           tabs={secondaryTabs}
           setTab={setActiveSubTab}
           tab={activeSubTab}
+          
         />
 
         {activeSubTab === "description" && (
@@ -873,6 +877,12 @@ const Index = ({ listing, session }: PageProps) => {
               isListing
               main
               additionalData={<span className="hidden md:block">{StatusChecker(status)}</span>}
+              count={{
+                messages: {
+                  total: 0,
+                  unread: messagesCount || 0,
+                }}
+              }
 
             />
             {tab === "chat" && (
@@ -1028,6 +1038,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const listing = await getListingById({ offerId });
 
+    const countUnreadMessages = await prisma.message.count({
+      where: {
+        listingId: offerId,
+        read: false,
+      },
+    });
+
     if (!listing) {
       return {
         notFound: true,
@@ -1047,6 +1064,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         listing,
         session,
+        messagesCount: countUnreadMessages,
       },
     };
   } catch (error) {

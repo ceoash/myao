@@ -19,6 +19,12 @@ interface TabsProps {
   main?: boolean;
   additionalData?: any;
   mobileLinks?: any;
+  count?: {
+    messages?: {
+      total: number;
+      unread: number;
+    };
+  };
 }
 
 const Tabs = ({
@@ -30,6 +36,7 @@ const Tabs = ({
   main,
   additionalData,
   mobileLinks,
+  count,
 }: TabsProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -54,7 +61,10 @@ const Tabs = ({
   }, [isOpen]);
 
   return (
-    <ul key={tabs[0].label + tabs[tabs.length - 1].id} className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative">
+    <ul
+      key={tabs[0].label + tabs[tabs.length - 1].id}
+      className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative"
+    >
       {main && (
         <li
           key={"trade"}
@@ -75,9 +85,7 @@ const Tabs = ({
             font-medium
             md:font-bold
             ${
-              activeTab === "details"
-                ? " bg-orange-400 text-white"
-                : "bg-white"
+              activeTab === "details" ? " bg-orange-400 text-white" : "bg-white"
             }
           }`}
         >
@@ -95,43 +103,47 @@ const Tabs = ({
           <div key={i} className="relative ">
             {tab.notificationsCount && tab.notificationsCount > 0 ? (
               <div className="absolute -top-1 -right-1 bg-orange-default text-white px-1.5 text-xs font-bold rounded-full z-20">
-              {tab.notificationsCount}
-            </div>
-            ) : ""}
+                {tab.notificationsCount}
+              </div>
+            ) : (
+              ""
+            )}
 
             <div
-              
               onClick={() => setTab(tab.id)}
               className={`
-            cursor-pointer 
-            border-r
-            border-t
-            first:border-l rounded-tl-lg
-            last:border-l rounded-tr-lg
-            md:px-4 py-2
-            px-2.5
-            sm:px-3
-            flex
-            flex-nowrap 
-            whitespace-nowrap
-            rounded-t-lg
-            text-sm
-            md:text-md
-            font-medium
-            md:font-bold
-          border-gray-200
-          
-        ${
-          tab.label === "Bid History"
-            ? "hidden md:inline-block"
-            : "inline-block"
-        }
-
-        
+                cursor-pointer 
+                border-r
+                border-t
+                first:border-l rounded-tl-lg
+                last:border-l rounded-tr-lg
+                md:px-4 py-2
+                px-2.5
+                sm:px-3
+                flex
+                flex-nowrap 
+                whitespace-nowrap
+                rounded-t-lg
+                text-sm
+                md:text-md
+                font-medium
+                md:font-bold
+              border-gray-200
+              relative
+              ${
+                tab.label === "Bid History"
+                  ? "hidden md:inline-block"
+                  : "inline-block"
+              }
         ${activeTab === tab.id ? " bg-orange-400 text-white" : "bg-white"}
         }`}
             >
               {tab.label}
+              {tab.id === "chat" &&
+                count?.messages &&
+                count?.messages?.unread > 0 && (
+                  <div className="rounded-full border bg-orange-400 w-3 h-3 right-0  -mt-0.5 mr-0.5 absolute"></div>
+                )}
             </div>
           </div>
         );

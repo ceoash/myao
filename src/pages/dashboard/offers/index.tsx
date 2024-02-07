@@ -40,7 +40,7 @@ const Index = ({
           <div className="pt-6">
             <div className="flex justify-between items-center mb-8">
               <h3>
-                Your Offers {}
+                Your Trades {}
               </h3>
             </div>
             <Offers

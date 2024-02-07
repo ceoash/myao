@@ -211,6 +211,7 @@ const OfferEditModal = () => {
           response.data.listing.sellerId,
           response.data.listing.buyerId
         );
+        
       })
       .catch((err) => {
         console.log(err);

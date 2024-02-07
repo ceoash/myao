@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
@@ -38,10 +38,12 @@ const Offer: React.FC<any> = ({
   options,
   updatedAt,
   user,
+  _count
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isOffer, setIsOffer] = useState(false);
   const { data: session } = useSession();
+
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
   let img = [];
   if (image) {
@@ -61,6 +63,64 @@ const Offer: React.FC<any> = ({
   useEffect(() => {
     setStatusState(status || "");
   }, [status]);
+
+ 
+
+  useEffect(() => {
+    setCustom({
+      bids: bids,
+    buyer: {
+      id: buyerId,
+      username: buyer.username,
+      profile:
+        {
+          image: buyer?.profile?.image || "",
+        } || null,
+    },
+    buyerId: buyerId,
+    category: category,
+    completedById: completedById,
+    createdAt: createdAt,
+    description: description,
+    expireAt: expireAt,
+    id: id,
+    image: image,
+    messages: [],
+    options: {
+      location: {
+        city: options?.locoation?.city || "",
+        region: options?.locoation?.city || "" ,
+      },
+      condition: options?.condition || "",
+      pickup: options?.pickup,
+      public: false,
+    },
+    price: price,
+    reviews: [],
+    seller: {
+      id: sellerId,
+      username: seller.usernamw,
+      profile:
+        {
+          image: seller?.profile?.image || "",
+        } || null,
+    },
+    sellerId: sellerId,
+    status: status,
+    title: title,
+    type: type,
+    updatedAt: updatedAt,
+    user: {
+      id: userId,
+      username: user?.username,
+    },
+    userId: userId,
+    _count: {
+      messages: _count?.messages,
+    }
+    
+    });
+  }, [id, title, price, category, image, seller, sellerId, bids, buyer, buyerId, type, createdAt, status, userId, activity, completedById, description, expireAt, options, updatedAt, user, _count]);
 
   const edit = useOfferEditModal();
 
@@ -173,55 +233,60 @@ const Offer: React.FC<any> = ({
     };
   }, [isOffer]);
 
-  const custom = {
-    bids: bids,
+
+  const [custom, setCustom] = useState({
+    bids: [],
     buyer: {
-      id: buyerId,
-      username: buyer.username,
-      profile:
-        {
-          image: buyer?.profile?.image || "",
-        } || null,
+      id: "",
+      username: "",
+      profile: {
+        image: "",
+      },
     },
-    buyerId: buyerId,
-    category: category,
-    completedById: completedById,
-    createdAt: createdAt,
-    description: description,
-    expireAt: expireAt,
-    id: id,
-    image: image,
+    buyerId: "",
+    category: "",
+    completedById: "",
+    createdAt: new Date(),
+    description: "",
+    expireAt: new Date(),
+    id: "",
+    image: "",
     messages: [],
     options: {
       location: {
-        city: options?.locoation?.city || "",
-        region: options?.locoation?.city || "" || null,
+        city:  "",
+        region:  "",
       },
-      condition: options?.condition || "",
-      pickup: options?.pickup,
+      condition:  "",
+      pickup: "",
       public: false,
     },
-    price: price,
+    price: "",
     reviews: [],
     seller: {
-      id: sellerId,
-      username: seller.usernamw,
-      profile:
-        {
-          image: seller?.profile?.image || "",
-        } || null,
+      id: "",
+      username: "",
+      profile: {
+        image: "",
+      },
+    
     },
-    sellerId: sellerId,
-    status: status,
-    title: title,
-    type: type,
-    updatedAt: updatedAt,
+    sellerId: "",
+    status: "",
+    title: "",
+    type: "",
+    updatedAt: new Date(),
     user: {
-      id: userId,
-      username: user?.username,
+      id: "",
+      username: "",
     },
-    userId: userId,
-  };
+    userId: "",
+    _count: {
+      messages: 0,
+    }
+  });
+
+  
 
   return (
     <div className="w-full border bg-white  border-gray-200 rounded-lg  mb-6  hover:bg-gray-50 transition-all ease-in-out">
@@ -368,7 +433,7 @@ const Offer: React.FC<any> = ({
                   </Link>
                   <CgArrowRight />
                   <Link href={`/dashboard/profile/${userId} `}>
-                    <div className=" gap-1.5 items-center text-xs xl:text-sm flex">
+                    <div className=" gap-1.5 items-center text-[18px] xl:text-sm flex">
                       <div className="relative rounded-full border border-gray-200 h-4 w-4">
                         <Image
                           src={
@@ -400,7 +465,7 @@ const Offer: React.FC<any> = ({
               </div>
               <div className="flex jus">
                   <FaEnvelope className="mr-2" size={16}/>
-                  0
+                  {0}
                 </div>
               <div className="ml-auto sm:ml-0 flex items-center gap-1.5 text-xs xl:text-sm">
                 <BiCalendar />
@@ -437,7 +502,59 @@ const Offer: React.FC<any> = ({
                   <>
                     <button
                       onClick={() =>
-                        edit.onOpen(session?.user?.id, custom, "default", {})
+                        edit.onOpen(session?.user?.id, 
+                          {
+                            bids: bids,
+                          buyer: {
+                            id: buyerId,
+                            username: buyer.username,
+                            profile:
+                              {
+                                image: buyer?.profile?.image || "",
+                              } || null,
+                          },
+                          buyerId: buyerId,
+                          category: category,
+                          completedById: completedById,
+                          createdAt: createdAt,
+                          description: description,
+                          expireAt: expireAt,
+                          id: id,
+                          image: image,
+                          messages: [],
+                          options: {
+                            location: {
+                              city: options?.locoation?.city || "",
+                              region: options?.locoation?.city || "" ,
+                            },
+                            condition: options?.condition || "",
+                            pickup: options?.pickup,
+                            public: false,
+                          },
+                          price: price,
+                          reviews: [],
+                          seller: {
+                            id: sellerId,
+                            username: seller.usernamw,
+                            profile:
+                              {
+                                image: seller?.profile?.image || "",
+                              } || null,
+                          },
+                          sellerId: sellerId,
+                          status: status,
+                          title: title,
+                          type: type,
+                          updatedAt: updatedAt,
+                          user: {
+                            id: userId,
+                            username: user?.username,
+                          },
+                          userId: userId,
+                          
+                          
+                          
+                        }, "default", {})
                       }
                       className={`
                         w-full

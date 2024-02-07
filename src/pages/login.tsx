@@ -10,6 +10,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getProviders, getSession, signIn } from "next-auth/react";
 import { FaGoogle } from "react-icons/fa";
+import getCurrentUser from "@/actions/getCurrentUser";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +32,6 @@ const Login = () => {
   });
 
   console.log("errs", errors);
-
 
   const validateForm = (data: any) => {
     const validation = {
@@ -67,51 +67,29 @@ const Login = () => {
 
     data.email = data.email.toLowerCase();
 
+
     const login = signIn("credentials", {
       ...data,
       redirect: false,
       callbackUrl: "/dashboard",
-    }).then((res) => {
-      if (res?.error) {
-        throw new Error(res.error);
-      } else {
-      }
-      setIsLoading(false);
-      setDisabled(false);
-      router.push("/dashboard");
-    }).catch((err) => {
-      setDisabled(false);
-      setIsLoading(false);
-      throw err;
-    });
-    
-    toast.promise(
-      login,
-      {
-        loading: 'Signing in...',
-        success: () => {
-          return 'Logging in';
-        },
-        error: (err) => {
-          return `email or password is incorrect`;
-        },
-      },
-      {
-        style: {
-          minWidth: '250px',
-        },
-        success: {
-          duration: 6000,
-          icon: <Spinner noMargin />,
-          
-        },
-        error: {
-          duration: 5000,
-          icon: '🚫',
-        },
-      }
-    );
-
+    })
+      .then((res) => {
+        if (res?.error) {
+          toast.error(res.error);
+          setIsLoading(false);
+          setDisabled(false);
+          return;
+        }
+        toast.success("Logged in successfully");
+        router.refresh();
+        setIsLoading(false);
+        setDisabled(false);
+      })
+      .catch((err) => {
+        setDisabled(false);
+        setIsLoading(false);
+        toast.error(err.message);
+      });
   };
 
   return (
@@ -125,7 +103,7 @@ const Login = () => {
           >
             <img src="/images/cat.png" className="h-[40px] mr-2" />{" "}
             <span className="self-center text-xl font-semibold whitespace-nowrap">
-              MYAO 
+              MYAO
             </span>
           </Link>
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
@@ -133,9 +111,10 @@ const Login = () => {
               <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center">
                 Sign in to your account
               </h2>
-              <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                
-
+              <form
+                className="space-y-4 md:space-y-6"
+                onSubmit={handleSubmit(onSubmit)}
+              >
                 <div className="-mb-4">
                   <Input
                     id="email"
@@ -173,15 +152,12 @@ const Login = () => {
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label
-                        htmlFor="remember"
-                        className="text-gray-500 "
-                      >
+                      <label htmlFor="remember" className="text-gray-500 ">
                         Remember me
                       </label>
                     </div>
                   </div>
-                  <Link 
+                  <Link
                     href="#"
                     className="text-sm font-medium text-orange-600 hover:underline"
                   >
@@ -190,8 +166,8 @@ const Login = () => {
                 </div>
                 <button className="flex border bg-orange-400 text-white border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center hover:opacity-90">
                   <div className="mx-auto flex gap-2 items-center">
-                  <span>Login</span></div>
-                  
+                    <span>Login</span>
+                  </div>
                 </button>
 
                 <p className="text-sm font-light text-gray-500">
@@ -206,14 +182,20 @@ const Login = () => {
               </form>
               <div className="flex items-center">
                 <div className="border-b border flex-grow w-full"></div>
-                <div className="text-gray-500 text-sm mx-4 font-bold text-center">OR</div>
+                <div className="text-gray-500 text-sm mx-4 font-bold text-center">
+                  OR
+                </div>
                 <div className="border-b border flex-grow w-full"></div>
               </div>
               <div>
-                <button onClick={() => signIn("google")} className="flex border border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center">
-                  <div className="mx-auto flex gap-2 items-center"><FaGoogle className="w-3 h-3" />
-                  <span>Continue with Google</span></div>
-                  
+                <button
+                  onClick={() => signIn("google")}
+                  className="flex border border-gray-200 rounded-lg p-3 px-3 items-center w-full justify-center"
+                >
+                  <div className="mx-auto flex gap-2 items-center">
+                    <FaGoogle className="w-3 h-3" />
+                    <span>Continue with Google</span>
+                  </div>
                 </button>
               </div>
             </div>
@@ -229,8 +211,18 @@ export default Login;
 export async function getServerSideProps(context: any) {
   const { req } = context;
   const session = await getSession({ req });
+
+  const currentUser = session ? await getCurrentUser(session) : null;
+
   const providers = await getProviders();
-  if (session) {
+
+  if (currentUser && currentUser?.role === "admin") {
+    return { 
+      redirect: { destination: "/admin" },
+    };
+  }
+
+  if (currentUser && currentUser?.role !== "admin") {
     return {
       redirect: { destination: "/dashboard" },
     };

@@ -21,6 +21,9 @@ import { usePathname } from "next/navigation";
 import { Router } from "next/router";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import AdminSidebar from "@/components/dashboard/AdminSidebar";
+import Modal from "@/components/modals/Modal";
+import DefaultModal from "@/components/modals/DefaultModal";
 
 type IDashProps = {
   meta: ReactNode;
@@ -30,6 +33,7 @@ type IDashProps = {
   dashboard?: boolean;
   optionalData?: any;
   noBreadcrumbs?: boolean;
+  admin?: boolean;
 };
 
 export interface ErrorResponse {
@@ -197,6 +201,8 @@ const Dash = (props: IDashProps) => {
       <OfferEditModal />
       <QRModal />
       <SearchComponentModal />
+      <DefaultModal />
+      
       <UserMenu
         session={session}
         blockedUsers={alerts.alerts?.blockedUsers}
@@ -208,7 +214,7 @@ const Dash = (props: IDashProps) => {
       <SkeletonTheme highlightColor="#edf2f7">
         <main className="content flex flex-col flex-grow overflow-y-auto">
           <div className="relative bg-gray-50 overflow-hidden flex-grow pt-16">
-            {!props.full && <Sidebar />}
+            {!props.full && props.admin ? <AdminSidebar /> : !props.full && <Sidebar />}
             <div
               id="main"
               className={`

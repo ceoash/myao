@@ -57,8 +57,8 @@ const Tabs = ({
     <ul key={tabs[0].label + tabs[tabs.length - 1].id} className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative">
       {main && (
         <li
-          key={"overview"}
-          onClick={() => setTab("overview")}
+          key={"trade"}
+          onClick={() => setTab("trade")}
           className={`
             cursor-pointer 
             border-r
@@ -75,13 +75,13 @@ const Tabs = ({
             font-medium
             md:font-bold
             ${
-              activeTab === "overview"
+              activeTab === "details"
                 ? " bg-orange-400 text-white"
                 : "bg-white"
             }
           }`}
         >
-          <span>Overview</span>
+          <span>Trade</span>
         </li>
       )}
       {tabs.map((tab, i) => {

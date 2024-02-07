@@ -97,7 +97,7 @@ const Input: React.FC<InputProps> = ({
             onChange={onChange}
           />
           {errors && errors[id] && (
-            <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500 ">
+            <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">
               {String(errors[id]?.message)}
             </div>
           )}

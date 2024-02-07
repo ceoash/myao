@@ -69,9 +69,6 @@ const Offers = ({
   const [selectedCategory, setSelectedCategory] = useState("negotiating");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  console.log("offers", offers);
-  console.log("allOffers", allOffers);
-  console.log("categorisedOffers", categorisedOffers);
 
   const [skip, setSkip] = useState(5);
   const [isMounted, setIsMounted] = useState(false);
@@ -378,7 +375,7 @@ const Offers = ({
                     "border !bg-orange-default border-orange-200 text-white"
                   }`}
                 >
-                  AWAITING
+                  WAITING
                 </span>
 
                 {/* {allRequests.length > 0 && (

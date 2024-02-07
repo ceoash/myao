@@ -80,7 +80,7 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
       const transactions : any | ErrorResponse = response.data.transactionResult;
 
       if ('error' in updatedListing) {
-        console.log("Bid not updated:", updatedListing.error);
+        console.log("Offer not updated:", updatedListing.error);
       } else {
 
         const myLastBid = updatedListing.bids.find((bid: any) => bid.userId === session?.user.id);
@@ -154,7 +154,7 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
             currentBid.currentPrice && 
             currentBid.currentPrice !== "0" && 
             currentBid.currentPrice !== "" && 
-            currentBid.byUserId === session?.user.id ? "UPDATE OFFER" : currentBid && currentBid.byUserId !== session?.user.id ? "COUNTER OFFER" : "PLACE BID"
+            currentBid.byUserId === session?.user.id ? "UPDATE OFFER" : currentBid && currentBid.byUserId !== session?.user.id ? "COUNTER OFFER" : "PLACE OFFER"
           } 
           onClick={handleSubmit(onSubmit)} 
           disabled={isSubmitting}   />

@@ -44,12 +44,12 @@ const Sidebar = () => {
               <li className={
                       router.pathname === "/offers" ? "text-orange-default" : ""
                     }>
-                <Link href="/dashboard/offers">
+                <Link href="/dashboard/negotiations">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0`}
                   >
                     <MdLocalOffer className={`text-xl lg:mr-4`} />
-                    <span className="hidden lg:block">Offers</span>
+                    <span className="hidden lg:block">My Trades</span>
                   </span>
                 </Link>
               </li>

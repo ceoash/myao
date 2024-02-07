@@ -212,7 +212,7 @@ const Index = ({
         <div className="w-full h-full mx-auto lg:px-0 col-span-2 flex flex-col">
           <div className=" pt-2 ">
             <div className="pb-4">
-              <span className="title">Recent Offers</span>
+              <span className="title">Recent Trades</span>
             </div>
 
             <Offers

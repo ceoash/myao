@@ -121,7 +121,6 @@ const OfferDetailsWidget = ({
       : listing.seller || listing.sellerId === listing.userId
       ? listing.buyer
       : listing.seller;
-  console.log("listing", listing);
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -243,7 +242,7 @@ const OfferDetailsWidget = ({
                 <span className="text-sm">
                   {meLastBid?.price ? (
                     <div className="text-right">
-                      <p className="text-xs text-gray-800">Latest Bid</p>{" "}
+                      <p className="text-xs text-gray-800">Latest Offer</p>{" "}
                       <span className="text-sm uppercase">{`£${Number(
                         meLastBid?.price
                       ).toLocaleString()}`}</span>
@@ -261,7 +260,7 @@ const OfferDetailsWidget = ({
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === session?.user.id && (
               <MdArrowCircleDown
-                className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full ${
+                className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 -mt-12  z-10 rounded-full ${
                   status === "rejected" || status === "cancelled"
                     ? "bg-red-50 text-red-400 border-red-100"
                     : status === "accepted" || status === "completed"
@@ -281,7 +280,7 @@ const OfferDetailsWidget = ({
               : "bg-white border-gray-200"
           } border  shadow`}
         >
-          <div className="p-4 flex md:hidden gap-4 ">
+          <div className="p-4 flex border-b gap-4 ">
             <div className=" relative rounded-lg overflow-hidden w-20  h-14">
               <div className="transition-transform duration-500 transform ease-in-out hover:scale-110 ">
                 <div className="absolute inset-0 bg-black opacity-10"></div>
@@ -304,19 +303,19 @@ const OfferDetailsWidget = ({
                 {listing.title}
               </h2>
 
-              <div className="-mt-4 flex items-start justify-between flex-1">
+              <div className="-mt-5 flex items-start justify-between flex-1">
                 <p className=" text-sm  line-clamp-1">{listing.category}</p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-200 h-1 shadow-2xl mb-4 lg:mt-4 lg:border-0" />
+          <div className="border-t border-gray-200 h-1 shadow-2xl mb-4 lg:mt-4 lg:border-0 md:hidden" />
 
-          <div className="md:hidden w-full flex justify-center mb-4">
+          <div className="md:hidden w-full flex justify-center mb-4 md:mt-4">
             {StatusChecker(status)}
           </div>
           <div className="px-6">
-            <div className="text-lg -mb-3 font-bold text-center flex flex-col items-center ">
+            <div className="text-lg -mb-3 font-bold text-center flex flex-col items-center md:mt-4 ">
               {status === "rejected" ||
               status === "cancelled" ||
               status === "expired"
@@ -369,8 +368,8 @@ const OfferDetailsWidget = ({
               Number(currentBid?.currentPrice) < 1 ? (
                 <p className="block w-full mt-4 italic">
                   {listing.userId === session?.user?.id
-                    ? `Awaiting bid from ${participant?.username || ""}`
-                    : "Enter a bid to start negotiating"}
+                    ? `Awaiting offer from ${participant?.username || ""}`
+                    : "Enter a offer to start negotiating"}
                 </p>
               ) : currentBid.byUserId !== session?.user?.id &&
                 status === "negotiating" ? (
@@ -522,7 +521,7 @@ const OfferDetailsWidget = ({
                 <span className="text-sm">
                   {participantLastBid?.price ? (
                     <div className="text-right">
-                      <p className="text-xs text-gray-800">Latest Bid</p>{" "}
+                      <p className="text-xs text-gray-800">Latest Offer</p>{" "}
                       <span className="text-sm uppercase">{`£${Number(
                         participantLastBid?.price
                       ).toLocaleString()}`}</span>
@@ -539,28 +538,28 @@ const OfferDetailsWidget = ({
 
       {events &&
         events.length > 0 &&
-        (
-          (events[0].event !== "cancelled" && events[0].event !== "completed" &&
-            events[0].event !== "accepted" && (
-              <div
-                className={`border ${
-                  status === "rejected"
-                    ? "border-red-300 bg-red-200"
-                    : "border-orange-300 bg-orange-default"
-                }  px-4 pb-4 pt-1 rounded-xl shadow mt-6`}
-              >
-                <PriceWidget
-                  listing={listing}
-                  currentBid={currentBid}
-                  setCurrentBid={setCurrentBid}
-                  bids={bids}
-                  setBids={setBids}
-                  sessionUser={sessionUser}
-                  status={status}
-                  setStatus={setStatus}
-                />
-              </div>
-            )))}
+        events[0].event !== "cancelled" &&
+        events[0].event !== "completed" &&
+        events[0].event !== "accepted" && (
+          <div
+            className={`border ${
+              status === "rejected"
+                ? "border-red-300 bg-red-200"
+                : "border-orange-300 bg-orange-default"
+            }  px-4 pb-4 pt-1 rounded-xl shadow mt-6`}
+          >
+            <PriceWidget
+              listing={listing}
+              currentBid={currentBid}
+              setCurrentBid={setCurrentBid}
+              bids={bids}
+              setBids={setBids}
+              sessionUser={sessionUser}
+              status={status}
+              setStatus={setStatus}
+            />
+          </div>
+        )}
 
       {/* <div className="mt-6 space-x-2">
         <Button primary={toggleMenu.summary} onClick={() => setToggleMenu({description: false, events: false, summary: true})} label="Summary" options={{size: "xs"}} />

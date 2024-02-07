@@ -47,6 +47,7 @@ model User {
   listings                  Listing[]         @relation("listings")
   reviews                   Review[]          @relation("reviews")
   notifications             Notification[]
+  status                    String?           @default("none")
   
   @@unique([email, username])
 }
@@ -115,6 +116,7 @@ model Listing {
   price           String?
   completedById   String?           @db.ObjectId
   completedBy     User?             @relation("completedBy", fields: [completedById], references: [id], onDelete: Cascade)
+  completedAt     DateTime?
   events          Json[]
   messages        Message[]
   activity        Activity[] @relation("activity")

@@ -61,6 +61,7 @@ export const authOptions: AuthOptions = {
             email: true,
             hashedPassword: true,
             options: true,
+            status: true,
           },
         });        
 
@@ -75,6 +76,11 @@ export const authOptions: AuthOptions = {
         if (!isValid) {
           throw new Error("Invalid credentials");
         }
+
+        if (user.status === "disabled") {
+          throw new Error("User is disabled contact support");
+        }
+
 
         return user;
       },

@@ -80,6 +80,11 @@ export default async function getAllOffersByUserId(
             username: true,
           },
         },
+        _count: {
+          select: {
+            messages: true,
+          },
+        },
       },
     });
 

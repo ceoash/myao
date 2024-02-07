@@ -50,6 +50,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
    
 
   };
+  
   const handleUpload = useCallback(
     (result: any) => {
       images.push(result.info.secure_url);
@@ -63,29 +64,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
     <CldUploadWidget
       onUpload={handleUpload}
       uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+      
       options={{
         maxFiles: 5,
         sources: ["local", "url", "camera"],
+        clientAllowedFormats: ["png", "jpeg", "jpg"],
+        
       }}
     >
       {({ open }: any) => (
         <div
           onClick={() => open?.()}
-          className="
-                        flex
-                        flex-col
-                        items-center
-                        justify-center
-                        w-full 
-                        border
-                        border-gray-400
-                        border-dashed
-                        rounded-lg
-                        bg-gray-50
-                        h-full
-                        p-10
-                        cursor-pointer
-                        relative"
+          className="flex flex-col items-center justify-center w-full  border border-gray-400 border-dashed rounded-lg bg-gray-50 h-full p-10 cursor-pointer relative"
         >
           <FaUpload size={40} className="text-neutral-400" />
           <p className="text-neutral-400 mb-6 mt-2">
@@ -97,7 +87,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
               <div key={i} className="w-full h-full relative">
                <FaTimes onClick={() => handleDelete(image)} className="absolute top-0 right-0 text-white rounded-full border border-red-200 bg-red-400 text-xl shadow transition ease-in-out hover:text-2xl" />
                 <Image
-                  
                   src={image}
                   alt="Upload"
                   width={100}

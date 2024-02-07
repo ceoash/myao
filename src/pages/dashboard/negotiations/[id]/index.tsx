@@ -557,7 +557,6 @@ const Index = ({ listing, session }: PageProps) => {
           listingId: currentListing.id,
           userId: session?.user?.id,
           completedById: userId,
-          completedAt: new Date().toISOString(),
         })
         .then((response) => {
           socket.emit("update_status", {
@@ -566,6 +565,7 @@ const Index = ({ listing, session }: PageProps) => {
             userId: userId,
           });
 
+          
           const sellerEmail = axios.post("/api/email/emailNotification", {
             listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
             name: response.data.listing.seller.name,
@@ -604,6 +604,7 @@ const Index = ({ listing, session }: PageProps) => {
           setLoadingState((prev) => ({ ...prev, status: false }));
           setLoadingState(LOADING_STATE);
         });
+
       return;
     }
     confirmationModal.onOpen(
@@ -730,8 +731,6 @@ const Index = ({ listing, session }: PageProps) => {
                   />
                 )}
               {currentListing.description}
-              {currentListing.completedById}
-
             </div>
             {currentBid.currentPrice !== "0" &&
               currentBid.currentPrice !== "" && (
@@ -799,7 +798,7 @@ const Index = ({ listing, session }: PageProps) => {
                             : listing.price
                         ).toLocaleString()}`
                       ) : (
-                        "No bids yet"
+                        "No offers yet"
                       )}
                     </div>
                   </div>
@@ -807,7 +806,6 @@ const Index = ({ listing, session }: PageProps) => {
               )}
           </div>
         )}
-
         {activeSubTab === "photos" && (
           <>
             {currentListing.image ? (
@@ -982,7 +980,7 @@ const Index = ({ listing, session }: PageProps) => {
 
           <div
             className={`w-full xl:col-span-4 col-span-4 ${
-              tab === "details" ? "block" : "hidden xl:block"
+              tab === "overview" ? "block" : "hidden xl:block"
             }`}
           >
             <OfferDetailsWidget

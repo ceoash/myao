@@ -17,7 +17,7 @@ import useOfferEditModal from "@/hooks/useOfferEditModal";
 import { CgArrowRight } from "react-icons/cg";
 
 const Offer: React.FC<any> = ({
-  id,
+  id, 
   title,
   price,
   category,

@@ -85,6 +85,8 @@ const Header = ({
 
   const modal = useOfferModal();
 
+
+
   const updateBid = async (num: number | string | null) => {
     if (num === null) {
       toast.error("Please enter a offer price");
@@ -216,11 +218,11 @@ const Header = ({
           </div>
          
         </div>
-        {listing?.events &&
+        {  listing?.events &&
           listing?.events.length > 0 &&
           listing?.events[0].event !== "cancelled" &&
           listing?.events[0].event !== "completed" &&
-          listing?.events[0].event !== "accepted" && (
+          listing?.events[0].event !== "accepted" || listing.userId === session?.user.id && (
             <div className="hidden xl:flex justify-between mt-auto">
               <div>
                 <div className="flex rounded border">
@@ -253,7 +255,7 @@ const Header = ({
                       onClick={() => updateBid(bid)}
                       className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
                     >
-                      {isLoading ? <Spinner /> : "Send Offer"}
+                      {isLoading ? <Spinner /> : "Update Offer"}
                     </button>
                   ) : (
                     <button

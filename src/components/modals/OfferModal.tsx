@@ -256,12 +256,16 @@ const OfferModal = () => {
       .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
         if (res.data.id && res.data.id === session?.user?.id) {
-          toast.error("You can't create an offer with yourself");
           setFoundUser(null);
           setError("user", {
             message: "You can't create an offer with yourself",
           });
         } else {
+          if(!res.data || !res.data.id) {
+            setFoundUser(null);
+            setError("user", { message: "User not found" });
+            return;
+          }
           setFoundUser(res.data);
           setError("user", { message: "" });
         }

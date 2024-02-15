@@ -181,7 +181,7 @@ const OfferDetailsWidget = ({
             ? "bg-red-100  border-red-50"
             : status === "accepted" || status === "completed"
             ? "bg-green-100 border-green-50"
-            : "  border-gray-200"
+            : " bg-gradient-to-b  from-orange-400 to-orange-300 bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-70 border-gray-200"
         }
         `}
     >
@@ -254,12 +254,12 @@ const OfferDetailsWidget = ({
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === session?.user.id && (
               <TbArrowBigDownFilled
-                className={` transition-all text-white/70 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-14 z-10 rounded-full p-2.5 ${
+                className={` shadow-sm transition-all text-white/90 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-14 z-10 rounded-full p-2.5 ${
                   status === "rejected" || status === "cancelled"
                     ? "border-red-200  bg-gradient-to-t from-red-default to-red-300"
                     : status === "accepted" || status === "completed"
                     ? "border-green-200  bg-gradient-to-t from-green-default to-green-300"
-                    : "border-orange-200  bg-gradient-to-t from-orange-default to-orange-300"
+                    : " bg-gradient-to-t from-orange-500 to-orange-300 border-orange-300"
                 } border  shadow`}
               />
             )}
@@ -472,24 +472,24 @@ const OfferDetailsWidget = ({
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === participant.id && (
               <TbArrowBigUpFilled
-                className={` transition-all text-white/70 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-14 z-10 rounded-full p-2.5 ${
+                className={` transition-all shadow-sm text-white/90 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-14 z-10 rounded-full p-2.5 ${
                   status === "rejected" || status === "cancelled"
                     ? "border-red-200  bg-gradient-to-b from-red-default to-red-300"
                     : status === "accepted" || status === "completed"
                     ? "border-green-200  bg-gradient-to-b from-green-default to-green-300"
-                    : "border-orange-200  bg-gradient-to-b from-orange-default to-orange-300"
+                    : "bg-gradient-to-b from-orange-400 to-orange-300 border-orange-300"
                 } border  shadow`}
               />
             )}
           {!currentBid?.currentPrice ||
             (Number(currentBid.currentPrice) < 1 && (
               <MdOutlineSwapVerticalCircle
-                className={`transition-all text-white/80 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  p-2.5 ${
+                className={`transition-all text-white/90 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  p-2.5 ${
                   status === "rejected" || status === "cancelled"
                     ? "border-red-200  bg-gradient-to-b from-red-default to-red-300"
                     : status === "accepted" || status === "completed"
                     ? "border-green-200  bg-gradient-to-b from-green-default to-green-300"
-                    : "border-orange-200  bg-gradient-to-br from-orange-default to-orange-200"
+                    : "bg-gradient-to-b from-orange-400 to-orange-300 border-orange-300"
                 } border shadow`}
               />
             ))}

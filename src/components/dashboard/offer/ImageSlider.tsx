@@ -14,6 +14,8 @@ import plus from "@/images/plus.svg";
 // import required modules
 import SwiperCore, { Thumbs, Navigation, FreeMode } from "swiper";
 import Image from "next/image";
+import { ImUpload3 } from "react-icons/im";
+import { RiImageAddFill } from "react-icons/ri";
 
 interface ImageSliderProps {
   images: string;
@@ -35,20 +37,20 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
 
       return newImages;
     });
-  }, []);
+  }, [images]);
 
   return (
-    <div className="relative overflow-auto flex-grow h-auto">
+    <div className="relative overflow-auto flex-grow h-auto flex flex-col  ">
       <Swiper
         spaceBetween={10}
         thumbs={{ swiper: thumbsSwiperRef.current }}
         modules={[FreeMode, Navigation, Thumbs]}
-        className=" mySwiper2 flex justify-center z-10 mx-0"
+        className=" mySwiper2 flex  z-10 mx-0 mb-6 flex-1"
       >
         {imagesStore.map((image, i) => (
           <SwiperSlide
             key={i}
-            className="relative h-full aspect-video bg-gray-50"
+            className="relative h-full aspect-video bg-gray-50 border-x border-t rounded"
           >
             <Image
               alt=""
@@ -58,45 +60,54 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
               layout="fill"
             />
           </SwiperSlide>
-        ))}
+        )) || (
+          <SwiperSlide
+            className="relative h-full aspect-video bg-gray-50 flex justify-center items-center"
+            onClick={handleAddImages}
+          >
+            <ImUpload3 className="text-5xl text-gray-400" />
+          </SwiperSlide>
+        )}
       </Swiper>
 
+      <div className="p-2 bg-white border flex justify-between ">
         <Swiper
           onSwiper={(swiper) => {
             thumbsSwiperRef.current = swiper;
           }}
-          spaceBetween={16}
+          spaceBetween={10}
           slidesPerView={4}
           freeMode={true}
           watchSlidesProgress={true}
           modules={[FreeMode, Navigation, Thumbs]}
-          className="flex mt-5"
+          className="flex z-20 mx-0 "
         >
           {imagesStore.map((image, i) => (
             <SwiperSlide
               key={i}
-              className="bg-white rounded-md border border-gry-200 z-30"
+              className="bg-white rounded-md border border-gry-200 z-30 aspect-square"
             >
-              <img src={image} className="" />
-            </SwiperSlide>
-          ))}
-          {imagesStore.length < 4 && (
-            <SwiperSlide
-              className="bg-white rounded-md border border-gry-200 z-30 relative h-20"
-              onClick={handleAddImages}
-            >
-              <div className="p-16"></div>
               <Image
-                src={plus}
-                layout="fill"
-                objectFit="cover"
-                alt="plus icon"
-                className="text-gray-300 h-full"
+                alt=""
+                src={image}
+                className="aspect-square rounded border"
+                width={90}
+                height={90}
               />
             </SwiperSlide>
-          )}
+          ))}
+         
         </Swiper>
+        {imagesStore.length < 5 && (
+            <div
+              className="bg-white rounded-md border border-gry-200 z-30 aspect-square flex justify-center items-center"
+              onClick={handleAddImages}
+            >
+              <RiImageAddFill className="text-6xl text-gray-300" />
+            </div>
+          )}
       </div>
+    </div>
   );
 };
 

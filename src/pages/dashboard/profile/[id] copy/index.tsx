@@ -351,7 +351,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                 ? `£${stats?.highestCompletedBid.toString()}`
                 : "None"
             }
-            text="Highest Offer"
+            text="Highest Trade"
             color={`gray`}
             span={`col-span-2 md:col-span-1`}
             isLoading={isLoading}
@@ -365,7 +365,7 @@ const profile = ({ user, session, friend }: ProfieProps) => {
                 ? `£${stats?.highestBid.toString()}`
                 : "None"
             }
-            text="Highest Bid"
+            text="Highest Offer"
             color={`gray`}
             span={`col-span-2 md:col-span-1`}
             isLoading={isLoading}

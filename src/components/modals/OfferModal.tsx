@@ -1,62 +1,236 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Modal from "./Modal";
 import useOfferModal from "@/hooks/useOfferModal";
 import Heading from "./Heading";
-import CategoryInput from "../inputs/CategoryInput";
 import Input from "../inputs/Input";
 import ImageUpload from "../inputs/ImageUpload";
 import Button from "../dashboard/Button";
-import TextArea from "../inputs/TextArea";
 import UserType from "../wizard/UserType";
 import PriceInput from "../inputs/PriceInput";
 import CityAutocomplete from "../dashboard/AutoComplete";
-import {
-  BiCategory,
-  BiCategoryAlt,
-  BiChevronRight,
-  BiUserCircle,
-} from "react-icons/bi";
+import { BiChevronRight } from "react-icons/bi";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { itemCategories } from "@/data/cateories";
-import { IoPricetagOutline } from "react-icons/io5";
-import { useSocketContext } from "@/context/SocketContext";
+import { itemCategories, itemSubCategories } from "@/data/cateories";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { useSocketContext } from "@/context/SocketContext";
 
 enum STEPS {
   TYPE = 0,
   BUYER = 1,
   DESCRIPTION = 2,
   ITEM = 3,
-  CATEGORY = 4,
-  IMAGES = 5,
-  REVIEW = 6,
+  IMAGES = 4,
+  REVIEW = 5,
 }
+
+const FormType = {
+  title: "",
+  description: "",
+  additionalInformation: "",
+  price: "0",
+  category: "",
+  subcategory: "",
+  image: "",
+  buyerId: "",
+  sellerId: "",
+  public: false,
+  type: "",
+  location: {
+    region: "",
+    city: "",
+  },
+  options: {
+    location: {
+      region: "",
+      city: "",
+    },
+    condition: "",
+    color: "",
+  },
+};
 
 const OfferModal = () => {
   const offerModal = useOfferModal();
+  const listing = offerModal?.listing || null;
+
+  console.log("listing", offerModal.isOpen);
   const { data: session, status } = useSession();
   const [step, setStep] = useState(STEPS.TYPE);
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
-  const [userType, setUserType] = useState("sellerOffer");
-  const [selectedCity, setSelectedCity] = useState<{
-    region: string;
-    city?: string | "";
-  }>({ city: "", region: "" });
+  const [formData, setFormData] = useState<FieldValues>(FormType);
+
+  useEffect(() => {
+    if (listing) {
+      setFormData((prev) => ({
+        ...prev,
+        title: listing.title,
+        description: listing.description,
+        price: listing.price.toString(),
+        category: listing.category,
+        subcategory: listing.subcategory,
+        image: listing.image,
+        buyerId: listing.buyerId,
+        sellerId: listing.sellerId,
+        public: true,
+        type: listing.type,
+        location: {
+          region: listing?.location?.region || "",
+          city: listing?.location?.city || "",
+        },
+        options: {
+          location: {
+            region: listing.options.location.region,
+            city: listing.options.location.city,
+          },
+          condition: listing.options.condition,
+          color: listing?.options?.color || "",
+        },
+      }));
+      setStep(STEPS.DESCRIPTION);
+    }
+  } , [listing]);
+
+  const [errors, setErrors] = useState({
+    title: {
+      message: "",
+    },
+    description: {
+      message: "",
+    },
+    price: {
+      message: "",
+    },
+    category: {
+      message: "",
+    },
+    subcategory: {
+      message: "",
+    },
+    image: {
+      message: "",
+    },
+    buyerId: {
+      message: "",
+    },
+    sellerId: {
+      message: "",
+    },
+    public: {
+      message: "",
+    },
+    type: {
+      message: "",
+    },
+    location: {
+      region: {
+        message: "",
+      },
+      city: {
+        message: "",
+      },
+    },
+    user: {
+      message: "",
+    },
+    options: {
+      location: {
+        region: {
+          message: "",
+        },
+        city: {
+          message: "",
+        },
+      },
+      condition: {
+        message: "",
+      },
+      color: {
+        message: "",
+      },
+    },
+  });
+
   const [foundUser, setFoundUser] = useState<any | null>(
     offerModal?.participant || null
   );
   // console.log("foundUser", foundUser);
   // console.log("session", session);
+
+  type Category = keyof typeof itemSubCategories;
+
+  const socket = useSocketContext();
+
+  const actionLabel = useMemo(() => {
+    switch (step) {
+      case STEPS.TYPE:
+        return "Continue";
+      case STEPS.BUYER:
+        return "Next";
+      case STEPS.DESCRIPTION:
+        return "Next";
+      case STEPS.ITEM:
+        return "Next";
+      case STEPS.IMAGES:
+        return "Next";
+      case STEPS.REVIEW:
+        return listing ? "Update" : "Create";
+    }
+  }, [step]);
+
+  const secondaryActionLabel = useMemo(() => {
+    switch (step) {
+      case STEPS.TYPE:
+        return undefined;
+      case STEPS.BUYER:
+        return "Back";
+      case STEPS.DESCRIPTION:
+        return "Back";
+      case STEPS.ITEM:
+        return "Back";
+      case STEPS.IMAGES:
+        return "Back";
+      case STEPS.REVIEW:
+        return "Back";
+    }
+  }, [step]);
+
+  const clearError = (name: string) => {
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  let im = null;
+
+  if (formData.image) {
+    let arr = new Array(formData.image);
+    im = JSON.parse(formData.image);
+  }
+
+  const setCity = (city: string, region?: string) => {
+
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        city: city,
+        region: region ? region : "England",
+      },
+    }));
+  };
+
+  const setError = (name: string, error: { message: string }) => {
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+  };
 
   useEffect(() => {
     if (foundUser === null && offerModal?.participant) {
@@ -64,33 +238,16 @@ const OfferModal = () => {
     }
   }, [offerModal?.participant]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-    setValue,
-    setError,
-    clearErrors,
-  } = useForm<FieldValues>({
-    defaultValues: {
-      title: "",
-      description: "",
-      price: "0",
-      category: "",
-      image: "",
-      buyerId: "",
-      sellerId: "",
-      public: false,
-      userType: "",
-      location: {
-        region: "",
-        city: "",
+  const changeColor = (color: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      options: {
+        ...prev.options,
+        color: color,
       },
-      condition: "",
-    },
-  });
+    }));
+  };
+
   const onSearchUser = () => {
     if (!search) {
       return;
@@ -106,7 +263,7 @@ const OfferModal = () => {
           });
         } else {
           setFoundUser(res.data);
-          clearErrors("user");
+          setError("user", { message: "" });
         }
       })
       .catch((err) => {
@@ -129,9 +286,9 @@ const OfferModal = () => {
 
     switch (step) {
       case STEPS.TYPE:
-        if (!data.userType) {
+        if (!data.type) {
           validation.isValid = false;
-          setError("userType", {
+          setError("type", {
             message: "Select the type of listing you would like to create",
           });
         }
@@ -147,19 +304,11 @@ const OfferModal = () => {
           validation.isValid = false;
           setError("title", { message: "Title is required" });
         }
-        if (!data.description) {
-          validation.isValid = false;
-          setError("description", { message: "Description is required" });
-        }
+
         break;
       case STEPS.ITEM:
         break;
-      case STEPS.CATEGORY:
-        if (selectedCategory.length === 0) {
-          validation.isValid = false;
-          validation.errors["category"] = { message: "Category is required" };
-        }
-        break;
+     
       case STEPS.IMAGES:
         break;
 
@@ -172,193 +321,81 @@ const OfferModal = () => {
     return validation;
   };
 
-  const onClose = () => {
-    reset({
-      title: "",
-      description: "",
-      price: "0",
-      category: "",
-      image: "",
-      buyerId: "",
-      sellerId: "",
-      public: false,
-      userType: "",
-      location: {
-        region: "",
-        city: "",
-      },
-      condition: "",
-    });
-    setSelectedCity({ city: "", region: "" });
-    setFoundUser(null);
-    setSearch("");
-    setSelectedCategory("");
-    setUserType("");
-    setPrice("0");
-    setStep(STEPS.TYPE);
-    offerModal.onClose();
-  };
-
-  const onBack = () => {
-    if (
-      (step === STEPS.REVIEW && userType === "buyer") ||
-      (step === STEPS.CATEGORY && userType === "buyer")
-    ) {
-      setStep(step - 2);
-    } else {
-      setStep(step - 1);
+  const updateListing = (data: any) => {
+    if (!listing) {
+      return;
     }
-  };
-  const onNext = () => {
-    handleSubmit((data, event) => {
-      event?.preventDefault();
-      event?.stopPropagation();
-
-      if (step !== STEPS.REVIEW) {
-        const stepValidationResult = validateStep(step, data);
-        if (stepValidationResult.isValid) {
-          setTitle(data.title);
-          setDescription(data.description);
-          setCategory(data.category);
-          setPrice(data.price);
-          setUserType(data.userType);
-          setStep(step + 1);
-        }
-      } else {
-        onSubmit(data);
-      }
-    })();
-  };
-
-  useEffect(() => {
-    if (step === STEPS.IMAGES && userType === "buyer") {
-      onNext();
+    if(listing.userId !== session?.user.id) {
+      toast.error("You can't update this offer");
+      return;
     }
-    if (step === STEPS.ITEM && userType === "buyer") {
-      onNext();
-    }
-  }, [step]);
-
-  const actionLabel = useMemo(() => {
-    switch (step) {
-      case STEPS.TYPE:
-        return "Continue";
-      case STEPS.BUYER:
-        return "Next";
-      case STEPS.DESCRIPTION:
-        return "Next";
-      case STEPS.ITEM:
-        return "Next";
-      case STEPS.CATEGORY:
-        return "Next";
-      case STEPS.IMAGES:
-        return "Next";
-      case STEPS.REVIEW:
-        return "Create Offer";
-    }
-  }, [step]);
-
-  const secondaryActionLabel = useMemo(() => {
-    switch (step) {
-      case STEPS.TYPE:
-        return undefined;
-      case STEPS.BUYER:
-        return "Back";
-      case STEPS.DESCRIPTION:
-        return "Back";
-      case STEPS.ITEM:
-        return "Back";
-      case STEPS.CATEGORY:
-        return "Back";
-      case STEPS.IMAGES:
-        return "Back";
-      case STEPS.REVIEW:
-        return "Back";
-    }
-  }, [step]);
-
-  const image = watch("image");
-
-  let im = null;
-
-  if (image) {
-    let arr = new Array(image);
-    im = JSON.parse(image);
+    const transaction = {
+      id: listing.id,
+      userId: session?.user.id,
+      data: data
+  }
+    axios
+      .put(`/api/listings/${listing?.id}`, transaction)
+      .then((response) => {
+        toast.success("Offer updated successfully!");
+        offerModal.onClose();
+        setStep(STEPS.TYPE);
+        setFormData(FormType);
+        setFoundUser(null);
+        setSearch("");
+        socket.emit(
+          "update_listing",
+          response.data.listing,
+          session?.user.id,
+          listing?.sellerId === session?.user.id ? listing?.buyerId : listing?.sellerId,
+        );
+        socket.emit(
+          "update_activities",
+          response.data.transactionResult,
+          response.data.listing.sellerId,
+          response.data.listing.buyerId
+        );
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error("Something went wrong!");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
-  const setCustomValue = (id: string, value: any) => {
-    setValue(id, value, {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
-
-  const socket = useSocketContext();
-
-  const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
+  const onSubmit: SubmitHandler<FieldValues> = async () => {
     if (step !== STEPS.REVIEW) {
       return onNext();
     }
-    if (status === "authenticated" && session?.user) {
-      data.sellerId = session?.user.id;
-    } else {
-      return;
-    }
-
+    
     if (!foundUser) {
       toast.error("Please select a user to send the offer to");
       setStep(STEPS.BUYER);
       return;
     }
 
-    //console.log("data", data);
+    const data = { ...formData };
+
+   // console.log("data", data);
 
     setIsLoading(true);
-    data.category = selectedCategory;
     data.participantId = foundUser?.id;
     data.conversationId = offerModal.conversationId;
-    data.type = userType === "buyer" ? "buyerOffer" : "sellerOffer";
     data.userId = session?.user.id;
-    data.sellerId = userType === "seller" ? session?.user.id : foundUser?.id;
-    data.buyerId = userType === "buyer" ? session?.user.id : foundUser?.id;
-
-    data.options = {
-      location: selectedCity,
-      condition: data.condition ? data.condition : "Unknown",
-      pickup: data.pickup ? data.pickup : "Unknown",
-      public: false,
-    };
-
+    data.sellerId = data.type === "seller" ? session?.user.id : foundUser?.id;
+    data.buyerId = data.type === "buyer" ? session?.user.id : foundUser?.id;
+    
     await axios
       .post("/api/listings", data)
       .then((response) => {
         toast.success("Offer created successfully!");
-        reset();
         setStep(STEPS.TYPE);
-        reset({
-          title: "",
-          description: "",
-          price: "0",
-          category: "",
-          image: "",
-          buyerId: "",
-          sellerId: "",
-          public: false,
-          userType: "",
-          location: {
-            region: "",
-            city: "",
-          },
-          condition: "",
-        });
+        setFormData(FormType);
         offerModal.onClose();
-        setSelectedCity({ city: "", region: "" });
         setFoundUser(null);
         setSearch("");
-        setSelectedCategory("");
-        setUserType("");
-        setPrice("0");
         setStep(STEPS.TYPE);
 
         let urlArray = JSON.parse(data.image || "[]");
@@ -407,11 +444,38 @@ const OfferModal = () => {
       });
   };
 
+  const onClose = () => {
+    setFormData(FormType);
+    setFoundUser(null);
+    setSearch("");
+    setStep(STEPS.TYPE);
+    offerModal.onClose();
+  };
+
+  const onBack = () => {
+    if (formData.userType === "buyer" && step === STEPS.REVIEW) {
+      setStep(STEPS.DESCRIPTION);
+      return;
+    }
+    setStep((prev) => prev - 1);
+  };
+
+  const onNext = () => {
+    const validation = validateStep(step, formData);
+    if (STEPS.REVIEW === step) {
+      if (listing) {
+        return updateListing(formData);
+      }
+      return onSubmit(formData);
+    }
+    setStep((prev) => prev + 1);
+  };
+
   let bodyContent = (
     <div className="flex flex-col">
       <Heading
         title={
-          userType === "buyer"
+          formData.userType === "buyer"
             ? "What would you like to buy"
             : "What would you like to sell"
         }
@@ -421,42 +485,348 @@ const OfferModal = () => {
       <div className="mb-5">
         <Input
           id="title"
-          label="Name of item"
+          label="Name of the item"
           type="text"
-          register={register}
-          errors={errors}
           disabled={isLoading}
-          onChange={() => clearErrors("title")}
+          value={formData.title}
+          onChange={(e) => {
+            setFormData((prev) => ({
+              ...prev,
+              title: e.target.value,
+            }));
+          }}
+          placeholder="Eg. iPhone 12 Pro Max"
         />
+        {errors.title && typeof errors.title.message === "string" && (
+          <div className="text-red-500 text-sm">{errors.title.message}</div>
+        )}
       </div>
-      <div>
-        <TextArea
+      <div className="grid grid-cols-2 gap-4">
+        <div className="mb-4">
+          <label htmlFor={"category"} className="mb-3 flex gap-1">
+            Category
+          </label>
+          <select
+            defaultValue={""}
+            className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+            value={formData.category}
+            onChange={(e) => {
+              setFormData((prev) => ({
+                ...prev,
+                category: e.target.value,
+              }));
+              clearError("category");
+            }}
+          >
+            <option value="" disabled className="text-gray-600">
+              Select a category
+            </option>
+            {itemCategories.map((item, i) => (
+              <option key={i} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+          {errors.category && typeof errors.category.message === "string" && (
+            <div className="text-red-500 text-sm">
+              {errors.category.message}
+            </div>
+          )}
+        </div>
+        {formData.type && (
+          <div className="mb-4">
+            <label htmlFor={"subcategory"} className="mb-3 flex gap-1">
+              Type
+            </label>
+            <select
+              value={formData.subcategory}
+              className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  subcategory: e.target.value,
+                }));
+              }}
+            >
+              <option value="" disabled className="text-gray-600">
+                Select the type
+              </option>
+              {formData.category &&
+                itemSubCategories[formData.category as Category].map(
+                  (item, i) => (
+                    <option key={i} value={item}>
+                      {item}
+                    </option>
+                  )
+                )}
+            </select>
+            {errors.subcategory &&
+              typeof errors.subcategory.message === "string" && (
+                <div className="text-red-500 text-sm">
+                  {errors.subcategory.message}
+                </div>
+              )}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2">
+        <div className="mb-4">
+          <label className="block mb-3">
+            Condition{" "}
+            <span className="italic text-gray-500 text-sm"> (Optional)</span>
+          </label>
+          <label className="block mb-3 space-x-2">
+            <input
+              type="radio"
+              checked={formData?.options?.condition === "new"}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return {
+                    ...prev,
+                    options: {
+                      ...prev.options,
+                      condition: "new",
+                    },
+                  };
+                })
+              }
+              value="new"
+            />
+            <span>New</span>
+          </label>
+          <label className="block mb-3 space-x-2">
+            <input
+              type="radio"
+              checked={formData?.options?.condition === "used"}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return {
+                    ...prev,
+                    options: {
+                      ...prev.options,
+                      condition: "used",
+                    },
+                  };
+                })
+              }
+              value="used"
+            />
+            <span>Used</span>
+          </label>
+          <label className="block mb-3 space-x-2">
+            <input
+              type="radio"
+              checked={formData?.options?.condition === "damaged"}
+              onChange={(e) =>
+                setFormData((prev) => {
+                  return {
+                    ...prev,
+                    options: {
+                      ...prev.options,
+                      condition: "damaged",
+                    },
+                  };
+                })
+              }
+              value="damaged"
+            />
+            <span>Damaged</span>
+          </label>
+        </div>
+        <div className="">
+          <div className="mb-3">
+            <div className="w-1/3 sm:w-1/5 mb-3">
+              <p className="font-hk text-secondary">Color</p>
+            </div>
+            <div className="flex w-2/3 items-center sm:w-5/6">
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-black" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-black px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-black" ? "border-black" : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-white" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-white px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-white" ? "border-black" : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-gray-200" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-gray-200 px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-gray-200" ? "border-black" : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-gray-600" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-gray-500 px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-gray-500" ? "border-black" : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-red-500" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-red-500 px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-red-500" ? "border-black" : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-blue-500" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-blue-500 px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-blue-500" ? "border-black" : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-green-500" },
+                    };
+                  })
+                }
+                className={`mr-2 cursor-pointer rounded-full border p-1 bg-green-500 px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-green-500"
+                    ? "border-black"
+                    : ""
+                }`}
+              ></div>
+              <div
+                onClick={() =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: { ...prev.options, color: "bg-orange-500" },
+                    };
+                  })
+                }
+                className={`cursor-pointer rounded-full border p-1 bg-orange-500 px-2 py-2 transition-colors hover:border-black ${
+                  formData.options.color === "bg-orange-500"
+                    ? "border-black"
+                    : ""
+                }`}
+              ></div>
+            </div>
+          </div>
+
+          <div className="">
+            <p className="font-hk text-secondary mb-3">Size</p>
+            <select
+              className=" border border-gray-200 rounded-xl px-2 p-2 w-24 focus:border-orange-300 focus:ring-0 text-sm"
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  options: {
+                    ...prev.options,
+                    size: e.target.value,
+                  },
+                }));
+              }}
+            >
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="block mb-3">
+          Description{" "}
+          <span className="italic text-gray-500 text-sm "> (Optional)</span>
+        </label>
+
+        <textarea
+          className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+          placeholder="Enter a description of the item"
           id="description"
-          label="Description"
-          errors={errors}
-          disabled={isLoading}
-          register={register}
           rows={5}
-          clearErrors={() => clearErrors("description")}
-        />
+          value={formData.description}
+          onChange={(e) => {
+            setFormData((prev) => ({
+              ...prev,
+              description: e.target.value,
+            }));
+            clearError("description");
+          }}
+        ></textarea>
+        {errors.description &&
+          typeof errors.description.message === "string" && (
+            <div className="text-red-500 text-sm">
+              {errors.description.message}
+            </div>
+          )}
       </div>
-      <div>
+
+      <div className="w-1/3">
         <PriceInput
           id="price"
           label="Starting price"
           type="number"
           modal
           formatPrice
-          register={register}
-          errors={errors}
+          disabled={listing ? true : false}
           placeholder="0.00"
-          onChange={() => clearErrors("price")}
+          value={formData.price}
+          onChange={(e) => {
+            setFormData((prev) => ({
+              ...prev,
+              price: e.target.value,
+            }));
+          }}
           sm
           optional
         />
       </div>
+      {errors.price && typeof errors.price.message === "string" && (
+        <div className="text-red-500 text-sm">{errors.price.message}</div>
+      )}
     </div>
   );
+
   if (step === STEPS.ITEM) {
     bodyContent = (
       <div className="flex flex-col">
@@ -465,40 +835,28 @@ const OfferModal = () => {
           description="Important infortmation about your thing"
           nounderline
         />
+        
+
         <div className="mb-5">
           <CityAutocomplete
-            selectedCity={selectedCity}
-            setSelectedCity={setSelectedCity}
+            selectedCity={formData.location.city}
+            setSelectedCity={setCity}
           />
         </div>
-
         <div className="mb-4">
           <label className="block mb-3">
-            Condition{" "}
-            <span className="italic text-gray-500 text-sm "> (Optional)</span>
-          </label>
-          <select
-            defaultValue={"Select"}
-            className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0 active:ring-0 active:border-0 "
-            {...register("condition")}
-          >
-            <option value="Select" disabled className="text-gray-600">
-              Select
-            </option>
-            <option value="new">New</option>
-            <option value="used">Used</option>
-            <option value="damaged">Damaged</option>
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-3">
-            Pickup{" "}
+            Delivery{" "}
             <span className="italic text-gray-500 text-sm "> (Optional)</span>
           </label>
           <select
             defaultValue={"Select"}
             className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
-            {...register("pickup")}
+            onChange={(e) => {
+              setFormData((prev) => ({
+                ...prev,
+                pickup: e.target.value,
+              }));
+            }}
           >
             <option value="Select" disabled className="text-gray-600">
               Select
@@ -513,43 +871,31 @@ const OfferModal = () => {
             <option value="both">Collection or Pickup</option>
           </select>
         </div>
-      </div>
-    );
-  }
+        <div className="mb-3">
+          <label className="block mb-3">
+            Additional Information{" "}
+            <span className="italic text-gray-500 text-sm "> (Optional)</span>
+          </label>
 
-  if (step === STEPS.CATEGORY) {
-    const updateCategory = (category: string) => {
-      setSelectedCategory(category);
-      setValue("category", category);
-      setValue("price", price);
-    };
-    bodyContent = (
-      <div className="flex flex-col">
-        <Heading
-          nounderline
-          title="Select a category"
-          description="Choose the category that best describes the item"
-        />
-        {errors.category && typeof errors.category.message === "string" && (
-          <div className="text-red-500 text-sm">{errors.category.message}</div>
-        )}
-        {!selectedCategory && (
-          <div className="text-red-500 text-sm">Select a category</div>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
-          {itemCategories.map((item, i) => (
-            <CategoryInput
-              name={item}
-              key={i}
-              selected={selectedCategory === item}
-              onClick={updateCategory}
-              register={register}
-            />
-          ))}
+          <textarea
+            className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+            placeholder="Enter additional information about the item"
+            id="additionalInformation"
+            rows={5}
+            value={formData.additionalInformation}
+            onChange={(e) => {
+              setFormData((prev) => ({
+                ...prev,
+                additionalInformation: e.target.value,
+              }));
+              clearError("additionalInformation");
+            }}
+          ></textarea>
         </div>
       </div>
     );
   }
+
   if (step === STEPS.TYPE) {
     bodyContent = (
       <div className="flex flex-col">
@@ -560,21 +906,30 @@ const OfferModal = () => {
         />
         <div className="mb-5">
           <UserType
-            setValue={setValue}
-            setUserType={setUserType}
-            userType={userType}
+            setValue={formData.type}
+            setUserType={(value) => {
+              setFormData((prev) => ({
+                ...prev,
+                type: value,
+              }));
+              clearError("type");
+            }}
+            userType={formData.type}
             notrade
-            clearErrors={clearErrors}
+            clearErrors={() => {
+              clearError("type");
+            }}
           />
-          {errors.userType && (
+          {errors.type && (
             <span className="text-red-500">
-              {errors.userType.message as string}
+              {errors.type.message as string}
             </span>
           )}
         </div>
       </div>
     );
   }
+
   if (step === STEPS.IMAGES) {
     bodyContent = (
       <div className="flex flex-col">
@@ -585,8 +940,10 @@ const OfferModal = () => {
         />
         <div>
           <ImageUpload
-            value={image}
-            onChange={(value) => setCustomValue("image", value)}
+            value={formData.image}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, image: value }))
+            }
           />
         </div>
       </div>
@@ -596,7 +953,7 @@ const OfferModal = () => {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
-          title={`Select the ${userType === "buyer" ? "Seller" : "Buyer"}`}
+          title={`Select the ${formData.type === "buyer" ? "Seller" : "Buyer"}`}
           description={`Who would you like to send this offer to?`}
           nounderline
         />
@@ -629,7 +986,7 @@ const OfferModal = () => {
                     options={{ size: "xs" }}
                     onClick={() => {
                       setFoundUser(null);
-                      clearErrors("buyer");
+                      clearError("user");
                     }}
                   >
                     Change
@@ -657,9 +1014,9 @@ const OfferModal = () => {
                 >
                   Search <BiChevronRight />
                 </button>
-                {errors && errors.user && (
+                {errors && errors?.user && (
                   <div className=" text-sm text-red-500 absolute bottom-0">
-                    {String(errors.user?.message)}
+                    {String(errors?.user?.message)}
                   </div>
                 )}
               </div>
@@ -691,10 +1048,10 @@ const OfferModal = () => {
                 </div>
                 <div>
                   <div className="first-letter:uppercase title-sm font-bold">
-                    {title}
+                    {formData.title}
                   </div>
                   <div className="flex items-center gap-2 text-[16px] text-[#979797]">
-                    {category}
+                    {formData.category} - {formData.subcategory}
                   </div>
                 </div>
               </div>
@@ -703,25 +1060,28 @@ const OfferModal = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-bold">Price: </span>
 
-                    {!price || price === "0" ? "Open Offer" : `£ ${price}`}
+                    {!formData.price || formData.price === "0"
+                      ? "Open Offer"
+                      : `£ ${formData.price}`}
                   </div>
                   <span className="border-l"></span>
                   <div className="flex items-center gap-2">
                     <span className="font-bold">Sent to: </span>
-                    {foundUser?.username} - ({userType})
+                    {foundUser?.username} - (
+                    {formData.type === "buyer" ? "Seller" : "Buyer"})
                   </div>
                   <span className="border-l"></span>
                   <div className="flex items-center gap-2 capitalize">
                     <span className="font-bold">Type: </span>
 
-                    {userType}
+                    {formData.type}
                   </div>
                 </div>
               </div>
               <hr className="mt-2 mb-2" />
               <div className="">
                 <div className="font-medium">Description</div>
-                <p className="text-[#979797]">{description}</p>
+                <p className="text-[#979797]">{formData.description}</p>
               </div>
             </div>
           </div>
@@ -731,17 +1091,15 @@ const OfferModal = () => {
   }
   return (
     <Modal
-      title="Make an offer"
+      title={listing ? "Edit Offer" : "Create Offer"}
       isOpen={offerModal.isOpen}
       onClose={onClose}
-      onSubmit={handleSubmit(onSubmit)}
       actionLabel={actionLabel}
-      secondaryAction={step > STEPS.BUYER ? onBack : undefined}
+      secondaryAction={step > STEPS.TYPE ? onBack : undefined}
       secondaryActionLabel={secondaryActionLabel}
       body={bodyContent}
-      disabled={Object.keys(errors).length > 0}
       isLoading={isLoading}
-      errors={errors}
+      onSubmit={onNext}
     />
   );
 };

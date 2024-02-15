@@ -64,6 +64,46 @@ export default async function listingsApi(
 
       const id = Math.floor(Math.random() * Math.pow(10, 10));
 
+      const prevMetadata = findListing.metadata || null;
+
+      let metadata = {}
+
+      if (prevMetadata) {
+        metadata = prevMetadata;
+      }
+
+      if(status === "completed"){
+        Object.assign(metadata, {
+          completedBy: completedBy?.username,
+          completedById: completedBy?.id,
+          completedAt: new Date(now)
+        })
+      }
+
+      if(status === "cancelled"){
+        Object.assign(metadata, {
+          cancelledBy: completedBy?.username,
+          cancelledById: completedBy?.id,
+          cancelledAt: new Date(now)
+        })
+      }
+
+      if(status === "rejected"){
+        Object.assign(metadata, {
+          rejectedBy: completedBy?.username,
+          rejectedById: completedBy?.id,
+          rejectedAt: new Date(now)
+        })
+      }
+
+      if(status === "accepted"){
+        Object.assign(metadata, {
+          acceptedBy: completedBy?.username,
+          acceptedById: completedBy?.id,
+          acceptedAt: new Date(now)
+        })
+      }
+
       const listing: any = await prisma.listing.update({
         where: { id: findListing?.id },
         data: { 
@@ -78,7 +118,10 @@ export default async function listingsApi(
                 userId: userId 
               }
             },
-            updatedAt: new Date(now)
+            updatedAt: new Date(now),
+            metadata: {
+              
+            }
          },
          include: {
           buyer: true,

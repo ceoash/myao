@@ -8,7 +8,7 @@ import { Session } from 'next-auth';
 
 interface ISwap{
     participant: any;
-    price: string;
+    price: string | number | null | undefined;
     session: Session;
     completedBy: any;
     sellerId: string;
@@ -84,7 +84,7 @@ const Swap = ({
                     {userId === session?.user.id && price !== '0' && price !== '' && (
                     <div>{price !== '0' && price !== '' && `Start price: £${price}`}</div>
                     )}
-                    <div>{meLastBid?.price ? "Last bid: £" + Number(meLastBid.price).toLocaleString() : "No bids yet"}</div>
+                    <div>{meLastBid?.price ? "Last offer: £" + Number(meLastBid.price).toLocaleString() : "No offers yet"}</div>
                   </div>
                 </div>
               </div>
@@ -132,8 +132,8 @@ const Swap = ({
                   )}
                   <div>
                     {participantLastBid?.price
-                      ? "Last bid: £" + Number(participantLastBid?.price).toLocaleString()
-                      : "No bids yet"}
+                      ? "Last offer: £" + Number(participantLastBid?.price).toLocaleString()
+                      : "No offers yet"}
                   </div>
                 </div>
               </div>

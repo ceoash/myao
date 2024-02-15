@@ -45,7 +45,7 @@ const OfferNav = ({ setTab, tab, status, listingType }: OfferNavProps) => {
           tab === "bids" && "border-b-4 border-orange-default "
         }`}
       >
-        Bid History
+        Offer History
       </div>
       <div className="ml-auto hidden md:flex ">
         <Badge>{StatusChecker(status || "")}</Badge>

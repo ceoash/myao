@@ -1,6 +1,7 @@
 import prisma from "@/libs/prismadb";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Listing } from ".prisma/client";
+import { tr } from "date-fns/locale";
 
 interface ErrorResponse {
   error: string;
@@ -24,8 +25,7 @@ export default async function newOfferMessage(
               userActivity: true,
             },
           },
-          buyer: true,
-          seller: true,
+         
           status: true,
           id: true,
           title: true,
@@ -63,9 +63,18 @@ export default async function newOfferMessage(
           seller: true,
           messages: {
             include: {
-              buyer: true,
-              seller: true,
-              user: true,
+              buyer:{
+               include: {profile: true}
+    
+              },
+              seller:{
+               include: {profile: true}
+    
+              },
+              user:{
+               include: {profile: true}
+    
+              },
             },
           },
         },

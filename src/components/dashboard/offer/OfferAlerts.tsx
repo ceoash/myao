@@ -26,8 +26,8 @@ const OfferAlerts = ({
     {status === "accepted" && (
       <AlertBanner
         text={ completedBy === session?.user.id ? 
-          completedBy === listing.buyerId ? "You accepted the latest bid. Make payment to complete the negotiation" : `You accepted the latest bid. Payment instructions have been sent to ${participant?.username }`: 
-          session?.user.id === listing.buyerId && completedBy !== session?.user.id ? "Your bid has been accepted. Make payment to complete the negotiation" : `Your bid was accepted the. Payment instructions have been sent to ${participant?.username}` }
+          completedBy === listing.buyerId ? "You accepted the latest offer. Make payment to complete the negotiation" : `You accepted the latest offer. Payment instructions have been sent to ${participant?.username }`: 
+          session?.user.id === listing.buyerId && completedBy !== session?.user.id ? "Your offer has been accepted. Make payment to complete the negotiation" : `Your offer was accepted the. Payment instructions have been sent to ${participant?.username}` }
         success
         button
         buttonText={session?.user.id === listing.buyerId ? "Pay" : "Contact "}
@@ -52,9 +52,9 @@ const OfferAlerts = ({
           completedBy &&
           session?.user.id &&
           completedBy === session?.user.id
-            ? "You rejected the latest bid. Awaiting repsonse from " +
+            ? "You rejected the latest offer. Awaiting repsonse from " +
               participant?.username
-            : "Your bid has been rejected. Submit a new bid to continue "
+            : "Your offer has been rejected. Submit a new offer to continue "
         }
         danger
         button
@@ -64,8 +64,8 @@ const OfferAlerts = ({
             <AlertBanner
               text={
                 completedBy === session?.user.id
-                  ? "You terminated the offer."
-                  : "This offer has been terminated"
+                  ? "You terminated the trade."
+                  : "This trade has been terminated"
               }
               danger
               button

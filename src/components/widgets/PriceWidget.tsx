@@ -12,7 +12,7 @@ interface PriceWidgetProps {
   listing: any;
   isBuyer?: boolean;
   setCurrentBid: Dispatch<SetStateAction<{
-    currentPrice: string;
+    currentPrice: string | number;
     byUserId: string;
     byUsername: string;
     me: Bid;
@@ -60,12 +60,12 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
     data.bidById = session?.user.id;
 
     if(data.price == currentPrice) {
-      toast.error("You can't bid the same price as the current bid!");
+      toast.error("You can't submit the same price as the current offer!");
       setIsLoading(false);
       return;
     }
     if(data.price == "") {
-      toast.error("Enter a bid price");
+      toast.error("Enter a offer price");
       setIsLoading(false);
       return;
     }
@@ -110,7 +110,7 @@ const PriceWidget = ({ listing, setCurrentBid, currentBid, sessionUser, status }
           updatedListing.sellerId,
           updatedListing.buyerId,
         );
-        toast.success("Bid submitted!");
+        toast.success("New offer submitted!");
       }
       reset();
 

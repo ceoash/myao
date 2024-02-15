@@ -8,7 +8,7 @@ interface CityProps {
   region: string; 
 }
 
-interface CityAutocompleteProps { setSelectedCity: React.Dispatch<React.SetStateAction<CityProps>>; selectedCity: CityProps; }
+interface CityAutocompleteProps { setSelectedCity: (city: string, region?: string) => void; selectedCity: CityProps; }
 
 function CityAutocomplete({setSelectedCity, selectedCity}: CityAutocompleteProps) {
 
@@ -48,8 +48,8 @@ function CityAutocomplete({setSelectedCity, selectedCity}: CityAutocompleteProps
     setSuggestions(sortedMatches);
   }
 
-  function handleCityClick(city: any) {
-    setSelectedCity(city);
+  function handleCityClick(city: string, region?: string) {
+    setSelectedCity(city, region || "");
     setInputValue(city);
     setSuggestions([]);
   }
@@ -78,7 +78,7 @@ function CityAutocomplete({setSelectedCity, selectedCity}: CityAutocompleteProps
                 {selectedCity?.city && selectedCity.city}
               </span>
             </div>
-            <Button onClick={() => (setSelectedCity({ region: "", city: "" }), setInputValue(''))}>
+            <Button onClick={() => (setSelectedCity(""), setInputValue(''))}>
               Change
             </Button>
           </div>
@@ -97,7 +97,7 @@ function CityAutocomplete({setSelectedCity, selectedCity}: CityAutocompleteProps
             {suggestions?.map((city) => (
               <li
                 key={city.region + city?.city}
-                onClick={() => handleCityClick(city)}
+                onClick={() => handleCityClick(city?.city || "", city.region)}
                 className="py-1 cursor-pointer"
               >
                 <span className={`${city.city ? "italic" : "font-bold"}`}>

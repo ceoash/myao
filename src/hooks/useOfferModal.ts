@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User } from '@prisma/client';
+import { CustomListing } from '@/interfaces/authenticated';
 
 interface Profile {
     image?: string;
@@ -12,7 +13,8 @@ interface OfferModalStore {
     user?: User | null;
     participant?: UserStore | null;
     conversationId?: string | null;
-    onOpen: (user?: any, participant?: any, conversationId?: string) => void;
+    listing: CustomListing | null,
+    onOpen: (user?: any, participant?: any, conversationId?: string, listing?: CustomListing | null ) => void;
     onClose: () => void;
   }
   
@@ -21,9 +23,10 @@ interface OfferModalStore {
     user: null,
     participant: null,
     conversationId: null,
-    onOpen: (user?: any, participant?: any, conversationId?: string) =>
-      set({ isOpen: true, user, participant, conversationId }),
-    onClose: () => set({ isOpen: false, user: null, participant: null }),
+    listing: null,
+    onOpen: (user?: any, participant?: any, conversationId?: string, listing?: CustomListing | null) =>
+      set({ isOpen: true, user, participant, conversationId, listing }),
+    onClose: () => set({ isOpen: false, user: null, participant: null, conversationId: null, listing: null}),
   }));
   
 

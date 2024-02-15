@@ -24,6 +24,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import AdminSidebar from "@/components/dashboard/AdminSidebar";
 import Modal from "@/components/modals/Modal";
 import DefaultModal from "@/components/modals/DefaultModal";
+import DataModal from "@/components/modals/DataModal";
 
 type IDashProps = {
   meta: ReactNode;
@@ -185,7 +186,7 @@ const Dash = (props: IDashProps) => {
 
   return (
     <div
-      className={`w-full h-screen bg-gray-50 text-gray-700 antialiased overflow-hidden flex flex-col ${
+      className={`w-full h-screen relative bg-gray-50 text-gray-700 antialiased overflow-hidden flex flex-col ${
         toggleSidebar && "overflow-hidden xl:overflow-auto"
       }`}
     >
@@ -202,6 +203,7 @@ const Dash = (props: IDashProps) => {
       <QRModal />
       <SearchComponentModal />
       <DefaultModal />
+      <DataModal />
       
       <UserMenu
         session={session}
@@ -222,7 +224,7 @@ const Dash = (props: IDashProps) => {
               bg-gray-50
               ${props.full ? "" : "md:ml-20 lg:ml-60"} 
               ${props.dashboard && toggleSidebar && "xl:mr-60"}
-              overflow-y-auto h-full`}
+              overflow-y-auto flex flex-col flex-grow h-full`}
             >
               {!props.noBreadcrumbs && (
                 <div

@@ -185,6 +185,15 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
+.swiper, .swiper-container{
+  margin: 0 !important;
+}
+
+.swiper-thumb{
+  margin: 0 10px  !important;
+  padding-top: 10px  !important;
+}
+
 .st0{fill:#0acf83}
 .st1{fill:#a259ff}
 .st2{fill:#f24e1e}

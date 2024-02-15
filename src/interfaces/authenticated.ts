@@ -8,8 +8,9 @@ export interface OfferModalStore {
   listing?: CustomListing | null;
   section: string | null;
   data: any | null;
-  onOpen: (user: any, listing: CustomListing, section: string, data: any) => void;
+  onOpen: (user: any, listing: CustomListing, section: string, data: any, setListing?: (listing: CustomListing) => void)  => void;
   onClose: () => void;
+  setListing?: (listing: CustomListing) => void; // New function type
 }
 
 export interface ExtendedActivity extends Activity {
@@ -163,7 +164,7 @@ export interface IConversation {
 export interface EventsProps{
   id: string,
   event: string, 
-  price: string,
+  price: string | number,
   date: string, 
   userId: string 
 }
@@ -184,6 +185,7 @@ export interface EventsProps{
     }}
     buyerId: string;
     category: string;
+    subcategory?: string | null | undefined;
     completedById: string;
     createdAt: Date;
     description: string;
@@ -191,10 +193,17 @@ export interface EventsProps{
     id: string;
     image: string | null;
     messages: MessageProps[]
-    options: {location: {
+    location?: {
       city?: string,
       region?: string
-    }, condition: string, pickup: string, public: boolean}
+    },
+    options: {
+
+    location: {
+      city?: string,
+      region?: string
+    }, 
+    condition: string, pickup: string, public: boolean, color?: string, size?: string, brand?: string, model?: string, year?: string, type?: string, material?: string, style?: string}
     price: string 
     reviews: Review[]
     seller: {id: string, username: string, profile?: {

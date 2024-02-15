@@ -2,7 +2,7 @@ function StatusChecker(status: string) {
   switch (status) {
     case "negotiating":
       return (
-        <span className="inline-flex items-center bg-orange-100 text-orange-800 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
+        <span className="inline-flex items-center bg-orange-100 text-orange-600 text-sm  mr-2 px-2.5 py-0.5 rounded-full ">
           <span className="w-2 h-2 mr-1 bg-orange-500 rounded-full"></span>
           Haggling
         </span>

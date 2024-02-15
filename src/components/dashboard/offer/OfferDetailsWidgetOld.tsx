@@ -49,7 +49,7 @@ interface OfferDetailsWidgetProps {
   setStatus: Dispatch<SetStateAction<string>>;
   setCurrentBid: Dispatch<
     SetStateAction<{
-      currentPrice: string;
+      currentPrice: string | number;
       byUserId: string;
       byUsername: string;
       me: Bid;
@@ -109,8 +109,6 @@ const OfferDetailsWidgetOld = ({
   const [participantLastBid, setParticipantLastBid] = useState<any>();
   const [mostRecentBid, setMostRecentBid] = useState<any>();
   const [buttonClicked, setButtonClicked] = useState("");
-
-  console.log("currentBid", currentBid)
 
   const noBids = !meLastBid && !participantLastBid && status === "negotiating";
   const rejectedByMe =
@@ -741,9 +739,9 @@ const OfferDetailsWidgetOld = ({
                     )}
                   <div>
                     {participantLastBid?.price
-                      ? "Last bid: £" +
+                      ? "Last offer: £" +
                         Number(participantLastBid?.price).toLocaleString()
-                      : "No bids yet"}
+                      : "No offers yet"}
                   </div>
                 </div>
               </div>

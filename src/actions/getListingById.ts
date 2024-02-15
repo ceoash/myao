@@ -70,6 +70,11 @@ export default async function getListingById({ offerId }: IParams) {
               select: {
                 id: true,
                 username: true,
+                profile: {
+                  select: {
+                    image: true,
+                  },
+                },
             },},
             createdAt: true,
             updatedAt: true,
@@ -110,7 +115,7 @@ export default async function getListingById({ offerId }: IParams) {
       },
     });
 
-    if (!bid) throw new Error("Bid not found");
+    if (!bid) throw new Error("Offer not found");
 
     return {
       ...bid,

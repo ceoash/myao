@@ -1,5 +1,5 @@
 import Button from "../dashboard/Button";
-import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
+import { FieldError, FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 import { RegisterOptions } from "react-hook-form";
 
 interface InputProps {
@@ -10,11 +10,11 @@ interface InputProps {
   disabled?: boolean;
   formatPrice?: boolean;
   required?: boolean;
-  errors?: FieldErrors<FieldValues>;
+  errors?: any ;
   sm?: boolean;
   value?: string;
   modal?: boolean;
-  register: UseFormRegister<FieldValues>;
+  register?: UseFormRegister<FieldValues>;
   registerOptions?: RegisterOptions;
   username?: boolean;
   onChange?: (e?: any) => void;
@@ -44,6 +44,9 @@ const Input: React.FC<InputProps> = ({
   btnText,
   optional,
 }) => {
+  const testErrors = {
+    email: { message: "This field is required" },
+  };
   return (
     <div className={`flex ${!inline && "pt-3"}`}>
       <div className="w-full relative flex flex-col gap-[1px]">
@@ -90,17 +93,23 @@ const Input: React.FC<InputProps> = ({
           }
           ${errors && errors[id] ? "text-red-500" : "text-gray-700"}
         `}
-            {...register(id, {
+            {...(register ? register(id, {
               required: required && "This field is required",
               ...registerOptions,
-            })}
+            }) : {})}
             onChange={onChange}
           />
-          {errors && errors[id] && (
+          {!value || value && value.length < 1 && errors && errors[id] && (
             <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">
-              {String(errors[id]?.message)}
+              {String( errors[id]?.message as FieldError )}
             </div>
-          )}
+          )} 
+          {/* {!value || value && value.length < 1 && testErrors && testErrors[id as "email"] && (
+            <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">
+              {String(testErrors[id as "email" ]?.message)}
+            </div>
+          )} */}
+
         </div>
       </div>
       {inline && (

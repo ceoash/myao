@@ -11,7 +11,6 @@ interface BidProps {
 const Bid = ({ bid, participant, me }: BidProps) => {
 
   if (!participant || !me) return null;
-  console.log(me)
   
     const [timeSinceCreated, setTimeSinceCreated] = useState<string>("");
   
@@ -26,7 +25,7 @@ const Bid = ({ bid, participant, me }: BidProps) => {
   const now = Date.now();
 
   return (
-    <div className="flex gap-4 justify-between py-2 mb-2 border-b border-gray-200">
+    <div className="flex gap-4 justify-between py-2 mb-2 border-b border-gray-200 px-4">
       <div className="flex items-center">
         <div className={`w-4 mr-2`}>
           <svg

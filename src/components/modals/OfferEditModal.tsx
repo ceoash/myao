@@ -174,6 +174,7 @@ const OfferEditModal = () => {
 
   const socket = useSocketContext()
 
+
   const onSubmit: SubmitHandler<FieldValues> = async (data: any) => {
 
     if(!offerEditModal.user || !offerEditModal.listing?.id){
@@ -271,10 +272,7 @@ const OfferEditModal = () => {
       />
       <div className="mb-5">
       
-        <CityAutocomplete selectedCity={{
-            city: city || undefined,
-            region: region || ""
-        }} setSelectedCity={setSelectedCity} />
+       
       </div>
         <div className="mb-4">
         <label className="block mb-3">
@@ -427,10 +425,7 @@ const OfferEditModal = () => {
       />
       <div className="mb-5">
       
-        <CityAutocomplete selectedCity={{
-            city: city || undefined,
-            region: region || ""
-        }} setSelectedCity={setSelectedCity} />
+       
       </div>
         <div className="mb-4">
         <label className="block mb-3">

@@ -24,7 +24,6 @@ export default async function submitBid(
   if (req.method === "POST") {
     const { price, id, bidById, userId } = req.body;
 
-    console.log("REQUEST", req.body);
 
     try {
       const updateListing = await prisma.listing.findFirst({
@@ -72,11 +71,11 @@ export default async function submitBid(
           bids: {
             create: [
               {
-                price: price,
+                price: parseFloat(price.toString()),
                 userId: userId,
                 previous:
                   updateListing.bids[updateListing.bids.length - 1]?.price ||
-                  "0",
+                  0,
               },
             ],
           },
@@ -88,13 +87,14 @@ export default async function submitBid(
         },
       });
 
+
       if (!listing) {
         return res.status(400).json({ error: "Unable to update listing" });
       }
 
       const buyerActivity = createActivity({
         type: "listing",
-        message: `New bid submitted by ${
+        message: `New offer submitted by ${
           listing.userId === listing.buyerId ? "You" : listing.seller?.username
         }`,
         listing_message: listing.title || "",
@@ -108,7 +108,7 @@ export default async function submitBid(
 
       const sellerActivity = createActivity({
         type: "listing",
-        message: `New bid submitted by ${
+        message: `New offer submitted by ${
           listing.userId === listing.sellerId ? "You" : listing.buyer?.username
         }`,
         listing_message: listing.title || "",

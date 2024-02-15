@@ -4,6 +4,7 @@ import { DirectMessage } from ".prisma/client";
 import { PrismaClient } from "@prisma/client";
 import { createActivity } from "@/prisma";
 import { ExtendedActivity } from "@/interfaces/authenticated";
+import { da } from "date-fns/locale";
 
 interface ErrorResponse {
   error: string;
@@ -105,21 +106,21 @@ export default async function listingsApi(
       image,
       sellerId,
       category,
+      subcategory,
       buyerId,
       conversationId,
       type,
       userId,
       participantId,
       options,
+      additionalInformation,
     } = req.body;
 
     try {
-      const newListingData = {
+      let newListingData = {
         title,
         description,
         category,
-        price,
-        image,
         sellerId,
         status: "awaiting approval",
         buyerId,
@@ -128,9 +129,27 @@ export default async function listingsApi(
         options,
       };
 
+      if (subcategory) Object.assign(newListingData, { subcategory });
+      if (image) Object.assign(newListingData, { image });
+      if (price) Object.assign(newListingData, { price: parseFloat(price) });
+      else Object.assign(newListingData, { price: "0" });
+
+      let listingOptions = {
+        ...options,
+      };
+
+      if (additionalInformation)
+        Object.assign(listingOptions, { additionalInformation });
+      if (conversationId) Object.assign(listingOptions, { conversationId });
+      if (type) Object.assign(listingOptions, { type });
+      if (participantId) Object.assign(listingOptions, { participantId });
+
       let message;
 
-      const listing = await createListing(newListingData);
+      const listing = await createListing({
+        ...newListingData,
+        options: listingOptions,
+      });
 
       if (!listing)
         return res.status(400).json({ error: "Unable to create listing" });
@@ -191,24 +210,44 @@ export default async function listingsApi(
       res.status(500).json({ error: "Something went wrong" });
     }
   } else if (req.method === "PUT") {
-    const { id, userId } = req.body;
+    const { id, userId, ...rest } = req.body;
 
-    let data = req.body.data;
+    let data = {
+      ...rest,
+    };
 
     if (!id) {
       res.status(400).json({ error: "Missing listing id" });
       return;
     }
 
-    data.options.pickup = data.pickup;
-    data.options.condition = data.condition;
-    data.options.location = data.location;
-    delete data.pickup;
-    delete data.condition;
-    delete data.location;
+    if (data?.image) parsedImg = JSON.parse(data.image) || null;
+    if (data?.options) {
+      data.options.pickup = data?.pickup
+        ? data.pickup
+        : data.options?.pickup
+        ? data.options.pickup
+        : null;
+      data.options.condition = data?.condition
+        ? data.condition
+        : data.options?.condition
+        ? data.options.condition
+        : null;
+      data.options.location = data?.location
+        ? data.location
+        : data.options?.location
+        ? data.options.location
+        : null;
+      delete data.pickup;
+      delete data.condition;
+      delete data.location;
+    }
+    if (data?.price) data.price = parseFloat(data.price.toString());
 
     data = Object.fromEntries(
-      Object.entries(data).filter(([key, value]) => value !== "")
+      Object.entries(data).filter(
+        ([key, value]) => value !== "" && value !== null
+      )
     );
 
     try {

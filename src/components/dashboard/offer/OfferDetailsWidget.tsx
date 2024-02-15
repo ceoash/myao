@@ -10,10 +10,15 @@ import Image from "next/image";
 import StripeCheckout from "@/components/StripeCheckout";
 
 import {
-  MdArrowCircleDown,
-  MdArrowCircleUp,
-  MdOutlineSwapVerticalCircle,
-} from "react-icons/md";
+  TbArrowBigDown,
+  TbArrowBigDownFilled,
+  TbArrowBigDownLinesFilled,
+  TbArrowBigUp,
+  TbArrowBigUpFilled,
+  TbArrowBigUpLinesFilled,
+  TbInfoHexagon,
+} from "react-icons/tb";
+import { MdOutlineSwapVerticalCircle } from "react-icons/md";
 import { CustomListing } from "@/interfaces/authenticated";
 import {
   CiCalendar,
@@ -38,7 +43,7 @@ interface OfferDetailsWidgetProps {
     event: string;
     date: string;
     userId: string;
-    price: string;
+    price: string | number;
   }[];
   isLoading?: boolean;
   handleFinalise: (userId: string, participantId: string) => void;
@@ -46,7 +51,7 @@ interface OfferDetailsWidgetProps {
   setStatus: Dispatch<SetStateAction<string>>;
   setCurrentBid: Dispatch<
     SetStateAction<{
-      currentPrice: string;
+      currentPrice: string | number;
       byUserId: string;
       byUsername: string;
       me: Bid;
@@ -110,17 +115,6 @@ const OfferDetailsWidget = ({
   const edit = useOfferEditModal();
   const { options } = listing;
 
-  const owner =
-    (bids.length > 0 && bids[bids.length - 1].userId === session?.user.id) ||
-    listing.sellerId === listing.userId
-      ? listing.seller
-      : listing.buyer;
-  const receiver =
-    bids.length > 0 && bids[bids.length - 1].userId === listing.sellerId
-      ? listing.buyer
-      : listing.seller || listing.sellerId === listing.userId
-      ? listing.buyer
-      : listing.seller;
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -187,20 +181,20 @@ const OfferDetailsWidget = ({
             ? "bg-red-100  border-red-50"
             : status === "accepted" || status === "completed"
             ? "bg-green-100 border-green-50"
-            : " bg-orange-default border-gray-200"
+            : "  border-gray-200"
         }
         `}
     >
       <div className="relative mx-auto w-full">
         <Link
           href={`/dashboard/profile/${session?.user.id}`}
-          className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform transform hover:-translate-y-2 w-full shadow mb-4 
+          className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform transform hover:-translate-y-2 w-full shadow mb-4  border
         ${
           status === "rejected" || status === "cancelled"
             ? "bg-red-50 text-red-500 border-red-100"
             : status === "accepted" || status === "completed"
             ? "bg-green-50 text-green-500 border-green-100"
-            : "bg-gray-50 border-gray-200"
+            : currentBid?.currentPrice && currentBid?.byUserId === session?.user.id && status === "negotiating" ? "bg-orange-50 text-orange-500 border-orange-100" : "bg-white border-gray-200"
         } border  shadow`}
         >
           <div className="grid grid-cols-2 my-4 mx-4">
@@ -256,17 +250,17 @@ const OfferDetailsWidget = ({
           </div>
         </Link>
 
-        <div className="w-full flex justify-center mb-4 -mt-4 md:mt-0 md:mb-0">
+        <div className="w-full flex justify-center mt-2 -mb-2 ">
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === session?.user.id && (
-              <MdArrowCircleDown
-                className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 -mt-12  z-10 rounded-full ${
+              <TbArrowBigDownFilled
+                className={` transition-all text-white/70 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-14 z-10 rounded-full p-2.5 ${
                   status === "rejected" || status === "cancelled"
-                    ? "bg-red-50 text-red-400 border-red-100"
+                    ? "border-red-200  bg-gradient-to-t from-red-default to-red-300"
                     : status === "accepted" || status === "completed"
-                    ? "bg-green-50 text-green-400 border-green-100"
-                    : "text-orange-default bg-gray-50 border-gray-200"
-                } border shadow`}
+                    ? "border-green-200  bg-gradient-to-t from-green-default to-green-300"
+                    : "border-orange-200  bg-gradient-to-t from-orange-default to-orange-300"
+                } border  shadow`}
               />
             )}
         </div>
@@ -351,8 +345,8 @@ const OfferDetailsWidget = ({
               ></div>
             </div>
 
-            <div className="-mt-2 text-center">
-              <div className="flex justify-center gap-1 ">
+            <div className="-mt-2 ">
+              <div className="flex justify-center gap-1 text-center ">
                 <span>By</span>
                 <Link
                   href={`/dashboard/profile/${currentBid.byUserId}`}
@@ -366,20 +360,37 @@ const OfferDetailsWidget = ({
 
               {!currentBid?.currentPrice ||
               Number(currentBid?.currentPrice) < 1 ? (
-                <p className="block w-full mt-4 italic">
-                  {listing.userId === session?.user?.id
-                    ? `Awaiting offer from ${participant?.username || ""}`
-                    : "Enter a offer to start negotiating"}
-                </p>
+                <div className="flex justify-center items-center w-full">
+                  <div className="flex items-center mx-auto gap-1">
+                    <TbInfoHexagon />
+                    <p className="block w-full my-2 italic">
+                      {listing.userId === session?.user?.id
+                        ? `Awaiting offer from ${participant?.username || ""}`
+                        : "Enter a offer to start negotiating"}
+                    </p>
+                  </div>
+                </div>
               ) : currentBid.byUserId !== session?.user?.id &&
                 status === "negotiating" ? (
-                <p className="block w-full mt-4 italic">
-                  Would you like to accept?
-                </p>
+                <div className="flex justify-center items-center gap-1 w-full">
+                  <div className="flex items-center mx-auto gap-1">
+                  <TbInfoHexagon />
+                  <p className="block w-full my-2 italic">
+                    Would you like to accept?
+                  </p>
+
+                  </div>
+                </div>
               ) : status === "negotiating" ? (
-                <p className="block w-full mt-4 italic">
-                  Awaiting response from {participant?.username || ""}
-                </p>
+                <div className="flex justify-center items-centerw-full">
+                  <div className="flex items-center mx-auto gap-1">
+                  <TbInfoHexagon />
+                  <p className="block w-full my-2 italic">
+                    Awaiting response from {participant?.username || ""}
+                  </p>
+                    
+                  </div>
+                </div>
               ) : (
                 ""
               )}
@@ -457,40 +468,40 @@ const OfferDetailsWidget = ({
       </div>
 
       <div className="relative inline-block  w-full  rounded-lg mt-4 ">
-        <div className="w-full flex justify-center ">
+        <div className="w-full flex justify-center -mb-4 mt-4">
           {Number(currentBid?.currentPrice) > 0 &&
             currentBid?.byUserId === participant.id && (
-              <MdArrowCircleUp
-                className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-14 z-10 rounded-full  ${
+              <TbArrowBigUpFilled
+                className={` transition-all text-white/70 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-14 z-10 rounded-full p-2.5 ${
                   status === "rejected" || status === "cancelled"
-                    ? "bg-red-50 text-red-500 border-red-100"
+                    ? "border-red-200  bg-gradient-to-b from-red-default to-red-300"
                     : status === "accepted" || status === "completed"
-                    ? "bg-green-50 text-green-400 border-green-100"
-                    : "text-orange-default bg-gray-50 border-gray-200"
+                    ? "border-green-200  bg-gradient-to-b from-green-default to-green-300"
+                    : "border-orange-200  bg-gradient-to-b from-orange-default to-orange-300"
                 } border  shadow`}
               />
             )}
           {!currentBid?.currentPrice ||
             (Number(currentBid.currentPrice) < 1 && (
               <MdOutlineSwapVerticalCircle
-                className={`text-[70px] md:text-[70px] lg:text-[70px] xl:text-[60px] xl:-mt-10 2xl:text-[70px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  ${
+                className={`transition-all text-white/80 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  p-2.5 ${
                   status === "rejected" || status === "cancelled"
-                    ? "bg-red-50 text-red-400 border-red-100"
+                    ? "border-red-200  bg-gradient-to-b from-red-default to-red-300"
                     : status === "accepted" || status === "completed"
-                    ? "bg-green-50 text-green-400 border-green-100"
-                    : "bg-gray-50 border-gray-200 text-orange-default"
+                    ? "border-green-200  bg-gradient-to-b from-green-default to-green-300"
+                    : "border-orange-200  bg-gradient-to-br from-orange-default to-orange-200"
                 } border shadow`}
               />
             ))}
         </div>
         <Link
           href={`/dashboard/profile/${participant?.id}`}
-          className={`relative rounded-lg inline-block duration-300 ease-in-out transition-transform text-md lg:text-lg transform hover:-translate-y-2 w-full ${
+          className={`border relative rounded-lg inline-block duration-300 ease-in-out transition-transform text-md lg:text-lg transform hover:-translate-y-2 w-full ${
             status === "rejected" || status === "cancelled"
               ? "bg-red-50 text-red-500 border-red-100"
               : status === "accepted" || status === "completed"
               ? "bg-green-50 text-green-500 border-green-100"
-              : "bg-gray-50 border-gray-200"
+              : currentBid?.currentPrice && currentBid?.byUserId !== session?.user.id && status === "negotiating" ? "bg-orange-50 text-orange-500 border-orange-100" : "bg-white border-gray-200"
           } border shadow`}
         >
           <div className="grid grid-cols-2 my-4 mx-4">
@@ -542,7 +553,7 @@ const OfferDetailsWidget = ({
         events[0].event !== "completed" &&
         events[0].event !== "accepted" && (
           <div
-            className={`border ${
+            className={`border xl:hidden ${
               status === "rejected"
                 ? "border-red-300 bg-red-200"
                 : "border-orange-300 bg-orange-default"
@@ -570,7 +581,7 @@ const OfferDetailsWidget = ({
       {status === "accepted" &&
         listing.buyerId === session?.user.id &&
         status === "accepted" && (
-          <div className="flex flex-col items-center gap-4 mt-4 w-full">
+          <div className="flex flex-col items-center gap-4 mt-4 w-full lg:hidden">
             <StripeCheckout
               session={session}
               listing={{
@@ -667,7 +678,7 @@ const OfferDetailsWidget = ({
       )}
       {toggleMenu.summary && (
         <div
-          className={`mt-6 grid grid-cols-1 md:grid-cols-2 border rounded-lg px-4 shadow  pt-6 pb-6 mb-6 auto-cols-fr gap-4 relative ${
+          className={`xl:hidden mt-6 grid grid-cols-1 md:grid-cols-2 border rounded-lg px-4 shadow  pt-6 pb-6 mb-6 auto-cols-fr gap-4 relative ${
             status === "rejected" || status === "cancelled"
               ? "bg-red-50  border-red-100"
               : status === "accepted" || status === "completed"
@@ -768,7 +779,7 @@ const OfferDetailsWidget = ({
       {status !== "cancelled" &&
         status !== "accepted" &&
         status !== "completed" && (
-          <div className="col-span-2 -mt-1 flex gap-2">
+          <div className="col-span-2 -mt-1 flex gap-2 xl:hidden">
             <Button
               label="TERMINATE"
               cancel
@@ -780,6 +791,7 @@ const OfferDetailsWidget = ({
 
       {status === "completed" && (
         <Button
+          className="xl:hidden"
           primary
           options={{ size: "lg" }}
           isLoading={loadingState.contact}

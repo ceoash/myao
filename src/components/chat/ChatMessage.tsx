@@ -17,6 +17,8 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(
       setTimeSinceCreated(timeSince(new Date(message.createdAt)));
     }, [message.createdAt]);
 
+    console.log(message);
+
     return (
       <div
         ref={ref}
@@ -30,7 +32,7 @@ const ChatMessage = forwardRef<HTMLDivElement, MessageProps>(
         <div className="flex items-center justify-end h-10 w-10 rounded-full text-white flex-shrink-0">
           <img
             src={
-              message?.user?.profile?.image || "/images/placeholders/avatar.png"
+              message?.user?.profile?.image ? message?.user?.profile?.image : "/images/placeholders/avatar.png"
             }
             className="rounded-full border-2 border-gray-200 p-1"
           />

@@ -5,6 +5,7 @@ import { FaChevronRight } from "react-icons/fa";
 
 interface TabsProps {
   setTab: (tab: string) => void;
+
   tabs: {
     id: string;
     label: string;
@@ -19,11 +20,17 @@ interface TabsProps {
   main?: boolean;
   additionalData?: any;
   mobileLinks?: any;
+  className?: string;
   count?: {
     messages?: {
       total: number;
       unread: number;
     };
+  };
+  setCount?: React.Dispatch<React.SetStateAction<number>>;
+  model?: {
+    id: string;
+    title: string;
   };
 }
 
@@ -37,6 +44,9 @@ const Tabs = ({
   additionalData,
   mobileLinks,
   count,
+ setCount,
+  model,
+  className,
 }: TabsProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +57,38 @@ const Tabs = ({
     if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
       setIsOpen(false);
     }
+  };
+
+  const markReasAsRead = async () => {
+    if (!model?.id) return;
+    try {
+      const res = await fetch("/api/messages/markAsRead", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId: model?.id || "",
+          read: true,
+        }),
+      });
+
+      const data = await res.json();
+      console.log(data);
+      if (res.ok) {
+        console.log("Messages marked as read");
+        setCount && setCount(0);
+      }
+    } catch (error) {
+      console.error("API error:", error);
+    }
+  };
+
+  const changeTab = (tab: string) => {
+    if (tab === "chat") {
+      markReasAsRead();
+    }
+    setTab(tab);
   };
 
   useEffect(() => {
@@ -63,7 +105,9 @@ const Tabs = ({
   return (
     <ul
       key={tabs[0].label + tabs[tabs.length - 1].id}
-      className="flex border-l rounded-tl-lg flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative"
+      className={`flex  flex-wrap text-md font-medium text-center text-gray-700 border-b border-gray-200 relative items-center ${
+        className ? className : ""
+      }`}
     >
       {main && (
         <li
@@ -71,8 +115,7 @@ const Tabs = ({
           onClick={() => setTab("trade")}
           className={`
             cursor-pointer 
-            border-r
-            border-t
+            
             rounded-t-lg active
             px-2.5
             sm:px-3
@@ -83,9 +126,11 @@ const Tabs = ({
             xl:hidden
             border-gray-20
             font-medium
-            md:font-bold
+            
             ${
-              activeTab === "details" ? " bg-orange-400 text-white" : "bg-white"
+              activeTab === "trade"
+                ? " border-b-2 border-orange-400 text-orange-600"
+                : "bg-white"
             }
           }`}
         >
@@ -108,15 +153,10 @@ const Tabs = ({
             ) : (
               ""
             )}
-
             <div
-              onClick={() => setTab(tab.id)}
+              onClick={() => changeTab(tab.id)}
               className={`
                 cursor-pointer 
-                border-r
-                border-t
-                first:border-l rounded-tl-lg
-                last:border-l rounded-tr-lg
                 md:px-4 py-2
                 px-2.5
                 sm:px-3
@@ -127,23 +167,38 @@ const Tabs = ({
                 text-sm
                 md:text-md
                 font-medium
-                md:font-bold
+                
               border-gray-200
               relative
               ${
-                tab.label === "Bid History"
+                tab.id === "chat" &&
+                count?.messages?.unread &&
+                count.messages.unread > 0
+                  ? "pr-8 gap-3"
+                  : ""
+              }
+              ${
+                tab.label === "Offer History"
                   ? "hidden md:inline-block"
                   : "inline-block"
               }
-        ${activeTab === tab.id ? " bg-orange-400 text-white" : "bg-white"}
+        ${
+          activeTab === tab.id
+            ? " border-b-2 border-orange-400 text-orange-600"
+            : "bg-white"
+        }
         }`}
             >
               {tab.label}
-              {tab.id === "chat" &&
-                count?.messages &&
-                count?.messages?.unread > 0 && (
-                  <div className="rounded-full border bg-orange-400 w-3 h-3 right-0  -mt-0.5 mr-0.5 absolute"></div>
-                )}
+              {activeTab !== tab.id &&
+                tab.id === "chat" &&
+                count?.messages?.unread &&
+                count.messages.unread > 0 ? (
+                  <div className="">
+                    <div className="rounded-full border border-b-2 border-orange-400 bg-orange-400 w-3 h-3 right-0  -mt-0.5 mr-0.5 absolute mx-2"></div>
+
+                  </div>
+                ) : null}
             </div>
           </div>
         );
@@ -157,8 +212,7 @@ const Tabs = ({
                 cursor-pointer 
                 border-r
                 border-t
-                first:border-l rounded-tl-lg
-                last:border-l rounded-tr-lg
+                
                 px-3 md:px-4 py-2
                 flex-nowrap 
                 whitespace-nowrap
@@ -187,7 +241,7 @@ const Tabs = ({
                           <MenuItem
                             key={i}
                             label={tab.label}
-                            onClick={() => setTab(tab.id)}
+                            onClick={() => changeTab(tab.id)}
                           />
                         );
                       })}

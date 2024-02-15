@@ -14,13 +14,12 @@ import OfferAlerts from "@/components/dashboard/offer/OfferAlerts";
 import Tabs from "@/components/dashboard/Tabs";
 import Button from "@/components/dashboard/Button";
 import Header from "@/components/dashboard/offer/Header";
-import useOfferEditModal from "@/hooks/useOfferEditModal";
 import StatusChecker from "@/utils/status";
 import Link from "next/link";
 import { Bid, Profile, Review, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useSocketContext } from "@/context/SocketContext";
-import { FaImage, FaPencilAlt, FaPlus } from "react-icons/fa";
+import { FaImage } from "react-icons/fa";
 import { Session } from "next-auth";
 import { tempId } from "@/utils/generate";
 import { GetServerSideProps } from "next";
@@ -35,7 +34,13 @@ import {
   EventsProps,
   ProfileUser,
 } from "@/interfaces/authenticated";
+import useOfferEditModal from "@/hooks/useOfferEditModal";
+import useDataModal from "@/hooks/useDataModal";
+import AddImages from "@/components/forms/AddImages";
 // import OfferDetailsWidgetOld from "@/components/dashboard/offer/OfferDetailsWidgetOld";
+interface IUser extends User {
+  profile: Profile;
+}
 
 interface MessageProps {
   buyerId: string;
@@ -44,11 +49,9 @@ interface MessageProps {
   text: string;
   id: string;
   read: boolean;
+  user?: IUser;
 }
 
-interface IUser extends User {
-  profile: Profile;
-}
 interface IReview extends Review {
   user: IUser;
 }
@@ -67,7 +70,7 @@ const LOADING_STATE = {
 };
 
 const CURRENT_BID_STATE = {
-  currentPrice: "",
+  currentPrice: "" || 0,
   byUserId: "",
   byUsername: "",
   me: {} as Bid,
@@ -147,12 +150,19 @@ const generateStats = (stats: {
 
 const Index = ({ listing, session, messagesCount }: PageProps) => {
   const [disabled, setDisabled] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState("description");
+  const [activeSubTab, setActiveSubTab] = useState("additional");
   const [activities, setActivities] = useState<ExtendedActivity[]>([]);
   const [loadingState, setLoadingState] = useState(LOADING_STATE);
   const [bids, setBids] = useState<Bid[]>([]);
   const [events, setEvents] = useState<EventsProps[]>([]);
-  const [currentBid, setCurrentBid] = useState(CURRENT_BID_STATE);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [currentBid, setCurrentBid] = useState<{
+    currentPrice: string | number;
+    byUserId: string;
+    byUsername: string;
+    me: Bid;
+    participant: Bid;
+  }>(CURRENT_BID_STATE);
   const [status, setStatus] = useState<string>("");
   const [tab, setTab] = useState("details");
   const [timeSinceCreated, setTimeSinceCreated] = useState<string | null>(null);
@@ -165,9 +175,10 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const [size, setSize] = useState(0);
   const [mobileView, setMobileView] = useState(false);
 
-  const edit = useOfferEditModal();
   const now = Date.now();
   const socket = useSocketContext();
+
+  const modal = useDataModal();
 
   const [reviews, setReviews] = useState<{
     userReview: IReview;
@@ -181,15 +192,15 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
 
   const mainTabs = [
     { id: "details", label: "Details", primary: true },
-   /*  { id: "chat", label: "Chat", primary: true, notificationsCount: messages.filter(message => !message.read).length || 0 }, */
-     { id: "chat", label: "Chat", primary: true },
-    { id: "activity", label: "Activity", primary: true },
-    { id: "bids", label: "Offer History" },
+    /*  { id: "chat", label: "Chat", primary: true, notificationsCount: messages.filter(message => !message.read).length || 0 }, */
+    { id: "chat", label: "Chat", primary: true },
   ];
 
   const secondaryTabs = [
-    { id: "description", label: "Description", primary: true },
-    { id: "photos", label: "Photos", primary: true },
+    { id: "additional", label: "Additional Information", primary: true },
+    { id: "bids", label: "Offer History" },
+    { id: "activity", label: "Activity", primary: true },
+
     {
       id: "user",
       label: `${
@@ -206,6 +217,11 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   }, []);
 
   useEffect(() => {
+    setUnreadMessages(messagesCount);
+
+  }, [messagesCount]);
+
+  useEffect(() => {
     if (isMounted) {
       setCurrentListing(listing);
     }
@@ -214,21 +230,18 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   useEffect(() => {
     const handleResize = () => {
       if (
-        window.innerWidth <= 1280 &&
-        window.innerWidth !== size &&
-        !mobileView
+        window.innerWidth >= 1280 &&
+        window.innerWidth !== size
+   
       ) {
         if (tab !== "details") setTab("details");
-        setTab("details");
         setSize(window.innerWidth);
         setMobileView(true);
       } else if (
-        window.innerWidth >= 1280 &&
+        window.innerWidth < 1280 &&
         window.innerWidth !== size &&
-        tab === "details" &&
-        mobileView
-      ) {
-        setTab("details");
+        tab !== "trade" ) {
+        setTab("trade");
         setSize(window.innerWidth);
         setMobileView(false);
       }
@@ -243,8 +256,22 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     };
   }, [size, mobileView]);
 
+  const addImages = async (images: string) => {
+   
+    const res = await axios.put(`/api/listings`, {
+      image: images,
+      id: currentListing.id,
+    });
+
+    setCurrentListing((prev: any) => {
+      return { ...prev, image: images };
+    });
+
+    return res;
+  }
+
   const handleAddImages = () => {
-    edit.onOpen(session?.user, currentListing, "images", {});
+    modal.onOpen("Add Images", <AddImages images={currentListing?.image || ""} saveImages={addImages} />);
   };
 
   useEffect(() => {
@@ -359,19 +386,23 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   ]);
 
   useEffect(() => {
-    if(tab === "chat") {
+    if (tab === "chat") {
       const markAsRead = async () => {
-        const url = "/api/dashboard/markAllAsRead?listingId=" + currentListing.id + "&userId=" + session?.user.id;
+        const url =
+          "/api/dashboard/markAllAsRead?listingId=" +
+          currentListing.id +
+          "&userId=" +
+          session?.user.id;
         const ids = messages.map((message) => message.id);
         try {
           await axios.put(url);
         } catch (error) {
           console.log(error);
         }
-      }
+      };
       markAsRead();
     }
-  },[tab])
+  }, [tab]);
 
   useEffect(() => {
     socket.emit("join_listing", currentListing.id);
@@ -381,19 +412,18 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   }, [currentListing.id]);
 
   useEffect(() => {
+    console.log("Running socket effect");
     if (!session?.user.id) return;
-
-    socket.on("new_listing_message", (data) => {
+    const handleNewListingMessage = (data: any) => {
       console.log("Received new message: ", data);
       setMessages((prevMessages) => [...prevMessages, data]);
-    });
+      if(data.userId !== session?.user.id && tab !== "chat") setUnreadMessages((prev) => prev + 1);
+    };
 
-    socket.on("updated_bid", (data) => {
+    const handleUpdatedBid = (data: any) => {
       const { price, userId, username, listingId, previous } = data;
-
-      console.log("Received new bid: ", data);
       console.log(
-        `Received bid price update for listing ${listingId}: ${price}`
+        `Received offer price update for listing ${listingId}: ${price}`
       );
       setBids((prevBids) => {
         let temporaryId = tempId();
@@ -406,6 +436,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           createdAt: new Date(now),
           updatedAt: new Date(now),
         };
+        console.log("New bid: ", newBid);
         const updatedBids = [...prevBids, newBid];
         return updatedBids;
       });
@@ -424,9 +455,10 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         return newBid;
       });
       setStatus("negotiating");
-    });
+      return console.log("New bid: ", data);
+    }
 
-    socket.on("update_status", (data) => {
+    const handleUpdateStatus = (data: {listingId: string, newStatus: string, userId: string}) => {
       const { listingId, newStatus, userId } = data;
       if (listingId === currentListing.id)
         console.log(
@@ -441,13 +473,15 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           date: new Date(now).toISOString(),
           userId: userId,
         };
-        return [newEvent ,...prev];
-      })
-    });
-    socket.on("updated_listing", (data) => {
-      const { listing } = data;
+        return [newEvent, ...prev];
+      });
+      return console.log("New status: ", data);
+    
+    }
 
-      console.log("Received updated listing: ", listing)
+
+    const handleUpdatedListing = (data: any) => {
+      const { listing } = data;
 
       setCurrentListing((prev: any) => {
         return {
@@ -458,11 +492,16 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           updatedAt: listing.updatedAt,
           status: listing.status,
           options: listing.options,
-         
         };
       });
-      
-    });
+
+      return console.log("Updated listing: ", data);
+    }
+
+  socket.on("new_listing_message", handleNewListingMessage);
+  socket.on("updated_bid", handleUpdatedBid);
+  socket.on("update_status", handleUpdateStatus);
+  socket.on("updated_listing", handleUpdatedListing);
 
     return () => {
       socket.off("new_listing_message");
@@ -509,7 +548,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         bids,
         currentBid,
         listing,
-        "reject the current bid for £"
+        "reject the current offer for £"
       ),
       negotiating: "start negotiating",
       completed: "mark this offer as completed",
@@ -553,61 +592,88 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
       setLoadingState((prev) => {
         return { ...prev, completed: true };
       });
-      
-      await axios
-        .put(`/api/updateListing/status`, {
-          status: status,
-          listingId: currentListing.id,
-          userId: session?.user?.id,
-          completedById: userId,
-          completedAt: new Date().toISOString(),
-        })
-        .then((response) => {
-          socket.emit("update_status", {
-            newStatus: status,
-            listingId: currentListing.id,
-            userId: userId,
-          });
+      confirmationModal.onOpen(
+        "Are you sure you want to " + statusMessage + "?",
+        async () => {
+          await axios
+            .put(`/api/updateListing/status`, {
+              status: status,
+              listingId: currentListing.id,
+              userId: session?.user?.id,
+              completedById: userId,
+              completedAt: new Date().toISOString(),
+            })
+            .then((response) => {
+              socket.emit("update_status", {
+                newStatus: status,
+                listingId: currentListing.id,
+                userId: userId,
+              });
 
-          const sellerEmail = axios.post("/api/email/emailNotification", {
-            listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
-            name: response.data.listing.seller.name,
-            email: response.data.listing.seller.email,
-            title: response.data.listing.buyer?.username + " has paid you " + response.data.listing.events[response.data.listing.events.length - 1].price,
-            body: `Your offer has been paid by ${response.data.listing.buyer.username}. Log in and arrange the transfer of the item(s).`,
-            linkText: "Make Payment",
-            url: `/dashboard/offers/${response.data.listing.id}`,
-          });
-          
-          const buyerEmail = axios.post("/api/email/emailNotification", {
-            listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
-            name: response.data.listing.buyer.name,
-            email: response.data.listing.buyer.email,
-            title: "Your payment was successful",
-            body: `Your payment of ${response.data.listing.events[ response.data.listing.events - 1].price} was successful. Log in and arrange the transfer of the item(s).`,
-            linkText: "Log in",
-            url: `/dashboard/offers/${response.data.listing.id}`,
-          });
+              const sellerEmail = axios.post("/api/email/emailNotification", {
+                listing: {
+                  ...response.data.listing,
+                  price:
+                    (response.data.listing.events &&
+                      response.data.listing.events[
+                        response.data.listing.events.length - 1
+                      ].price) ||
+                    response.data.listing.price,
+                },
+                name: response.data.listing.seller.name,
+                email: response.data.listing.seller.email,
+                title:
+                  response.data.listing.buyer?.username +
+                  " has paid you " +
+                  response.data.listing.events[
+                    response.data.listing.events.length - 1
+                  ].price,
+                body: `Your offer has been paid by ${response.data.listing.buyer.username}. Log in and arrange the transfer of the item(s).`,
+                linkText: "Make Payment",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
 
+              const buyerEmail = axios.post("/api/email/emailNotification", {
+                listing: {
+                  ...response.data.listing,
+                  price:
+                    (response.data.listing.events &&
+                      response.data.listing.events[
+                        response.data.listing.events.length - 1
+                      ].price) ||
+                    response.data.listing.price,
+                },
+                name: response.data.listing.buyer.name,
+                email: response.data.listing.buyer.email,
+                title: "Your payment was successful",
+                body: `Your payment of ${
+                  response.data.listing.events[response.data.listing.events - 1]
+                    .price
+                } was successful. Log in and arrange the transfer of the item(s).`,
+                linkText: "Log in",
+                url: `/dashboard/offers/${response.data.listing.id}`,
+              });
 
-          const { sellerId, buyerId, transactionResult } = response.data;
+              const { sellerId, buyerId, transactionResult } = response.data;
 
-          socket.emit(
-            "update_activities",
-            transactionResult,
-            sellerId,
-            buyerId
-          );
-        })
-        
-        .catch((err) => {
-          console.log("Something went wrong!");
-        })
-        .finally(() => {
-          setLoadingState((prev) => ({ ...prev, status: false }));
-          setLoadingState(LOADING_STATE);
-        });
-      return;
+              socket.emit(
+                "update_activities",
+                transactionResult,
+                sellerId,
+                buyerId
+              );
+            })
+
+            .catch((err) => {
+              console.log("Something went wrong!");
+            })
+            .finally(() => {
+              setLoadingState((prev) => ({ ...prev, status: false }));
+              setLoadingState(LOADING_STATE);
+            });
+          return;
+        }
+      );
     }
     confirmationModal.onOpen(
       "Are you sure you want to " + statusMessage + "?",
@@ -651,24 +717,63 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
               userId: userId,
             });
 
-            if(response.data.listing.status === "accepted" ) {
-              const receiver = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.buyer : response.data.listing.seller;
-              const sender = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.seller : response.data.listing.buyer;
+            if (response.data.listing.status === "accepted") {
+              const receiver =
+                response.data.listing?.events[0].userId ===
+                response.data.listing.sellerId
+                  ? response.data.listing.buyer
+                  : response.data.listing.seller;
+              const sender =
+                response.data.listing?.events[0].userId ===
+                response.data.listing.sellerId
+                  ? response.data.listing.seller
+                  : response.data.listing.buyer;
               const email = axios.post("/api/email/emailNotification", {
-                listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
+                listing: {
+                  ...response.data.listing,
+                  price:
+                    (response.data.listing.events &&
+                      response.data.listing.events[
+                        response.data.listing.events.length - 1
+                      ].price) ||
+                    response.data.listing.price,
+                },
                 name: response.data.listing?.buyer.username,
                 email: response.data.listing?.buyer.email,
-                title: response.data.listing?.sellerId === sender.id ? "You have a deal!" : "You accepted the offer!",
-                body: response.data.listing?.sellerId === sender.id ? `Your offer has been accepted by ${listing.buyer.username}`: `You accepted your offer with ${listing.seller.username}.`,
-                description: "Login to make payment and complete the negotiation.",
+                title:
+                  response.data.listing?.sellerId === sender.id
+                    ? "You have a deal!"
+                    : "You accepted the offer!",
+                body:
+                  response.data.listing?.sellerId === sender.id
+                    ? `Your offer has been accepted by ${listing.buyer.username}`
+                    : `You accepted your offer with ${listing.seller.username}.`,
+                description:
+                  "Login to make payment and complete the negotiation.",
                 linkText: "Make Payment",
                 url: `/dashboard/offers/${response.data.listing.id}`,
               });
-            } else{
-              const receiver = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.buyer : response.data.listing.seller;
-              const sender = response.data.listing?.events[0].userId === response.data.listing.sellerId ? response.data.listing.seller : response.data.listing.buyer;
+            } else {
+              const receiver =
+                response.data.listing?.events[0].userId ===
+                response.data.listing.sellerId
+                  ? response.data.listing.buyer
+                  : response.data.listing.seller;
+              const sender =
+                response.data.listing?.events[0].userId ===
+                response.data.listing.sellerId
+                  ? response.data.listing.seller
+                  : response.data.listing.buyer;
               const email = axios.post("/api/email/emailNotification", {
-                listing: { ...response.data.listing, price: response.data.listing.events && response.data.listing.events[response.data.listing.events.length - 1].price || response.data.listing.price},
+                listing: {
+                  ...response.data.listing,
+                  price:
+                    (response.data.listing.events &&
+                      response.data.listing.events[
+                        response.data.listing.events.length - 1
+                      ].price) ||
+                    response.data.listing.price,
+                },
                 name: receiver.username,
                 email: receiver.email,
                 title: `Your offer has been ${status}`,
@@ -700,12 +805,18 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
 
   const MainBody = (
     <>
-      <div className="h-full flex flex-col  pt-6">
+      <div className="h-full flex flex-col ">
         <Header
           status={status}
           currentBid={currentBid}
           listing={currentListing}
           session={session}
+          handleAddImages={handleAddImages}
+          bids={bids}
+          setBids={setBids}
+          setCurrentBid={setCurrentBid}
+          setStatus={setStatus}
+          sessionUser={sessionUser}
         />
 
         <Tabs
@@ -713,102 +824,128 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           tabs={secondaryTabs}
           setTab={setActiveSubTab}
           tab={activeSubTab}
+          className="border-t bg-white rounded-t border-x"
           
         />
 
-        {activeSubTab === "description" && (
-          <div className="h-full flex flex-col bg-white p-4 pt-0 border rounded-b-lg rounded-tr-lg border-gray-200 border-t-0 transition-all ease-in-out duration-200">
+        {activeSubTab === "additional" && (
+          <div className="flex-grow flex flex-col bg-white p-4 pt-0 border rounded-b  border-gray-200 border-t-0 transition-all ease-in-out duration-200 h-full">
             <div className="mb-auto mt-4 md:mx-1 flex-grow leading-relaxed first-letter:uppercase pb-6 relative">
-              {status !== "cancelled" &&
+              {/*  {status !== "cancelled" &&
                 status !== "accepted" &&
                 status !== "completed" &&
                 currentListing.userId === session?.user.id && (
                   <FaPencilAlt
                     className="absolute top-1 right-1 text-gray-600 -mt-2 border p-1 rounded-full bg-white border-gray-200 text-2xl"
                     onClick={() =>
-                      edit.onOpen(session?.user, listing, "description", {
+                      edit.onOpen(session?.user, listing, "additinalInformation", {
                         title: currentListing.title,
-                        description: currentListing.description,
+                        description: currentListing.additionalInformation,
                       })
                     }
                   />
-                )}
-              {currentListing.description}
-              {currentListing.completedById}
-
+                )} */}
+              {currentListing?.options?.additionalInformation ||
+                "No additional information"}
             </div>
-            {currentBid.currentPrice !== "0" &&
-              currentBid.currentPrice !== "" && (
-                <div
-                  className={`flex gap-2 justify-between bg-gray-default border border-gray-200 rounded-xl mt-4 p-4 `}
-                >
-                  <div className="block">
-                    {currentBid.currentPrice && (
-                      <div className="text-xs font-bold">
-                        Start price by{" "}
-                        <Link
-                          href={`/dashboard/profile/${currentBid.byUserId}`}
-                          className="underline"
-                        >
-                          {listing.user.id === sessionUser?.id ? 'You' : listing.user.username || ''}
-                        </Link>
-                      </div>
-                    )}
-                    <div className="font-extrabold ">
-                      { listing.price &&
-                      listing.price !== "" && listing.price !== "0" ? (
-                        `£${Number(
-                          listing.price === "0" ? "0.00" : listing.price
-                        ).toLocaleString()}`
-                      ) : (
-                       'none'
+            {typeof currentBid.currentPrice === "number"
+              ? currentBid.currentPrice !== 0
+              : typeof currentBid.currentPrice === "string" &&
+                currentBid.currentPrice !== "0" &&
+                currentBid.currentPrice !== "" && (
+                  <div
+                    className={`flex gap-2 justify-between bg-gray-default border border-gray-200 rounded-xl mt-4 p-4 `}
+                  >
+                    <div className="block">
+                      {currentBid.currentPrice && (
+                        <div className="text-xs font-bold">
+                          Start price by{" "}
+                          <Link
+                            href={`/dashboard/profile/${currentBid.byUserId}`}
+                            className="underline"
+                          >
+                            {listing.user.id === sessionUser?.id
+                              ? "You"
+                              : listing.user.username || ""}
+                          </Link>
+                        </div>
                       )}
+                      <div className="font-extrabold ">
+                        {listing.price &&
+                        listing.price !== "" &&
+                        listing.price !== "0"
+                          ? `£${Number(
+                              listing.price === "0" ? "0.00" : listing.price
+                            ).toLocaleString()}`
+                          : "none"}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className={`block`}>
-                    {currentBid.currentPrice && (
-                      <div className="text-right text-xs font-bold">
-                        {status === "accepted" ? (
-                          <div className="mb-0.5">Agreed price</div>
-                        ) : (
-                          <div className="text-right mb-0.5">
-                            Last offer by
-                            <Link
-                              href={`/dashboard/profile/${currentBid.byUserId}`}
-                              className="underline ml-[2px]"
-                            >
-                              {currentBid.byUsername === sessionUser?.username ? 'You' : currentBid.byUsername || ''}
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="font-extrabold text-right">
-                      {currentBid.currentPrice &&
-                      currentBid.currentPrice !== "0" &&
-                      currentBid.currentPrice !== "" ? (
-                        `£${Number(
-                          currentBid.currentPrice === "0" ||
-                            currentBid.currentPrice === ""
-                            ? "0.00"
-                            : currentBid.currentPrice
-                        ).toLocaleString()}`
-                      ) : (listing.price !== "" && listing.price !== "0") ||
-                        status === "cancelled" ||
-                        status === "rejected" ? (
-                        `£${Number(
-                          listing.price === "0" || listing.price === ""
-                            ? "0.00"
-                            : listing.price
-                        ).toLocaleString()}`
-                      ) : (
-                        "No bids yet"
+                    <div className={`block`}>
+                      {currentBid.currentPrice && (
+                        <div className="text-right text-xs font-bold">
+                          {status === "accepted" ? (
+                            <div className="mb-0.5">Agreed price</div>
+                          ) : (
+                            <div className="text-right mb-0.5">
+                              Last offer by
+                              <Link
+                                href={`/dashboard/profile/${currentBid.byUserId}`}
+                                className="underline ml-[2px]"
+                              >
+                                {currentBid.byUsername === sessionUser?.username
+                                  ? "You"
+                                  : currentBid.byUsername || ""}
+                              </Link>
+                            </div>
+                          )}
+                        </div>
                       )}
+                      <div className="font-extrabold text-right">
+                        {currentBid.currentPrice &&
+                        currentBid.currentPrice !== "0" &&
+                        currentBid.currentPrice !== ""
+                          ? `£${Number(
+                              currentBid.currentPrice === "0" ||
+                                currentBid.currentPrice === ""
+                                ? "0.00"
+                                : currentBid.currentPrice
+                            ).toLocaleString()}`
+                          : (listing.price !== "" && listing.price !== "0") ||
+                            status === "cancelled" ||
+                            status === "rejected"
+                          ? `£${Number(
+                              listing.price === "0" || listing.price === ""
+                                ? "0.00"
+                                : listing.price
+                            ).toLocaleString()}`
+                          : "No bids yet"}
+                      </div>
                     </div>
                   </div>
+                )}
+          </div>
+        )}
+
+        {activeSubTab === "activity" && (
+          <div className=" bg-white border-x border-b rounded-b mb-6 p">
+            {activities?.map((activity: any, i: number) => (
+              <div
+                key={i}
+                className="flex gap-4 justify-between py-2 border-b border-gray-200 px-4 last:border-0"
+              >
+                <div>{activity.message}</div>
+                <div className="text-gray-500 text-sm italic">
+                  {timeSince(activity.createdAt)}
                 </div>
-              )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeSubTab === "bids" && (
+          <div className=" bg-white border-x border-b rounded mb-6">
+            <Bids bids={bids} participant={participant} me={me} />
           </div>
         )}
 
@@ -824,7 +961,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             ) : (
               <div className="flex flex-col items-center my-12">
                 <p className="font-bold my-6 ">No photos available</p>
-                <Button onClick={handleAddImages} >
+                <Button onClick={handleAddImages}>
                   <FaImage className="text-xl text-gray-400 mr-1" />
                   <p className="font-bold text-gray-500">Add photos</p>
                 </Button>
@@ -837,6 +974,9 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             {sessionUser?.id && (
               <div>
                 <UserStats
+                 id={listing.id}
+                 startPrice={Number(listing.price || 0)}
+
                   userLoading={loadingState.user}
                   participant={participant}
                 />
@@ -858,7 +998,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         pageTitle={listing.title}
         meta={<Meta title={listing.title} description={listing.description} />}
       >
-        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6">
+        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6 h-full">
           <OfferAlerts
             handleStatusChange={handleStatusChange}
             session={session}
@@ -868,25 +1008,32 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             listing={listing}
             handleFinalise={handleFinalise}
           />
-          <div className="w-full col-span-6 xl:col-span-8  flex flex-col md:mt-4 lg:mt-0 mt-2">
+          <div className="w-full col-span-6 xl:col-span-8  flex flex-col md:mt-4 lg:mt-0 mt-2 h-full">
             <Tabs
               status={status}
               tabs={mainTabs}
               setTab={setTab}
               tab={tab}
               isListing
+              className="border-t border-x rounded-t bg-white"
+              model={{
+                id: currentListing.id,
+                title: "listing",
+              }}
               main
-              additionalData={<span className="hidden md:block">{StatusChecker(status)}</span>}
+              additionalData={
+                <span className="hidden md:block">{StatusChecker(status)}</span>
+              }
+              setCount={setUnreadMessages}
               count={{
                 messages: {
                   total: 0,
-                  unread: messagesCount || 0,
-                }}
-              }
-
+                  unread: unreadMessages || 0,
+                },
+              }}
             />
             {tab === "chat" && (
-              <div className="messages pt-6 mb-6">
+              <div className="messages pt-6 mb-6 bg-white">
                 {status === "negotiating" && (
                   <ListingChat
                     id={listing.id}
@@ -940,7 +1087,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             )}
 
             {tab === "details" && (
-              <>
+              <div className="h-full">
                 {MainBody}
                 {status === "completed" && (
                   <div className="hidden md:block">
@@ -964,35 +1111,13 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
                     )}
                   </div>
                 )}
-              </>
-            )}
-
-            {tab === "activity" && (
-              <div className="mt-4">
-                {activities?.map((activity: any, i: number) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 justify-between px-1 pb-2 border-b border-gray-200 mb-2"
-                  >
-                    <div>{activity.message}</div>
-                    <div className="text-gray-500 text-sm italic">
-                      {timeSince(activity.createdAt)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {tab === "bids" && (
-              <div className="mb-6  mt-4">
-                <Bids bids={bids} participant={participant} me={me} />
               </div>
             )}
           </div>
 
           <div
             className={`w-full xl:col-span-4 col-span-4 ${
-              tab === "details" ? "block" : "hidden xl:block"
+              tab === "trade" ? "block" : "hidden xl:block"
             }`}
           >
             <OfferDetailsWidget
@@ -1003,7 +1128,6 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
               currentBid={currentBid}
               setCurrentBid={setCurrentBid}
               bids={bids}
-              setBids={setBids}
               handleStatusChange={handleStatusChange}
               isLoading={loadingState.status}
               loadingState={loadingState}
@@ -1013,6 +1137,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
               setStatus={setStatus}
               handleFinalise={handleFinalise}
               me={me}
+              setBids={setBids}
             />
           </div>
         </div>
@@ -1042,6 +1167,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       where: {
         listingId: offerId,
         read: false,
+        userId: {
+          not: session.user.id,
+        },
       },
     });
 
@@ -1051,7 +1179,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    if(session.user.id !== listing.sellerId && session.user.id !== listing.buyerId) {
+    if (
+      session.user.id !== listing.sellerId &&
+      session.user.id !== listing.buyerId
+    ) {
       return {
         redirect: {
           destination: "/dashboard/offers",

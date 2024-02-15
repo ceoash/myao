@@ -12,6 +12,7 @@ interface MessageProps {
   text: string;
   id: string;
   read: boolean;
+  user?: any;
 }
 
 interface ListingChatProps {
@@ -61,8 +62,9 @@ const ListingChat = ({ id, session, messages, buyerId, sellerId }: ListingChatPr
 
       await axios.post("/api/newOfferMessage", data).then((response) => {
         const newMessage = response.data.messages[response.data.messages.length - 1];
-        const message = {...newMessage};
-        socket.emit("new_listing_message", message);
+        const message = {...newMessage };
+        socket.emit("new_listing_message",{...message });
+        console.log("new message", message);
         reset();
       })
       .catch((error) => console.log(error))

@@ -15,9 +15,8 @@ const UserType = ({
 }: UserTypeProps) => {
   
   const handleSelect = (value: string) => {
-    setValue("userType", value);
     setUserType(value);
-    clearErrors && clearErrors("userType");
+    clearErrors && clearErrors("type");
   };
 
   return (

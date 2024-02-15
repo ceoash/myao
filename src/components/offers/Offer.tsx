@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import { useSocketContext } from "@/context/SocketContext";
 
 import useConfirmationModal from "@/hooks/useConfirmationModal";
-import useOfferEditModal from "@/hooks/useOfferEditModal";
 import { CgArrowRight } from "react-icons/cg";
 
 const Offer: React.FC<any> = ({
@@ -122,7 +121,6 @@ const Offer: React.FC<any> = ({
     });
   }, [id, title, price, category, image, seller, sellerId, bids, buyer, buyerId, type, createdAt, status, userId, activity, completedById, description, expireAt, options, updatedAt, user, _count]);
 
-  const edit = useOfferEditModal();
 
   const confirmation = useConfirmationModal();
 
@@ -359,7 +357,7 @@ const Offer: React.FC<any> = ({
               <div>
                 <div className="text-right text-xs md:text-sm pt-2 lg:pt-0">
                   {bids && bids.length > 0
-                    ? "Bid by "
+                    ? "Offer by "
                     : price !== "0" && price !== ""
                     ? "Starting price "
                     : "Open offer by "}

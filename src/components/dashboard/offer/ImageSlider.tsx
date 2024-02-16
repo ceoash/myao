@@ -102,7 +102,7 @@ const ImageSlider = ({ images, handleAddImages, listingType }: ImageSliderProps)
         </Swiper>
         {imagesStore.length < 5 && (
             <div
-              className="bg-white rounded-md border border-gry-200 z-30 aspect-square flex justify-center items-center"
+              className="bg-white rounded-md border border-gry-200  aspect-square flex justify-center items-center"
               onClick={handleAddImages}
             >
               <RiImageAddFill className="text-6xl text-gray-300" />

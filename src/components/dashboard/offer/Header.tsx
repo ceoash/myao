@@ -316,7 +316,9 @@ const Header = ({
                   </div>
                 )}
             </div>
-          ) : ( listing.userId === session?.user.id && (
+          ) : ( listing.userId === session?.user.id && status !== "cancelled" &&
+          status !== "accepted" &&
+          status !== "completed" &&  (
           <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
             <div>
               <div className="flex rounded border divide-x bg-gray-50">

@@ -70,7 +70,7 @@ const OfferAlerts = ({
               danger
               button
               buttonText={`Contact ${
-                listing.sellerId === session?.user.id ? "Buyer" : "Seller"
+                listing?.sellerId === session?.user.id ? "Buyer" : "Seller" || ""
               }`}
               onClick={() => participant?.id && session?.user?.id && handleFinalise(session?.user?.id, participant?.id || "")}
             />

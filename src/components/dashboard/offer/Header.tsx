@@ -133,8 +133,8 @@ const Header = ({
         const price = data.price;
         const listingId = listing.id;
         const previous = currentBid.currentPrice;
-        const sellerId = listing.sellerId;
-        const buyerId = listing.buyerId;
+        const sellerId = listing?.sellerId || "";
+        const buyerId = listing?.buyerId || "";
 
         socket.emit("update_bid", {
           price: num,

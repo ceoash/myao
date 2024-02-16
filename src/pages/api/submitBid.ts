@@ -95,7 +95,7 @@ export default async function submitBid(
       const buyerActivity = createActivity({
         type: "listing",
         message: `New offer submitted by ${
-          listing.userId === listing.buyerId ? "You" : listing.seller?.username
+          listing.userId === listing?.buyerId ? "You" : listing?.seller?.username
         }`,
         listing_message: listing.title || "",
         listing_message_type: "bid",

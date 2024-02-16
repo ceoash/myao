@@ -94,7 +94,7 @@ export default async function listingsApi(
       user_message: "listing updated",
       user_message_type: "listing",
       action: `/dashboard/offers/${listing.id}`,
-      receiverId: listing.sellerId || "",
+      receiverId: listing?.sellerId || "",
     });
 
     const sellerActivity = createActivity({
@@ -102,7 +102,7 @@ export default async function listingsApi(
       message: "listing updated",
       listing_message: title,
       listing_message_type: "update",
-      userId: listing.sellerId || "",
+      userId: listing?.sellerId || "",
       user_message: "listing updated",
       user_message_type: "listing",
       action: `/dashboard/offers/${listing.id}`,

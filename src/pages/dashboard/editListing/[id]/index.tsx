@@ -247,8 +247,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
         emitEvent(
           "updated_activities",
           data.transactionOperations,
-          data.listing.sellerId,
-          data.listing.buyerId
+          data.listing?.sellerId,
+          data.listing?.buyerId
         );
       })
       .catch((err) => {
@@ -361,8 +361,8 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
                   <BiUserCircle />
                 </span>
                 {listing?.type === "sellerOffer"
-                  ? listing.buyer.username
-                  : listing.seller.username}
+                  ? listing?.buyer.username
+                  : listing?.seller.username}
               </div>
 
               <div className="flex items-center gap-2">

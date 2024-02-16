@@ -100,8 +100,8 @@ const index = ({
                                   <div className="flex flex-col justify-center">
                                     <h6 className="mb-0 leading-normal text-sm">
                                       {listing.type === "sellerOffer"
-                                        ? listing.seller.username
-                                        : listing.buyer.username}
+                                        ? listing?.seller.username
+                                        : listing?.buyer.username}
                                     </h6>
                                   </div>
                                   <span className="px-3">
@@ -110,8 +110,8 @@ const index = ({
                                   <div className="flex flex-col justify-center">
                                     <h6 className="mb-0 leading-normal text-sm">
                                       {listing.type === "sellerOffer"
-                                        ? listing.buyer.username
-                                        : listing.seller.username}
+                                        ? listing?.buyer.username
+                                        : listing?.seller.username}
                                     </h6>
                                   </div>
                                 </div>
@@ -214,7 +214,7 @@ export const getServerSideProps = async () => {
       ...model,
       createdAt: model.createdAt.toLocaleString("en-GB"),
       updatedAt: model.updatedAt.toLocaleString("en-GB"),
-      seller: {
+      seller: model.seller && {
         ...model.seller,
         createdAt: model.seller.createdAt.toString(),
         updatedAt: model.seller.updatedAt.toString(),

@@ -161,8 +161,7 @@ const OfferDetailsWidget = ({
 
   let parsedImage;
 
-  const sessionUser =
-    listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
+  const sessionUser = listing?.sellerId === session?.user.id ? listing?.seller : listing?.buyer || session?.user;
 
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
@@ -204,9 +203,9 @@ const OfferDetailsWidget = ({
                   <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                   <Image
                     src={
-                      sessionUser.id === listing.sellerId
-                        ? listing.seller.profile?.image || dog
-                        : listing.buyer.profile?.image || cat
+                      sessionUser.id === listing?.sellerId
+                        ? listing?.seller.profile?.image || dog
+                        : listing?.buyer.profile?.image || cat
                     }
                     className="rounded-full"
                     alt=""
@@ -217,7 +216,7 @@ const OfferDetailsWidget = ({
               </div>
               <p className="ml-2 !container text-gray-800 text-md xl:text-md font-bold">
                 You {/*  {session?.user?.id} - {events && events[0]?.userId} */}{" "}
-                {session?.user.id === listing.sellerId ? (
+                {session?.user.id === listing?.sellerId ? (
                   <span className="!font-medium text-gray-600 text-sm">
                     {" "}
                     (seller)
@@ -513,7 +512,7 @@ const OfferDetailsWidget = ({
                     src={
                       participant?.profile?.image
                         ? participant?.profile?.image
-                        : participant?.id === listing.sellerId
+                        : participant?.id === listing?.sellerId || null
                         ? dog
                         : cat
                     }
@@ -619,7 +618,7 @@ const OfferDetailsWidget = ({
                   <div className="rounded-full w-6 h-6 md:w-8 md:h-8 bg-white">
                     <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                     <Image
-                      src={event.userId === listing.seller.id ? dog : cat}
+                      src={event.userId === listing?.seller.id ? dog : cat}
                       alt=""
                       layout="fill"
                       objectFit="cover"
@@ -630,9 +629,9 @@ const OfferDetailsWidget = ({
                   <div className="text-gray-800 font-bold">{event.event}</div>
                   <div>
                     {" "}
-                    {event.userId === listing.seller.id
-                      ? listing.seller.username
-                      : listing.buyer.username}
+                    {event.userId === listing?.seller.id
+                      ? listing?.seller.username || "Unknown"
+                      : listing?.buyer.username || "Unknown"}
                   </div>
                 </div>
               </div>
@@ -805,7 +804,7 @@ const OfferDetailsWidget = ({
             })
           )}
         >
-          Contact {session?.user.id === listing.sellerId ? "Buyer" : "Seller"}
+          Contact {session?.user.id === listing?.sellerId ? "Buyer" : "Seller"}
         </Button>
       )}
     </div>

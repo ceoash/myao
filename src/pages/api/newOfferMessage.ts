@@ -80,8 +80,8 @@ export default async function newOfferMessage(
         },
       });
 
-      const sender = updatedMessage.buyerId === userId ? updatedMessage.buyer : updatedMessage.seller
-      const receiver = updatedMessage.buyerId === userId ? updatedMessage.seller : updatedMessage.buyer
+      const sender = updatedMessage.buyerId === userId ? updatedMessage?.buyer : updatedMessage?.seller
+      const receiver = updatedMessage.buyerId === userId ? updatedMessage?.seller : updatedMessage?.buyer
       
       if(!sender && !receiver) return res.status(404).json({ error: "sender or receiver not found" });
       

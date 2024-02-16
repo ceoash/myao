@@ -303,15 +303,15 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   useEffect(() => {
     if (!session || !sessionUser.id) return;
 
-    if (currentListing.sellerId === sessionUser?.id) {
-      setMe(currentListing.seller);
+    if (currentListing?.sellerId === sessionUser?.id) {
+      setMe(currentListing?.seller);
       setParticipant((prev) => {
-        return { ...prev, ...currentListing.buyer };
+        return { ...prev, ...currentListing?.buyer };
       });
     } else {
       setMe(currentListing.buyer);
       setParticipant((prev) => {
-        return { ...prev, ...currentListing.seller };
+        return { ...prev, ...currentListing?.seller };
       });
     }
     setMessages([...listing.messages].reverse());

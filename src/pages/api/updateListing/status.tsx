@@ -39,7 +39,7 @@ export default async function listingsApi(
         return res.status(404).json({error: "listing not found"})
       }
 
-      const completedBy = findListing.sellerId === userId ? findListing.seller : findListing.buyer
+      const completedBy = findListing?.sellerId === userId ? findListing?.seller : findListing?.buyer
       let message;
       switch (status) {
         case "negotiation":
@@ -144,7 +144,7 @@ export default async function listingsApi(
         user_message: "listing updated",
         user_message_type: "listing",
         action: `/dashboard/offers/${findListing.id}`,
-        receiverId: findListing.sellerId || "",
+        receiverId: findListing?.sellerId || "",
       });
 
       const sellerActivity = createActivity({
@@ -154,7 +154,7 @@ export default async function listingsApi(
         : `${status === "negotiating" ? 'You and ' + listing?.buyer?.username + " are negotiating" : listing?.buyer?.username + " " + status + " the offer"}`,
         listing_message: findListing.title || "",
         listing_message_type: "update",
-        userId: findListing.sellerId || "",
+        userId: findListing?.sellerId || "",
         user_message: "listing updated",
         user_message_type: "listing",
         action: `/dashboard/offers/${findListing.id}`,

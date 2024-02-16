@@ -171,9 +171,9 @@ const OfferDetailsWidgetOld = ({
   let parsedImage;
 
   const sessionUser =
-    listing.sellerId === session?.user.id ? listing.seller : listing.buyer;
+    listing.sellerId === session?.user.id ? listing?.seller : listing?.buyer;
   const nonSessionUser =
-    listing.sellerId === session?.user.id ? listing.buyer : listing.seller;
+    listing.sellerId === session?.user.id ? listing?.buyer : listing?.seller;
 
   if (listing?.image) {
     parsedImage = JSON.parse(listing?.image || "");
@@ -294,7 +294,7 @@ const OfferDetailsWidgetOld = ({
                         </Button>
                         <Image
                           src={
-                            session?.user?.id === listing.sellerId
+                            session?.user?.id === listing?.sellerId
                               ? catAccept
                               : dogAccept
                           }
@@ -315,7 +315,7 @@ const OfferDetailsWidgetOld = ({
                         </Button>
                         <Image
                           src={
-                            session?.user?.id === listing.sellerId
+                            session?.user?.id === listing?.sellerId
                               ? catTerminate
                               : dogTerminate
                           }
@@ -424,7 +424,7 @@ const OfferDetailsWidgetOld = ({
                   )}
                 >
                   Contact{" "}
-                  {session?.user.id === listing.sellerId ? "Buyer" : "Seller"}
+                  {session?.user.id === listing?.sellerId ? "Buyer" : "Seller"}
                 </Button>
               )}
             </div>
@@ -556,7 +556,7 @@ const OfferDetailsWidgetOld = ({
                     </Button>
                     <Image
                       src={
-                        session?.user?.id === listing.sellerId
+                        session?.user?.id === listing?.sellerId
                           ? catAccept
                           : dogAccept
                       }
@@ -577,7 +577,7 @@ const OfferDetailsWidgetOld = ({
                     </Button>
                     <Image
                       src={
-                        session?.user?.id === listing.sellerId
+                        session?.user?.id === listing?.sellerId
                           ? catTerminate
                           : dogTerminate
                       }
@@ -683,7 +683,7 @@ const OfferDetailsWidgetOld = ({
               )}
             >
               Contact{" "}
-              {session?.user.id === listing.sellerId ? "Buyer" : "Seller"}
+              {session?.user.id === listing?.sellerId ? "Buyer" : "Seller"}
             </Button>
           )}
         </div>

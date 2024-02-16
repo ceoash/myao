@@ -17,6 +17,7 @@ import { useSession } from "next-auth/react";
 import { itemCategories, itemSubCategories } from "@/data/cateories";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useSocketContext } from "@/context/SocketContext";
+import { useRouter } from "next/navigation";
 
 enum STEPS {
   TYPE = 0,
@@ -62,6 +63,7 @@ const OfferModal = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState<FieldValues>(FormType);
+  const router = useRouter();
 
   useEffect(() => {
     if (listing) {
@@ -359,8 +361,8 @@ const OfferModal = () => {
         socket.emit(
           "update_activities",
           response.data.transactionResult,
-          response.data.listing.sellerId,
-          response.data.listing.buyerId
+          response.data.listing?.sellerId || "",
+          response.data.listing?.buyerId || ""
         );
       })
       .catch((err) => {
@@ -375,11 +377,18 @@ const OfferModal = () => {
   const onSubmit: SubmitHandler<FieldValues> = async (formData) => {
     if (!session) {
       toast.error("Please login to create an offer");
+      router.push("/login");
       return;
     }
     if (!foundUser) {
       toast.error("Please select a user to send the offer to");
       setStep(STEPS.BUYER);
+      return;
+    }
+
+    if(!formData.type) {
+      toast.error("Please select the type of offer you want to create");
+      setStep(STEPS.TYPE);
       return;
     }
 

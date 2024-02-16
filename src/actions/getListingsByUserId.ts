@@ -83,8 +83,8 @@ export default async function getListingsByUserId(id: any,) {
           })),
         }
         : null,
-      seller: {
-        ...listing.seller,
+      seller: listing.seller ? {
+        ...listing?.seller,
         createdAt: listing.seller.createdAt.toISOString(),
         updatedAt: listing.seller.updatedAt.toISOString(),
         buyer: listing.seller.buyer.map(buyer => ({
@@ -97,7 +97,7 @@ export default async function getListingsByUserId(id: any,) {
           createdAt: seller.createdAt.toISOString(),
           updatedAt: seller.updatedAt.toISOString(),
         })),
-      },
+      } : null,
       user: {
         ...listing.user,
         createdAt: listing.user.createdAt.toISOString(),

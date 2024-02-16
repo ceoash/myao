@@ -209,7 +209,7 @@ const OfferEditModal = () => {
         socket.emit(
           "update_activities",
           response.data.transactionResult,
-          response.data.listing.sellerId,
+          response.data?.listing?.sellerId,
           response.data.listing.buyerId
         );
         

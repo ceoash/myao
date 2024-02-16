@@ -37,7 +37,6 @@ export default async function listingsApi(
     const listing = await prisma.listing.create({
       data: {
         ...data,
-        userId : session?.user?.id,
       },
       include: {
         user: true,

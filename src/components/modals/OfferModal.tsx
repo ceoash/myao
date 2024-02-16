@@ -23,9 +23,10 @@ enum STEPS {
   TYPE = 0,
   BUYER = 1,
   DESCRIPTION = 2,
-  ITEM = 3,
-  IMAGES = 4,
-  REVIEW = 5,
+  ADDITIONAL = 3,
+  ITEM = 4,
+  IMAGES = 5,
+  REVIEW = 6,
 }
 
 const FormType = {
@@ -94,7 +95,7 @@ const OfferModal = () => {
       }));
       setStep(STEPS.DESCRIPTION);
     }
-  } , [listing]);
+  }, [listing]);
 
   useEffect(() => {
     session && setIsLoading(false);
@@ -178,6 +179,8 @@ const OfferModal = () => {
         return "Next";
       case STEPS.DESCRIPTION:
         return "Next";
+      case STEPS.ADDITIONAL:
+        return "Next";
       case STEPS.ITEM:
         return "Next";
       case STEPS.IMAGES:
@@ -194,6 +197,8 @@ const OfferModal = () => {
       case STEPS.BUYER:
         return "Back";
       case STEPS.DESCRIPTION:
+        return "Back";
+      case STEPS.ADDITIONAL:
         return "Back";
       case STEPS.ITEM:
         return "Back";
@@ -219,7 +224,6 @@ const OfferModal = () => {
   }
 
   const setCity = (city: string, region?: string) => {
-
     setFormData((prev) => ({
       ...prev,
       location: {
@@ -266,7 +270,7 @@ const OfferModal = () => {
             message: "You can't create an offer with yourself",
           });
         } else {
-          if(!res.data || !res.data.id) {
+          if (!res.data || !res.data.id) {
             setFoundUser(null);
             setError("user", { message: "User not found" });
             return;
@@ -293,7 +297,7 @@ const OfferModal = () => {
       errors: {} as Record<string, { message: string }>,
     };
 
-    switch (step) {
+    /* switch (step) {
       case STEPS.TYPE:
         if (!data.type) {
           validation.isValid = false;
@@ -315,9 +319,16 @@ const OfferModal = () => {
         }
 
         break;
+      case STEPS.ADDITIONAL:
+        if (!data.title) {
+          validation.isValid = false;
+          setError("title", { message: "Title is required" });
+        }
+
+        break;
       case STEPS.ITEM:
         break;
-     
+
       case STEPS.IMAGES:
         break;
 
@@ -326,7 +337,7 @@ const OfferModal = () => {
       default:
         break;
     }
-
+ */
     return validation;
   };
 
@@ -334,15 +345,15 @@ const OfferModal = () => {
     if (!listing) {
       return;
     }
-    if(listing.userId !== session?.user.id) {
+    if (listing.userId !== session?.user.id) {
       toast.error("You can't update this offer");
       return;
     }
     const transaction = {
       id: listing.id,
       userId: session?.user.id,
-      data: data
-  }
+      data: data,
+    };
     axios
       .put(`/api/listings/${listing?.id}`, transaction)
       .then((response) => {
@@ -356,7 +367,9 @@ const OfferModal = () => {
           "update_listing",
           response.data.listing,
           session?.user.id,
-          listing?.sellerId === session?.user.id ? listing?.buyerId : listing?.sellerId,
+          listing?.sellerId === session?.user.id
+            ? listing?.buyerId
+            : listing?.sellerId
         );
         socket.emit(
           "update_activities",
@@ -372,7 +385,7 @@ const OfferModal = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  }
+  };
 
   const onSubmit: SubmitHandler<FieldValues> = async (formData) => {
     if (!session) {
@@ -386,23 +399,30 @@ const OfferModal = () => {
       return;
     }
 
-    if(!formData.type) {
+    if (!formData.type) {
       toast.error("Please select the type of offer you want to create");
       setStep(STEPS.TYPE);
       return;
     }
 
-    const data = { ...formData };
+    const data = {
+      ...formData,
+      userId: session?.user.id,
+      type: formData.type,
+      image: formData.image,
+    };
 
-   // console.log("data", data);
+    // console.log("data", data);
 
     setIsLoading(true);
-    data.participantId = foundUser?.id;
-    data.conversationId = offerModal.conversationId;
-    
-    data.sellerId = data.type === "seller" ? session?.user.id : foundUser?.id;
-    data.buyerId = data.type === "buyer" ? session?.user.id : foundUser?.id;
-    
+    if (foundUser?.id) Object.assign(data, { participantId: foundUser?.id });
+    if (offerModal.conversationId)
+      Object.assign(data, { conversationId: offerModal.conversationId });
+    if (data.type === "buyer" || data.type === "buyerOffer")
+      Object.assign(data, { buyerId: session?.user.id });
+    if (data.type === "seller" || data.type === "sellerOffer")
+      Object.assign(data, { sellerId: session?.user.id });
+
     await axios
       .post("/api/listings", data)
       .then((response) => {
@@ -484,7 +504,7 @@ const OfferModal = () => {
       }
       return onSubmit(formData);
     }
-    if(formData.type === "buyer" && step === STEPS.DESCRIPTION) {
+    if (formData.type === "buyer" && step === STEPS.DESCRIPTION) {
       setStep(STEPS.REVIEW);
       return;
     }
@@ -521,277 +541,75 @@ const OfferModal = () => {
           <div className="text-red-500 text-sm">{errors.title.message}</div>
         )}
       </div>
-      {/* <div className="grid grid-cols-2 gap-4">
-        <div className="mb-4">
-          <label htmlFor={"category"} className="mb-3 flex gap-1">
-            Category
-          </label>
-          <select
-            defaultValue={""}
-            className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
-            value={formData.category}
-            onChange={(e) => {
-              setFormData((prev) => ({
-                ...prev,
-                category: e.target.value,
-              }));
-              clearError("category");
-            }}
-          >
-            <option value="" disabled className="text-gray-600">
-              Select a category
-            </option>
-            {itemCategories.map((item, i) => (
-              <option key={i} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          {errors.category && typeof errors.category.message === "string" && (
-            <div className="text-red-500 text-sm">
-              {errors.category.message}
-            </div>
-          )}
-        </div>
-        {formData.type && (
+
+      <div className="grid grid-cols-2 gap-4">
           <div className="mb-4">
-            <label htmlFor={"subcategory"} className="mb-3 flex gap-1">
-              Type
+            <label htmlFor={"category"} className="mb-3 flex gap-1">
+              Category
             </label>
             <select
-              value={formData.subcategory}
+              defaultValue={""}
               className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+              value={formData.category}
               onChange={(e) => {
                 setFormData((prev) => ({
                   ...prev,
-                  subcategory: e.target.value,
+                  category: e.target.value,
                 }));
+                clearError("category");
               }}
             >
               <option value="" disabled className="text-gray-600">
-                Select the type
+                Select a category
               </option>
-              {formData.category &&
-                itemSubCategories[formData.category as Category].map(
-                  (item, i) => (
-                    <option key={i} value={item}>
-                      {item}
-                    </option>
-                  )
+              {itemCategories.map((item, i) => (
+                <option key={i} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+            {errors.category && typeof errors.category.message === "string" && (
+              <div className="text-red-500 text-sm">
+                {errors.category.message}
+              </div>
+            )}
+          </div>
+          {formData.type && (
+            <div className="mb-4">
+              <label htmlFor={"subcategory"} className="mb-3 flex gap-1">
+                Type
+              </label>
+              <select
+                value={formData.subcategory}
+                className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    subcategory: e.target.value,
+                  }));
+                }}
+              >
+                <option value="" disabled className="text-gray-600">
+                  Select the type
+                </option>
+                {formData.category &&
+                  itemSubCategories[formData.category as Category].map(
+                    (item, i) => (
+                      <option key={i} value={item}>
+                        {item}
+                      </option>
+                    )
+                  )}
+              </select>
+              {errors.subcategory &&
+                typeof errors.subcategory.message === "string" && (
+                  <div className="text-red-500 text-sm">
+                    {errors.subcategory.message}
+                  </div>
                 )}
-            </select>
-            {errors.subcategory &&
-              typeof errors.subcategory.message === "string" && (
-                <div className="text-red-500 text-sm">
-                  {errors.subcategory.message}
-                </div>
-              )}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2">
-        <div className="mb-4">
-          <label className="block mb-3">
-            Condition{" "}
-            <span className="italic text-gray-500 text-sm"> (Optional)</span>
-          </label>
-          <label className="block mb-3 space-x-2">
-            <input
-              type="radio"
-              checked={formData?.options?.condition === "new"}
-              onChange={(e) =>
-                setFormData((prev) => {
-                  return {
-                    ...prev,
-                    options: {
-                      ...prev.options,
-                      condition: "new",
-                    },
-                  };
-                })
-              }
-              value="new"
-            />
-            <span>New</span>
-          </label>
-          <label className="block mb-3 space-x-2">
-            <input
-              type="radio"
-              checked={formData?.options?.condition === "used"}
-              onChange={(e) =>
-                setFormData((prev) => {
-                  return {
-                    ...prev,
-                    options: {
-                      ...prev.options,
-                      condition: "used",
-                    },
-                  };
-                })
-              }
-              value="used"
-            />
-            <span>Used</span>
-          </label>
-          <label className="block mb-3 space-x-2">
-            <input
-              type="radio"
-              checked={formData?.options?.condition === "damaged"}
-              onChange={(e) =>
-                setFormData((prev) => {
-                  return {
-                    ...prev,
-                    options: {
-                      ...prev.options,
-                      condition: "damaged",
-                    },
-                  };
-                })
-              }
-              value="damaged"
-            />
-            <span>Damaged</span>
-          </label>
-        </div>
-        <div className="">
-          <div className="mb-3">
-            <div className="w-1/3 sm:w-1/5 mb-3">
-              <p className="font-hk text-secondary">Color</p>
             </div>
-            <div className="flex w-2/3 items-center sm:w-5/6">
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-black" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-black px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-black" ? "border-black" : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-white" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-white px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-white" ? "border-black" : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-gray-200" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-gray-200 px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-gray-200" ? "border-black" : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-gray-600" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-gray-500 px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-gray-500" ? "border-black" : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-red-500" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-red-500 px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-red-500" ? "border-black" : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-blue-500" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-blue-500 px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-blue-500" ? "border-black" : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-green-500" },
-                    };
-                  })
-                }
-                className={`mr-2 cursor-pointer rounded-full border p-1 bg-green-500 px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-green-500"
-                    ? "border-black"
-                    : ""
-                }`}
-              ></div>
-              <div
-                onClick={() =>
-                  setFormData((prev) => {
-                    return {
-                      ...prev,
-                      options: { ...prev.options, color: "bg-orange-500" },
-                    };
-                  })
-                }
-                className={`cursor-pointer rounded-full border p-1 bg-orange-500 px-2 py-2 transition-colors hover:border-black ${
-                  formData.options.color === "bg-orange-500"
-                    ? "border-black"
-                    : ""
-                }`}
-              ></div>
-            </div>
-          </div>
-
-          <div className="">
-            <p className="font-hk text-secondary mb-3">Size</p>
-            <select
-              className=" border border-gray-200 rounded-xl px-2 p-2 w-24 focus:border-orange-300 focus:ring-0 text-sm"
-              onChange={(e) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  options: {
-                    ...prev.options,
-                    size: e.target.value,
-                  },
-                }));
-              }}
-            >
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
-            </select>
-          </div>
+          )}
         </div>
-      </div> */}
 
       <div className="mb-3">
         <label className="block mb-3">
@@ -851,11 +669,10 @@ const OfferModal = () => {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
-          title="Item Details"
-          description="Important infortmation about your thing"
+          title="Delivery/Collection Details"
+          description="Enter location and delivery details"
           nounderline
         />
-        
 
         <div className="mb-5">
           <CityAutocomplete
@@ -887,9 +704,234 @@ const OfferModal = () => {
             >
               Collection Only
             </option>
-            <option value="pickup">Pickup Only</option>
-            <option value="both">Collection or Pickup</option>
+            <option value="delivery">Delivery Only</option>
+            <option value="both">Collection or Delivery</option>
           </select>
+        </div>
+       
+      </div>
+    );
+  }
+  if (step === STEPS.ADDITIONAL) {
+    bodyContent = (
+      <div className="flex flex-col">
+        <Heading
+          title="Additional Information"
+          description="Fill out the additional information"
+          nounderline
+        />
+
+       
+
+        <div className="grid grid-cols-2">
+          <div className="mb-4">
+            <label className="block mb-3">
+              Condition{" "}
+              <span className="italic text-gray-500 text-sm"> (Optional)</span>
+            </label>
+            <label className="block mb-3 space-x-2">
+              <input
+                type="radio"
+                checked={formData?.options?.condition === "new"}
+                onChange={(e) =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: {
+                        ...prev.options,
+                        condition: "new",
+                      },
+                    };
+                  })
+                }
+                value="new"
+              />
+              <span>New</span>
+            </label>
+            <label className="block mb-3 space-x-2">
+              <input
+                type="radio"
+                checked={formData?.options?.condition === "used"}
+                onChange={(e) =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: {
+                        ...prev.options,
+                        condition: "used",
+                      },
+                    };
+                  })
+                }
+                value="used"
+              />
+              <span>Used</span>
+            </label>
+            <label className="block mb-3 space-x-2">
+              <input
+                type="radio"
+                checked={formData?.options?.condition === "damaged"}
+                onChange={(e) =>
+                  setFormData((prev) => {
+                    return {
+                      ...prev,
+                      options: {
+                        ...prev.options,
+                        condition: "damaged",
+                      },
+                    };
+                  })
+                }
+                value="damaged"
+              />
+              <span>Damaged</span>
+            </label>
+          </div>
+          <div className="">
+            <div className="mb-3">
+              <div className="w-1/3 sm:w-1/5 mb-3">
+                <p className="font-hk text-secondary">Color</p>
+              </div>
+              <div className="flex w-2/3 items-center sm:w-5/6">
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-black" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-black px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-black" ? "border-black" : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-white" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-white px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-white" ? "border-black" : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-gray-200" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-gray-200 px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-gray-200"
+                      ? "border-black"
+                      : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-gray-600" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-gray-500 px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-gray-500"
+                      ? "border-black"
+                      : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-red-500" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-red-500 px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-red-500"
+                      ? "border-black"
+                      : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-blue-500" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-blue-500 px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-blue-500"
+                      ? "border-black"
+                      : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-green-500" },
+                      };
+                    })
+                  }
+                  className={`mr-2 cursor-pointer rounded-full border p-1 bg-green-500 px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-green-500"
+                      ? "border-black"
+                      : ""
+                  }`}
+                ></div>
+                <div
+                  onClick={() =>
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        options: { ...prev.options, color: "bg-orange-500" },
+                      };
+                    })
+                  }
+                  className={`cursor-pointer rounded-full border p-1 bg-orange-500 px-2 py-2 transition-colors hover:border-black ${
+                    formData.options.color === "bg-orange-500"
+                      ? "border-black"
+                      : ""
+                  }`}
+                ></div>
+              </div>
+            </div>
+
+            <div className="">
+              <p className="font-hk text-secondary mb-3">Size</p>
+              <select
+                className=" border border-gray-200 rounded-xl px-2 p-2 w-24 focus:border-orange-300 focus:ring-0 text-sm"
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    options: {
+                      ...prev.options,
+                      size: e.target.value,
+                    },
+                  }));
+                }}
+              >
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div className="mb-3">
           <label className="block mb-3">

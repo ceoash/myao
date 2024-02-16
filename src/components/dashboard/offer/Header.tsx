@@ -65,6 +65,7 @@ interface HeaderProps {
   };
   setStatus: Dispatch<React.SetStateAction<string>>;
   handleAddImages: () => void;
+  handleStatusChange: (status: string, userId: string) => void;
 }
 
 const Header = ({
@@ -78,6 +79,7 @@ const Header = ({
   sessionUser,
   setStatus,
   events,
+  handleStatusChange,
   handleAddImages,
 }: HeaderProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -251,7 +253,7 @@ const Header = ({
           events.length > 0 &&
           events[0].event !== "cancelled" &&
           events[0].event !== "completed" &&
-          events[0].event !== "accepted" && (
+          events[0].event !== "accepted" ? (
             <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
               <div>
                 <div className="flex rounded border divide-x bg-gray-50">
@@ -298,24 +300,30 @@ const Header = ({
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  disabled={isLoading}
-                  className="p-2 rounded whitespace-nowrap px-4 text-red-500 border hover:opacity-80  "
-                >
-                  Terminate
-                </button>
-              </div>
+              {status !== "cancelled" &&
+                status !== "accepted" &&
+                status !== "completed" && (
+                  <div className="flex justify-end">
+                    <button
+                      disabled={isLoading}
+                      onClick={() =>
+                        handleStatusChange("cancelled", session?.user.id)
+                      }
+                      className="p-2 rounded whitespace-nowrap px-4 text-red-500 border hover:opacity-80  "
+                    >
+                      Terminate
+                    </button>
+                  </div>
+                )}
             </div>
-          )}
-        {listing.userId === session?.user.id && (
+          ) : ( listing.userId === session?.user.id && (
           <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
             <div>
               <div className="flex rounded border divide-x bg-gray-50">
                 <span className="p-2 px-3">£</span>
                 <input
                   type="number"
-                  disabled={isLoading}
+                  disabled={true}
                   className="w-full  px-2"
                   placeholder="0.00"
                   value={bid ? bid : ""}
@@ -323,7 +331,7 @@ const Header = ({
                 />
                 {bids.length > 0 ? (
                   <button
-                    onClick={() => updateBid(bid)}
+                    onClick={() => toast.error("You can't update the offer price")}
                     disabled={isLoading}
                     className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
                   >
@@ -359,17 +367,24 @@ const Header = ({
                 )}
               </div>
             </div>
+            {status !== "cancelled" &&
+                status !== "accepted" &&
+                status !== "completed" && (
 
             <div className="flex justify-end">
               <button
+                 onClick={() =>
+                  handleStatusChange("cancelled", session?.user.id)
+                }
                 disabled={isLoading}
                 className="p-2 rounded whitespace-nowrap px-4 text-red-500 border hover:opacity-80  "
               >
                 Terminate
               </button>
             </div>
+            )}
           </div>
-        )}
+        ) )}
 
         {/* <div className="flex items-center justify-between pb-4">
           <div className="w-1/3 sm:w-1/5">

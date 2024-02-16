@@ -817,6 +817,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           setStatus={setStatus}
           sessionUser={sessionUser}
           events={events}
+          handleStatusChange={handleStatusChange}
         />
 
         <Tabs

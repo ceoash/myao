@@ -170,7 +170,7 @@ export default async function listingsApi(
 
       const sellerActivity = createActivity({
         type: "Offer",
-        userId: listing?.sellerId,
+        userId: listing.sellerId,
         message: "New offer created",
         user_message: `${
           listing?.sellerId === session?.user?.id

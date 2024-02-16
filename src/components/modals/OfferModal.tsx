@@ -512,7 +512,7 @@ const OfferModal = () => {
           <div className="text-red-500 text-sm">{errors.title.message}</div>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      {/* <div className="grid grid-cols-2 gap-4">
         <div className="mb-4">
           <label htmlFor={"category"} className="mb-3 flex gap-1">
             Category
@@ -782,7 +782,7 @@ const OfferModal = () => {
             </select>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="mb-3">
         <label className="block mb-3">

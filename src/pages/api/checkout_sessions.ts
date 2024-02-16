@@ -47,8 +47,8 @@ export default async function handler(
           },
         ],
         mode: "payment",
-        success_url: `${req.headers.origin}/dashboard/offers/${id}?success=true`,
-        cancel_url: `${req.headers.origin}/dashboard/offers/${id}/?canceled=true`,
+        success_url: `${req.headers.origin}/dashboard/trades/${id}?success=true`,
+        cancel_url: `${req.headers.origin}/dashboard/trades/${id}/?canceled=true`,
       });
 
       await prisma.notification.create({
@@ -57,7 +57,7 @@ export default async function handler(
           message: `You paid £${price} to ${
             sellerUsername ? sellerUsername : "unknown"
           }`,
-          action: `/dashboard/offers/${id}`,
+          action: `/dashboard/trades/${id}`,
           type: "listing",
           read: false,
         },
@@ -69,7 +69,7 @@ export default async function handler(
           message: `${
             buyerUsername ? buyerUsername : "unknown"
           } has paid you £${price}`,
-          action: `/dashboard/offers/${id}`,
+          action: `/dashboard/trades/${id}`,
           type: "listing",
           read: false,
         },

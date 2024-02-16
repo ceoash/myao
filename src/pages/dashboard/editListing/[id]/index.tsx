@@ -240,7 +240,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
       .then((response) => {
         const data = response.data;
         toast.success("Offer updated successfully!");
-        router.push(`/dashboard/offers/${listing.id}`);
+        router.push(`/dashboard/trades/${listing.id}`);
         reset();
         setStep(STEPS.DESCRIPTION);
         // emitEvent("update_listing", listing);

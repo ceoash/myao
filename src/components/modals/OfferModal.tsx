@@ -425,7 +425,7 @@ const OfferModal = () => {
           image: firstImageUrl || "/images/cat.png",
           body: `You have a new offer from ${session?.user?.username}`,
           linkText: "View Offer",
-          url: `/dashboard/offers/${response.data.listing.id}`,
+          url: `/dashboard/trades/${response.data.listing.id}`,
         });
 
         socket.emit(

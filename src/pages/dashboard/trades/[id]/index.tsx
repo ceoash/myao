@@ -175,6 +175,8 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const [size, setSize] = useState(0);
   const [mobileView, setMobileView] = useState(false);
 
+  console.log("currentBid", currentBid);
+
   const now = Date.now();
   const socket = useSocketContext();
 
@@ -331,16 +333,16 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
       currentPrice:
         currentListing.bids && currentListing.bids.length > 0
           ? currentListing.bids[currentListing.bids.length - 1].price
-          : currentListing.price && currentListing.price,
+          : 0,
       byUserId:
         (currentListing.bids &&
           currentListing.bids[currentListing.bids.length - 1]?.userId) ||
-        currentListing.userId,
+        "",
       byUsername:
         (currentListing.bids &&
           currentListing.bids[currentListing.bids.length - 1]?.user
             ?.username) ||
-        currentListing.user.username,
+        "",
       me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
       participant: reversedBids.filter(
         (bid: Bid) => bid.userId === participant?.id
@@ -630,7 +632,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
                   ].price,
                 body: `Your offer has been paid by ${response.data.listing.buyer.username}. Log in and arrange the transfer of the item(s).`,
                 linkText: "Make Payment",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
 
               const buyerEmail = axios.post("/api/email/emailNotification", {
@@ -651,7 +653,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
                     .price
                 } was successful. Log in and arrange the transfer of the item(s).`,
                 linkText: "Log in",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
 
               const { sellerId, buyerId, transactionResult } = response.data;
@@ -751,7 +753,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
                 description:
                   "Login to make payment and complete the negotiation.",
                 linkText: "Make Payment",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
             } else {
               const receiver =
@@ -779,7 +781,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
                 title: `Your offer has been ${status}`,
                 body: `Your offer has been ${status} by ${sender.username}.`,
                 linkText: "Manage Offer",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
             }
 
@@ -1185,7 +1187,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     ) {
       return {
         redirect: {
-          destination: "/dashboard/offers",
+          destination: "/dashboard/trades",
           permanent: false,
         },
       };

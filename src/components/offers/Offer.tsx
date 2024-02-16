@@ -11,6 +11,11 @@ import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useSocketContext } from "@/context/SocketContext";
+import catPlaceholder from "@/images/cat-placeholder.png";
+import dogPlaceholder from "@/images/dog-placeholder.png";
+import dogIcon from "@/images/dog.png";
+import catIcon from "@/images/cat.png";
+
 
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 import { CgArrowRight } from "react-icons/cg";
@@ -128,9 +133,9 @@ const Offer: React.FC<any> = ({
   const sessionUser = session?.user?.id === sellerId ? seller : buyer;
 
   const sellerIcon =
-    type === "buyerOffer" ? "/images/cat.png" : "/images/dog.png";
+    type === "buyerOffer" ? dogIcon : catIcon;
   const buyerIcon =
-    type === "buyerOffer" ? "/images/dog.png" : "/images/cat.png";
+    type === "buyerOffer" ? catIcon : dogIcon;
 
   const formatStatus = (status: string) => {
     switch (status) {
@@ -180,7 +185,7 @@ const Offer: React.FC<any> = ({
                 title: "Your offer has been accepted",
                 body: `Your offer has been accepted by ${receiver}. You can now view the offer and complete the transaction.`,
                 linkText: "Make Payment",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
             }
             if(response.data.listing.status === "completed" ) {
@@ -192,7 +197,7 @@ const Offer: React.FC<any> = ({
                 title: buyer?.username + " has paid you " + response.data.listing.price,
                 body: `Your offer has been accepted by ${receiver}. You can now view the offer and complete the transaction.`,
                 linkText: "Make Payment",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
               const buyerEmail = axios.post("/api/email/emailNotification", {
                 listing: { ...response.data.listing},
@@ -201,7 +206,7 @@ const Offer: React.FC<any> = ({
                 title: "Your offer has been accepted",
                 body: `Your offer has been accepted by ${receiver}. You can now view the offer and complete the transaction.`,
                 linkText: "Make Payment",
-                url: `/dashboard/offers/${response.data.listing.id}`,
+                url: `/dashboard/trades/${response.data.listing.id}`,
               });
             }
             setStatusState(response.data.listing.status);
@@ -290,7 +295,7 @@ const Offer: React.FC<any> = ({
     <div className="w-full border bg-white  border-gray-200 rounded-lg  mb-6  hover:bg-gray-50 transition-all ease-in-out">
       <div className="md:py-4 md:flex md:gap-4 xl:gap-6">
         <Link
-          href={`/dashboard/offers/${id}`}
+          href={`/dashboard/trades/${id}`}
           className="w-1/5 overflow-clip rounded-lg md:ml-4"
         >
           <div
@@ -315,7 +320,7 @@ const Offer: React.FC<any> = ({
             </div>
             <div className="absolute inset-0 bg-black hover:bg-white opacity-10"></div>
             <Image
-              src={img[0] || "/images/cat.png"}
+              src={img && img[0] ? img[0] : type === "buyerOffer" ? catPlaceholder : dogPlaceholder}
               alt="content"
               layout="fill"
               objectFit="cover"
@@ -328,7 +333,7 @@ const Offer: React.FC<any> = ({
           <div className="w-full flex justify-between flex-grow border-b px-4 md:border-none">
             <div>
               <Link
-                href={`/dashboard/offers/${id}`}
+                href={`/dashboard/trades/${id}`}
                 className="
                   text-gray-900
                   text-md
@@ -472,7 +477,7 @@ const Offer: React.FC<any> = ({
             </div>
             <div className="leading-relaxed lg:p-0 flex gap-1.5 text-sm ml-auto">
               <Link
-                href={`/dashboard/offers/${id}`}
+                href={`/dashboard/trades/${id}`}
                 className="
                 hidden
                 sm:flex

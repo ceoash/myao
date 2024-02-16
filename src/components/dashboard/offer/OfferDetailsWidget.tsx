@@ -333,8 +333,11 @@ const OfferDetailsWidget = ({
                 }`}
               >
                 {currentBid?.currentPrice &&
-                  Number(currentBid.currentPrice) > 0 &&
-                  `£${Number(currentBid.currentPrice).toLocaleString()}`}
+                  Number(currentBid.currentPrice) > 0 ?
+                  `£${Number(currentBid.currentPrice).toLocaleString()}`
+                  : listing.price && listing?.price !== "0" ? `£${Number(listing.price).toLocaleString()}` : "£0"
+                
+                }
               </div>
               <div
                 className={`text-xl mt-4 ${
@@ -351,9 +354,9 @@ const OfferDetailsWidget = ({
                   href={`/dashboard/profile/${currentBid.byUserId}`}
                   className="underline ml-[2px]"
                 >
-                  {currentBid.byUsername === session?.user?.username
+                  {currentBid.byUsername ? currentBid.byUsername === session?.user?.username
                     ? "You"
-                    : currentBid.byUsername || ""}
+                    : currentBid.byUsername || "(no username)" : listing?.user?.username || "(no username)"}
                 </Link>
               </div>
 
@@ -380,19 +383,32 @@ const OfferDetailsWidget = ({
 
                   </div>
                 </div>
-              ) : status === "negotiating" ? (
-                <div className="flex justify-center items-centerw-full">
+              ) : status === "awaiting approval" ? (
+                <div className="flex  justify-center items-center w-full">
                   <div className="flex items-center mx-auto gap-1">
                   <TbInfoHexagon />
                   <p className="block w-full my-2 italic">
-                    Awaiting response from {participant?.username || ""}
+                  {currentBid?.userId ? `${participant?.username || ""} would like to negotiate with you` : "Awaiting response"}
+
                   </p>
                     
                   </div>
                 </div>
               ) : (
+                status === "awaiting approval" ? (
+                <div className="flex justify-center items-centerw-full">
+                <div className="flex items-center mx-auto gap-1">
+                <TbInfoHexagon />
+                <p className="block w-full my-2 italic">
+                  Waiting for {participant?.username || ""}'s response
+                </p>
+                  
+                </div>
+              </div>
+              ) : (
                 ""
-              )}
+              ))}
+            
             </div>
 
             {Number(currentBid?.currentPrice) > 0 &&
@@ -443,7 +459,8 @@ const OfferDetailsWidget = ({
 
             {status === "awaiting approval" &&
             listing.userId !== session?.user?.id ? (
-              <div className="flex justify-center gap-2 mb-8 w-full mt-4">
+              <div className="flex justify-center flex-col gap-2 mb-8 w-full ">
+                
                 <Button
                   options={{ primary: true, size: "lg" }}
                   isLoading={loadingState.negotiating}
@@ -509,6 +526,7 @@ const OfferDetailsWidget = ({
                 <div className="rounded-full w-6 h-6 md:w-8 md:h-8 ">
                   <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-primary-red rounded-full"></span>
                   <Image
+                  className="rounded-full"
                     src={
                       participant?.profile?.image
                         ? participant?.profile?.image

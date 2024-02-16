@@ -130,7 +130,7 @@ useEffect(() => {
           ">
           <div className=" md:hidden">
             <MenuItem label="Home" link url={"/"} />
-            <MenuItem label="Offers" link url={"/dashboard/offers"} />
+            <MenuItem label="Offers" link url={"/dashboard/trades"} />
             <MenuItem label="Friends" link url={"/dashboard/friends"} />
             <MenuItem
               label="Activity"

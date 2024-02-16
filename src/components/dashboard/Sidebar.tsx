@@ -42,9 +42,9 @@ const Sidebar = () => {
                 </Link>
               </li>
               <li className={
-                      router.pathname === "/offers" ? "text-orange-default" : ""
+                      router.pathname === "/trades" ? "text-orange-default" : ""
                     }>
-                <Link href="/dashboard/negotiations">
+                <Link href="/dashboard/trades">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0`}
                   >

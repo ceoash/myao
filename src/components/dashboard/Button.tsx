@@ -97,7 +97,7 @@ const Button = ({
                 : options?.color
                 ? options.color
                 : options?.primary
-                ? "bg-orange-default text-white border border-orange-default hover:bg-orange-50 hover:text-orange-default"
+                ? "bg-orange-default text-white border border-orange-default hover:opacity-90 hover:text-orange-200"
                 : options?.secondary
                 ? "bg-orange-200 text-gray-800 border border-orange-200 hover:bg-white"
                 : options?.dark
@@ -162,7 +162,7 @@ const Button = ({
                 : options?.color
                 ? options.color
                 : options?.primary
-                ? "bg-orange-default text-white border border-orange-default hover:bg-orange-50 hover:text-orange-400"
+                ? " bg-gradient-to-b from-orange-400 to-orange-300 border border-orange-300 shadow-sm text-white hover:bg-orange-50 hover:text-orange-400"
                 : options?.secondary
                 ? "bg-orange-200 text-gray-800 border border-orange-200 hover:bg-white"
                 : options?.dark

@@ -78,14 +78,11 @@ const Header = ({
   setStatus,
   handleAddImages,
 }: HeaderProps) => {
-
   const [isLoading, setIsLoading] = useState(false);
   const [bid, setBid] = useState<string | null | number>(null);
   const socket = useSocketContext();
 
   const modal = useOfferModal();
-
-
 
   const updateBid = async (num: number | string | null) => {
     if (num === null) {
@@ -145,7 +142,7 @@ const Header = ({
           buyerId,
           sellerId,
         });
-      
+
         toast.success("New offer submitted!");
       }
       setIsLoading(false);
@@ -157,28 +154,39 @@ const Header = ({
   };
   return (
     <div className="flex flex-col justify-between  lg:flex-row py-6 mb-6 bg-white border-x border-b rounded-b">
-      <div
-        className="flex flex-col-reverse justify-between pl-5 pr-2 sm:flex-row-reverse lg:w-1/2 lg:flex-row"
-      >
-        <ImageSlider images={listing.image} handleAddImages={handleAddImages} />
+      <div className="flex flex-col-reverse justify-between pl-5 pr-2 sm:flex-row-reverse lg:w-1/2 lg:flex-row">
+        <ImageSlider
+          listingType={listing.type}
+          images={listing.image}
+          handleAddImages={handleAddImages}
+        />
       </div>
 
       <div className="px-5 pt-8 lg:w-1/2 lg:pt-0 flex flex-col">
         <div className="mb-4 pb-4 border-b border-grey-dark">
-          <div className="mb-4">
+          <div className="mb-2">
             <div className="flex w-full justify-between items-start">
               <h2 className="font-bold text-2xl  mb-0">{listing.title}</h2>
               {listing?.user?.id === session?.user.id ? (
-              <button className="border rounded bg-white" onClick={() => modal.onOpen(session?.user, "", "", listing)}>
-                <CiSettings size={22} />
-              </button>
-            ) : (
-             ""
-            )}
+                <button
+                  className="border rounded bg-white"
+                  onClick={() => modal.onOpen(session?.user, "", "", listing)}
+                >
+                  <CiSettings size={22} />
+                </button>
+              ) : (
+                ""
+              )}
             </div>
             <div className="flex items-center sm:w-5/6 space-x-2">
-              <p className="font-hk text-sm">{listing.category}</p>
-              {listing?.subcategory && <p className="font-hk text-sm text-gray-400"><FaChevronRight /></p>}
+              <p className="font-hk text-sm">
+                {listing.category || "(no category)"}
+              </p>
+              {listing?.subcategory && (
+                <p className="font-hk text-sm text-gray-400">
+                  <FaChevronRight />
+                </p>
+              )}
               {listing?.subcategory && (
                 <p className="font-hk text-sm">{listing?.subcategory}</p>
               )}
@@ -201,36 +209,57 @@ const Header = ({
           </div>
         </div>
 
-        <p className="pb-5 font-hk text-secondary">{listing.description}</p>
+        <p className="pb-5 font-hk text-sm">{listing.description}</p>
 
-        <div className=" items-center  grid grid-cols-4 gap-4 mb-6">
-          <div className="h-24 w-24 rounded-full border bg-white shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
+        <div className=" items-center  grid grid-cols-2 gap-4 mb-6 mt-auto">
+          <div className=" bg-gray-50 border rounded shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
+            <h4>Initial Offer</h4>
             <p className="font-extrabold text-lg mb-0 text-orange-500">
-              £{listing.price}
+              £
+              {listing?.price && listing?.price > 0
+                ? listing.price
+                : "Open Offer"}
             </p>
-            <h6 className="text-sm">Start Price</h6>
+            <h6 className="text-sm flex">
+              By: {listing?.user?.username || "(unknown user)"}
+            </h6>
           </div>
-          <div className="h-24 w-24 rounded-full border bg-white shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
+          <div className=" bg-gray-50 border h-full rounded shadow-sm px-3 py-4 flex items-center flex-col justify-start  text-center">
+            <h4>Current Offer</h4>
+            {currentBid && currentBid?.currentPrice &&  Number(currentBid?.currentPrice) > 0  ? (
+
+            <>
             <p className="font-extrabold text-lg mb-0 text-orange-500">
               £{currentBid.currentPrice}
             </p>
-            <h6 className="text-sm">Last Offer</h6>
+            <h6 className="text-sm flex">By: {currentBid.byUsername}</h6>
+            </>
+            ) : (
+              <>
+               <p className="font-extrabold text-lg mb-0 text-orange-500">
+              £{listing?.price}
+            </p>
+              <p className=" text-sm mb-0">
+              No counter offers
+            </p>
+              </>
+            )}
           </div>
-         
         </div>
-        {  listing?.events &&
+        {(listing?.events &&
           listing?.events.length > 0 &&
           listing?.events[0].event !== "cancelled" &&
           listing?.events[0].event !== "completed" &&
-          listing?.events[0].event !== "accepted" || listing.userId === session?.user.id && (
-            <div className="hidden xl:flex justify-between mt-auto">
+          listing?.events[0].event !== "accepted") ||
+          (listing.userId === session?.user.id && (
+            <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
               <div>
-                <div className="flex rounded border">
+                <div className="flex rounded border divide-x bg-gray-50">
                   <span className="p-2 px-3">£</span>
                   <input
                     type="number"
                     disabled={isLoading}
-                    className="w-full rounded-l px-2"
+                    className="w-full  px-2"
                     placeholder="0.00"
                     value={bid ? bid : ""}
                     onChange={(e) => setBid(e.target.value)}
@@ -239,7 +268,7 @@ const Header = ({
                     <button
                       onClick={() => updateBid(bid)}
                       disabled={isLoading}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-orange-400"
+                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
                     >
                       {isLoading ? (
                         <Spinner />
@@ -283,7 +312,7 @@ const Header = ({
                 </button>
               </div>
             </div>
-          )}
+          ))}
 
         {/* <div className="flex items-center justify-between pb-4">
           <div className="w-1/3 sm:w-1/5">

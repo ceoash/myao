@@ -93,7 +93,7 @@ export default async function listingsApi(
       userId: listing.buyerId || "",
       user_message: "listing updated",
       user_message_type: "listing",
-      action: `/dashboard/offers/${listing.id}`,
+      action: `/dashboard/trades/${listing.id}`,
       receiverId: listing?.sellerId || "",
     });
 
@@ -105,7 +105,7 @@ export default async function listingsApi(
       userId: listing?.sellerId || "",
       user_message: "listing updated",
       user_message_type: "listing",
-      action: `/dashboard/offers/${listing.id}`,
+      action: `/dashboard/trades/${listing.id}`,
       receiverId: listing.buyerId || "",
     });
 

@@ -92,7 +92,7 @@ const Stats = ({
           color={`orange`}
           span={`col-span-1`}
           className="bg-orange-100"
-          link="/dashboard/offers?sent=true"
+          link="/dashboard/trades?sent=true"
         />
         <InfoCard
           title={`Offers Received`}
@@ -102,7 +102,7 @@ const Stats = ({
           color={`orange`}
           span={`col-span-1`}
           className="bg-orange-100"
-          link="/dashboard/offers?sent=true"
+          link="/dashboard/trades?sent=true"
         /> */}
         {/* <InfoCard
           key={randomAdvice.key + Math.floor(Math.random() * 1000)}

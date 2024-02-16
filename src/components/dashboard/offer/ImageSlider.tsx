@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 // Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react"
-import catPlaceholder from "@/images/cat-placeholder.jpg";
+import catPlaceholder from "@/images/cat-placeholder.png";
+import dogPlaceholder from "@/images/dog-placeholder.png";
 
 // Import Swiper styles
 // Import Swiper styles
@@ -22,9 +23,10 @@ import { RiImageAddFill } from "react-icons/ri";
 interface ImageSliderProps {
   images: string;
   handleAddImages: () => void;
+  listingType?: string;
 }
 
-const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
+const ImageSlider = ({ images, handleAddImages, listingType }: ImageSliderProps) => {
   const thumbsSwiperRef = useRef<SwiperCore | null>(null);
   const [imagesStore, setImagesStore] = useState([]);
 
@@ -64,7 +66,7 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
           </SwiperSlide>
         )) :  <SwiperSlide className="relative h-full aspect-video bg-gray-50 border-x border-t rounded" >
 
-          <Image src={catPlaceholder} alt=""  /> 
+          <Image src={listingType && listingType === "buyerOffer" ? catPlaceholder : dogPlaceholder } alt=""  /> 
         </SwiperSlide>
         
         }

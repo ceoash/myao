@@ -40,7 +40,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                       ? "You created a offer"
                       : "You received a offer"}
                   </div>
-                  <Link href={`/dashboard/offers/${message.listing?.id}`}>
+                  <Link href={`/dashboard/trades/${message.listing?.id}`}>
                     <div className="text-orange-300 hover:underline text-sm">
                       View offer
                     </div>
@@ -83,7 +83,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                 }`}
               >
                 <Link
-                  href={`/dashboard/offers/${message.listing?.id}`}
+                  href={`/dashboard/trades/${message.listing?.id}`}
                   className="col-span-4"
                 >
                   {message?.image && !message.listingId && (
@@ -108,7 +108,7 @@ const MessageComponent = forwardRef<HTMLDivElement, MessageProps>(
                 {message.listingId && (
                   <div className="flex flex-col  col-span-8">
                     <div className="flex justify-between font-bold items-center">
-                      <Link href={`/dashboard/offers/${message.listing?.id}`}>
+                      <Link href={`/dashboard/trades/${message.listing?.id}`}>
                         <div className="mt-2 first-letter:uppercase">
                           {message?.listing.title || "unkown title"}
                         </div>

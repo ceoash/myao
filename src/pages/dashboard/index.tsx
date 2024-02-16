@@ -232,7 +232,7 @@ const Index = ({
                 <Button
                   label="View more"
                   className="-mt-6"
-                  link="/dashboard/offers"
+                  link="/dashboard/trades"
                 />
               </div>
             ) : (
@@ -314,7 +314,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         type: "offer",
         message: `You have ${countPendingReceived} pending offers`,
         userId: session?.user.id,
-        action: "/dashboard/offers",
+        action: "/dashboard/trades",
         createdAt: String(Date.now()),
         updatedAt: String(Date.now()),
       });

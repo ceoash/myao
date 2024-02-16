@@ -62,7 +62,7 @@ export default async function submitReview(
         userId: review.listing.buyerId || "",
         user_message: "New bid",
         user_message_type: "submit review",
-        action: `/dashboard/offers/${review.listing.id}`,
+        action: `/dashboard/trades/${review.listing.id}`,
         receiverId: review.listing.sellerId || "",
       });
 
@@ -74,7 +74,7 @@ export default async function submitReview(
         userId: review.listing.sellerId || "",
         user_message: "New review",
         user_message_type: "submit review",
-        action: `/dashboard/offers/${review.listing.id}`,
+        action: `/dashboard/trades/${review.listing.id}`,
         receiverId: review.listing.buyerId || "",
       });
 

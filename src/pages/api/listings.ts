@@ -178,7 +178,7 @@ export default async function listingsApi(
             : `${listing.buyer?.username} sent you a new offer`
         }`,
         user_message_type: "Offer",
-        action: "/dashboard/offers/" + listing.id,
+        action: "/dashboard/trades/" + listing.id,
         listingId: listing.id,
         listing_message: listing.title || "",
         listing_message_type: "Offer",
@@ -195,7 +195,7 @@ export default async function listingsApi(
             : `${listing.seller?.username} sent you a new offer`
         }`,
         user_message_type: "Offer",
-        action: "/dashboard/offers/" + listing.id,
+        action: "/dashboard/trades/" + listing.id,
         listingId: listing.id,
         listing_message: listing.title || "",
         listing_message_type: "Offer",
@@ -332,7 +332,7 @@ export default async function listingsApi(
               : `${listing.buyer?.username} updated your offer`
           } `,
           user_message_type: "Offer",
-          action: "/dashboard/offers/" + listing.id,
+          action: "/dashboard/trades/" + listing.id,
           listingId: listing.id,
           listing_message: listing.title || "",
           listing_message_type: "Offer",
@@ -349,7 +349,7 @@ export default async function listingsApi(
               : `${listing.buyer?.username} updated your offer`
           } `,
           user_message_type: "Offer",
-          action: "/dashboard/offers/" + listing.id,
+          action: "/dashboard/trades/" + listing.id,
           listingId: listing.id,
           listing_message: listing.title || "",
           listing_message_type: "Offer",

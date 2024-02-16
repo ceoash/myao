@@ -199,7 +199,7 @@ export default async function listingsApi(
         listingId: listing.id,
         listing_message: listing.title || "",
         listing_message_type: "Offer",
-        receiverId: listing?.sellerId,
+        receiverId: listing.sellerId || "",
       }) ;
 
       const transactionOperations = [sellerActivity, buyerActivity];
@@ -324,7 +324,7 @@ export default async function listingsApi(
       if (listing?.sellerId && listing.buyerId) {
         const sellerActivity = createActivity({
           type: "Offer",
-          userId: listing?.sellerId,
+          userId: listing.sellerId || "",
           message: "Offer updated",
           user_message: `${
             session?.user?.id === listing?.sellerId
@@ -353,7 +353,7 @@ export default async function listingsApi(
           listingId: listing.id,
           listing_message: listing.title || "",
           listing_message_type: "Offer",
-          receiverId: listing?.sellerId,
+          receiverId: listing.sellerId || "",
         });
 
         const transactionOperations = [sellerActivity, buyerActivity];

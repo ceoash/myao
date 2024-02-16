@@ -245,9 +245,11 @@ const OfferModal = () => {
 
   useEffect(() => {
     if (foundUser === null && offerModal?.participant) {
-      setFoundUser(offerModal?.participant || null);
+      setFoundUser(offerModal?.participant);
     }
   }, [offerModal?.participant]);
+
+  console.log("foundUser", foundUser);
 
   const changeColor = (color: string) => {
     setFormData((prev) => ({
@@ -419,9 +421,10 @@ const OfferModal = () => {
     // console.log("data", data);
 
     setIsLoading(true);
-    if (foundUser?.id) Object.assign(data, { participantId: foundUser?.id });
     if (offerModal.conversationId)
       Object.assign(data, { conversationId: offerModal.conversationId });
+
+      console.log("data", data);
     
     await axios
       .post("/api/listings", data)

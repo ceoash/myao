@@ -151,6 +151,8 @@ export default async function listingsApi(
         userId: userId,
       });
 
+      console.log("listing", listing)
+
       if (!listing) { return res.status(400).json({ error: "Unable to create listing" }) }
       if (conversationId) { message = await createMessage(prisma, listing, conversationId, type) }
 
@@ -202,8 +204,9 @@ export default async function listingsApi(
           .json({ error: "Something went wrong during the transaction" });
       }
     } catch (error) {
+      const err = error as Error;
       console.error("Error creating listing:", error);
-      res.status(500).json({ error: "Something went wrong" });
+      res.status(500).json({ error: err.message });
     }
   } else if (req.method === "PUT") {
     const { id, userId, ...rest } = req.body;

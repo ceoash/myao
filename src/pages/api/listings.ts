@@ -117,10 +117,9 @@ export default async function listingsApi(
       additionalInformation,
     } = req.body;
 
-    try {
-     
-   
+    console.log("req body", req.body)
 
+    try {
       let newListingData = {
         title,
         description,

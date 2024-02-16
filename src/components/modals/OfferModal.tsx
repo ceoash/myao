@@ -64,6 +64,8 @@ const OfferModal = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState<FieldValues>(FormType);
+  console.log("form", formData);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -410,6 +412,8 @@ const OfferModal = () => {
       userId: session?.user.id,
       type: formData.type,
       image: formData.image,
+      buyerId: foundUser && formData.type === "buyer" ? foundUser?.id : session?.user.id,
+      sellerId: foundUser && formData.type === "seller" ? foundUser?.id : session?.user.id,
     };
 
     // console.log("data", data);
@@ -418,11 +422,7 @@ const OfferModal = () => {
     if (foundUser?.id) Object.assign(data, { participantId: foundUser?.id });
     if (offerModal.conversationId)
       Object.assign(data, { conversationId: offerModal.conversationId });
-    if (data.type === "buyer" || data.type === "buyerOffer")
-      Object.assign(data, { buyerId: session?.user.id });
-    if (data.type === "seller" || data.type === "sellerOffer")
-      Object.assign(data, { sellerId: session?.user.id });
-
+    
     await axios
       .post("/api/listings", data)
       .then((response) => {

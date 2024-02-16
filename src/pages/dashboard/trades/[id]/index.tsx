@@ -175,7 +175,6 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const [size, setSize] = useState(0);
   const [mobileView, setMobileView] = useState(false);
 
-  console.log("currentBid", currentBid);
 
   const now = Date.now();
   const socket = useSocketContext();

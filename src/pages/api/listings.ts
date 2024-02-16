@@ -25,15 +25,11 @@ export default async function listingsApi(
   req: NextApiRequest,
   res: NextApiResponse<ListingResponse | ErrorResponse>
 ) {
-  const now = Date.now();
-  const session = await getServerSession(req, res, authOptions);
 
   async function createListing(data: any) {
-    if (!data)
-      return res.status(400).json({ error: "Missing required fields" });
 
-    const session = await getServerSession(req, res, authOptions);
-
+    if (!data) return res.status(400).json({ error: "Missing required fields" });
+    
     const listing = await prisma.listing.create({
       data: {
         ...data,
@@ -51,9 +47,7 @@ export default async function listingsApi(
       },
     });
 
-    if (!listing)
-      return res.status(400).json({ error: "Unable to create listing" });
-
+    if (!listing) return res.status(400).json({ error: "Unable to create listing" });
     if (listing?.image) parsedImg = JSON.parse(listing.image) || null;
 
     return listing;
@@ -143,12 +137,9 @@ export default async function listingsApi(
       if (price) Object.assign(newListingData, { price: parseFloat(price) });
       else Object.assign(newListingData, { price: "0" });
 
-      let listingOptions = {
-        ...options,
-      };
+      let listingOptions = { ...options };
 
-      if (additionalInformation)
-        Object.assign(listingOptions, { additionalInformation });
+      if (additionalInformation) Object.assign(listingOptions, { additionalInformation });
       if (conversationId) Object.assign(listingOptions, { conversationId });
       if (type) Object.assign(listingOptions, { type });
       if (participantId) Object.assign(listingOptions, { participantId });
@@ -158,21 +149,18 @@ export default async function listingsApi(
       const listing = await createListing({
         ...newListingData,
         options: listingOptions,
+        userId: userId,
       });
 
-      if (!listing)
-        return res.status(400).json({ error: "Unable to create listing" });
-
-      if (conversationId) {
-        message = await createMessage(prisma, listing, conversationId, type);
-      }
+      if (!listing) { return res.status(400).json({ error: "Unable to create listing" }) }
+      if (conversationId) { message = await createMessage(prisma, listing, conversationId, type) }
 
       const sellerActivity = createActivity({
         type: "Offer",
         userId: listing.sellerId || "",
         message: "New offer created",
         user_message: `${
-          listing?.sellerId === session?.user?.id
+          listing?.sellerId === userId
             ? `You sent ${listing.buyer?.username} a new offer`
             : `${listing.buyer?.username} sent you a new offer`
         }`,
@@ -189,7 +177,7 @@ export default async function listingsApi(
         userId: listing.buyerId || "",
         message: "New offer created",
         user_message: `${
-          listing.buyerId === session?.user?.id
+          listing.buyerId === userId
             ? `You sent ${listing?.seller?.username} a new offer`
             : `${listing.seller?.username} sent you a new offer`
         }`,
@@ -326,7 +314,7 @@ export default async function listingsApi(
           userId: listing.sellerId || "",
           message: "Offer updated",
           user_message: `${
-            session?.user?.id === listing?.sellerId
+            userId.id === listing?.sellerId
               ? "Offer updated"
               : `${listing.buyer?.username} updated your offer`
           } `,
@@ -343,7 +331,7 @@ export default async function listingsApi(
           userId: listing.userId,
           message: "Offer updated",
           user_message: `${
-            session?.user?.id === listing?.sellerId
+            userId === listing?.sellerId
               ? "Offer updated"
               : `${listing.buyer?.username} updated your offer`
           } `,

@@ -57,10 +57,9 @@ const OfferModal = () => {
   const offerModal = useOfferModal();
   const listing = offerModal?.listing || null;
 
-  console.log("listing", offerModal.isOpen);
   const { data: session, status } = useSession();
   const [step, setStep] = useState(STEPS.TYPE);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState<FieldValues>(FormType);
 
@@ -94,6 +93,10 @@ const OfferModal = () => {
       setStep(STEPS.DESCRIPTION);
     }
   } , [listing]);
+
+  useEffect(() => {
+    session && setIsLoading(false);
+  }, [session]);
 
   const [errors, setErrors] = useState({
     title: {
@@ -369,11 +372,11 @@ const OfferModal = () => {
       });
   }
 
-  const onSubmit: SubmitHandler<FieldValues> = async () => {
-    if (step !== STEPS.REVIEW) {
-      return onNext();
+  const onSubmit: SubmitHandler<FieldValues> = async (formData) => {
+    if (!session) {
+      toast.error("Please login to create an offer");
+      return;
     }
-    
     if (!foundUser) {
       toast.error("Please select a user to send the offer to");
       setStep(STEPS.BUYER);
@@ -387,7 +390,7 @@ const OfferModal = () => {
     setIsLoading(true);
     data.participantId = foundUser?.id;
     data.conversationId = offerModal.conversationId;
-    data.userId = session?.user.id;
+    
     data.sellerId = data.type === "seller" ? session?.user.id : foundUser?.id;
     data.buyerId = data.type === "buyer" ? session?.user.id : foundUser?.id;
     
@@ -457,7 +460,7 @@ const OfferModal = () => {
   };
 
   const onBack = () => {
-    if (formData.userType === "buyer" && step === STEPS.REVIEW) {
+    if (formData.type === "buyer" && step === STEPS.REVIEW) {
       setStep(STEPS.DESCRIPTION);
       return;
     }
@@ -472,6 +475,10 @@ const OfferModal = () => {
       }
       return onSubmit(formData);
     }
+    if(formData.type === "buyer" && step === STEPS.DESCRIPTION) {
+      setStep(STEPS.REVIEW);
+      return;
+    }
     setStep((prev) => prev + 1);
   };
 
@@ -479,7 +486,7 @@ const OfferModal = () => {
     <div className="flex flex-col">
       <Heading
         title={
-          formData.userType === "buyer"
+          formData.type === "buyer"
             ? "What would you like to buy"
             : "What would you like to sell"
         }

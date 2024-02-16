@@ -5,6 +5,8 @@ import { PrismaClient } from "@prisma/client";
 import { createActivity } from "@/prisma";
 import { ExtendedActivity } from "@/interfaces/authenticated";
 import { da } from "date-fns/locale";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./auth/[...nextauth]";
 
 interface ErrorResponse {
   error: string;
@@ -29,8 +31,13 @@ export default async function listingsApi(
     if (!data)
       return res.status(400).json({ error: "Missing required fields" });
 
+    const session = await getServerSession(req, res, authOptions);
+
     const listing = await prisma.listing.create({
-      data,
+      data: {
+        ...data,
+        userId : session?.user?.id,
+      },
       include: {
         user: true,
         seller: true,

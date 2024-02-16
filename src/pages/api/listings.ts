@@ -125,13 +125,8 @@ export default async function listingsApi(
     } = req.body;
 
     try {
-      const userExists = await prisma.user.findUnique({
-        where: { id: userId },
-      });
-      
-      if (!userExists) {
-        throw new Error("User does not exist");
-      }
+     
+   
 
       let newListingData = {
         title,
@@ -173,12 +168,12 @@ export default async function listingsApi(
         message = await createMessage(prisma, listing, conversationId, type);
       }
 
-      const sellerActivity = listing?.seller ? createActivity({
+      const sellerActivity = createActivity({
         type: "Offer",
         userId: listing?.sellerId,
         message: "New offer created",
         user_message: `${
-          listing?.sellerId === userId
+          listing?.sellerId === session?.user?.id
             ? `You sent ${listing.buyer?.username} a new offer`
             : `${listing.buyer?.username} sent you a new offer`
         }`,
@@ -188,14 +183,14 @@ export default async function listingsApi(
         listing_message: listing.title || "",
         listing_message_type: "Offer",
         receiverId: listing.buyerId || "",
-      }) : {};
+      }) ;
 
-      const buyerActivity = listing.buyer ? createActivity({
+      const buyerActivity = createActivity({
         type: "Offer",
         userId: listing.buyerId || "",
         message: "New offer created",
         user_message: `${
-          listing.buyerId === userId
+          listing.buyerId === session?.user?.id
             ? `You sent ${listing?.seller?.username} a new offer`
             : `${listing.seller?.username} sent you a new offer`
         }`,
@@ -205,7 +200,7 @@ export default async function listingsApi(
         listing_message: listing.title || "",
         listing_message_type: "Offer",
         receiverId: listing?.sellerId,
-      }) : {};
+      }) ;
 
       const transactionOperations = [sellerActivity, buyerActivity];
 
@@ -332,7 +327,7 @@ export default async function listingsApi(
           userId: listing?.sellerId,
           message: "Offer updated",
           user_message: `${
-            userId === listing?.sellerId
+            session?.user?.id === listing?.sellerId
               ? "Offer updated"
               : `${listing.buyer?.username} updated your offer`
           } `,
@@ -349,7 +344,7 @@ export default async function listingsApi(
           userId: listing.userId,
           message: "Offer updated",
           user_message: `${
-            userId === listing?.sellerId
+            session?.user?.id === listing?.sellerId
               ? "Offer updated"
               : `${listing.buyer?.username} updated your offer`
           } `,

@@ -367,8 +367,8 @@ const OfferDetailsWidget = ({
                     <TbInfoHexagon />
                     <p className="block w-full my-2 italic">
                       {listing.userId === session?.user?.id
-                        ? `Awaiting offer from ${participant?.username || ""}`
-                        : "Enter a offer to start negotiating"}
+                        ? `Awaiting response from ${participant?.username || ""}`
+                        : status === "negotiating" ?  "Enter a offer to start negotiating" : "Click to make an offer"}
                     </p>
                   </div>
                 </div>

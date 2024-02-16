@@ -174,8 +174,6 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const [currentListing, setCurrentListing] = useState<any>({});
   const [size, setSize] = useState(0);
   const [mobileView, setMobileView] = useState(false);
-
-
   const now = Date.now();
   const socket = useSocketContext();
 
@@ -818,6 +816,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           setCurrentBid={setCurrentBid}
           setStatus={setStatus}
           sessionUser={sessionUser}
+          events={events}
         />
 
         <Tabs

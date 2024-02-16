@@ -49,6 +49,7 @@ interface HeaderProps {
   listing: any;
   session: Session;
   status: string;
+  events: any;
   currentBid: {
     currentPrice: string | number;
     byUserId: string;
@@ -76,6 +77,7 @@ const Header = ({
   setCurrentBid,
   sessionUser,
   setStatus,
+  events,
   handleAddImages,
 }: HeaderProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -211,8 +213,8 @@ const Header = ({
 
         <p className="pb-5 font-hk text-sm">{listing.description}</p>
 
-        <div className=" items-center  grid grid-cols-2 gap-4 mb-6 mt-auto">
-          <div className=" bg-gray-50 border rounded shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
+        <div className=" items-center  grid grid-cols-2 border-t rounded-t border-x  mt-auto">
+          <div className=" bg-gray-50  rounded shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
             <h4>Initial Offer</h4>
             <p className="font-extrabold text-lg mb-0 text-orange-500">
               £
@@ -224,34 +226,32 @@ const Header = ({
               By: {listing?.user?.username || "(unknown user)"}
             </h6>
           </div>
-          <div className=" bg-gray-50 border h-full rounded shadow-sm px-3 py-4 flex items-center flex-col justify-start  text-center">
+          <div className=" bg-gray-50  h-full rounded shadow-sm px-3 py-4 flex items-center flex-col justify-start  text-center">
             <h4>Current Offer</h4>
-            {currentBid && currentBid?.currentPrice &&  Number(currentBid?.currentPrice) > 0  ? (
-
-            <>
-            <p className="font-extrabold text-lg mb-0 text-orange-500">
-              £{currentBid.currentPrice}
-            </p>
-            <h6 className="text-sm flex">By: {currentBid.byUsername}</h6>
-            </>
+            {currentBid &&
+            currentBid?.currentPrice &&
+            Number(currentBid?.currentPrice) > 0 ? (
+              <>
+                <p className="font-extrabold text-lg mb-0 text-orange-500">
+                  £{currentBid.currentPrice}
+                </p>
+                <h6 className="text-sm flex">By: {currentBid.byUsername}</h6>
+              </>
             ) : (
               <>
-               <p className="font-extrabold text-lg mb-0 text-orange-500">
-              £{listing?.price}
-            </p>
-              <p className=" text-sm mb-0">
-              No counter offers
-            </p>
+                <p className="font-extrabold text-lg mb-0 text-orange-500">
+                  £{listing?.price}
+                </p>
+                <p className=" text-sm mb-0">No counter offers</p>
               </>
             )}
           </div>
         </div>
-        {(listing?.events &&
-          listing?.events.length > 0 &&
-          listing?.events[0].event !== "cancelled" &&
-          listing?.events[0].event !== "completed" &&
-          listing?.events[0].event !== "accepted") ||
-          (listing.userId === session?.user.id && (
+        {events &&
+          events.length > 0 &&
+          events[0].event !== "cancelled" &&
+          events[0].event !== "completed" &&
+          events[0].event !== "accepted" && (
             <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
               <div>
                 <div className="flex rounded border divide-x bg-gray-50">
@@ -268,7 +268,7 @@ const Header = ({
                     <button
                       onClick={() => updateBid(bid)}
                       disabled={isLoading}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
+                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
                     >
                       {isLoading ? (
                         <Spinner />
@@ -282,22 +282,17 @@ const Header = ({
                     <button
                       disabled={isLoading}
                       onClick={() => updateBid(bid)}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
+                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
                     >
                       {isLoading ? <Spinner /> : "Update Offer"}
                     </button>
                   ) : (
                     <button
                       disabled={isLoading}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
+                      onClick={() => updateBid(bid)}
+                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
                     >
-                      {isLoading ? (
-                        <Spinner />
-                      ) : (
-                        `Message ${
-                          listing?.type === "buyer" ? "Buyer" : "Seller"
-                        }`
-                      )}
+                      {isLoading ? <Spinner /> : "Counter Offer"}
                     </button>
                   )}
                 </div>
@@ -312,7 +307,69 @@ const Header = ({
                 </button>
               </div>
             </div>
-          ))}
+          )}
+        {listing.userId === session?.user.id && (
+          <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
+            <div>
+              <div className="flex rounded border divide-x bg-gray-50">
+                <span className="p-2 px-3">£</span>
+                <input
+                  type="number"
+                  disabled={isLoading}
+                  className="w-full  px-2"
+                  placeholder="0.00"
+                  value={bid ? bid : ""}
+                  onChange={(e) => setBid(e.target.value)}
+                />
+                {bids.length > 0 ? (
+                  <button
+                    onClick={() => updateBid(bid)}
+                    disabled={isLoading}
+                    className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
+                  >
+                    {isLoading ? (
+                      <Spinner />
+                    ) : currentBid.byUserId === sessionUser?.id ? (
+                      "Update Offer"
+                    ) : (
+                      "Send Offer"
+                    )}
+                  </button>
+                ) : listing?.user?.id === sessionUser?.id ? (
+                  <button
+                    disabled={isLoading}
+                    onClick={() => updateBid(bid)}
+                    className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
+                  >
+                    {isLoading ? <Spinner /> : "Update Offer"}
+                  </button>
+                ) : (
+                  <button
+                    disabled={isLoading}
+                    className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
+                  >
+                    {isLoading ? (
+                      <Spinner />
+                    ) : (
+                      `Message ${
+                        listing?.type === "buyer" ? "Buyer" : "Seller"
+                      }`
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                disabled={isLoading}
+                className="p-2 rounded whitespace-nowrap px-4 text-red-500 border hover:opacity-80  "
+              >
+                Terminate
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* <div className="flex items-center justify-between pb-4">
           <div className="w-1/3 sm:w-1/5">

@@ -360,7 +360,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
                 <span className="font-medium flex">
                   <BiUserCircle />
                 </span>
-                {listing?.type === "sellerOffer"
+                {listing?.type === "seller"
                   ? listing?.buyer.username
                   : listing?.seller.username}
               </div>

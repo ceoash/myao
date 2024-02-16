@@ -20,7 +20,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "seller" },
               {
                 sellerId: {
                   notIn: blocked?.map((blocker: { friendBlockedId: string }) => blocker.friendBlockedId),
@@ -31,7 +31,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               {
                 buyerId: {
                   notIn: blocked?.map((blocker: { friendBlockedId: string }) => blocker.friendBlockedId),
@@ -91,7 +91,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { buyerId: id }, 
-              { type: "sellerOffer" },
+              { type: "seller" },
               { sellerId: {
                   notIn: blockedIds,
                 },
@@ -101,7 +101,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { sellerId: id }, 
-              { type: "buyerOffer" },
+              { type: "seller" },
               {
                 buyerId: {
                   notIn: blockedIds,
@@ -155,7 +155,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "seller" },
               {
                 sellerId: {
                   notIn: blockedIds,
@@ -166,7 +166,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               {
                 buyerId: {
                   notIn: blockedIds,
@@ -185,7 +185,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "seller" },
               { status: "awaiting approval" },
               {
                 sellerId: {
@@ -197,7 +197,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               { status: "awaiting approval" },
               {
                 buyerId: {
@@ -216,7 +216,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               {
                 sellerId: {
                   notIn: blockedIds,
@@ -227,7 +227,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "buyerOffer" },
+              { type: "seller" },
               {
                 buyerId: {
                   notIn: blockedIds,
@@ -246,7 +246,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               { status: "awaiting approval" },
               {
                 sellerId: {
@@ -258,7 +258,7 @@ export default async function getOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "buyerOffer" },
+              { type: "seller" },
               { status: "awaiting approval" },
               {
                 buyerId: {

@@ -162,8 +162,8 @@ export default async function handler(
     const sentCount = await prisma?.listing.count({
         where: {
           OR: [
-            { sellerId: userId as string, type: "sellerOffer" },
-            { buyerId: userId as string, type: "buyerOffer" },
+            { sellerId: userId as string, type: "seller" },
+            { buyerId: userId as string, type: "buyer" },
           ],
         },
       });
@@ -171,8 +171,8 @@ export default async function handler(
       const completedSentCount = await prisma?.listing.count({
         where: {
           OR: [
-            { sellerId: userId as string, type: "sellerOffer", status: "accepted" },
-            { buyerId: userId as string, type: "buyerOffer", status: "accepted" },
+            { sellerId: userId as string, type: "seller", status: "accepted" },
+            { buyerId: userId as string, type: "buyer", status: "accepted" },
           ],
         },
       });
@@ -180,8 +180,8 @@ export default async function handler(
     const cancelledSentCount = await prisma?.listing.count({
         where: {
           OR: [
-            { sellerId: userId as string, type: "sellerOffer", status: "cancelled" },
-            { buyerId: userId as string, type: "buyerOffer", status: "cancelled" },
+            { sellerId: userId as string, type: "seller", status: "cancelled" },
+            { buyerId: userId as string, type: "buyer", status: "cancelled" },
           ],
         },
       });
@@ -189,24 +189,24 @@ export default async function handler(
     const receivedCount = await prisma?.listing.count({
         where: {
           OR: [
-            { buyerId: userId as string, type: "sellerOffer" },
-            { sellerId: userId as string, type: "buyerOffer" },
+            { buyerId: userId as string, type: "seller" },
+            { sellerId: userId as string, type: "buyer" },
           ],
         },
       });
     const completedReceivedCount = await prisma?.listing.count({
         where: {
           OR: [
-            { buyerId: userId as string, type: "sellerOffer", status: "accepted" },
-            { sellerId: userId as string, type: "buyerOffer", status: "accepted" },
+            { buyerId: userId as string, type: "seller", status: "accepted" },
+            { sellerId: userId as string, type: "buyer", status: "accepted" },
           ],
         },
       });
     const cancelledReceivedCount = await prisma?.listing.count({
         where: {
           OR: [
-            { buyerId: userId as string, type: "sellerOffer", status: "cancelled" },
-            { sellerId: userId as string, type: "buyerOffer", status: "cancelled" },
+            { buyerId: userId as string, type: "seller", status: "cancelled" },
+            { sellerId: userId as string, type: "buyer", status: "cancelled" },
           ],
         },
       });

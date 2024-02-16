@@ -389,7 +389,7 @@ const OfferDetailsWidgetOld = ({
                   >
                     Arrange to{" "}
                     {completedBy === session?.user.id &&
-                    listing.type === "sellerOffer"
+                    listing.type === "seller"
                       ? "get paid"
                       : "get your item"}
                   </Button>
@@ -515,7 +515,7 @@ const OfferDetailsWidgetOld = ({
                         <div className="flex gap-1 items-center">
                           <MdOutlineSyncAlt />
                           <div>
-                            {listing.type === "sellerOffer" ? "Sale" : "Buy"}
+                            {listing.type === "seller" ? "Sale" : "Buy"}
                           </div>
                         </div>
                         <div className="flex gap-1 items-center">
@@ -649,7 +649,7 @@ const OfferDetailsWidgetOld = ({
               >
                 Arrange to{" "}
                 {completedBy === session?.user.id &&
-                listing.type === "sellerOffer"
+                listing.type === "seller"
                   ? "get paid"
                   : "get your item"}
               </Button>

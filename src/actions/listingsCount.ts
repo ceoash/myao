@@ -9,13 +9,13 @@ export default async function listingsCount(id: any,) {
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
             ],
           },
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
             ],
           },
         ],
@@ -27,13 +27,13 @@ export default async function listingsCount(id: any,) {
           {
             AND: [
               { buyerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
             ],
           },
           {
             AND: [
               { sellerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
             ],
           },
         ],

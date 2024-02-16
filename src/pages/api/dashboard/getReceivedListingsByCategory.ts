@@ -18,12 +18,12 @@ function createQueryObject(userId: string, category: string): QueryObject {
   };
 
   const buyerOffer = category === 'all' 
-    ? { buyerId: userId, type: "sellerOffer" }
-    : { buyerId: userId, type: "sellerOffer", status: category };
+    ? { buyerId: userId, type: "seller" }
+    : { buyerId: userId, type: "seller", status: category };
 
   const sellerOffer = category === 'all' 
-    ? { sellerId: userId, type: "buyerOffer" }
-    : { sellerId: userId, type: "buyerOffer", status: category };
+    ? { sellerId: userId, type: "buyer" }
+    : { sellerId: userId, type: "buyer", status: category };
   
   queryObject.OR.push({ AND: [sellerOffer] }, { AND: [buyerOffer] });
 

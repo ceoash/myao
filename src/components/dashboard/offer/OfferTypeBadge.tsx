@@ -4,7 +4,7 @@ interface OfferTypeBadgeProps {
 }
 
 const OfferTypeBadge = ({ type, noBg }: OfferTypeBadgeProps) => {
-  return type === "buyerOffer" ? (
+  return type === "buyer" ? (
     <div className={`ml-4 text-xs inline-flex items-center font-bold leading-sm uppercase px-3 py-1 ${!noBg && "bg-orange-200" } text-orange-500 rounded-full`}>
       <svg
         xmlns="http://www.w3.org/2000/svg"

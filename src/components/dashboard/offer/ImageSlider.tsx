@@ -66,7 +66,7 @@ const ImageSlider = ({ images, handleAddImages, listingType }: ImageSliderProps)
           </SwiperSlide>
         )) :  <SwiperSlide className="relative h-full aspect-video bg-gray-50 border-x border-t rounded" >
 
-          <Image src={listingType && listingType === "buyerOffer" ? catPlaceholder : dogPlaceholder } alt=""  /> 
+          <Image src={listingType && listingType === "buyer" ? catPlaceholder : dogPlaceholder } alt=""  /> 
         </SwiperSlide>
         
         }

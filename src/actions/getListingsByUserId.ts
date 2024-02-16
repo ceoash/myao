@@ -8,14 +8,14 @@ export default async function getListingsByUserId(id: any,) {
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
               { userId: id },
             ],
           },
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               { userId: id },
             ],
           },

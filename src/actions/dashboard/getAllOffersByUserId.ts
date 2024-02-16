@@ -96,7 +96,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
               {
                 sellerId: {
                   notIn: blockedIds,
@@ -107,7 +107,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               {
                 buyerId: {
                   notIn: blockedIds,
@@ -126,7 +126,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
               { status: "awaiting approval" },
               {
                 sellerId: {
@@ -138,7 +138,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               { status: "awaiting approval" },
               {
                 buyerId: {
@@ -157,7 +157,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               {
                 sellerId: {
                   notIn: blockedIds,
@@ -168,7 +168,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
               {
                 buyerId: {
                   notIn: blockedIds,
@@ -187,7 +187,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { buyerId: id },
-              { type: "sellerOffer" },
+              { type: "seller" },
               { status: "awaiting approval" },
               {
                 sellerId: {
@@ -199,7 +199,7 @@ export default async function getAllOffersByUserId(
           {
             AND: [
               { sellerId: id },
-              { type: "buyerOffer" },
+              { type: "buyer" },
               { status: "awaiting approval" },
               {
                 buyerId: {

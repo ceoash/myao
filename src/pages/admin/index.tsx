@@ -254,11 +254,11 @@ const index = ({
                         <tbody className="text-sm divide-y divide-gray-100">
                           {listings.map((listing: any) => {
                             const sellerIcon =
-                              listing.type === "buyerOffer"
+                              listing.type === "buyer"
                                 ? "/images/cat.png"
                                 : "/images/dog.png";
                             const buyerIcon =
-                              listing.type === "buyerOffer"
+                              listing.type === "buyer"
                                 ? "/images/dog.png"
                                 : "/images/cat.png";
 
@@ -267,7 +267,7 @@ const index = ({
                               : null;
 
                             const icon =
-                              listing.type === "sellerOffer"
+                              listing.type === "seller"
                                 ? sellerIcon
                                 : buyerIcon;
 
@@ -293,7 +293,7 @@ const index = ({
                                   <div className="flex items-center justify-start">
                                     <div className="flex flex-col justify-center">
                                       <h6 className="mb-0 leading-normal text-sm">
-                                        {listing.type === "sellerOffer"
+                                        {listing.type === "seller"
                                           ? listing?.seller.username || "NA"
                                           : listing?.buyer.username || "NA"}
                                       </h6>
@@ -303,7 +303,7 @@ const index = ({
                                     </span>
                                     <div className="flex flex-col justify-center">
                                       <h6 className="mb-0 leading-normal text-sm">
-                                        {listing.type === "sellerOffer"
+                                        {listing.type === "seller"
                                           ? listing?.buyer.username || "NA"
                                           : listing?.seller.username || "NA"}
                                       </h6>

@@ -133,9 +133,9 @@ const Offer: React.FC<any> = ({
   const sessionUser = session?.user?.id === sellerId ? seller : buyer;
 
   const sellerIcon =
-    type === "buyerOffer" ? dogIcon : catIcon;
+    type === "buyer" ? dogIcon : catIcon;
   const buyerIcon =
-    type === "buyerOffer" ? catIcon : dogIcon;
+    type === "buyer" ? catIcon : dogIcon;
 
   const formatStatus = (status: string) => {
     switch (status) {
@@ -320,7 +320,7 @@ const Offer: React.FC<any> = ({
             </div>
             <div className="absolute inset-0 bg-black hover:bg-white opacity-10"></div>
             <Image
-              src={img && img[0] ? img[0] : type === "buyerOffer" ? catPlaceholder : dogPlaceholder}
+              src={img && img[0] ? img[0] : type === "buyer" ? catPlaceholder : dogPlaceholder}
               alt="content"
               layout="fill"
               objectFit="cover"
@@ -464,7 +464,7 @@ const Offer: React.FC<any> = ({
 
               <div className=" items-center gap-1.5 text-xs xl:text-sm hidden 2xl:flex">
                 <ImPriceTag />
-                <span>{type === "sellerOffer" ? "Sale" : "Buy"}</span>
+                <span>{type === "seller" ? "Sale" : "Buy"}</span>
               </div>
               {/* <div className="flex jus">
                   <FaEnvelope className="mr-2" size={16}/>

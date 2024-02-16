@@ -295,7 +295,7 @@ const Header = ({
                         <Spinner />
                       ) : (
                         `Message ${
-                          listing?.type === "sellerOffer" ? "Buyer" : "Seller"
+                          listing?.type === "buyer" ? "Buyer" : "Seller"
                         }`
                       )}
                     </button>

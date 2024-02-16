@@ -26,6 +26,7 @@ export default async function listingsApi(
   res: NextApiResponse<ListingResponse | ErrorResponse>
 ) {
   const now = Date.now();
+  const session = await getServerSession(req, res, authOptions);
 
   async function createListing(data: any) {
     if (!data)
@@ -124,6 +125,14 @@ export default async function listingsApi(
     } = req.body;
 
     try {
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+      
+      if (!userExists) {
+        throw new Error("User does not exist");
+      }
+
       let newListingData = {
         title,
         description,
@@ -131,7 +140,6 @@ export default async function listingsApi(
         sellerId,
         status: "awaiting approval",
         buyerId,
-        userId,
         type,
         options,
       };

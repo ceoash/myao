@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 // Import Swiper React components
-import { Swiper, SwiperSlide } from "swiper/react";
+import { Swiper, SwiperSlide } from "swiper/react"
+import catPlaceholder from "@/images/cat-placeholder.jpg";
 
 // Import Swiper styles
 // Import Swiper styles
@@ -16,6 +17,7 @@ import SwiperCore, { Thumbs, Navigation, FreeMode } from "swiper";
 import Image from "next/image";
 import { ImUpload3 } from "react-icons/im";
 import { RiImageAddFill } from "react-icons/ri";
+
 
 interface ImageSliderProps {
   images: string;
@@ -47,7 +49,7 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
         modules={[FreeMode, Navigation, Thumbs]}
         className=" mySwiper2 flex  z-10 mx-0 mb-6 flex-1"
       >
-        {imagesStore.map((image, i) => (
+        {imagesStore && imagesStore.length > 0 ? imagesStore.map((image, i) => (
           <SwiperSlide
             key={i}
             className="relative h-full aspect-video bg-gray-50 border-x border-t rounded"
@@ -60,14 +62,12 @@ const ImageSlider = ({ images, handleAddImages }: ImageSliderProps) => {
               layout="fill"
             />
           </SwiperSlide>
-        )) || (
-          <SwiperSlide
-            className="relative h-full aspect-video bg-gray-50 flex justify-center items-center"
-            onClick={handleAddImages}
-          >
-            <ImUpload3 className="text-5xl text-gray-400" />
-          </SwiperSlide>
-        )}
+        )) :  <SwiperSlide className="relative h-full aspect-video bg-gray-50 border-x border-t rounded" >
+
+          <Image src={catPlaceholder} alt=""  /> 
+        </SwiperSlide>
+        
+        }
       </Swiper>
 
       <div className="p-2 bg-white border flex justify-between ">

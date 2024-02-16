@@ -112,8 +112,8 @@ model Listing {
   image           String?
   buyerId         String?           @db.ObjectId
   buyer           User?             @relation("buyer", fields: [buyerId], references: [id], onDelete: Cascade)
-  sellerId        String            @db.ObjectId
-  seller          User              @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId        String?            @db.ObjectId
+  seller          User?              @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
   price           Float?
   completedById   String?           @db.ObjectId
   completedBy     User?             @relation("completedBy", fields: [completedById], references: [id], onDelete: Cascade)

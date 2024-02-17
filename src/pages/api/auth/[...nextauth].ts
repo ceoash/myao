@@ -98,7 +98,7 @@ export const authOptions: AuthOptions = {
     },
     session: ({ session, token }) => ({
       ...session,
-      name: "gatcVIA9Wh_session",
+      name: "nz6sAbHOdE_session",
       user: {
         ...session.user,
         id: token.sub,
@@ -115,6 +115,6 @@ export const authOptions: AuthOptions = {
     strategy: "jwt",
   },
 
-  secret: "gatcVIA9Wh"
+  secret: "WdvWVCQ3py"
 };
 export default NextAuth(authOptions);

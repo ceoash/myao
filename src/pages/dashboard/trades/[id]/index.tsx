@@ -267,7 +267,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     });
 
     return res;
-  }
+  }  
 
   const handleAddImages = () => {
     modal.onOpen("Add Images", <AddImages images={currentListing?.image || ""} saveImages={addImages} />);

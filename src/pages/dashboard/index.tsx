@@ -48,6 +48,8 @@ const Index = ({
     pendingReceived: 0,
   });
 
+  console.log("session", session);
+
   const offerModal = useOfferModal();
   const socket = useSocketContext();
   const router = useRouter();

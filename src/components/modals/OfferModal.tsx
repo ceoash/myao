@@ -265,8 +265,7 @@ const OfferModal = () => {
     if (!search) {
       return;
     }
-    axios
-      .get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
+    axios.get(`/api/getUserByUsernameApi?username=${search.toLowerCase()}`)
       .then((res) => {
         if (res.data.id && res.data.id === session?.user?.id) {
           setFoundUser(null);
@@ -279,7 +278,21 @@ const OfferModal = () => {
             setError("user", { message: "User not found" });
             return;
           }
-          setFoundUser(res.data);
+         setFormData((prev) => {
+          if(prev.type === "buyer"){
+            return {
+              ...prev,
+              sellerId: res.data.id,
+            };
+          }
+          return {
+            ...prev,
+            buyerId: res.data.id,
+          };
+         } );
+
+         setFoundUser(res.data);
+
           setError("user", { message: "" });
         }
       })
@@ -397,12 +410,6 @@ const OfferModal = () => {
       router.push("/login");
       return;
     }
-    if (!foundUser) {
-      toast.error("Please select a user to send the offer to");
-      setStep(STEPS.BUYER);
-      return;
-    }
-
     if (!formData.type) {
       toast.error("Please select the type of offer you want to create");
       setStep(STEPS.TYPE);
@@ -414,25 +421,29 @@ const OfferModal = () => {
       userId: session?.user.id,
       type: formData.type,
       image: formData.image,
-      buyerId: foundUser && formData.type === "buyer" ? foundUser?.id : session?.user.id,
-      sellerId: foundUser && formData.type === "seller" ? foundUser?.id : session?.user.id,
     };
 
-    // console.log("data", data);
+    if (formData.type === "buyer") {
+      Object.assign(data, { buyerId: session?.user.id });
+    }
+
+    if (formData.type === "seller") {
+      Object.assign(data, { sellerId: session?.user.id });
+    }
 
     setIsLoading(true);
-    if (offerModal.conversationId)
-      Object.assign(data, { conversationId: offerModal.conversationId });
 
-      console.log("data", data);
+    if (offerModal.conversationId) Object.assign(data, { conversationId: offerModal.conversationId });
+
+    console.log("data", data);
     
     await axios
       .post("/api/listings", data)
       .then((response) => {
+        offerModal.onClose();
         toast.success("Offer created successfully!");
         setStep(STEPS.TYPE);
         setFormData(FormType);
-        offerModal.onClose();
         setFoundUser(null);
         setSearch("");
         setStep(STEPS.TYPE);
@@ -715,6 +726,7 @@ const OfferModal = () => {
       </div>
     );
   }
+  
   if (step === STEPS.ADDITIONAL) {
     bodyContent = (
       <div className="flex flex-col">
@@ -1014,6 +1026,7 @@ const OfferModal = () => {
       </div>
     );
   }
+
   if (step === STEPS.BUYER) {
     bodyContent = (
       <div className="flex flex-col">
@@ -1023,7 +1036,7 @@ const OfferModal = () => {
           nounderline
         />
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-          {foundUser ? (
+          {formData.type === "buyer" && formData.sellerId || formData.type === "seller" && formData.buyerId ? (
             <>
               <p className="font-bold">Found: {}</p>
               <div className="flex justify-between items-center border border-gray-200 rounded-lg px-4 py-2 bg-gray-50">

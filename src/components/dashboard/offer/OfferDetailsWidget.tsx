@@ -187,6 +187,7 @@ const OfferDetailsWidget = ({
         }
         `}
     >
+      <h4 className="pb-2">Trading Card</h4>
       <div className="relative mx-auto w-full">
         <Link
           href={`/dashboard/profile/${session?.user.id}`}

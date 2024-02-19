@@ -556,7 +556,7 @@ const OfferModal = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 md:gap-4">
           <div className="mb-4">
             <label htmlFor={"category"} className="mb-3 flex gap-1">
               Category
@@ -1035,6 +1035,11 @@ const OfferModal = () => {
           description={`Who would you like to send this offer to?`}
           nounderline
         />
+        <p className="mb-4 text-sm md:hidden">
+          {formData.type === "buyer"
+            ? "Select the seller you would like to send this offer to"
+            : "Select the buyer you would like to send this offer to"}
+        </p>
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
           {formData.type === "buyer" && formData.sellerId || formData.type === "seller" && formData.buyerId ? (
             <>

@@ -92,10 +92,10 @@ const PriceInput: FC<InputProps> = ({
 
   return (
     <div className="flex flex-col gap-0.5">
-      <label htmlFor={id} className="mb-2 flex gap-1">
+      <label htmlFor={id} className="mb-2 flex gap-1 whitespace-nowrap">
         {label}
         {optional && (
-          <span className="italic text-gray-500 text-sm "> (Optional)</span>
+          <span className="italic text-gray-500 text-sm "></span>
         )}
       </label>
       <div

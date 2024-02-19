@@ -10,9 +10,9 @@ interface HeadingProps {
 const Heading = ({ title, description, nounderline, center }: HeadingProps) => {
   return (
     <div
-      className={`${!nounderline && `border-b border-gray-200`} ${
+      className={`${!nounderline && `border-b border-gray-200 `} ${
         center && "text-center"
-      } pb-4 mb-4`}
+      } pb-4 mb-4 hidden md:block`}
     >
       {center ? (
         <>

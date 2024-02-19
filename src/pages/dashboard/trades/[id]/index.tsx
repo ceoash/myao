@@ -1021,7 +1021,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         pageTitle={listing.title}
         meta={<Meta title={listing.title} description={listing.description} />}
       >
-        <div className="mt-10 mx-8 -mb-2">
+        <div className="mt-6 lg:mt-10 mx-8 -mb-2">
          <OfferAlerts
             handleStatusChange={handleStatusChange}
             session={session}

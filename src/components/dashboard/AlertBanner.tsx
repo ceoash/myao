@@ -1,4 +1,4 @@
-import { FaCheck, FaInfo } from "react-icons/fa";
+import { FaCheck, FaInfo, FaTimes } from "react-icons/fa";
 import { BiBlock } from "react-icons/bi";
 
 interface AlertBannerProps {
@@ -29,20 +29,21 @@ const AlertBanner = ({
     <div className={`
         items-center
         justify-between
-        p-2
+        p-4
         text-sm
         font-semibold
         rounded-lg
         col-span-12
         xl:-mt-4
+       
         ${success && "border bg-green-100 border-green-200 text-green-500"}
-        ${danger && "border border-red-200 text-red-500 bg-red-100"}
+        ${danger && " border-red-50 text-red-500 bg-red-50"}
         ${info && "border bg-yellow-50 border-yellow-200 text-yellow-400"}
         ${primary && " border-orange-200 border bg-orange-100 text-orange-default"}
         ${secondary && "text-gray-600 border-gray-300 border bg-gray-100"}
       `}
     >
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-4 items-center">
         <div
           className={`
             rounded-full 
@@ -54,8 +55,8 @@ const AlertBanner = ({
             ${secondary && "text-gray-500 border-gray-400 border !bg-white"}
           `}
         >
-          {success && <FaCheck />}
-          {danger && <BiBlock />}
+          {success && <FaCheck  />}
+          {danger && <FaTimes size={10} />}
           {info && <FaInfo />}
           {primary && <FaInfo />}
           {secondary && <FaInfo />}

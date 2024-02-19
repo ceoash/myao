@@ -1,13 +1,16 @@
 import React from 'react'
 import Heading from '../modals/Heading'
 import ImageUpload from '../inputs/ImageUpload'
+import Button from '../Button';
 
 const AddImages = ({
     saveImages,
     images,
+    close
 }: {
     saveImages: (value: string) => void;
     images: string;
+    close: () => void;
 
 }) => {
   return (
@@ -22,6 +25,9 @@ const AddImages = ({
             value={images}
             onChange={(value) => saveImages(value)}
           />
+        </div>
+        <div className='mt-6'>
+            <Button label="Done" onClick={close} />
         </div>
       </div>
   )

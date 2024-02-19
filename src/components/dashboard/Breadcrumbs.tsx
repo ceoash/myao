@@ -1,3 +1,4 @@
+import { truncateFromMiddle } from "@/utils/helpers";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -55,7 +56,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
             </svg>
           </span>
     
-          <span className="capitalize">{pathParts[1]}</span>
+          <span className="capitalize whitespace-nowrap">{pathParts[1]}</span>
         </Link>
       </li>
       )}
@@ -63,7 +64,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
       <li className="inline-flex items-center">
         <Link
           href={`#`}
-          className={`inline-flex items-center capitalize  font-medium text-sm md:text-md md:font-bold ${
+          className={`inline-flex items-center capitalize  font-medium text-sm md:text-md md:font-bold w-24 ${
             pathParts.length === 3 || pageTitle ? "text-gray-700" : "text-gray-500"
           }`}
         >          
@@ -87,9 +88,9 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
             </svg>
           </span>
         )}
-          <span className={`inline-flex items-center  font-medium text-sm md:text-md md:font-bold ${
+          <span className={`inline-flex items-center  font-medium text-sm md:text-md md:font-bold whitespace-nowrap ${
             pathParts.length === 3 ? "text-gray-700" : "text-gray-500"
-          }` }>{pathParts.length < 4 && pageTitle ? pageTitle : pathParts[2] && typeof pathParts[2] === 'string' && pathParts[2].includes('?') ? pathParts[2].split("?")[0] : pathParts[2]}</span>
+          }` }>{pathParts.length < 4 && pageTitle ? truncateFromMiddle(pageTitle) : truncateFromMiddle(pathParts[2]) && typeof pathParts[2] === 'string' && pathParts[2].includes('?') ? truncateFromMiddle(pathParts[2].split("?")[0]) : truncateFromMiddle(pathParts[2])}</span>
         </Link>
       </li>
       

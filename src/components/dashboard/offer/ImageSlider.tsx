@@ -11,12 +11,9 @@ import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
 
-import plus from "@/images/plus.svg";
-
 // import required modules
 import SwiperCore, { Thumbs, Navigation, FreeMode } from "swiper";
 import Image from "next/image";
-import { ImUpload3 } from "react-icons/im";
 import { RiImageAddFill } from "react-icons/ri";
 
 

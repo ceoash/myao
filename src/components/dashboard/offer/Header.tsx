@@ -20,6 +20,11 @@ import { useSocketContext } from "@/context/SocketContext";
 import Spinner from "@/components/Spinner";
 import { FaChevronRight } from "react-icons/fa";
 import useOfferModal from "@/hooks/useOfferModal";
+import useDataModal from "@/hooks/useDataModal";
+import EditTradeDetailsForm from "@/components/forms/EditTradeDetailsForm";
+import { set } from "date-fns";
+import { CgChevronRightR } from "react-icons/cg";
+import { TbChevronRight } from "react-icons/tb";
 
 const formatDate = (date: string | Date, format = "short") => {
   let dateObj;
@@ -66,6 +71,13 @@ interface HeaderProps {
   setStatus: Dispatch<React.SetStateAction<string>>;
   handleAddImages: () => void;
   handleStatusChange: (status: string, userId: string) => void;
+  handleUpdateDetails: (listing: {
+    title?: string;
+    description?: string;
+    price?: number;
+    category?: string;
+    subcategory?: string;
+  }) => void;
 }
 
 const Header = ({
@@ -81,12 +93,24 @@ const Header = ({
   events,
   handleStatusChange,
   handleAddImages,
+  handleUpdateDetails,
 }: HeaderProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [bid, setBid] = useState<string | null | number>(null);
+  const [bid, setBid] = useState<null | number>(null);
   const socket = useSocketContext();
 
-  const modal = useOfferModal();
+  const modal = useDataModal();
+
+  const updateInitialOffer = async () => {
+    setIsLoading(true);
+    if (bid === null) {
+      toast.error("Please enter a offer price");
+      return;
+    }
+    handleUpdateDetails({ price: bid  });
+    setBid(null);
+    setIsLoading(false);
+  }
 
   const updateBid = async (num: number | string | null) => {
     if (num === null) {
@@ -170,11 +194,11 @@ const Header = ({
         <div className="mb-4 pb-4 border-b border-grey-dark">
           <div className="mb-2">
             <div className="flex w-full justify-between items-start">
-              <h2 className="font-bold text-2xl  mb-0">{listing.title}</h2>
+              <h2 className="font-bold text-[18px] md:text-md lg:text-2xl  mb-0 truncate">{listing.title}</h2>
               {listing?.user?.id === session?.user.id ? (
                 <button
                   className="border rounded bg-white"
-                  onClick={() => modal.onOpen(session?.user, "", "", listing)}
+                  onClick={() => modal.onOpen("edit-listing", <EditTradeDetailsForm listing={listing} session={session} updateDetails={handleUpdateDetails} />)}
                 >
                   <CiSettings size={22} />
                 </button>
@@ -182,13 +206,13 @@ const Header = ({
                 ""
               )}
             </div>
-            <div className="flex items-center sm:w-5/6 space-x-2">
+            <div className="flex items-center sm:w-5/6 space-x-1 text-gray-500">
               <p className="font-hk text-sm">
                 {listing.category || "(no category)"}
               </p>
               {listing?.subcategory && (
                 <p className="font-hk text-sm text-gray-400">
-                  <FaChevronRight />
+                  <TbChevronRight />
                 </p>
               )}
               {listing?.subcategory && (
@@ -197,7 +221,7 @@ const Header = ({
             </div>
           </div>
 
-          <div className="flex text-sm">
+          <div className="flex text-sm pt-2 ">
             <div className="flex gap-2 items-center">
               <CiCalendar />
               <p className="font-hk text-secondary">
@@ -219,9 +243,9 @@ const Header = ({
           <div className=" bg-gray-50  rounded shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
             <h4>Initial Offer</h4>
             <p className="font-extrabold text-lg mb-0 text-orange-500">
-              £
+              
               {listing?.price && listing?.price > 0
-                ? listing.price
+                ?`£${Number(listing.price).toLocaleString()}`
                 : "Open Offer"}
             </p>
             <h6 className="text-sm flex">
@@ -235,14 +259,14 @@ const Header = ({
             Number(currentBid?.currentPrice) > 0 ? (
               <>
                 <p className="font-extrabold text-lg mb-0 text-orange-500">
-                  £{currentBid.currentPrice}
+                  £{Number(currentBid.currentPrice).toLocaleString()}
                 </p>
                 <h6 className="text-sm flex">By: {currentBid.byUsername}</h6>
               </>
             ) : (
               <>
                 <p className="font-extrabold text-lg mb-0 text-orange-500">
-                  £{listing?.price}
+                  {listing?.price && listing?.price > 0 ? `£${Number(listing.price).toLocaleString()}` : "N/A"}
                 </p>
                 <p className=" text-sm mb-0">No counter offers</p>
               </>
@@ -264,7 +288,7 @@ const Header = ({
                     className="w-full  px-2"
                     placeholder="0.00"
                     value={bid ? bid : ""}
-                    onChange={(e) => setBid(e.target.value)}
+                    onChange={(e) => setBid(Number(e.target.value))}
                   />
                   {bids.length > 0 ? (
                     <button
@@ -277,7 +301,7 @@ const Header = ({
                       ) : currentBid.byUserId === sessionUser?.id ? (
                         "Update Offer"
                       ) : (
-                        "Send Offer"
+                        "Counter Offer"
                       )}
                     </button>
                   ) : listing?.user?.id === sessionUser?.id ? (
@@ -316,62 +340,34 @@ const Header = ({
                   </div>
                 )}
             </div>
-          ) : ( listing.userId === session?.user.id && status !== "cancelled" &&
-          status !== "accepted" &&
-          status !== "completed" &&  (
+          ) : ( listing.userId === session?.user.id && status === "awaiting approval" ?
+          (
           <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
             <div>
               <div className="flex rounded border divide-x bg-gray-50">
                 <span className="p-2 px-3">£</span>
                 <input
                   type="number"
-                  disabled={true}
                   className="w-full  px-2"
                   placeholder="0.00"
                   value={bid ? bid : ""}
-                  onChange={(e) => setBid(e.target.value)}
+                  disabled={isLoading}
+                  onChange={(e) => setBid(Number(e.target.value))}
                 />
-                {bids.length > 0 ? (
                   <button
-                    onClick={() => toast.error("You can't update the offer price")}
+                    onClick={updateInitialOffer}
                     disabled={isLoading}
                     className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
                   >
                     {isLoading ? (
                       <Spinner />
-                    ) : currentBid.byUserId === sessionUser?.id ? (
-                      "Update Offer"
-                    ) : (
-                      "Send Offer"
-                    )}
+                    ) : "Update Price" }
+                   
                   </button>
-                ) : listing?.user?.id === sessionUser?.id ? (
-                  <button
-                    disabled={isLoading}
-                    onClick={() => updateBid(bid)}
-                    className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
-                  >
-                    {isLoading ? <Spinner /> : "Update Offer"}
-                  </button>
-                ) : (
-                  <button
-                    disabled={isLoading}
-                    className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80"
-                  >
-                    {isLoading ? (
-                      <Spinner />
-                    ) : (
-                      `Message ${
-                        listing?.type === "buyer" ? "Buyer" : "Seller"
-                      }`
-                    )}
-                  </button>
-                )}
+                
               </div>
             </div>
-            {status !== "cancelled" &&
-                status !== "accepted" &&
-                status !== "completed" && (
+            
 
             <div className="flex justify-end">
               <button
@@ -384,9 +380,9 @@ const Header = ({
                 Terminate
               </button>
             </div>
-            )}
+        
           </div>
-        ) )}
+        ) : null )}
 
         {/* <div className="flex items-center justify-between pb-4">
           <div className="w-1/3 sm:w-1/5">

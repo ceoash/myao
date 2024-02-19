@@ -211,8 +211,8 @@ const OfferDetailsWidget = ({
                   <Image
                     src={
                       sessionUser.id === listing?.sellerId
-                        ? listing?.seller.profile?.image || dog
-                        : listing?.buyer.profile?.image || cat
+                        ? listing?.seller?.profile?.image || dog
+                        : listing?.buyer?.profile?.image || cat
                     }
                     className="rounded-full"
                     alt=""
@@ -240,7 +240,21 @@ const OfferDetailsWidget = ({
             <div className="flex justify-end">
               <div className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
                 <span className="text-sm">
-                  {meLastBid?.price ? (
+                  {events && events.length > 0 && events?.[0].event === "cancelled" && events?.[0].userId === sessionUser.id || 
+                  events && events.length > 0 && events?.[0].event === "approved" && events?.[0].userId === sessionUser.id  ||
+                  events && events.length > 0 && events?.[0].event === "completed" && events?.[0].userId === sessionUser.id  ||
+                  events && events.length > 0 && events?.[0].event === "accepted" && events?.[0].userId === sessionUser.id  ? 
+                    (
+                      <div className="text-right">
+                      <p className="text-xs ">
+                        {events && events.length > 0 && events?.[0].event === "cancelled" && events?.[0].userId === sessionUser.id ? "Cancelled" : events && events.length > 0 && events?.[0].event === "approved" && events?.[0].userId === sessionUser.id ? "Approved" : events && events.length > 0 && events?.[0].event === "completed" && events?.[0].userId === sessionUser.id ? "Completed" : events && events.length > 0 && events?.[0].event === "accepted" && events?.[0].userId === sessionUser.id ? "Accepted" : ""}
+                      </p>
+                      <p className="text-xs">
+                        {new Date(events?.[0].date).toLocaleString("en-GB")}
+                      </p>
+
+                      </div>
+                    ) : ( meLastBid?.price ? (
                     <div className="text-right">
                       <p className="text-xs text-gray-800">Latest Offer</p>{" "}
                       <span className="text-sm uppercase">{`£${Number(
@@ -249,7 +263,7 @@ const OfferDetailsWidget = ({
                     </div>
                   ) : (
                     <span className="text-xs text-gray-800">no offers yet</span>
-                  )}
+                  ) )}
                 </span>
               </div>
             </div>
@@ -324,9 +338,9 @@ const OfferDetailsWidget = ({
               status === "expired"
                 ? "Last Offer" + " "
                 : status === "completed"
-                ? "Paid"
+                ? "Last Offer" + " "
                 : status === "accepted"
-                ? "Agreed Offer" + " "
+                ? "Last Offer" + " "
                 : !currentBid.currentPrice || currentBid.currentPrice == ""
                 ? currentBid.currentPrice == "0" &&
                   (listing.price === "" ||
@@ -371,66 +385,17 @@ const OfferDetailsWidget = ({
                 </Link>
               </div>
 
-              {!currentBid?.currentPrice ||
-              Number(currentBid?.currentPrice) < 1 ? (
-                <div className="flex justify-center items-center w-full">
-                  <div className="flex items-center mx-auto gap-1">
-                    <TbInfoHexagon />
-                    <p className="block w-full my-2 italic">
-                      {listing.userId === session?.user?.id
-                        ? `Awaiting response from ${
-                            participant?.username || ""
-                          }`
-                        : status === "negotiating"
-                        ? "Enter a offer to start negotiating"
-                        : "Click to make an offer"}
-                    </p>
-                  </div>
-                </div>
-              ) : currentBid.byUserId !== session?.user?.id &&
-                status === "negotiating" ? (
-                <div className="flex justify-center items-center gap-1 w-full">
-                  <div className="flex items-center mx-auto gap-1">
-                    <TbInfoHexagon />
-                    <p className="block w-full my-2 italic">
-                      Would you like to accept?
-                    </p>
-                  </div>
-                </div>
-              ) : status === "awaiting approval" ? (
-                <div className="flex  justify-center items-center w-full">
-                  <div className="flex items-center mx-auto gap-1">
-                    <TbInfoHexagon />
-                    <p className="block w-full my-2 italic">
-                      {currentBid?.userId
-                        ? `${
-                            participant?.username || ""
-                          } would like to negotiate with you`
-                        : "Awaiting response"}
-                    </p>
-                  </div>
-                </div>
-              ) : status === "awaiting approval" ? (
-                <div className="flex justify-center items-centerw-full">
-                  <div className="flex items-center mx-auto gap-1">
-                    <TbInfoHexagon />
-                    <p className="block w-full my-2 italic">
-                      Waiting for {participant?.username || ""}'s response
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                ""
-              )}
-            </div>
-
-            {Number(currentBid?.currentPrice) > 0 &&
-              currentBid?.byUserId !== session?.user?.id && (
-                <>
-                  <div className="py-2 ">
-                    <div className=" gap-2 text-sm  font-bold mb-2 items-start">
-                      <div className="w-2/3 flex gap-2 mx-auto justify-center">
-                        {status === "negotiating" && (
+              {status === "awaiting approval" || status === "negotiating" ? (
+                (currentBid &&
+                  currentBid.currentPrice &&
+                  currentBid.byUserId !== sessionUser.id) ||
+                (!currentBid.currentPrice &&
+                  Number(listing.price) > 0 &&
+                  listing.userId !== sessionUser.id) ? (
+                  <div className="flex justify-center items-center w-full">
+                    <div>
+                      <div className="w-2/3 flex gap-2 mx-auto justify-center pt-4">
+                        {
                           <>
                             <div className="flex flex-col justify-center  items-center gap-4">
                               <Button
@@ -444,7 +409,7 @@ const OfferDetailsWidget = ({
                                 }
                                 className="rounded-xl px-3 py-1 text-center w-10"
                               >
-                                YES
+                                ACCEPT
                               </Button>
                             </div>
                             <div className="flex flex-col justify-center items-center  gap-4">
@@ -459,20 +424,87 @@ const OfferDetailsWidget = ({
                                 }
                                 className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
                               >
-                                NO
+                                DECLINE
                               </Button>
                             </div>
                           </>
-                        )}
+                        }
                       </div>
                     </div>
                   </div>
+                ) : null
+              ) : null}
+
+              {status === "awaiting approval" &&
+              listing.userId !== sessionUser.id &&
+              !currentBid?.currentPrice &&
+              listing.price &&
+              Number(listing.price) > 0 ? (
+                <>
+                  <div className="flex items-center mx-auto gap-1">
+                    <p className="block w-full mt-6 italic">
+                      <div className="flex justify-center items-center gap-1 w-full">
+                        <div className="flex items-center mx-auto gap-1">
+                          <TbInfoHexagon />
+                          <p className="block w-full my-2 italic">
+                            {listing.userId === session?.user?.id
+                              ? `Awaiting response from ${
+                                  participant?.username || ""
+                                }`
+                              : "Click lets haggle to make a counter offer"}
+                          </p>
+                        </div>
+                      </div>
+                    </p>
+                  </div>
                 </>
-              )}
+              ) : status === "awaiting approval" ? (
+                <div className="flex  justify-center items-center w-full">
+                  <div className="flex items-center mx-auto gap-1">
+                    <TbInfoHexagon />
+                    <p className="block w-full my-2 italic">
+                      {currentBid?.userId
+                        ? `${
+                            participant?.username || ""
+                          } would like to negotiate with you`
+                        : "Awaiting response"}
+                    </p>
+                  </div>
+                </div>
+              ) : status === "negotiating" ? (
+                currentBid &&
+                  currentBid.currentPrice &&
+                  Number(currentBid.currentPrice) > 0 ||
+                (!currentBid.currentPrice &&
+                  Number(listing.price) > 0 &&
+                  listing.userId !== sessionUser.id) ? (
+                  <div className="flex items-center mx-auto gap-1">
+                    <p className="block w-full mt-6 italic">
+                      <div className="flex justify-center items-center gap-1 w-full">
+                        <div className="flex items-center mx-auto gap-1">
+                          <TbInfoHexagon />
+                          <p className="block w-full my-2 italic">
+                            {currentBid?.currentPrice && currentBid.byUserId === session?.user?.id || !currentBid.currentPrice && listing.userId === session?.user?.id
+                              ? `Awaiting response from ${
+                                  participant?.username || ""
+                                }`
+                              : currentBid?.currentPrice && currentBid.byUserId !== session?.user?.id ? "Enter a counter offer to continue negotiating" : !currentBid.currentPrice && listing.userId !== session?.user?.id
+                              ? "Enter a counter offer to start negotiating" : "Click lets haggle to make a counter offer" }
+                          </p>
+                        </div>
+                      </div>
+                    </p>
+                  </div>
+                  ) : null
+
+            
+              ) : null }
+
+            </div>
 
             {status === "awaiting approval" &&
             listing.userId !== session?.user?.id ? (
-              <div className="flex justify-center flex-col gap-2 mb-8 w-full ">
+              <div className="flex justify-center flex-col gap-2 mb-8 w-full mt-2 ">
                 <Button
                   options={{ primary: true, size: "lg" }}
                   isLoading={loadingState.negotiating}
@@ -512,21 +544,6 @@ const OfferDetailsWidget = ({
                 } border  shadow`}
               />
             )}
-          {(status !== "cancelled" &&
-            status !== "accepted" &&
-            status !== "completed" &&
-            !currentBid?.currentPrice) ||
-            (Number(currentBid.currentPrice) < 1 && (
-              <MdOutlineSwapVerticalCircle
-                className={`transition-all text-white/90 animate-bounce text-[50px] md:text-[50px] lg:text-[50px] xl:text-[40px] xl:-mt-10 2xl:text-[50px] -my-10 md:-mt-10 z-10 rounded-full -mb-6  p-2.5 ${
-                  status === "rejected" || status === "cancelled"
-                    ? "border-red-200  bg-gradient-to-b from-red-default to-red-300"
-                    : status === "accepted" || status === "completed"
-                    ? "border-green-200  bg-gradient-to-b from-green-default to-green-300"
-                    : "bg-gradient-to-b from-orange-400 to-orange-300 border-orange-300"
-                } border shadow`}
-              />
-            ))}
         </div>
         <Link
           href={`/dashboard/profile/${participant?.id}`}
@@ -568,8 +585,22 @@ const OfferDetailsWidget = ({
             </div>
             <div className="flex justify-end">
               <div className="inline-block font-semibold text-primary whitespace-nowrap leading-tight rounded-xl">
-                <span className="text-sm">
-                  {participantLastBid?.price ? (
+                <div className="text-sm">
+                  {events && events.length > 0 && events?.[0].event === "cancelled" && events?.[0].userId === participant.id || 
+                  events && events.length > 0 && events?.[0].event === "approved" && events?.[0].userId === participant.id  ||
+                  events && events.length > 0 && events?.[0].event === "completed" && events?.[0].userId === participant.id  ||
+                  events && events.length > 0 && events?.[0].event === "accepted" && events?.[0].userId === participant.id  ? 
+                    (
+                      <div className="text-right">
+                      <p className="text-xs ">
+                        {events && events.length > 0 && events?.[0].event === "cancelled" && events?.[0].userId === participant.id ? "Cancelled" : events && events.length > 0 && events?.[0].event === "approved" && events?.[0].userId === participant.id ? "Approved" : events && events.length > 0 && events?.[0].event === "completed" && events?.[0].userId === participant.id ? "Completed" : events && events.length > 0 && events?.[0].event === "accepted" && events?.[0].userId === participant.id ? "Accepted" : ""}
+                      </p>
+                      <p className="text-xs">
+                        {new Date(events?.[0].date).toLocaleString("en-GB")}
+                      </p>
+
+                      </div>
+                    ) : (participantLastBid?.price ? (
                     <div className="text-right">
                       <p className="text-xs text-gray-800">Latest Offer</p>{" "}
                       <span className="text-sm uppercase">{`£${Number(
@@ -578,8 +609,8 @@ const OfferDetailsWidget = ({
                     </div>
                   ) : (
                     <span className="text-xs text-gray-800">no offers yet</span>
-                  )}
-                </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -616,39 +647,38 @@ const OfferDetailsWidget = ({
         <Button primary={toggleMenu.description} onClick={() => setToggleMenu({description: true, events: false, summary: false})} label="Description" options={{size: "xs"}} />
         <Button primary={toggleMenu.events} onClick={() => setToggleMenu({description: false, events: true, summary: false})} label="Events" options={{size: "xs"}} />
       </div> 
+
  */}
-      {status === "accepted" &&
-        listing.buyerId === session?.user.id &&
-        status === "accepted" && (
-          <div className="flex flex-col items-center gap-4 mt-4 w-full lg:hidden">
-            <StripeCheckout
-              session={session}
-              listing={{
-                id: listing.id,
-                price: Number(
-                  currentBid.currentPrice
-                    ? currentBid.currentPrice
-                    : listing.price
-                ),
-                title: listing.title,
-                buyer: {
-                  id: listing.buyerId,
-                  username: listing.buyer.username,
-                },
-                seller: {
-                  id: listing.sellerId,
-                  username: listing.seller.username,
-                },
-                status: status,
-                image:
-                  parsedImage && parsedImage[0]
-                    ? parsedImage[0]
-                    : "/images/cat.png",
-              }}
-              handleStatusChange={handleStatusChange}
-            />
-          </div>
-        )}
+      {listing.buyerId === session?.user.id && status === "accepted" && (
+        <div className="flex flex-col items-center gap-4 mt-4 w-full ">
+          <StripeCheckout
+            session={session}
+            listing={{
+              id: listing.id,
+              price: Number(
+                currentBid.currentPrice
+                  ? currentBid.currentPrice
+                  : listing.price
+              ),
+              title: listing.title,
+              buyer: {
+                id: listing.buyerId,
+                username: listing.buyer.username,
+              },
+              seller: {
+                id: listing.sellerId,
+                username: listing.seller.username,
+              },
+              status: status,
+              image:
+                parsedImage && parsedImage[0]
+                  ? parsedImage[0]
+                  : "/images/cat.png",
+            }}
+            handleStatusChange={handleStatusChange}
+          />
+        </div>
+      )}
       {toggleMenu.events && events && events.length > 0 && (
         <Card className="mt-6">
           {events.map((event) => (

@@ -17,6 +17,7 @@ interface ListingResponse {
   message?: DirectMessage;
   transactionResult?: ExtendedActivity[];
   participantId?: string;
+  status?: number;
 }
 
 let parsedImg = "";
@@ -117,7 +118,6 @@ export default async function listingsApi(
       additionalInformation,
     } = req.body;
 
-    console.log("req body", req.body)
 
     try {
       let newListingData = {
@@ -208,8 +208,10 @@ export default async function listingsApi(
       console.error("Error creating listing:", error);
       res.status(500).json({ error: err.message });
     }
+
   } else if (req.method === "PUT") {
-    const { id, userId, ...rest } = req.body;
+
+    const { id, userId, image, ...rest } = req.body;
 
     let data = {
       ...rest,
@@ -220,10 +222,14 @@ export default async function listingsApi(
       return;
     }
 
-    if (data?.image) parsedImg = JSON.parse(data.image) || null;
+    if (image) {
+      const isArray = Array.isArray(image);
+      Object.assign(data, { image: isArray ? JSON.stringify(image) : image});
+    }
+    
     if (data?.options) {
       data.options.pickup = data?.pickup
-        ? data.pickup
+        ? data.options.pickup
         : data.options?.pickup
         ? data.options.pickup
         : null;
@@ -237,11 +243,12 @@ export default async function listingsApi(
         : data.options?.location
         ? data.options.location
         : null;
-      delete data.pickup;
-      delete data.condition;
-      delete data.location;
+      
     }
-    if (data?.price) data.price = parseFloat(data.price.toString());
+
+    if(data?.pickup) delete data.pickup;
+    if(data?.condition) delete data.condition;
+    if(data?.location) delete data.location;
 
     data = Object.fromEntries(
       Object.entries(data).filter(
@@ -316,7 +323,7 @@ export default async function listingsApi(
           userId: listing.sellerId || "",
           message: "Offer updated",
           user_message: `${
-            userId.id === listing?.sellerId
+            userId === listing?.sellerId
               ? "Offer updated"
               : `${listing.buyer?.username} updated your offer`
           } `,
@@ -351,15 +358,14 @@ export default async function listingsApi(
           const transactionResult = await prisma.$transaction(
             transactionOperations
           );
-          res.status(200).json({ listing, transactionResult });
+          res.status(200).json({ listing, transactionResult, status: 200 });
         } catch (error) {
           console.error("Transaction failed: ", error);
-          res
-            .status(500)
-            .json({ error: "Something went wrong during the transaction" });
+          const err = error as Error;
+          res.status(500).json({ error: err.message });
         }
       } else {
-        res.status(404).json({ error: "Buyer or seller not found" });
+        res.status(404).json({ error: "User not found" });
       }
     } catch (error) {
       console.error("Error updating listing:", error);

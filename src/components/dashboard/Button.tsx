@@ -162,7 +162,7 @@ const Button = ({
                 : options?.color
                 ? options.color
                 : options?.primary
-                ? " bg-gradient-to-b from-orange-400 to-orange-300 border border-orange-300 shadow-sm text-white hover:bg-orange-50 hover:text-orange-400"
+                ? "bg-gradient-to-b from-orange-400 to-orange-300 border border-orange-400/30 shadow-sm text-white hover:bg-orange-50 hover:opacity-90"
                 : options?.secondary
                 ? "bg-orange-200 text-gray-800 border border-orange-200 hover:bg-white"
                 : options?.dark

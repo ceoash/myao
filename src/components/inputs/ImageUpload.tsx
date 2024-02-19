@@ -17,12 +17,10 @@ interface ImageUploadProps {
   value?: string;
 }
 
-
-
 const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
   let images = value ? JSON.parse(value) : [];
 
-  const confirmation = useConfirmationModal()
+  const confirmation = useConfirmationModal();
 
   const handleDelete = async (image: string) => {
     try {
@@ -35,22 +33,21 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
         api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
         timestamp: timestamp,
       };
-       await axios.post(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${image}/destroy`,
-        data
-      ).then((response) => {
-        toast.success("Image deleted")
-      }).catch((error) => {
-        toast.error("error deleting listing")
-        console.log(error)
-      });
-        
-    } catch (error) {
-      
-    }
-   
-
+      await axios
+        .post(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${image}/destroy`,
+          data
+        )
+        .then((response) => {
+          toast.success("Image deleted");
+        })
+        .catch((error) => {
+          toast.error("error deleting listing");
+          console.log(error);
+        });
+    } catch (error) {}
   };
-  
+
   const handleUpload = useCallback(
     (result: any) => {
       images.push(result.info.secure_url);
@@ -64,28 +61,42 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
     <CldUploadWidget
       onUpload={handleUpload}
       uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-      
       options={{
         maxFiles: 5,
         sources: ["local", "url", "camera"],
         clientAllowedFormats: ["png", "jpeg", "jpg"],
-        
       }}
     >
       {({ open }: any) => (
-        <div
-          onClick={() => open?.()}
-          className="flex flex-col items-center justify-center w-full  border border-gray-400 border-dashed rounded-lg bg-gray-50 h-full p-10 cursor-pointer relative"
-        >
-          <FaUpload size={40} className="text-neutral-400" />
-          <p className="text-neutral-400 mb-6 mt-2">
-            Drag and drop images to upload
-          </p>
-          <Button label="Select Images" />
-          <div className="grid grid-cols-4 gap-4 mt-6 rounded-lg">
+        <>
+          {images.length < 5 ? (
+            <div
+              onClick={() => open?.()}
+              className="flex flex-col items-center justify-center w-full  border border-gray-400 border-dashed rounded-lg bg-gray-50 h-full p-10 cursor-pointer relative"
+            >
+              <FaUpload size={40} className="" />
+              <p className=" mb-6 mt-2">
+                Drag and drop images to upload
+              </p>
+              <Button label="Select Images" />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center w-full  border border-gray-400 border-dashed rounded-lg bg-gray-50 h-full p-10 cursor-pointer relative">
+              <p className=" mb-6 mt-2">
+                You have reached the maximum number of images
+              </p>
+            </div>
+          )}
+          <div className="grid grid-cols-5 gap-4 mt-6">
             {images?.map((image: string, i: number) => (
-              <div key={i} className="w-full h-full relative">
-               <FaTimes onClick={() => handleDelete(image)} className="absolute top-0 right-0 text-white rounded-full border border-red-200 bg-red-400 text-xl shadow transition ease-in-out hover:text-2xl" />
+              <div
+                key={i}
+                className="w-full h-full relative flex items-center justify-center border aspect-square bg-white "
+              >
+                <FaTimes
+                  onClick={() => handleDelete(image)}
+                  className="absolute top-0 right-0 text-white rounded-full border border-red-200 bg-red-500 p-1 text-xl shadow transition ease-in-out hover:opacity-70 m-2"
+                />
                 <Image
                   src={image}
                   alt="Upload"
@@ -96,7 +107,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value }) => {
               </div>
             ))}
           </div>
-        </div>
+        </>
       )}
     </CldUploadWidget>
   );

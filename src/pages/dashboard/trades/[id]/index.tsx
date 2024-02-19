@@ -172,6 +172,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const { user: sessionUser } = session;
   const router = useRouter();
   const [currentListing, setCurrentListing] = useState<any>({});
+  console.log("Current listing: ", currentListing);
   const [size, setSize] = useState(0);
   const [mobileView, setMobileView] = useState(false);
   const now = Date.now();
@@ -198,7 +199,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const secondaryTabs = [
     { id: "additional", label: "Additional Information", primary: true },
     { id: "bids", label: "Offer History" },
-    { id: "activity", label: "Activity", primary: true },
+    { id: "activity", label: "Activity" },
 
     {
       id: "user",
@@ -256,21 +257,25 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   }, [size, mobileView]);
 
   const addImages = async (images: string) => {
+
    
     const res = await axios.put(`/api/listings`, {
       image: images,
       id: currentListing.id,
+      userId: sessionUser?.id,
     });
 
+    if (res.status !== 200) {return console.log("Error updating images");}
+
     setCurrentListing((prev: any) => {
-      return { ...prev, image: images };
+      return { ...prev, image: res.data.listing?.image || "" };
     });
 
     return res;
   }  
 
   const handleAddImages = () => {
-    modal.onOpen("Add Images", <AddImages images={currentListing?.image || ""} saveImages={addImages} />);
+    modal.onOpen("Add Images", <AddImages images={currentListing?.image || ""} saveImages={addImages} close={() => modal.onClose()} />);
   };
 
   useEffect(() => {
@@ -485,12 +490,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
       setCurrentListing((prev: any) => {
         return {
           ...prev,
-          description: listing.description,
-          title: listing.title,
-          image: listing.image,
-          updatedAt: listing.updatedAt,
-          status: listing.status,
-          options: listing.options,
+          ...listing
         };
       });
 
@@ -802,6 +802,26 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     );
   };
 
+  const updateListing = async (listing: any) => {
+   const { id, userId, ...rest } = listing;
+
+    if (!listing) return;
+
+    const res = await axios.put(`/api/listings`, {
+      ...rest,
+      id: currentListing.id,
+      userId: sessionUser?.id,
+    });
+    if (res.status !== 200) {
+      return console.log("Error updating listing");
+    }
+    setCurrentListing((prev: any) => {
+      return { ...prev, ...rest };
+      });
+    socket.emit("updated_listing", { listing: res.data.listing });
+    return res;
+  }
+
   const MainBody = (
     <>
       <div className="h-full flex flex-col ">
@@ -818,6 +838,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           sessionUser={sessionUser}
           events={events}
           handleStatusChange={handleStatusChange}
+          handleUpdateDetails={updateListing}
         />
 
         <Tabs
@@ -929,7 +950,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         )}
 
         {activeSubTab === "activity" && (
-          <div className=" bg-white border-x border-b rounded-b mb-6 p">
+          <div className=" bg-white border-x border-b rounded-b h-full p">
             {activities?.map((activity: any, i: number) => (
               <div
                 key={i}
@@ -945,8 +966,8 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         )}
 
         {activeSubTab === "bids" && (
-          <div className=" bg-white border-x border-b rounded mb-6">
-            <Bids bids={bids} participant={participant} me={me} />
+          <div className=" bg-white border-x border-b rounded  h-full">
+            <Bids bids={bids} participant={participant} me={me}  />
           </div>
         )}
 
@@ -974,6 +995,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           <div className=" justify-center z-10 mb-6">
             {sessionUser?.id && (
               <div>
+
                 <UserStats
                  id={listing.id}
                  startPrice={Number(listing.price || 0)}
@@ -999,8 +1021,8 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         pageTitle={listing.title}
         meta={<Meta title={listing.title} description={listing.description} />}
       >
-        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6 h-full">
-          <OfferAlerts
+        <div className="mt-10 mx-8 -mb-2">
+         <OfferAlerts
             handleStatusChange={handleStatusChange}
             session={session}
             participant={participant}
@@ -1009,6 +1031,10 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             listing={listing}
             handleFinalise={handleFinalise}
           />
+          
+        </div>
+        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6 ">
+         
           <div className="w-full col-span-6 xl:col-span-8  flex flex-col md:mt-4 lg:mt-0 mt-2 h-full">
             <Tabs
               status={status}
@@ -1122,7 +1148,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             }`}
           >
             <OfferDetailsWidget
-              listing={listing}
+              listing={currentListing}
               status={status || "pending"}
               session={session}
               events={events}
@@ -1162,7 +1188,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const offerId = context.params?.id as string;
 
   try {
-    const listing = await getListingById({ offerId });
+    const listing = await getListingById({ offerId, userId: session.user.id});
 
     const countUnreadMessages = await prisma.message.count({
       where: {

@@ -57,8 +57,8 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
           {userLoading ? (
             <Skeleton
               circle
-              width={150}
-              height={150}
+              width={70}
+              height={70}
               className=" border p-1 border-gray-200 rounded-full"
             />
           ) : (
@@ -70,14 +70,15 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
               }
               className="border p-1 border-gray-200 rounded-full"
               alt="Avatar"
-              fill
               style={{ objectFit: "cover" }}
+              width={70}
+              height={70}
             />
           )}
         </div>
         <div className="px-4 text-center">
           <h4>
-            {userLoading ? <Skeleton width={30} /> : participant?.username}
+            {userLoading ? <Skeleton width={100} height={16} /> : participant?.username}
           </h4>
           <div className="text-xl text-gray-400 mb-4">
             <BiStar className="inline-block text-orange-500" />
@@ -148,6 +149,7 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
             </h2>
             <div className="flex items-center gap-1">
               <p className="text-xs leading-[18px] ">{lastOfferPercentage || 0}%</p>
+              {Number(lastOfferPercentage) > 0 ? (
               <svg
                 width="16"
                 height="16"
@@ -162,6 +164,23 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
                   fill="#1C1C1C"
                 ></path>
               </svg>
+              ) : (
+                <svg
+                width="16"
+                height="16"
+                className="rotate-180"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M8.45488 5.60777L14 4L12.6198 9.6061L10.898 7.9532L8.12069 10.8463C8.02641 10.9445 7.89615 11 7.76 11C7.62385 11 7.49359 10.9445 7.39931 10.8463L5.36 8.72199L2.36069 11.8463C2.16946 12.0455 1.85294 12.0519 1.65373 11.8607C1.45453 11.6695 1.44807 11.3529 1.63931 11.1537L4.99931 7.65373C5.09359 7.55552 5.22385 7.5 5.36 7.5C5.49615 7.5 5.62641 7.55552 5.72069 7.65373L7.76 9.77801L10.1766 7.26067L8.45488 5.60777Z"
+                  fill="#1C1C1C"
+                ></path>
+              </svg>
+              )}
             </div>
           </div>
         </div>
@@ -172,8 +191,24 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
               £{stats?.higestOffer}
             </h2>
             <div className="flex items-center gap-1">
-              <p className="text-xs leading-[18px] ">{highestOfferPercentage || 0}</p>
+              <p className="text-xs leading-[18px] ">{highestOfferPercentage || 0}%</p>
+              {Number(highestOfferPercentage) > 0 ? (
               <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M8.45488 5.60777L14 4L12.6198 9.6061L10.898 7.9532L8.12069 10.8463C8.02641 10.9445 7.89615 11 7.76 11C7.62385 11 7.49359 10.9445 7.39931 10.8463L5.36 8.72199L2.36069 11.8463C2.16946 12.0455 1.85294 12.0519 1.65373 11.8607C1.45453 11.6695 1.44807 11.3529 1.63931 11.1537L4.99931 7.65373C5.09359 7.55552 5.22385 7.5 5.36 7.5C5.49615 7.5 5.62641 7.55552 5.72069 7.65373L7.76 9.77801L10.1766 7.26067L8.45488 5.60777Z"
+                  fill="#1C1C1C"
+                ></path>
+              </svg>
+              ) : (
+                <svg
                 width="16"
                 height="16"
                 className="rotate-180"
@@ -188,6 +223,8 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
                   fill="#1C1C1C"
                 ></path>
               </svg>
+              )}
+             
             </div>
           </div>
         </div>
@@ -198,8 +235,24 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
               £{stats?.lowestOffer}
             </h2>
             <div className="flex items-center gap-1">
-              <p className="text-xs leading-[18px] ">{lowestOfferPercentage}%</p>
+            <p className="text-xs leading-[18px] ">{lowestOfferPercentage || 0}%</p>
+            {Number(lowestOfferPercentage) > 0 ? (
               <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M8.45488 5.60777L14 4L12.6198 9.6061L10.898 7.9532L8.12069 10.8463C8.02641 10.9445 7.89615 11 7.76 11C7.62385 11 7.49359 10.9445 7.39931 10.8463L5.36 8.72199L2.36069 11.8463C2.16946 12.0455 1.85294 12.0519 1.65373 11.8607C1.45453 11.6695 1.44807 11.3529 1.63931 11.1537L4.99931 7.65373C5.09359 7.55552 5.22385 7.5 5.36 7.5C5.49615 7.5 5.62641 7.55552 5.72069 7.65373L7.76 9.77801L10.1766 7.26067L8.45488 5.60777Z"
+                  fill="#1C1C1C"
+                ></path>
+              </svg>
+              ) : (
+                <svg
                 width="16"
                 height="16"
                 className="rotate-180"
@@ -214,8 +267,9 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
                   fill="#1C1C1C"
                 ></path>
               </svg>
-            </div>
+              )}
           </div>
+        </div>
         </div>
       </div>
       {/* <div className="flex flex-col pb-4 md:p-4 gap-3 col-span-2 lg:col-span-1">

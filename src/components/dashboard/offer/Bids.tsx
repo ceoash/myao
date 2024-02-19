@@ -14,7 +14,7 @@ const Bids = ({ bids, participant, me }: BidsProps) => {
   return (
     <>
     
-    {bids.length === 0 ? <span>No offers yet</span> : bids?.map((bid: any) => <BidContainer key={bid.id} bid={bid} participant={participant} me={me} />).reverse()}
+    {bids.length === 0 ? <div className="p-4 px-5 ">No offers yet</div> : bids?.map((bid: any) => <BidContainer key={bid.id} bid={bid} participant={participant} me={me} />).reverse()}
     </>
   );
 };

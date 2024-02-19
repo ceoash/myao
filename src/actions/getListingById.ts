@@ -2,9 +2,16 @@ import prisma from "@/libs/prismadb";
 
 interface IParams {
   offerId: string;
+  userId?: string;
 }
 
-export default async function getListingById({ offerId }: IParams) {
+export default async function getListingById({ offerId, userId }: IParams) {
+  let where = {
+    id: offerId,
+  };
+  if (userId) {
+   Object.assign(where, { userId });
+  }
   try {
     const bid = await prisma?.listing.findUnique({
       where: {
@@ -82,6 +89,7 @@ export default async function getListingById({ offerId }: IParams) {
           },
         },
         activity: {
+          where: userId ? { userId } : {},
           select: {
             id: true,
             type: true,

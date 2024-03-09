@@ -67,7 +67,7 @@ const PriceInput: FC<InputProps> = ({
         setClasses("bg-red-50 border-red-100");
       case "cancelled":
         setClasses("bg-red-50 border-red-100");
-      case "negotiating":
+      case "haggling":
         setClasses("bg-orange-alt border-orange-100");
       case "awaiting approval":
         setClasses("bg-gray-50 border-gray-200");
@@ -110,7 +110,7 @@ const PriceInput: FC<InputProps> = ({
             ? "bg-red-50 border-red-100"
             : status === "cancelled"
             ? "bg-red-50 border-red-100"
-            : status === "negotiating"
+            : status === "haggling"
             ? "  border-gray-200 "
             : status === "awaiting approval"
             ? " border-gray-200 "
@@ -129,7 +129,7 @@ const PriceInput: FC<InputProps> = ({
                 ? "bg-red-100 border-red-200"
                 : status === "cancelled"
                 ? "bg-red-100 border-red-200"
-                : status === "negotiating"
+                : status === "haggling"
                 ? " border-gray-200"
                 : status === "awaiting approval"
                 ? " border-gray-200"
@@ -150,7 +150,7 @@ const PriceInput: FC<InputProps> = ({
                     ? " text-red-500"
                     : status === "cancelled"
                     ? " text-red-500"
-                    : status === "negotiating"
+                    : status === "haggling"
                     ? " text-orange-300"
                     : status === "awaiting approval"
                     ? "text-orange-300"

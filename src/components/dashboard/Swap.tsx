@@ -33,9 +33,9 @@ const Swap = ({
   const [ mostRecentBid, setMostRecentBid ] = useState<any>();
   const [ buttonClicked, setButtonClicked ] = useState("")
 
-  const noBids = !meLastBid && !participantLastBid && status === "negotiating";
+  const noBids = !meLastBid && !participantLastBid && status === "haggling";
   const rejectedByMe = status === "rejected" && session?.user.id !== completedBy;
-  const inNegotiation = status === "negotiating";
+  const inNegotiation = status === "haggling";
 
 
   const statusController = noBids || rejectedByMe || inNegotiation;
@@ -52,7 +52,7 @@ const Swap = ({
         ${status === "completed" && "bg-green-50 border-green-100"}
         ${status === "rejected" && "bg-red-50 border-red-100"}
         ${status === "cancelled" && "bg-red-50 border-red-100"}
-        ${status === "negotiating" && "bg-white/20"}
+        ${status === "haggling" && "bg-white/20"}
         ${status === "awaiting approval" && "bg-white/20"}
       `}>
         {
@@ -102,7 +102,7 @@ const Swap = ({
       ${status === "completed" && "bg-green-50 border-green-100"}
       ${status === "rejected" && "bg-red-50 border-red-100"}
       ${status === "cancelled" && "bg-red-50 border-red-100"}
-      ${status === "negotiating" && "bg-white/20 "}
+      ${status === "haggling" && "bg-white/20 "}
       ${status === "awaiting approval" && "bg-white/20 "}
       `}>
         <Link href={"/dashboard/profile/" + participant?.id} className="cursor-pointer" >

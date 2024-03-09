@@ -18,6 +18,7 @@ const Login = () => {
   const router = useRouter();
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -30,8 +31,6 @@ const Login = () => {
       password: "",
     },
   });
-
-  console.log("errs", errors);
 
   const validateForm = (data: any) => {
     const validation = {
@@ -72,8 +71,7 @@ const Login = () => {
       ...data,
       redirect: false,
       callbackUrl: "/dashboard",
-    })
-      .then((res) => {
+    }).then((res) => {
         if (res?.error) {
           toast.error(res.error);
           setIsLoading(false);
@@ -91,6 +89,9 @@ const Login = () => {
         toast.error(err.message);
       });
   };
+
+
+
 
   return (
     <div className="flex flex-col h-screen justify-center">
@@ -117,11 +118,12 @@ const Login = () => {
               >
                 <div className="-mb-4">
                   <Input
+                    control={control}
                     id="email"
+                    name="email"
                     type="email"
                     label="Email"
                     register={register}
-                    required
                     errors={errors}
                     onChange={() => clearErrors("email")}
                     disabled={disabled}
@@ -130,11 +132,12 @@ const Login = () => {
 
                 <div>
                   <Input
+                    control={control}
                     id="password"
                     label="Password"
+                    name="password"
                     type="password"
                     register={register}
-                    required
                     errors={errors}
                     onChange={() => clearErrors("password")}
                     disabled={disabled}
@@ -204,7 +207,8 @@ const Login = () => {
       </div>
     </div>
   );
-};
+}
+
 
 export default Login;
 

@@ -42,7 +42,7 @@ interface OffersProps {
 interface OffersState {
   all: DashListing[];
   awaiting: DashListing[];
-  negotiating: DashListing[];
+  haggling: DashListing[];
   accepted: DashListing[];
   completed: DashListing[];
   rejected: DashListing[];
@@ -66,7 +66,7 @@ const Offers = ({
   const [categorisedOffers, setCategorisedOffers] = useState<
     Record<string, DashListing[]>
   >({});
-  const [selectedCategory, setSelectedCategory] = useState("negotiating");
+  const [selectedCategory, setSelectedCategory] = useState("haggling");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
 
@@ -144,7 +144,6 @@ const Offers = ({
 
     try {
       const ordered = await axios.get(url);
-      console.log("ordered", ordered);
     } catch (error) {
       toast.error("Failed to order offers");
     }
@@ -234,8 +233,6 @@ const Offers = ({
           return [listing, ...prevListings];
         });
 
-        console.log("listing", listing);
-
         /* setCategorisedOffers((prevListings: any) => {
           return {
             ...prevListings,
@@ -268,35 +265,32 @@ const Offers = ({
       const { price, userId, username, listingId, previous } = data;
 
       setAllOffers((prev: any) => {
-        const updatedOffers = prev.map((offer: any, i: number) => {
+        if(prev && prev.length == 0) return;
+        return prev.map((offer: any) => {
           if (offer.id === listingId) {
-            const newOffer = {
-              ...offer,
-              bids: [
-                {
-                  id: i.toString(),
-                  price: price,
-                  userId: userId,
-                  listingId: listingId,
-                  previous: previous,
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                },
-                ...offer.bids,
-              ],
+            const newBid = {
+              price: price,
+              userId: userId,
+              previous: previous,
+              createdAt: new Date(),
+              updatedAt: new Date(),
             };
-            return newOffer;
+
+            return {
+              ...offer,
+              bids: [newBid],
+            };
           }
           return offer;
         });
-        return updatedOffers;
       });
+       
 
       setCategorisedOffers((prev: any) => {
         const categories = [
           "all",
           "rejected",
-          "negotiating",
+          "haggling",
           "awaiting",
           "cancelled",
           "accepted",
@@ -350,12 +344,12 @@ const Offers = ({
             <div className="flex pb-4 gap-2">
               <div
                 className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-3 py-1 ${
-                  selectedCategory === "negotiating" &&
+                  selectedCategory === "haggling" &&
                   "border !bg-orange-default border-orange-200 text-white"
                 }`}
                 onClick={() => {
-                  selectedCategory !== "negotiating" &&
-                    setSelectedCategory("negotiating");
+                  selectedCategory !== "haggling" &&
+                    setSelectedCategory("haggling");
                 }}
               >
                 HAGGLING
@@ -501,7 +495,7 @@ const Offers = ({
                       | "all"
                       | "awaiting approval"
                       | "cancelled"
-                      | "negotiating"
+                      | "haggling"
                       | "rejected"
                       | "accepted"
                       | "completed"

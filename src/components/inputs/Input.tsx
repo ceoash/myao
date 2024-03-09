@@ -1,9 +1,11 @@
 import Button from "../dashboard/Button";
 import { FieldError, FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
+import { Control, UseControllerProps, useController } from 'react-hook-form';
 import { RegisterOptions } from "react-hook-form";
 
-interface InputProps {
+interface InputProps extends UseControllerProps<FieldValues> {
   id: string;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   label?: string;
   type?: string;
   placeholder?: string;
@@ -30,6 +32,8 @@ const Input: React.FC<InputProps> = ({
   type,
   placeholder = "",
   modal,
+  control,
+  rules,
   disabled,
   formatPrice,
   required,
@@ -43,10 +47,18 @@ const Input: React.FC<InputProps> = ({
   inline,
   btnText,
   optional,
+  onKeyDown,
 }) => {
-  const testErrors = {
-    email: { message: "This field is required" },
-  };
+
+  const {
+    field,
+    fieldState: { error },
+  } = useController({ 
+    name: id, 
+    control,
+    rules,
+   });
+
   return (
     <div className={`flex ${!inline && "pt-3"}`}>
       <div className="w-full relative flex flex-col gap-[1px]">
@@ -65,9 +77,10 @@ const Input: React.FC<InputProps> = ({
             disabled={disabled}
             placeholder={placeholder}
             type={type || "text"}
-            value={value}
             style={{ zIndex: 0 }}
             required={required}
+            onKeyDown={onKeyDown}
+            {...field}
             className={`
           peer
           w-full
@@ -93,11 +106,7 @@ const Input: React.FC<InputProps> = ({
           }
           ${errors && errors[id] ? "text-red-500" : "text-gray-700"}
         `}
-            {...(register ? register(id, {
-              required: required && "This field is required",
-              ...registerOptions,
-            }) : {})}
-            onChange={onChange}
+           
           />
           {!value || value && value.length < 1 && errors && errors[id] && (
             <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">

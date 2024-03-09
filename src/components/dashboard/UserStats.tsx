@@ -41,7 +41,6 @@ const UserStats = ({ userLoading, participant, id, startPrice }: UserStatsProps)
     const res = await fetch(api);
     const data = await res.json();
 
-    console.log(data)
     setStats((prev) => ({ ...prev, ...data }));
     return data;
   };

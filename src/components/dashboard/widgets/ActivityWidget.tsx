@@ -8,9 +8,7 @@ interface ActivityWidgetProps {
 }
 
 const ActivityWidget = ({ title, activities }: ActivityWidgetProps) => {
-  
-  console.log("activities", activities);
-  
+    
   return (
     <div className="flex-grow overflow-y-auto col-span-4 mt-4 lg:mt-0">
       <div className="flex justify-between items-center">

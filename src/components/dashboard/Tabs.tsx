@@ -74,7 +74,6 @@ const Tabs = ({
       });
 
       const data = await res.json();
-      console.log(data);
       if (res.ok) {
         console.log("Messages marked as read");
         setCount && setCount(0);
@@ -120,12 +119,13 @@ const Tabs = ({
             px-2.5
             sm:px-3
             text-sm
-            md:px-4 py-2
+            md:px-4 py-3
             inline-block
             whitespace-nowrap
             xl:hidden
             border-gray-20
             font-medium
+
             
             ${
               activeTab === "trade"
@@ -140,7 +140,7 @@ const Tabs = ({
       {tabs.map((tab, i) => {
         if (
           status !== "awaiting approval" &&
-          status !== "negotiating" &&
+          status !== "haggling" &&
           tab.id === "chat"
         )
           return null;
@@ -157,7 +157,7 @@ const Tabs = ({
               onClick={() => changeTab(tab.id)}
               className={`
                 cursor-pointer 
-                md:px-4 py-2
+                md:px-4 py-3
                 px-2.5
                 sm:px-3
                 flex
@@ -213,7 +213,7 @@ const Tabs = ({
                 border-r
                 border-t
                 
-                px-3 md:px-4 py-2
+                px-3 md:px-4 py-3
                 flex-nowrap 
                 whitespace-nowrap
                 rounded-t-lg

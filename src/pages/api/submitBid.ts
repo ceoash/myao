@@ -67,7 +67,7 @@ export default async function submitBid(
         },
         data: {
           updatedAt: new Date(now),
-          status: updateListing.status === "rejected" ? "negotiating" : updateListing.status || "",
+          status: updateListing.status === "rejected" ? "haggling" : updateListing.status || "",
           bids: {
             create: [
               {

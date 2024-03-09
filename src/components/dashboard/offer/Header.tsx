@@ -87,7 +87,6 @@ const Header = ({
   session,
   bids,
   setBids,
-  setCurrentBid,
   sessionUser,
   setStatus,
   events,
@@ -191,13 +190,13 @@ const Header = ({
       </div>
 
       <div className="px-5 pt-8 lg:w-1/2 lg:pt-0 flex flex-col">
-        <div className="mb-4 pb-4 border-b border-grey-dark">
+        <div className="mb-4 pb-3 border-b border-grey-400">
           <div className="mb-2">
             <div className="flex w-full justify-between items-start">
               <h2 className="font-bold text-[18px] md:text-md lg:text-2xl  mb-0 truncate">{listing.title}</h2>
               {listing?.user?.id === session?.user.id ? (
                 <button
-                  className="border rounded bg-white"
+                  className="border rounded bg-gray-50 shadow-sm p-1 hover:bg-gray-100 transition-all duration-200 ease-in-out"
                   onClick={() => modal.onOpen("edit-listing", <EditTradeDetailsForm listing={listing} session={session} updateDetails={handleUpdateDetails} />)}
                 >
                   <CiSettings size={22} />
@@ -241,11 +240,11 @@ const Header = ({
 
         <div className=" items-center  grid grid-cols-2 border-t rounded-t border-x  mt-auto">
           <div className=" bg-gray-50  rounded shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
-            <h4>Initial Offer</h4>
+            <h4 className="text-gray-600 text-[16px]">Starting Offer</h4>
             <p className="font-extrabold text-lg mb-0 text-orange-500">
               
               {listing?.price && listing?.price > 0
-                ?`£${Number(listing.price).toLocaleString()}`
+                ?`£${Number(listing.price).toLocaleString("en-GB")}`
                 : "Open Offer"}
             </p>
             <h6 className="text-sm flex">
@@ -253,136 +252,27 @@ const Header = ({
             </h6>
           </div>
           <div className=" bg-gray-50  h-full rounded shadow-sm px-3 py-4 flex items-center flex-col justify-start  text-center">
-            <h4>Current Offer</h4>
+            <h4 className="text-gray-600 text-[16px]">Current Offer</h4>
             {currentBid &&
             currentBid?.currentPrice &&
             Number(currentBid?.currentPrice) > 0 ? (
               <>
                 <p className="font-extrabold text-lg mb-0 text-orange-500">
-                  £{Number(currentBid.currentPrice).toLocaleString()}
+                  £{Number(currentBid.currentPrice).toLocaleString("en-GB")}
                 </p>
                 <h6 className="text-sm flex">By: {currentBid.byUsername}</h6>
               </>
             ) : (
               <>
                 <p className="font-extrabold text-lg mb-0 text-orange-500">
-                  {listing?.price && listing?.price > 0 ? `£${Number(listing.price).toLocaleString()}` : "N/A"}
+                  {listing?.price && listing?.price > 0 ? `£${(Number(listing.price).toLocaleString("en-GB"))}` : "N/A"}
                 </p>
                 <p className=" text-sm mb-0">No counter offers</p>
               </>
             )}
           </div>
         </div>
-        {events &&
-          events.length > 0 &&
-          events[0].event !== "cancelled" &&
-          events[0].event !== "completed" &&
-          events[0].event !== "accepted" ? (
-            <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
-              <div>
-                <div className="flex rounded border divide-x bg-gray-50">
-                  <span className="p-2 px-3">£</span>
-                  <input
-                    type="number"
-                    disabled={isLoading}
-                    className="w-full  px-2"
-                    placeholder="0.00"
-                    value={bid ? bid : ""}
-                    onChange={(e) => setBid(Number(e.target.value))}
-                  />
-                  {bids.length > 0 ? (
-                    <button
-                      onClick={() => updateBid(bid)}
-                      disabled={isLoading}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
-                    >
-                      {isLoading ? (
-                        <Spinner />
-                      ) : currentBid.byUserId === sessionUser?.id ? (
-                        "Update Offer"
-                      ) : (
-                        "Counter Offer"
-                      )}
-                    </button>
-                  ) : listing?.user?.id === sessionUser?.id ? (
-                    <button
-                      disabled={isLoading}
-                      onClick={() => updateBid(bid)}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
-                    >
-                      {isLoading ? <Spinner /> : "Update Offer"}
-                    </button>
-                  ) : (
-                    <button
-                      disabled={isLoading}
-                      onClick={() => updateBid(bid)}
-                      className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
-                    >
-                      {isLoading ? <Spinner /> : "Counter Offer"}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {status !== "cancelled" &&
-                status !== "accepted" &&
-                status !== "completed" && (
-                  <div className="flex justify-end">
-                    <button
-                      disabled={isLoading}
-                      onClick={() =>
-                        handleStatusChange("cancelled", session?.user.id)
-                      }
-                      className="p-2 rounded whitespace-nowrap px-4 text-red-500 border hover:opacity-80  "
-                    >
-                      Terminate
-                    </button>
-                  </div>
-                )}
-            </div>
-          ) : ( listing.userId === session?.user.id && status === "awaiting approval" ?
-          (
-          <div className="hidden xl:flex justify-between  border rounded p-2 bg-gray-50">
-            <div>
-              <div className="flex rounded border divide-x bg-gray-50">
-                <span className="p-2 px-3">£</span>
-                <input
-                  type="number"
-                  className="w-full  px-2"
-                  placeholder="0.00"
-                  value={bid ? bid : ""}
-                  disabled={isLoading}
-                  onChange={(e) => setBid(Number(e.target.value))}
-                />
-                  <button
-                    onClick={updateInitialOffer}
-                    disabled={isLoading}
-                    className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
-                  >
-                    {isLoading ? (
-                      <Spinner />
-                    ) : "Update Price" }
-                   
-                  </button>
-                
-              </div>
-            </div>
-            
-
-            <div className="flex justify-end">
-              <button
-                 onClick={() =>
-                  handleStatusChange("cancelled", session?.user.id)
-                }
-                disabled={isLoading}
-                className="p-2 rounded whitespace-nowrap px-4 text-red-500 border hover:opacity-80  "
-              >
-                Terminate
-              </button>
-            </div>
         
-          </div>
-        ) : null )}
 
         {/* <div className="flex items-center justify-between pb-4">
           <div className="w-1/3 sm:w-1/5">

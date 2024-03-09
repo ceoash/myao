@@ -246,7 +246,7 @@ export interface EventsProps{
       expireAt: string | undefined;
   }
 
-export type ListingStatus = "awaiting approval" | "negotiating" | "accepted" | "rejected" | "expired" | "completed" | "cancelled";
+export type ListingStatus = "awaiting approval" | "haggling" | "accepted" | "rejected" | "expired" | "completed" | "cancelled";
 
 export interface DashListing extends Listing {
   status: ListingStatus;

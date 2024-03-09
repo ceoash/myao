@@ -64,7 +64,6 @@ const OfferModal = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState<FieldValues>(FormType);
-  console.log("form", formData);
 
   const router = useRouter();
 
@@ -249,7 +248,6 @@ const OfferModal = () => {
     }
   }, [offerModal?.participant]);
 
-  console.log("foundUser", foundUser);
 
   const changeColor = (color: string) => {
     setFormData((prev) => ({
@@ -434,8 +432,6 @@ const OfferModal = () => {
     setIsLoading(true);
 
     if (offerModal.conversationId) Object.assign(data, { conversationId: offerModal.conversationId });
-
-    console.log("data", data);
     
     await axios
       .post("/api/listings", data)
@@ -450,7 +446,6 @@ const OfferModal = () => {
 
         let urlArray = JSON.parse(data.image || "[]");
         let firstImageUrl = urlArray[0];
-        console.log("firstImageUrl", firstImageUrl);
         axios.post("/api/email/emailNotification", {
           listing: { ...response.data.listing },
           name: foundUser?.name,
@@ -539,6 +534,7 @@ const OfferModal = () => {
       <div className="mb-5">
         <Input
           id="title"
+          name="title"
           label="Name of the item"
           type="text"
           disabled={isLoading}

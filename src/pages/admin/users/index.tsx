@@ -61,7 +61,6 @@ const index = ({
 
     const res = await axios.put(`/api/users`, data);
     if(res.status === 200) {
-        console.log(res);
         router.refresh();
     }
 

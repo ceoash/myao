@@ -31,7 +31,6 @@ const FriendsWidget = ({
         })
         .then(
           (response) => {
-            console.log("friend response", response.data);
             if (socket) socket.emit("friend", response.data, "remove");
             if (response.data.followerId === session?.user.id) {
               dispatch({ type: "remove", payload: { id: response.data.followingId } });
@@ -53,7 +52,6 @@ const FriendsWidget = ({
         friendshipId: friendshipId,
       }).then((response) => {
         const data = response.data
-        console.log("data", data)
 
         dispatch({ type: "accept", payload: data.responseFriendship.followerId });
 

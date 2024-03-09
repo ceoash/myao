@@ -37,6 +37,8 @@ import {
 import useOfferEditModal from "@/hooks/useOfferEditModal";
 import useDataModal from "@/hooks/useDataModal";
 import AddImages from "@/components/forms/AddImages";
+import { LineChart } from "@/components/charts/Linechart";
+import { set } from "date-fns";
 // import OfferDetailsWidgetOld from "@/components/dashboard/offer/OfferDetailsWidgetOld";
 interface IUser extends User {
   profile: Profile;
@@ -63,7 +65,7 @@ const LOADING_STATE = {
   accepted: false,
   completed: false,
   contact: false,
-  negotiating: false,
+  haggling: false,
   user: false,
   status: false,
   loading: false,
@@ -128,6 +130,17 @@ interface PageProps {
   listing: Listing;
   session: Session;
   messagesCount: number;
+  cd: any;
+  serverBids: {
+    sessionOffers: {
+      price: number;
+      createdAt: string;
+    }[];
+    participantOffers: {
+      price: number;
+      createdAt: string;
+    }[];
+  };
 }
 
 const generateStats = (stats: {
@@ -148,7 +161,13 @@ const generateStats = (stats: {
   );
 };
 
-const Index = ({ listing, session, messagesCount }: PageProps) => {
+const Index = ({
+  listing,
+  session,
+  messagesCount,
+  cd,
+  serverBids,
+}: PageProps) => {
   const [disabled, setDisabled] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState("additional");
   const [activities, setActivities] = useState<ExtendedActivity[]>([]);
@@ -172,11 +191,34 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   const { user: sessionUser } = session;
   const router = useRouter();
   const [currentListing, setCurrentListing] = useState<any>({});
-  console.log("Current listing: ", currentListing);
   const [size, setSize] = useState(0);
   const [mobileView, setMobileView] = useState(false);
   const now = Date.now();
   const socket = useSocketContext();
+  const [participantOffers, setParticipantOffers] = useState<
+    {
+      price: number;
+      createdAt: string;
+    }[]
+  >([]);
+
+  const [chartData, setChartData] = useState<{
+    sessionOffers: {
+      price: number;
+      createdAt: string;
+    }[];
+    participantOffers: {
+      price: number;
+      createdAt: string;
+    }[];
+  }>();
+
+  const [sessionOffers, setSessionOffers] = useState<
+    {
+      price: number;
+      createdAt: string;
+    }[]
+  >([]);
 
   const modal = useDataModal();
 
@@ -218,7 +260,6 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
 
   useEffect(() => {
     setUnreadMessages(messagesCount);
-
   }, [messagesCount]);
 
   useEffect(() => {
@@ -229,18 +270,15 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (
-        window.innerWidth >= 1280 &&
-        window.innerWidth !== size
-   
-      ) {
+      if (window.innerWidth >= 1280 && window.innerWidth !== size) {
         if (tab !== "details") setTab("details");
         setSize(window.innerWidth);
         setMobileView(true);
       } else if (
         window.innerWidth < 1280 &&
         window.innerWidth !== size &&
-        tab !== "trade" ) {
+        tab !== "trade"
+      ) {
         setTab("trade");
         setSize(window.innerWidth);
         setMobileView(false);
@@ -257,25 +295,32 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   }, [size, mobileView]);
 
   const addImages = async (images: string) => {
-
-   
     const res = await axios.put(`/api/listings`, {
       image: images,
       id: currentListing.id,
       userId: sessionUser?.id,
     });
 
-    if (res.status !== 200) {return console.log("Error updating images");}
+    if (res.status !== 200) {
+      return console.log("Error updating images");
+    }
 
     setCurrentListing((prev: any) => {
       return { ...prev, image: res.data.listing?.image || "" };
     });
 
     return res;
-  }  
+  };
 
   const handleAddImages = () => {
-    modal.onOpen("Add Images", <AddImages images={currentListing?.image || ""} saveImages={addImages} close={() => modal.onClose()} />);
+    modal.onOpen(
+      "Add Images",
+      <AddImages
+        images={currentListing?.image || ""}
+        saveImages={addImages}
+        close={() => modal.onClose()}
+      />
+    );
   };
 
   useEffect(() => {
@@ -310,12 +355,12 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     if (currentListing?.sellerId === sessionUser?.id) {
       setMe(currentListing?.seller);
       setParticipant((prev) => {
-        return { ...prev, ...currentListing?.buyer };
+        return { ...currentListing?.buyer };
       });
     } else {
       setMe(currentListing.buyer);
       setParticipant((prev) => {
-        return { ...prev, ...currentListing?.seller };
+        return { ...currentListing?.seller };
       });
     }
     setMessages([...listing.messages].reverse());
@@ -330,6 +375,24 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     const reversedBids = [...currentListing.bids].reverse();
 
     setBids(currentListing.bids);
+    setChartData(serverBids || {
+      sessionOffers: [],
+      participantOffers: [],
+    });
+
+
+    const lastTwoSessionOffers = serverBids.sessionOffers.slice(-2) as {
+      price: number;
+      createdAt: string;
+    }[];
+
+    const lastTwoParticipantOffers = serverBids.participantOffers.slice(-2) as {
+      price: number;
+      createdAt: string;
+    }[];
+
+    setSessionOffers(serverBids.sessionOffers || []);
+    setParticipantOffers(serverBids.participantOffers || []);
 
     setCurrentBid({
       currentPrice:
@@ -345,9 +408,11 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           currentListing.bids[currentListing.bids.length - 1]?.user
             ?.username) ||
         "",
-      me: reversedBids.filter((bid: Bid) => bid.userId === me?.id)[0],
+      me: reversedBids.filter(
+        (bid: Bid) => bid.userId === session?.user?.id
+      )[0],
       participant: reversedBids.filter(
-        (bid: Bid) => bid.userId === participant?.id
+        (bid: Bid) => bid.userId !== session?.user?.id
       )[0],
     });
 
@@ -421,7 +486,8 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     const handleNewListingMessage = (data: any) => {
       console.log("Received new message: ", data);
       setMessages((prevMessages) => [...prevMessages, data]);
-      if(data.userId !== session?.user.id && tab !== "chat") setUnreadMessages((prev) => prev + 1);
+      if (data.userId !== session?.user.id && tab !== "chat")
+        setUnreadMessages((prev) => prev + 1);
     };
 
     const handleUpdatedBid = (data: any) => {
@@ -445,24 +511,129 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         return updatedBids;
       });
 
+      setChartData((prev) => {
+        let currentDate = new Date(now).toLocaleDateString("en-GB");
+
+        if (userId === session?.user.id && prev) {
+          if(prev.sessionOffers.find((offer) => offer.createdAt === currentDate)) {
+            return {
+              ...prev,
+              sessionOffers: prev.sessionOffers.map((offer) => {
+                if (offer.createdAt === currentDate) {
+                  return {
+                    ...offer,
+                    price: offer.price + price,
+                  };
+                }
+                return offer;
+              }),
+            };
+          }
+          return {
+            ...prev,
+            sessionOffers: [
+              ...prev.sessionOffers,
+              {
+                price: price,
+                createdAt: new Date(now).toLocaleDateString("en-GB"),
+              },
+            ],
+          };
+        }
+        if (userId !== session?.user.id && prev) {
+          if(prev.participantOffers.find((offer) => offer.createdAt === currentDate)) {
+            return {
+              ...prev,
+              participantOffers: prev.participantOffers.map((offer) => {
+                if (offer.createdAt === currentDate) {
+                  return {
+                    ...offer,
+                    price: offer.price + price,
+                  };
+                }
+                return offer;
+              }),
+            };
+          }
+          return {
+            ...prev,
+            participantOffers: [
+              ...prev.participantOffers,
+              {
+                price: price,
+                createdAt: new Date(now).toLocaleDateString("en-GB"),
+              },
+            ],
+          };
+        }
+        return prev;
+      });
+
+
       setCurrentBid((prev) => {
-        const newBid = {
+        let obj = {
           ...prev,
           currentPrice: price,
-          byUserId: userId || "",
-          byUsername: username || "",
-          me:
-            currentListing.bids && currentListing.bids.length > 0
-              ? currentListing.bids[currentListing.bids.length - 1]
-              : null,
+          byUserId: userId,
+          byUsername: username,
         };
-        return newBid;
-      });
-      setStatus("negotiating");
-      return console.log("New bid: ", data);
-    }
+        if (userId === session?.user.id) {
+          obj.me = {
+            id: tempId(),
+            updatedAt: new Date(now),
+            price: price,
+            userId: userId,
+            listingId: listingId,
+            previous: previous,
+            createdAt: new Date(now),
+          };
+        }
 
-    const handleUpdateStatus = (data: {listingId: string, newStatus: string, userId: string}) => {
+        if (userId !== session?.user.id) {
+          obj.participant = {
+            id: tempId(),
+            updatedAt: new Date(now),
+            price: price,
+            userId: userId,
+            listingId: listingId,
+            previous: previous,
+            createdAt: new Date(now),
+          };
+        }
+        return obj;
+      });
+
+      if (userId === session?.user.id) {
+        setSessionOffers((prev) => {
+          return [
+            ...prev,
+            {
+              price: price,
+              createdAt: new Date(now).toISOString(),
+            },
+          ];
+        });
+      } else {
+        setParticipantOffers((prev) => {
+          return [
+            ...prev,
+            {
+              price: price,
+              createdAt: new Date(now).toISOString(),
+            },
+          ];
+        });
+      }
+
+      setStatus("haggling");
+      return console.log("New bid: ", data);
+    };
+
+    const handleUpdateStatus = (data: {
+      listingId: string;
+      newStatus: string;
+      userId: string;
+    }) => {
       const { listingId, newStatus, userId } = data;
       if (listingId === currentListing.id)
         console.log(
@@ -480,9 +651,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         return [newEvent, ...prev];
       });
       return console.log("New status: ", data);
-    
-    }
-
+    };
 
     const handleUpdatedListing = (data: any) => {
       const { listing } = data;
@@ -490,17 +659,17 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
       setCurrentListing((prev: any) => {
         return {
           ...prev,
-          ...listing
+          ...listing,
         };
       });
 
       return console.log("Updated listing: ", data);
-    }
+    };
 
-  socket.on("new_listing_message", handleNewListingMessage);
-  socket.on("updated_bid", handleUpdatedBid);
-  socket.on("update_status", handleUpdateStatus);
-  socket.on("updated_listing", handleUpdatedListing);
+    socket.on("new_listing_message", handleNewListingMessage);
+    socket.on("updated_bid", handleUpdatedBid);
+    socket.on("update_status", handleUpdateStatus);
+    socket.on("updated_listing", handleUpdatedListing);
 
     return () => {
       socket.off("new_listing_message");
@@ -549,11 +718,10 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         listing,
         "reject the current offer for £"
       ),
-      negotiating: "start negotiating",
+      haggling: "start haggling",
       completed: "mark this offer as completed",
       cancelled: "terminate this offer",
     };
-
     return messages[status] || null;
   };
 
@@ -695,9 +863,9 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           setLoadingState((prev) => {
             return { ...prev, cancelled: true };
           });
-        if (status === "negotiating")
+        if (status === "haggling")
           setLoadingState((prev) => {
-            return { ...prev, negotiating: true };
+            return { ...prev, haggling: true };
           });
 
         await axios
@@ -803,7 +971,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
   };
 
   const updateListing = async (listing: any) => {
-   const { id, userId, ...rest } = listing;
+    const { id, userId, ...rest } = listing;
 
     if (!listing) return;
 
@@ -817,10 +985,10 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
     }
     setCurrentListing((prev: any) => {
       return { ...prev, ...rest };
-      });
+    });
     socket.emit("updated_listing", { listing: res.data.listing });
     return res;
-  }
+  };
 
   const MainBody = (
     <>
@@ -847,7 +1015,6 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           setTab={setActiveSubTab}
           tab={activeSubTab}
           className="border-t bg-white rounded-t border-x"
-          
         />
 
         {activeSubTab === "additional" && (
@@ -967,7 +1134,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
 
         {activeSubTab === "bids" && (
           <div className=" bg-white border-x border-b rounded  h-full">
-            <Bids bids={bids} participant={participant} me={me}  />
+            <Bids bids={bids} participant={participant} me={me} />
           </div>
         )}
 
@@ -995,11 +1162,9 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
           <div className=" justify-center z-10 mb-6">
             {sessionUser?.id && (
               <div>
-
                 <UserStats
-                 id={listing.id}
-                 startPrice={Number(listing.price || 0)}
-
+                  id={listing.id}
+                  startPrice={Number(listing.price || 0)}
                   userLoading={loadingState.user}
                   participant={participant}
                 />
@@ -1021,20 +1186,17 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
         pageTitle={listing.title}
         meta={<Meta title={listing.title} description={listing.description} />}
       >
-        <div className="mt-6 lg:mt-10 mx-8 -mb-2">
-         <OfferAlerts
-            handleStatusChange={handleStatusChange}
-            session={session}
-            participant={participant}
-            status={status}
-            completedBy={events[0]?.userId || null}
-            listing={listing}
-            handleFinalise={handleFinalise}
-          />
-          
-        </div>
-        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-8 mt-6 lg:p-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6 ">
-         
+        <OfferAlerts
+          handleStatusChange={handleStatusChange}
+          session={session}
+          participant={participant}
+          status={status}
+          completedBy={events[0]?.userId || null}
+          listing={listing}
+          handleFinalise={handleFinalise}
+        />
+
+        <div className="flex flex-col px-4 md:mt-0 md:p-6 lg:pt-4  lg:px-8 lg:pb-8 md:pt-4 mx-auto xl:grid xl:grid-cols-12 gap-6 ">
           <div className="w-full col-span-6 xl:col-span-8  flex flex-col md:mt-4 lg:mt-0 mt-2 h-full">
             <Tabs
               status={status}
@@ -1061,7 +1223,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
             />
             {tab === "chat" && (
               <div className="messages pt-6 mb-6 bg-white">
-                {status === "negotiating" && (
+                {status === "haggling" && (
                   <ListingChat
                     id={listing.id}
                     sellerId={listing.sellerId}
@@ -1104,7 +1266,7 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
                         primary
                         label={`Let's haggle`}
                         onClick={() =>
-                          handleStatusChange("negotiating", sessionUser?.id)
+                          handleStatusChange("haggling", sessionUser?.id)
                         }
                       />
                     )}
@@ -1165,7 +1327,28 @@ const Index = ({ listing, session, messagesCount }: PageProps) => {
               handleFinalise={handleFinalise}
               me={me}
               setBids={setBids}
+              updateListing={updateListing}
+              setCurrentListing={setCurrentListing}
+              setEvents={setEvents}
             />
+
+            <div className="border rounded-lg bg-white  pb-0 mt-6 pt-4">
+              <h4 className="-mb-1 pb-0 px-5">Trade Tracker</h4>
+
+              <LineChart
+                participant={{
+                  name: currentListing
+                    ? currentListing?.sellerId === sessionUser?.id
+                      ? currentListing?.buyer?.username
+                      : currentListing?.seller?.username
+                    : "",
+                }}
+                data={{
+                  sessionOffers: chartData?.sessionOffers || [],
+                  participantOffers: chartData?.participantOffers || [],
+                }}
+              />
+            </div>
           </div>
         </div>
       </Dash>
@@ -1185,20 +1368,181 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  const offerId = context.params?.id as string;
+  const id = context.params?.id as string;
 
   try {
-    const listing = await getListingById({ offerId, userId: session.user.id});
+    const listing = await getListingById({
+      offerId: id,
+      userId: session.user.id,
+    });
 
     const countUnreadMessages = await prisma.message.count({
       where: {
-        listingId: offerId,
+        listingId: id,
         read: false,
         userId: {
           not: session.user.id,
         },
       },
     });
+
+    const sessionOffers = await prisma.bid
+      .findMany({
+        select: {
+          price: true,
+          createdAt: true,
+        },
+
+        where: {
+          listingId: id,
+          userId: session.user.id,
+        },
+      })
+      .then((bids) => {
+        let startOffer = {
+          price: 0,
+          createdAt: new Date(listing.createdAt),
+        };
+
+        let offers = bids.map((bid) => {
+          return {
+            price: bid.price,
+            createdAt: bid.createdAt,
+          };
+        });
+
+        return [startOffer, ...offers];
+      });
+
+    const participantOffers = await prisma.bid
+      .findMany({
+        select: {
+          price: true,
+          createdAt: true,
+        },
+
+        where: {
+          listingId: id,
+          userId: {
+            not: session.user.id,
+          },
+        },
+      })
+      .then((bids) => {
+        let startOffer = {
+          price: 0,
+          createdAt: new Date(listing.createdAt),
+        };
+
+        let offers = bids.map((bid) => {
+          return {
+            price: bid.price,
+            createdAt: bid.createdAt,
+          };
+        });
+
+        return [startOffer, ...offers];
+      });
+
+
+      const aggregateDataByInterval = (data: { price: number, createdAt: Date}[]) => {
+        // Helper to add intervals to a date
+        const addIntervals = (date: Date, hours: number) => date.getTime() + hours * 60 * 60 * 1000;
+      
+        // Find min and max dates
+        const dateTimes = data.map((offer) => new Date(offer.createdAt).getTime());
+        const minDate = new Date(Math.min(...dateTimes));
+        const maxDate = new Date(Math.max(...dateTimes));
+        const diffTime = Number(maxDate) - Number(minDate);
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      
+        // Determine interval
+        let intervalHours: number;
+        if (diffDays <= 5 / 24) intervalHours = 1; // less than 5 hours
+        else if (diffDays <= 0.5) intervalHours = 2; // less than 12 hours
+        else if (diffDays <= 1) intervalHours = 4; // less than 1 day
+        else if (diffDays <= 3) intervalHours = 12; // less than 3 days
+        else if (diffDays <= 5) intervalHours = 24; // less than 5 days
+        else if (diffDays <= 14) intervalHours = 48; // less than 14 days
+        else if (diffDays <= 30) intervalHours = 24 * 7; // less than 1 month
+        else intervalHours = Number.MAX_SAFE_INTEGER; // beyond 1 month or any other condition
+      
+        // Aggregate data
+        let aggregatedData = [];
+        let currentInterval = minDate;
+        while (currentInterval <= maxDate) {
+          const offersInInterval = data.filter((offer) => {
+            const offerDate = new Date(offer.createdAt).getTime();
+            return offerDate >= Number(currentInterval) && offerDate < addIntervals(currentInterval, intervalHours);
+          });
+          const total = offersInInterval.reduce((acc, offer) => acc + offer.price, 0);
+          aggregatedData.push({ price: total, createdAt: currentInterval.toLocaleDateString("en-GB") });
+          currentInterval = new Date(addIntervals(currentInterval, intervalHours));
+        }
+        return aggregatedData;
+      };
+
+    const sOffersDates = sessionOffers.map((offer) => offer.createdAt);
+    const pOffersDates = participantOffers.map((offer) => offer.createdAt);
+
+    const dates = Array.from(new Set([...sOffersDates, ...pOffersDates]));
+
+    let newSessionOffers = dates.map((date) => {
+      return {
+        price:
+          sessionOffers.find((offer) => offer.createdAt === date)?.price || 0,
+        createdAt: date,
+      };
+    });
+
+    let newParticipantOffers = dates.map((date) => {
+      return {
+        price:
+          participantOffers.find((offer) => offer.createdAt === date)?.price || 0,
+        createdAt: date,
+      };
+    });
+
+    newSessionOffers.unshift({
+      price: listing.price || 0,
+      createdAt: new Date(listing.createdAt),
+    });
+
+    newParticipantOffers.unshift({
+      price: listing.price || 0,
+      createdAt: new Date(listing.createdAt),
+    });
+
+    const aggSOffers = aggregateDataByInterval(newSessionOffers);
+    const aggPOffers = aggregateDataByInterval(newParticipantOffers);
+
+    const checkIfBothOfferMoreThan0 = (sessionOffers: { price: number, createdAt: string}[], participantOffers: {price: number, createdAt: string}[]) => {
+      // Assuming createdAt is a string in a consistent, comparable format.
+      // If the format is not directly comparable, convert it to a Date object or a comparable string format first.
+    
+      // Create maps for easy lookup by date string
+      const sessionMap = new Map(sessionOffers.map(offer => [offer.createdAt.split('T')[0], offer.price]));
+      const participantMap = new Map(participantOffers.map(offer => [offer.createdAt.split('T')[0], offer.price]));
+    
+      // Filter sessionOffers where both current offer and corresponding participant offer are not 0
+      const filteredSessionOffers = sessionOffers.filter(offer => {
+        const dateKey = offer.createdAt.split('T')[0]; // Adjust if your date format is different
+        const participantPrice = participantMap.get(dateKey) || 0;
+        return !(offer.price === 0 && participantPrice === 0);
+      });
+    
+      // Similarly, filter participantOffers
+      const filteredParticipantOffers = participantOffers.filter(offer => {
+        const dateKey = offer.createdAt.split('T')[0]; // Adjust if your date format is different
+        const sessionPrice = sessionMap.get(dateKey) || 0;
+        return !(offer.price === 0 && sessionPrice === 0);
+      });
+    
+      return { filteredSessionOffers, filteredParticipantOffers };
+    };
+
+    const cd = checkIfBothOfferMoreThan0(aggSOffers, aggPOffers);
+
 
     if (!listing) {
       return {
@@ -1223,6 +1567,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         listing,
         session,
         messagesCount: countUnreadMessages,
+        serverBids: {
+          sessionOffers: cd.filteredSessionOffers || [],
+          participantOffers: cd.filteredParticipantOffers || [],
+        },
       },
     };
   } catch (error) {

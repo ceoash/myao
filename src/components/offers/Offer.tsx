@@ -19,6 +19,7 @@ import catIcon from "@/images/cat.png";
 
 import useConfirmationModal from "@/hooks/useConfirmationModal";
 import { CgArrowRight } from "react-icons/cg";
+import CountdownTimer from "../Countdown";
 
 const Offer: React.FC<any> = ({
   id, 
@@ -398,6 +399,8 @@ const Offer: React.FC<any> = ({
                     </h4>
                   )}
                 </div>
+
+                {bids[0].createdAt ? <CountdownTimer date={bids[0].createdAt} /> : null}
                 
               </div>
             </div>
@@ -466,10 +469,7 @@ const Offer: React.FC<any> = ({
                 <ImPriceTag />
                 <span>{type === "seller" ? "Sale" : "Buy"}</span>
               </div>
-              {/* <div className="flex jus">
-                  <FaEnvelope className="mr-2" size={16}/>
-                  {0}
-                </div> */}
+          
               <div className="ml-auto sm:ml-0 flex items-center gap-1.5 text-xs xl:text-sm">
                 <BiCalendar />
                 <span>{timeSinceCreated}</span>
@@ -503,88 +503,7 @@ const Offer: React.FC<any> = ({
                 statusState !== "accepted" &&
                 statusState !== "cancelled" && (
                   <>
-                    {/* <button
-                      onClick={() =>
-                        edit.onOpen(session?.user?.id, 
-                          {
-                            bids: bids,
-                          buyer: {
-                            id: buyerId,
-                            username: buyer.username,
-                            profile:
-                              {
-                                image: buyer?.profile?.image || "",
-                              } || null,
-                          },
-                          buyerId: buyerId,
-                          category: category,
-                          completedById: completedById,
-                          createdAt: createdAt,
-                          description: description,
-                          expireAt: expireAt,
-                          id: id,
-                          image: image,
-                          messages: [],
-                          options: {
-                            location: {
-                              city: options?.locoation?.city || "",
-                              region: options?.locoation?.city || "" ,
-                            },
-                            condition: options?.condition || "",
-                            pickup: options?.pickup,
-                            public: false,
-                          },
-                          price: price,
-                          reviews: [],
-                          seller: {
-                            id: sellerId,
-                            username: seller.usernamw,
-                            profile:
-                              {
-                                image: seller?.profile?.image || "",
-                              } || null,
-                          },
-                          sellerId: sellerId,
-                          status: status,
-                          title: title,
-                          type: type,
-                          updatedAt: updatedAt,
-                          user: {
-                            id: userId,
-                            username: user?.username,
-                          },
-                          userId: userId,
-                          
-                          
-                          
-                        }, "default", {})
-                      }
-                      className={`
-                        w-full
-                        focus:ring-4 
-                        focus:outline-none 
-                        focus:ring-primary-300 
-                        font-medium 
-                        rounded-lg 
-                        text-center
-                        hidden
-                        sm:flex
-                        p-1
-                        gap-2
-                        items-center
-                        text-md border 
-                        border-gray-200
-                        px-2 
-                        bg-white
-                        hover:bg-gray-100
-                        hover:text-gray-900
-                      `}
-                    >
-                      <span>
-                        <FaPencilAlt />
-                      </span>
-                      <span className="hidden 2xl:block">Edit</span>
-                    </button> */}
+                    
 
                     <button
                       onClick={() =>
@@ -598,10 +517,10 @@ const Offer: React.FC<any> = ({
                         items-center 
                         border
                         border-red-200 
-                        bg-red-200
+                        bg-red-400
                         rounded-md 
                         px-2 
-                        text-red-700
+                        text-white
                         hover:bg-red-400
                         hover:text-white
                         "

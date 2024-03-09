@@ -53,7 +53,6 @@ const EditUserForm = ({
 
   useEffect(() => {
     if (formData.username.length < 3) return;
-    console.log(suggestions);
     checkUsernameAvailability([formData.username]).then((result) => {
       if (result && result[0] === formData.username && result[0].length > 3) {
         setUsernameIsAvailable(true);

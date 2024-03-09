@@ -136,8 +136,8 @@ export default async function listingsApi(
       const buyerActivity = createActivity({
         type: "listing",
         message: userId === listing?.buyer?.id 
-        ? `You ${status !== "negotiating" ? status : "are negotiating"} your offer` 
-        : `${status === "negotiating" ? 'You and ' + listing?.seller?.username + " are negotiating" : listing?.seller?.username + " " + status + " the offer"}`,
+        ? `You ${status !== "haggling" ? status : "are haggling"} your offer` 
+        : `${status === "haggling" ? 'You and ' + listing?.seller?.username + " are haggling" : listing?.seller?.username + " " + status + " the offer"}`,
         listing_message: findListing.title || "",
         listing_message_type: "update",
         userId: findListing.buyerId || "",
@@ -150,8 +150,8 @@ export default async function listingsApi(
       const sellerActivity = createActivity({
         type: "listing",
         message: userId === listing?.seller?.id 
-        ? `You ${status !== "negotiating" ? status : "are negotiating"} your offer` 
-        : `${status === "negotiating" ? 'You and ' + listing?.buyer?.username + " are negotiating" : listing?.buyer?.username + " " + status + " the offer"}`,
+        ? `You ${status !== "haggling" ? status : "are haggling"} your offer` 
+        : `${status === "haggling" ? 'You and ' + listing?.buyer?.username + " are haggling" : listing?.buyer?.username + " " + status + " the offer"}`,
         listing_message: findListing.title || "",
         listing_message_type: "update",
         userId: findListing?.sellerId || "",

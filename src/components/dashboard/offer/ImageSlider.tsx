@@ -69,7 +69,7 @@ const ImageSlider = ({ images, handleAddImages, listingType }: ImageSliderProps)
         }
       </Swiper>
 
-      <div className="p-2 bg-white border flex justify-between ">
+      <div className="p-2 bg-gray-50/25 border flex justify-between ">
         <Swiper
           onSwiper={(swiper) => {
             thumbsSwiperRef.current = swiper;
@@ -84,7 +84,7 @@ const ImageSlider = ({ images, handleAddImages, listingType }: ImageSliderProps)
           {imagesStore.map((image, i) => (
             <SwiperSlide
               key={i}
-              className="bg-white rounded-md border border-gry-200 z-30 aspect-square"
+              className="bg-gray-50 rounded-md border border-gry-200 z-30 aspect-square"
             >
               <Image
                 alt=""
@@ -99,10 +99,10 @@ const ImageSlider = ({ images, handleAddImages, listingType }: ImageSliderProps)
         </Swiper>
         {imagesStore.length < 5 && (
             <div
-              className="bg-white rounded-md border border-gry-200  aspect-square flex justify-center items-center"
+              className="bg-white rounded-md border border-gry-200  aspect-square flex justify-center items-center shadow cursor-pointer "
               onClick={handleAddImages}
             >
-              <RiImageAddFill className="text-6xl text-gray-300" />
+              <RiImageAddFill className="text-4xl text-gray-200" />
             </div>
           )}
       </div>

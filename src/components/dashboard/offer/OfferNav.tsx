@@ -21,7 +21,7 @@ const OfferNav = ({ setTab, tab, status, listingType }: OfferNavProps) => {
         Details
       </div>
       {status === "awaiting approval" ||
-        (status === "negotiating" && (
+        (status === "haggling" && (
           <div
             onClick={() => setTab("chat")}
             className={`cursor-pointer ${

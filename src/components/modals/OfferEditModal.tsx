@@ -235,6 +235,7 @@ const OfferEditModal = () => {
       />
       <div className="mb-5">
         <Input
+          name="title"
           id="title"
           label="Name of thing"
           type="text"
@@ -392,6 +393,7 @@ const OfferEditModal = () => {
       />
       <div className="mb-5">
         <Input
+          name="title"
           id="title"
           label="Name of thing"
           type="text"

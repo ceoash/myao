@@ -148,6 +148,7 @@ const EditTradeDetailsForm = ({
     <div className="flex flex-col">
       <div className="mb-5">
         <Input
+          name="title"
           id="title"
           label="Name of the item"
           type="text"

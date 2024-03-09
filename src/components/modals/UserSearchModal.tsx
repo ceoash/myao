@@ -133,6 +133,7 @@ const SearchModal = ({ onAssignUser, buyer, url, setSellerId, setStatus }: searc
         description="Search for a user to send the offer to"
       />
       <Input
+        name="username"
         id="username"
         label="Enter Username"
         type="text"

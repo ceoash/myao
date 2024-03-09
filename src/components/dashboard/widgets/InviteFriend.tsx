@@ -47,6 +47,7 @@ const InviteFriend = ({ className, user}: InviteFriendProps) => {
           <Input
             id="email"
             type="email"
+            name="email"
             register={register}
             placeholder="joe@myao.life"
             inline={true}

@@ -262,7 +262,7 @@ const EditListing: React.FC<EditListingProps> = ({ listing }) => {
 
   let bodyContent = (
     <div className="flex flex-col">
-      <Input id="title" label="Title" type="text" register={register} />
+      <Input name="title" id="title" label="Title" type="text" register={register} />
       <label className="mb-2" htmlFor="description">
         Description
       </label>

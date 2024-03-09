@@ -150,6 +150,7 @@ const StartConversation = ({}: StartConversationProps) => {
       {!notFoundUser ? (
         <>
         <Input
+         name="username"
          id="username"
          label="Enter Username"
          type="text"

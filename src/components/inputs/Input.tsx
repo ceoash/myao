@@ -11,7 +11,7 @@ interface InputProps extends Partial<UseControllerProps<FieldValues>> {
   disabled?: boolean;
   formatPrice?: boolean;
   required?: boolean;
-  errors?: Record<string, FieldError | undefined>;
+  errors?: any;
   sm?: boolean;
   value?: string;
   modal?: boolean;
@@ -96,7 +96,7 @@ const Input: React.FC<InputProps & { field?: any; error?: FieldError }> = ({
           required={required}
           onKeyDown={onKeyDown}
           {...inputProps} // Apply inputProps which includes register or field
-          className={`peer w-full font-light border ${errors && errors[id] ? "border-red-500" : "border-gray-200"} outline-none transition disabled:cursor-not-allowed disabled:bg-gray-50 py-2 flex-1 ${inline ? `rounded-l-xl` : `rounded-xl`}`}
+          className={`peer w-full font-light border px-3 text-gray-600 ${errors && errors[id] ? "border-red-500" : "border-gray-200"} outline-none transition disabled:cursor-not-allowed disabled:bg-gray-50 py-2 flex-1 ${inline ? `rounded-l-xl` : `rounded-xl`}`}
         />
         {errors && errors[id] && (
           <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">

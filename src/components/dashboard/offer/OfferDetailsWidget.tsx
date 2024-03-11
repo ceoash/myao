@@ -437,7 +437,7 @@ const OfferDetailsWidget = ({
                   (listing.price === "" ||
                     (listing.price === "0" && "Open Offer"))
                 : "Current Offer"}
-                {status === "awaiting approval" && listing.price > 0 && (
+                {status === "awaiting approval" && Number(listing.price) > 0 && (
                   "Starting Offer" )}
             </div>
 
@@ -518,7 +518,7 @@ const OfferDetailsWidget = ({
                       }
                     </div>
                     </CountdownTimer> : (
-                      <>
+                      <div className="flex justify-center mt-4 gap-2">
                        <div className="flex flex-col justify-center  items-center gap-4">
                             <Button
                               isLoading={loadingState.yes}
@@ -542,7 +542,7 @@ const OfferDetailsWidget = ({
                             >
                               DECLINE
                             </Button>
-                          </div></>
+                          </div></div>
                     )}
                   </div>
 

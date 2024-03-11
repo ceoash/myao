@@ -400,7 +400,7 @@ const Offer: React.FC<any> = ({
                   )}
                 </div>
 
-                {bids[0].createdAt ? <CountdownTimer date={bids[0].createdAt} /> : null}
+                {bids[0] && bids[0]?.createdAt ? <CountdownTimer date={bids[0].createdAt} /> : null}
                 
               </div>
             </div>

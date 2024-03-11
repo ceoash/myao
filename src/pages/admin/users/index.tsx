@@ -10,7 +10,6 @@ import Dropdown, { DropdownItem } from "@/components/Dropdown";
 import Link from "next/link";
 import Button from "@/components/Button";
 import useModal from "@/hooks/useModal";
-import Input from "@/components/inputs/Input";
 import CreateUserForm from "@/components/forms/CreateUserForm";
 import { ImUserPlus } from "react-icons/im";
 import axios from "axios";

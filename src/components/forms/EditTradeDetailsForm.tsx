@@ -154,7 +154,7 @@ const EditTradeDetailsForm = ({
           type="text"
           disabled={isLoading}
           value={formData.title}
-          onChange={(e) => {
+          onChange={(e: any) => {
             setFormData((prev) => ({
               ...prev,
               title: e.target.value,

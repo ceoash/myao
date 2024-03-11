@@ -138,6 +138,8 @@ const OfferDetailsWidget = ({
   const edit = useOfferEditModal();
   const { options } = listing;
 
+  console.log("OfferDetailsWidget: ", listing);
+
   useEffect(() => {
     if (!session || !session?.user?.id) {
       return;
@@ -482,7 +484,7 @@ const OfferDetailsWidget = ({
                   Number(listing.price) > 0 &&
                   listing.userId !== sessionUser.id) ? (
                   <div className="flex flex-col justify-center items-center w-full mb-3">
-                    <CountdownTimer className="" date={currentBid.participant.createdAt} >
+                    {bids && bids.length > 0 ? <CountdownTimer className="" date={currentBid.participant.createdAt} >
                     <div className="w-2/3 flex gap-2 mx-auto justify-center pt-4">
                       {
                         <>
@@ -513,10 +515,36 @@ const OfferDetailsWidget = ({
                         </>
                       }
                     </div>
-                    </CountdownTimer>
+                    </CountdownTimer> : (
+                      <>
+                       <div className="flex flex-col justify-center  items-center gap-4">
+                            <Button
+                              isLoading={loadingState.yes}
+                              accept
+                              onClick={() =>
+                                handleStatusChange("accepted", session?.user.id)
+                              }
+                              className="rounded-xl px-3 py-1 text-center w-10"
+                            >
+                              ACCEPT
+                            </Button>
+                          </div>
+                          <div className="flex flex-col justify-center items-center  gap-4">
+                            <Button
+                              cancel
+                              isLoading={loadingState.no}
+                              onClick={() =>
+                                handleStatusChange("rejected", session?.user.id)
+                              }
+                              className="rounded-xl px-3 py-1 text-center bg-orange-default border border-orange-500"
+                            >
+                              DECLINE
+                            </Button>
+                          </div></>
+                    )}
                   </div>
 
-                ) : <div className="w-full flex justify-center mt-2"><CountdownTimer className="" date={currentBid?.me.createdAt} /></div>
+                ) : bids && bids.length > 0 && <div className="w-full flex justify-center mt-2"><CountdownTimer className="" date={currentBid?.me?.createdAt} /></div>
               )  : null}
 
               {status === "awaiting approval" &&
@@ -547,11 +575,15 @@ const OfferDetailsWidget = ({
                   <div className="flex items-center mx-auto gap-1">
                     <TbInfoHexagon />
                     <p className="block w-full my-2 italic">
-                      {currentBid?.byUserId !== session?.user?.id
+                      {currentBid?.byUserId ? currentBid?.byUserId !== session?.user?.id
                         ? `${
                             participant?.username || ""
                           } would like to negotiate with you`
-                        : "Awaiting response"}
+                        : "Awaiting response" : (
+                          listing.userId === session?.user?.id ? `Awaiting response from ${
+                            participant?.username || ""
+                          }` : "Click lets haggle to make a counter offer"
+                        )}
                     </p>
                   </div>
                 </div>

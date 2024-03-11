@@ -6,7 +6,7 @@ import CategoryInput from "../inputs/CategoryInput";
 import axios from "axios";
 import Skeleton from "react-loading-skeleton";
 import TextArea from "../inputs/TextArea";
-import Input from "../inputs/Input";
+import { Input } from "../inputs/Input";
 import ImageUpload from "../inputs/ImageUpload";
 import CityAutocomplete from "../dashboard/AutoComplete";
 import useOfferEditModal from "@/hooks/useOfferEditModal";

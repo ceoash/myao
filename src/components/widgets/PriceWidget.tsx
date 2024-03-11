@@ -65,10 +65,7 @@ const PriceWidget = ({ listing,
   const socket = useSocketContext();
 
   const modal = useDataModal();
-
-
   const currentPrice = currentBid.currentPrice;
-
 
   const updateInitialOffer = async () => {
     setIsLoading(true);
@@ -168,7 +165,6 @@ const PriceWidget = ({ listing,
     }
   };
 
-
   return (
     events &&
       events.length > 0 &&
@@ -240,8 +236,8 @@ const PriceWidget = ({ listing,
         </div>
       ) : ( listing.userId === session?.user.id && status === "awaiting approval" ?
       (
-      <div className="flex xl:hidden justify-between   rounded p-2 bg-gray-50">
-        <div>
+      <div className="flex  justify-between   p-2 rounded-lg border-orange-300 shadow  bg-orange-200">
+        <div className='w-full'>
           <div className="flex rounded  divide-x bg-gray-50">
             <span className="p-2 px-3">£</span>
             <input
@@ -255,7 +251,7 @@ const PriceWidget = ({ listing,
               <button
                 onClick={updateInitialOffer}
                 disabled={isLoading}
-                className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-orange-400 rounded-r"
+                className="whitespace-nowrap p-2 px-3 text-sm bg-gradient-to-b from-orange-400 to-orange-600 text-white  hover:opacity-80 border border-red-100 border-l-0"
               >
                 {isLoading ? (
                   <Spinner />
@@ -273,7 +269,7 @@ const PriceWidget = ({ listing,
               handleStatusChange("cancelled", session?.user.id)
             }
             disabled={isLoading}
-            className="p-2 rounded whitespace-nowrap px-4 text-red-500  hover:opacity-80  "
+            className=" rounded whitespace-nowrap px-4 bg-gradient-to-b from-red-400 to-red-600 text-white  border border-red-100 border-l-0 hover:opacity-80  "
           >
             Terminate
           </button>

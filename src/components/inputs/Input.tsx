@@ -1,9 +1,8 @@
+import React from 'react';
 import Button from "../dashboard/Button";
-import { FieldError, FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
-import { Control, UseControllerProps, useController } from 'react-hook-form';
-import { RegisterOptions } from "react-hook-form";
+import { FieldError, FieldValues, UseFormRegister, RegisterOptions, useController, UseControllerProps } from "react-hook-form";
 
-interface InputProps extends UseControllerProps<FieldValues> {
+interface InputProps extends Partial<UseControllerProps<FieldValues>> {
   id: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   label?: string;
@@ -12,52 +11,64 @@ interface InputProps extends UseControllerProps<FieldValues> {
   disabled?: boolean;
   formatPrice?: boolean;
   required?: boolean;
-  errors?: any ;
+  errors?: Record<string, FieldError | undefined>;
   sm?: boolean;
   value?: string;
   modal?: boolean;
   register?: UseFormRegister<FieldValues>;
   registerOptions?: RegisterOptions;
   username?: boolean;
-  onChange?: (e?: any) => void;
+  onChange?: (e?: React.ChangeEvent<HTMLInputElement>) => void;
   inline?: boolean;
   onClick?: () => void;
   btnText?: string | React.ReactNode;
   optional?: boolean;
 }
 
-const Input: React.FC<InputProps> = ({
+const InputWithController: React.FC<InputProps> = ({
+  control,
+  ...props
+}) => {
+  if (control) {
+    const {
+      field,
+      fieldState: { error },
+    } = useController({ 
+      name: props.id,
+      control,
+      rules: props.rules,
+    });
+
+    return <Input {...props} field={field} error={error} />;
+  } else {
+    // Fallback to Input without controller if control is not provided
+    return <Input {...props} />;
+  }
+};
+
+const Input: React.FC<InputProps & { field?: any; error?: FieldError }> = ({
   id,
   label,
-  type,
+  type = "text",
   placeholder = "",
-  modal,
-  control,
-  rules,
   disabled,
-  formatPrice,
   required,
   errors,
-  value,
   register,
   registerOptions,
-  username,
-  onChange,
+  btnText,
   onClick,
   inline,
-  btnText,
   optional,
   onKeyDown,
+  field,
+  error,
 }) => {
-
-  const {
-    field,
-    fieldState: { error },
-  } = useController({ 
-    name: id, 
-    control,
-    rules,
-   });
+  // Prepare inputProps based on the provided props or register
+  let inputProps = register ? register(id, registerOptions) : {};
+  if (field) {
+    inputProps = { ...inputProps, ...field };
+  }
 
   return (
     <div className={`flex ${!inline && "pt-3"}`}>
@@ -65,67 +76,30 @@ const Input: React.FC<InputProps> = ({
         {label && (
           <label htmlFor={id} className="mb-3 flex gap-1">
             {label}
-            {optional && (
-              <span className="italic text-gray-500 text-sm "> (Optional)</span>
-            )}
+            {optional && <span className="italic text-gray-500 text-sm"> (Optional)</span>}
           </label>
         )}
 
-        <div className="relative ">
-          <input
-            id={id}
-            disabled={disabled}
-            placeholder={placeholder}
-            type={type || "text"}
-            style={{ zIndex: 0 }}
-            required={required}
-            onKeyDown={onKeyDown}
-            {...field}
-            className={`
-          peer
-          w-full
-          font-light
-          border
-         border-gray-200
-          outline-none
-          transition
-          disabled:cursor-not-allowed
-          disabled:bg-gray-50          
-         
-          py-2
-          flex-1
-          flex-grow
-          ${inline ? `rounded-l-xl` : `rounded-xl`}
-        
-          ${username && "lowercase"}
-          ${formatPrice ? "pl-10" : "pl-4"}
-          ${
-            errors && errors[id]
-              ? "border-red-500 focus:border-red-500 hover:border-b-red-500"
-              : "border-gray-200 hover:border-orange-300 focus:border-orange-300"
-          }
-          ${errors && errors[id] ? "text-red-500" : "text-gray-700"}
-        `}
-           
-          />
-          {!value || value && value.length < 1 && errors && errors[id] && (
-            <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">
-              {String( errors[id]?.message as FieldError )}
-            </div>
-          )} 
-          {/* {!value || value && value.length < 1 && testErrors && testErrors[id as "email"] && (
-            <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">
-              {String(testErrors[id as "email" ]?.message)}
-            </div>
-          )} */}
-
-        </div>
+        <input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          disabled={disabled}
+          required={required}
+          onKeyDown={onKeyDown}
+          {...inputProps} // Apply inputProps which includes register or field
+          className={`peer w-full font-light border ${errors && errors[id] ? "border-red-500" : "border-gray-200"} outline-none transition disabled:cursor-not-allowed disabled:bg-gray-50 py-2 flex-1 ${inline ? `rounded-l-xl` : `rounded-xl`}`}
+        />
+        {errors && errors[id] && (
+          <div className="absolute top-0 ml-2 text-xs mt-3 text-red-500">
+            {errors[id]?.message}
+          </div>
+        )}
       </div>
-      {inline && (
+      {inline && btnText && (
         <Button
           label={btnText}
           onClick={onClick}
-          options={{ primary: true,  }}
           className="ml-2 my-auto"
           inline={inline}
         />
@@ -134,4 +108,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default InputWithController;

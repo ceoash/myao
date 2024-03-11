@@ -437,6 +437,8 @@ const OfferDetailsWidget = ({
                   (listing.price === "" ||
                     (listing.price === "0" && "Open Offer"))
                 : "Current Offer"}
+                {status === "awaiting approval" && listing.price > 0 && (
+                  "Starting Offer" )}
             </div>
 
             <div

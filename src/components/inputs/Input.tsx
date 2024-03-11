@@ -62,10 +62,18 @@ const Input: React.FC<InputProps & { field?: any; error?: FieldError }> = ({
   optional,
   onKeyDown,
   field,
+  value,
+  onChange,
   error,
 }) => {
   // Prepare inputProps based on the provided props or register
   let inputProps = register ? register(id, registerOptions) : {};
+  if (value) {
+    inputProps = { ...inputProps, value };
+  }
+  if (onChange) {
+    inputProps = { ...inputProps, onChange };
+  }
   if (field) {
     inputProps = { ...inputProps, ...field };
   }

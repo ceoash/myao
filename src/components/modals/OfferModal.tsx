@@ -65,6 +65,8 @@ const OfferModal = () => {
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState<FieldValues>(FormType);
 
+  console.log("formData", formData);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -539,7 +541,7 @@ const OfferModal = () => {
           type="text"
           disabled={isLoading}
           value={formData.title}
-          onChange={(e) => {
+          onChange={(e: any) => {
             setFormData((prev) => ({
               ...prev,
               title: e.target.value,

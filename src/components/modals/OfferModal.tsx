@@ -607,7 +607,7 @@ const OfferModal = () => {
           )}
         </div>
 
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <label className="block mb-3">
           Description{" "}
           <span className="italic text-gray-500 text-sm "> (Optional)</span>
@@ -633,7 +633,7 @@ const OfferModal = () => {
               {errors.description.message}
             </div>
           )}
-      </div>
+      </div> */}
 
       <div className="w-1/3">
         <PriceInput

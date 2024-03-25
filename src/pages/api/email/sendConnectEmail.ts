@@ -46,7 +46,7 @@ export default async function handler(
       await transporter.sendMail({
         ...mailOptions,
         ...generateEmailContent(data),
-        subject: "Sign Up and Connect",
+        subject: "Sign Up and Create Offer",
         to: data.user,
       });
       return res.status(200).json({ success: true });

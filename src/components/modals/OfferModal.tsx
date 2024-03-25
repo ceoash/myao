@@ -18,10 +18,11 @@ import { itemCategories, itemSubCategories } from "@/data/cateories";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useSocketContext } from "@/context/SocketContext";
 import { useRouter } from "next/navigation";
+import { set } from "date-fns";
 
 enum STEPS {
-  TYPE = 0,
-  BUYER = 1,
+  BUYER = 0,
+  TYPE = 1,
   DESCRIPTION = 2,
   ADDITIONAL = 3,
   ITEM = 4,
@@ -60,12 +61,10 @@ const OfferModal = () => {
   const listing = offerModal?.listing || null;
 
   const { data: session, status } = useSession();
-  const [step, setStep] = useState(STEPS.TYPE);
+  const [step, setStep] = useState(STEPS.BUYER);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState<FieldValues>(FormType);
-
-  console.log("formData", formData);
 
   const router = useRouter();
 
@@ -176,9 +175,9 @@ const OfferModal = () => {
 
   const actionLabel = useMemo(() => {
     switch (step) {
-      case STEPS.TYPE:
-        return "Continue";
       case STEPS.BUYER:
+        return "Continue";
+      case STEPS.TYPE:
         return "Next";
       case STEPS.DESCRIPTION:
         return "Next";
@@ -195,9 +194,9 @@ const OfferModal = () => {
 
   const secondaryActionLabel = useMemo(() => {
     switch (step) {
-      case STEPS.TYPE:
-        return undefined;
       case STEPS.BUYER:
+        return undefined;
+      case STEPS.TYPE:
         return "Back";
       case STEPS.DESCRIPTION:
         return "Back";
@@ -278,22 +277,8 @@ const OfferModal = () => {
             setError("user", { message: "User not found" });
             return;
           }
-         setFormData((prev) => {
-          if(prev.type === "buyer"){
-            return {
-              ...prev,
-              sellerId: res.data.id,
-            };
-          }
-          return {
-            ...prev,
-            buyerId: res.data.id,
-          };
-         } );
-
-         setFoundUser(res.data);
-
-          setError("user", { message: "" });
+        setFoundUser(res.data);
+        setError("user", { message: "" });
         }
       })
       .catch((err) => {
@@ -314,7 +299,14 @@ const OfferModal = () => {
       errors: {} as Record<string, { message: string }>,
     };
 
-    /* switch (step) {
+    switch (step) {
+      
+      case STEPS.BUYER:
+        if (!foundUser) {
+          validation.isValid = false;
+          setError("user", { message: "Select a user" });
+        }
+        break;
       case STEPS.TYPE:
         if (!data.type) {
           validation.isValid = false;
@@ -323,38 +315,24 @@ const OfferModal = () => {
           });
         }
         break;
-      case STEPS.BUYER:
-        if (!foundUser) {
-          validation.isValid = false;
-          setError("user", { message: "Select a user" });
-        }
-        break;
       case STEPS.DESCRIPTION:
         if (!data.title) {
           validation.isValid = false;
           setError("title", { message: "Title is required" });
         }
-
-        break;
-      case STEPS.ADDITIONAL:
-        if (!data.title) {
+        if (!data.category) {
           validation.isValid = false;
-          setError("title", { message: "Title is required" });
+          setError("category", { message: "Category is required" });
         }
-
-        break;
-      case STEPS.ITEM:
-        break;
-
-      case STEPS.IMAGES:
-        break;
-
-      case STEPS.REVIEW:
+        if (!data.subcategory) {
+          validation.isValid = false;
+          setError("subcategory", { message: "Type is required" });
+        }
         break;
       default:
         break;
     }
- */
+
     return validation;
   };
 
@@ -376,7 +354,7 @@ const OfferModal = () => {
       .then((response) => {
         toast.success("Offer updated successfully!");
         offerModal.onClose();
-        setStep(STEPS.TYPE);
+        setStep(STEPS.BUYER);
         setFormData(FormType);
         setFoundUser(null);
         setSearch("");
@@ -423,12 +401,16 @@ const OfferModal = () => {
       image: formData.image,
     };
 
-    if (formData.type === "buyer") {
+    if (formData.type === "buyer" && foundUser) {
       Object.assign(data, { buyerId: session?.user.id });
+      Object.assign(data, { sellerId: foundUser.id });
     }
-
-    if (formData.type === "seller") {
+    else if (formData.type === "seller" && foundUser) {
       Object.assign(data, { sellerId: session?.user.id });
+      Object.assign(data, { buyerId: foundUser.id });
+    } else {
+      toast.error("Please select a user");
+      setStep(STEPS.BUYER);
     }
 
     setIsLoading(true);
@@ -440,11 +422,10 @@ const OfferModal = () => {
       .then((response) => {
         offerModal.onClose();
         toast.success("Offer created successfully!");
-        setStep(STEPS.TYPE);
+        setStep(STEPS.BUYER);
         setFormData(FormType);
         setFoundUser(null);
         setSearch("");
-        setStep(STEPS.TYPE);
 
         let urlArray = JSON.parse(data.image || "[]");
         let firstImageUrl = urlArray[0];
@@ -495,7 +476,7 @@ const OfferModal = () => {
     setFormData(FormType);
     setFoundUser(null);
     setSearch("");
-    setStep(STEPS.TYPE);
+    setStep(STEPS.BUYER);
     offerModal.onClose();
   };
 
@@ -509,17 +490,18 @@ const OfferModal = () => {
 
   const onNext = () => {
     const validation = validateStep(step, formData);
+
     if (STEPS.REVIEW === step) {
       if (listing) {
         return updateListing(formData);
       }
       return onSubmit(formData);
     }
-    if (formData.type === "buyer" && step === STEPS.DESCRIPTION) {
-      setStep(STEPS.REVIEW);
-      return;
+
+    if (validation.isValid) {
+      setStep((prev) => prev + 1);
     }
-    setStep((prev) => prev + 1);
+    
   };
 
   let bodyContent = (
@@ -546,7 +528,9 @@ const OfferModal = () => {
               ...prev,
               title: e.target.value,
             }));
+            clearError("title");
           }}
+
           placeholder="Eg. iPhone 12 Pro Max"
         />
         {errors.title && typeof errors.title.message === "string" && (
@@ -560,7 +544,6 @@ const OfferModal = () => {
               Category
             </label>
             <select
-              defaultValue={""}
               className="w-full border border-gray-200 rounded-xl p-3 focus:border-orange-300 focus:ring-0"
               value={formData.category}
               onChange={(e) => {
@@ -599,6 +582,7 @@ const OfferModal = () => {
                     ...prev,
                     subcategory: e.target.value,
                   }));
+                  clearError("subcategory");
                 }}
               >
                 <option value="" disabled className="text-gray-600">
@@ -1029,17 +1013,13 @@ const OfferModal = () => {
     bodyContent = (
       <div className="flex flex-col">
         <Heading
-          title={`Select the ${formData.type === "buyer" ? "Seller" : "Buyer"}`}
+          title={`Who is this offer for?`}
           description={`Who would you like to send this offer to?`}
           nounderline
         />
-        <p className="mb-4 text-sm md:hidden">
-          {formData.type === "buyer"
-            ? "Select the seller you would like to send this offer to"
-            : "Select the buyer you would like to send this offer to"}
-        </p>
+        
         <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
-          {formData.type === "buyer" && formData.sellerId || formData.type === "seller" && formData.buyerId ? (
+          {foundUser ? (
             <>
               <p className="font-bold">Found: {}</p>
               <div className="flex justify-between items-center border border-gray-200 rounded-lg px-4 py-2 bg-gray-50">
@@ -1176,7 +1156,7 @@ const OfferModal = () => {
       isOpen={offerModal.isOpen}
       onClose={onClose}
       actionLabel={actionLabel}
-      secondaryAction={step > STEPS.TYPE ? onBack : undefined}
+      secondaryAction={step > STEPS.BUYER ? onBack : undefined}
       secondaryActionLabel={secondaryActionLabel}
       body={bodyContent}
       isLoading={isLoading}

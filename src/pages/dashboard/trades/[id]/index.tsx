@@ -455,7 +455,7 @@ const Index = ({
   ]);
 
   useEffect(() => {
-    if (tab === "chat") {
+    if (tab === "chat" && messages.length > 0) {
       const markAsRead = async () => {
         const url =
           "/api/dashboard/markAllAsRead?listingId=" +
@@ -885,16 +885,7 @@ const Index = ({
             });
 
             if (response.data.listing.status === "accepted") {
-              const receiver =
-                response.data.listing?.events[0].userId ===
-                response.data.listing.sellerId
-                  ? response.data.listing.buyer
-                  : response.data.listing.seller;
-              const sender =
-                response.data.listing?.events[0].userId ===
-                response.data.listing.sellerId
-                  ? response.data.listing.seller
-                  : response.data.listing.buyer;
+              
               const email = axios.post("/api/email/emailNotification", {
                 listing: {
                   ...response.data.listing,
@@ -905,18 +896,12 @@ const Index = ({
                       ].price) ||
                     response.data.listing.price,
                 },
-                name: response.data.listing?.buyer.username,
+                name: listing.buyer.username,
                 email: response.data.listing?.buyer.email,
                 title:
-                  response.data.listing?.sellerId === sender.id
-                    ? "You have a deal!"
-                    : "You accepted the offer!",
-                body:
-                  response.data.listing?.sellerId === sender.id
-                    ? `Your offer has been accepted by ${listing.buyer.username}`
-                    : `You accepted your offer with ${listing.seller.username}.`,
-                description:
-                  "Login to make payment and complete the negotiation.",
+                  "Offer Accepted",
+                body: listing.buyerId === sessionUser?.id ? `You have accepted the offer. Please make the payment.` : `The offer has been accepted. Please make the payment.`,
+                description: "",
                 linkText: "Make Payment",
                 url: `/dashboard/trades/${response.data.listing.id}`,
               });
@@ -943,9 +928,9 @@ const Index = ({
                 },
                 name: receiver.username,
                 email: receiver.email,
-                title: `Your offer has been ${status}`,
-                body: `Your offer has been ${status} by ${sender.username}.`,
-                linkText: "Manage Offer",
+                title: "Offer " + status,
+                body:`${sender.username} has ${status} the offer`,
+                linkText: "View Trade",
                 url: `/dashboard/trades/${response.data.listing.id}`,
               });
             }
@@ -1223,7 +1208,7 @@ const Index = ({
             />
             {tab === "chat" && (
               <div className="messages pt-6 mb-6 bg-white">
-                {status === "haggling" && (
+                {status !== "awaiting approval" && (
                   <ListingChat
                     id={listing.id}
                     sellerId={listing.sellerId}
@@ -1332,7 +1317,7 @@ const Index = ({
               setEvents={setEvents}
             />
 
-            <div className="border rounded-lg bg-white  pb-0 mt-6 pt-4">
+            {/* <div className="border rounded-lg bg-white  pb-0 mt-6 pt-4">
               <h4 className="-mb-1 pb-0 px-5">Trade Tracker</h4>
 
               <LineChart
@@ -1348,7 +1333,7 @@ const Index = ({
                   participantOffers: chartData?.participantOffers || [],
                 }}
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </Dash>

@@ -138,12 +138,7 @@ const Tabs = ({
         </li>
       )}
       {tabs.map((tab, i) => {
-        if (
-          status !== "awaiting approval" &&
-          status !== "haggling" &&
-          tab.id === "chat"
-        )
-          return null;
+        
         return (
           <div key={i} className="relative ">
             {tab.notificationsCount && tab.notificationsCount > 0 ? (

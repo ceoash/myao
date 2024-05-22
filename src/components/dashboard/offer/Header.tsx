@@ -238,40 +238,7 @@ const Header = ({
 
         <p className="pb-5 font-hk text-sm">{listing.description}</p>
 
-        <div className=" items-center  grid grid-cols-2 border-t rounded-t border-x  mt-auto">
-          <div className=" bg-gray-50  rounded shadow-sm px-3 py-4 flex items-center flex-col justify-center  text-center">
-            <h4 className="text-gray-600 text-[16px]">Starting Offer</h4>
-            <p className="font-extrabold text-lg mb-0 text-orange-500">
-              
-              {listing?.price && listing?.price > 0
-                ?`£${Number(listing.price).toLocaleString("en-GB")}`
-                : "Open Offer"}
-            </p>
-            <h6 className="text-sm flex">
-              By: {listing?.user?.username || "(unknown user)"}
-            </h6>
-          </div>
-          <div className=" bg-gray-50  h-full rounded shadow-sm px-3 py-4 flex items-center flex-col justify-start  text-center">
-            <h4 className="text-gray-600 text-[16px]">Current Offer</h4>
-            {currentBid &&
-            currentBid?.currentPrice &&
-            Number(currentBid?.currentPrice) > 0 ? (
-              <>
-                <p className="font-extrabold text-lg mb-0 text-orange-500">
-                  £{Number(currentBid.currentPrice).toLocaleString("en-GB")}
-                </p>
-                <h6 className="text-sm flex">By: {currentBid.byUsername}</h6>
-              </>
-            ) : (
-              <>
-                <p className="font-extrabold text-lg mb-0 text-orange-500">
-                  {listing?.price && listing?.price > 0 ? `£${(Number(listing.price).toLocaleString("en-GB"))}` : "N/A"}
-                </p>
-                <p className=" text-sm mb-0">No counter offers</p>
-              </>
-            )}
-          </div>
-        </div>
+       
         
 
         {/* <div className="flex items-center justify-between pb-4">

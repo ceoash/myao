@@ -104,7 +104,7 @@ const CreateUserForm = () => {
   };
   return (
     <div>
-      <div className="flex flex-col">
+      <div className="flex flex-col pb-3">
         <label
           htmlFor="name"
           className="block mb-2 text-sm font-medium text-gray-900"
@@ -120,7 +120,7 @@ const CreateUserForm = () => {
         />
         {errors.name && <span className="text-red-400">{errors.name}</span>}
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col pb-3">
         <label
           htmlFor="email"
           className="block mb-2 text-sm font-medium text-gray-900"
@@ -205,15 +205,29 @@ const CreateUserForm = () => {
         />
       </div>
 
-      <div className="flex flex-col mb-6">
+      <div className="flex flex-col mb-6 pt-3">
         <label htmlFor="role" className="block mb-2 text-sm font-medium text-gray-900">Role</label>
+
+        <label htmlFor="admin" className="block mb-2 text-sm font-medium text-gray-900">
         <input
-          type="text"
+          id="admin"
+          type="radio"
           name="role"
           className=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg px-2 py-2 outline-none "
-          value={role}
+          value={"admin"}
+          defaultChecked={role === "admin"}
           onChange={(e) => onChange(e)}
-        />
+        /> Admin</label>
+        <label htmlFor="admin" className="block mb-2 text-sm font-medium text-gray-900">
+        <input
+          id="admin"
+          type="radio"
+          name="role"
+          className=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg px-2 py-2 outline-none "
+          value={"user"}
+          defaultChecked={role !== "admin"}
+          onChange={(e) => onChange(e)}
+        /> User</label>
       </div>
       <Button type="button" onClick={onSubmit}>
         Save

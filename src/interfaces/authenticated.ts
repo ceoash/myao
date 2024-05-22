@@ -1,6 +1,19 @@
-import { Activity, Bid, DirectMessage, Listing, ListingActivity, Profile, Review, User, UserActivity } from "@prisma/client";
+import {
+  Activity,
+  Bid,
+  DirectMessage,
+  Listing,
+  ListingActivity,
+  Prisma,
+  Profile,
+  Review,
+  User,
+  UserActivity,
+} from "@prisma/client";
 
-interface IBid extends Bid { user: User; }
+interface IBid extends Bid {
+  user: User;
+}
 
 export interface OfferModalStore {
   isOpen: boolean;
@@ -8,7 +21,13 @@ export interface OfferModalStore {
   listing?: CustomListing | null;
   section: string | null;
   data: any | null;
-  onOpen: (user: any, listing: CustomListing, section: string, data: any, setListing?: (listing: CustomListing) => void)  => void;
+  onOpen: (
+    user: any,
+    listing: CustomListing,
+    section: string,
+    data: any,
+    setListing?: (listing: CustomListing) => void
+  ) => void;
   onClose: () => void;
   setListing?: (listing: CustomListing) => void; // New function type
 }
@@ -73,7 +92,7 @@ export interface Conversation {
   friendStatus?: boolean;
   blockedStatus?: boolean;
   status?: string;
-  currentUser?: any
+  currentUser?: any;
   unreadCount?: number;
 }
 export interface AdminConversation {
@@ -115,7 +134,7 @@ export interface CheckoutProps {
   options?: Object;
 }
 
-export interface INotification  {
+export interface INotification {
   id: string;
   type: string;
   message: string;
@@ -125,7 +144,6 @@ export interface INotification  {
   updatedAt: string;
   action: string;
 }
-
 
 export interface dashboardProps {
   user: IUser;
@@ -149,107 +167,154 @@ export interface dashboardProps {
 }
 
 export interface IConversation {
-    id: string;
-    participant1Id: string;
-    participant2Id: string;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
-    participant1: IUser;
-    participant2: IUser;
-    directMessages: DirectMessage[];
-    user: IUser;
-  }
-
-export interface EventsProps{
-  id: string,
-  event: string, 
-  price: string | number,
-  date: string, 
-  userId: string 
+  id: string;
+  participant1Id: string;
+  participant2Id: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  participant1: IUser;
+  participant2: IUser;
+  directMessages: DirectMessage[];
+  user: IUser;
 }
 
-  interface MessageProps {
-    buyerId: string;
-    sellerId: string;
-    listingId: string;
-    text: string;
-    id: string;
-  }
+export interface EventsProps {
+  id: string;
+  event: string;
+  price: string | number;
+  date: string;
+  userId: string;
+}
 
-  export interface CustomListing {
-    activity?: ExtendedActivity[]
-    bids: Bid[]
-    buyer: {id: string, username: string, profile?: {
+interface MessageProps {
+  buyerId: string;
+  sellerId: string;
+  listingId: string;
+  text: string;
+  id: string;
+}
+
+export interface CustomListing {
+  activity?: ExtendedActivity[];
+  bids: Bid[];
+  buyer: {
+    id: string;
+    username: string;
+    profile?: {
       image?: string;
-    }}
-    buyerId: string;
-    category: string;
-    subcategory?: string | null | undefined;
-    completedById: string;
-    createdAt: Date;
-    description: string;
-    expireAt: Date;
-    id: string;
-    image: string | null;
-    messages: MessageProps[]
-    location?: {
-      city?: string,
-      region?: string
-    },
-    options: {
-
+    };
+  };
+  buyerId: string;
+  category: string;
+  subcategory?: string | null | undefined;
+  completedById: string;
+  createdAt: Date;
+  description: string;
+  expireAt: Date;
+  id: string;
+  image: string | null;
+  messages: MessageProps[];
+  location?: {
+    city?: string;
+    region?: string;
+  };
+  options: {
     location: {
-      city?: string,
-      region?: string
-    }, 
-    condition: string, pickup: string, public: boolean, color?: string, size?: string, brand?: string, model?: string, year?: string, type?: string, material?: string, style?: string}
-    price: string 
-    reviews: Review[]
-    seller: {id: string, username: string, profile?: {
+      city?: string;
+      region?: string;
+    };
+    condition: string;
+    pickup: string;
+    public: boolean;
+    color?: string;
+    size?: string;
+    brand?: string;
+    model?: string;
+    year?: string;
+    type?: string;
+    material?: string;
+    style?: string;
+  };
+  price: string;
+  reviews: Review[];
+  seller: {
+    id: string;
+    username: string;
+    profile?: {
       image?: string;
-    }}
-    sellerId: string
-    status: string;
-    title: string;
-    type: string;
-    updatedAt: Date;
-    user: {
-      id: string, username: string
-    }
-    userId: string;
-    }
-  
-  export interface ActivityWidgetProps {
-    title?: string;
-    activities?: ExtendedActivity[];
-  }
+    };
+  };
+  sellerId: string;
+  status: string;
+  title: string;
+  type: string;
+  updatedAt: Date;
+  user: {
+    id: string;
+    username: string;
+  };
+  userId: string;
+}
 
-  export interface IActvity extends Activity {
+export interface ActivityWidgetProps {
+  title?: string;
+  activities?: ExtendedActivity[];
+}
 
-  }
+export interface IActvity extends Activity {}
 
-  export interface GolablListing {
-      id: string;
-      title: string | null;
-      description: string | null; 
-      image: string | null; 
-      price: string;
-      status: ListingStatus | null;
-      sellerId: string;
-      buyerId: string;
-      seller: User;
-      buyer: User;
-      bids: Bid[]
-      createdAt: string;
-      updatedAt: string;
-      expireAt: string | undefined;
-  }
+export interface GolablListing {
+  id: string;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  price: string;
+  status: ListingStatus | null;
+  sellerId: string;
+  buyerId: string;
+  seller: User;
+  buyer: User;
+  bids: Bid[];
+  createdAt: string;
+  updatedAt: string;
+  expireAt: string | undefined;
+}
 
-export type ListingStatus = "awaiting approval" | "haggling" | "accepted" | "rejected" | "expired" | "completed" | "cancelled";
+export type ListingStatus =
+  | "awaiting approval"
+  | "haggling"
+  | "accepted"
+  | "rejected"
+  | "expired"
+  | "completed"
+  | "cancelled";
 
-export interface DashListing extends Listing {
+export interface DashListing {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  expireAt: string | null;
+  title: string | null;
+  description: string | null;
+  options: Prisma.JsonValue | null;
+  category: string | null;
+  subcategory: string | null;
+  image: string | null;
+  buyerId: string | null;
+  sellerId: string | null;
+  price: number | null;
+  completedById: string | null;
+  completedAt: Date | null;
+  events: Prisma.JsonValue[];
+  activities: Prisma.JsonValue[];
+  userId: string;
+  type: string | null;
+  metadata: Prisma.JsonValue | null;
   status: ListingStatus;
+  buyer: User;
+  seller: User;
+  bids: Bid[];
 }
 
 export type ListingsMap = {
@@ -257,20 +322,22 @@ export type ListingsMap = {
 };
 
 export interface IEmailTemplate {
-  title: string, 
-  name: string, 
-  url: string, 
-  image?: string,
-  linkText: string, 
-  listing?: { 
-    id: string, 
-    title: string, 
-    price: string, 
-    category: string,
-    image: string | null, 
-    user: { 
-      username: string, 
-      id: string}}, 
-  body?: React.ReactNode
-  description?: string
+  title: string;
+  name: string;
+  url: string;
+  image?: string;
+  linkText: string;
+  listing?: {
+    id: string;
+    title: string;
+    price: string;
+    category: string;
+    image: string | null;
+    user: {
+      username: string;
+      id: string;
+    };
+  };
+  body?: React.ReactNode;
+  description?: string;
 }

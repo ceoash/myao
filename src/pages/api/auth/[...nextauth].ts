@@ -5,7 +5,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 
-
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
 
@@ -18,6 +17,7 @@ export const authOptions: AuthOptions = {
           id: profile.sub,
           name: profile.name,
           email: profile.email,
+          role: "user",
           username: profile.email.split("@")[0],
           activated: true,
           verified: true,
@@ -62,6 +62,7 @@ export const authOptions: AuthOptions = {
             hashedPassword: true,
             options: true,
             status: true,
+            role: true,
           },
         });        
 
@@ -93,10 +94,11 @@ export const authOptions: AuthOptions = {
         token.id = user?.id;
         token.email = user?.email;
         token.username = user?.username;
+        token.role = user?.role;
       }
       return token;
     },
-    session: ({ session, token }) => ({
+    session: ({ session, token, user }) => ({
       ...session,
       name: "nz6sAbHOdE_session",
       user: {
@@ -104,6 +106,7 @@ export const authOptions: AuthOptions = {
         id: token.sub,
         email: token.email,
         username: token.username,
+        role: user?.role,
       },
     }),
   },

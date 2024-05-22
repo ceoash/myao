@@ -80,7 +80,6 @@ const CURRENT_BID_STATE = {
   byUsername: "",
   me: {} as Bid,
   participant: {} as Bid,
-  final: false,
 };
 
 interface Listing {
@@ -187,7 +186,6 @@ const Index = ({
     byUsername: string;
     me: Bid;
     participant: Bid;
-    final?: boolean;
   }>(CURRENT_BID_STATE);
   const [status, setStatus] = useState<string>("");
   const [tab, setTab] = useState("details");
@@ -422,9 +420,6 @@ const Index = ({
       participant: reversedBids.filter(
         (bid: Bid) => bid.userId !== session?.user?.id
       )[0],
-      final: currentListing.bids && currentListing.bids.length > 0
-      ? currentListing.bids[currentListing.bids.length - 1].final
-      : false
     });
 
     setLoadingState((prev) => ({ ...prev, loading: false }));
@@ -796,7 +791,7 @@ const Index = ({
                 userId: userId,
               });
 
-              const sellerEmail = axios.post("/api/email/emailNotification", {
+             /*  const sellerEmail = axios.post("/api/email/emailNotification", {
                 listing: {
                   ...response.data.listing,
                   price:
@@ -838,7 +833,7 @@ const Index = ({
                 } was successful. Log in and arrange the transfer of the item(s).`,
                 linkText: "Log in",
                 url: `/dashboard/trades/${response.data.listing.id}`,
-              });
+              }); */
 
               const { sellerId, buyerId, transactionResult } = response.data;
 
@@ -1338,6 +1333,8 @@ const Index = ({
               setEvents={setEvents}
             />
 
+            
+
             {/* <div className="border rounded-lg bg-white  pb-0 mt-6 pt-4">
               <h4 className="-mb-1 pb-0 px-5">Trade Tracker</h4>
 
@@ -1586,18 +1583,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    if (
-      (session.user.id !== listing.sellerId &&
-      session.user.id !== listing.buyerId && currentUser?.role !== "admin" && currentUser?.role !== "moderator")
-    ) {
-      return {
-        redirect: {
-          destination: "/dashboard/trades",
-          permanent: false,
-        },
-      };
-    }
-
+   
     return {
       props: {
         listing,

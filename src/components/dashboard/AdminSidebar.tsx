@@ -43,9 +43,9 @@ const AdminSidebar = () => {
                 </Link>
               </li>
               <li className={
-                      router.pathname === "/admin/negotiations" ? "text-orange-default" : ""
+                      router.pathname === "/admin/trades" ? "text-orange-default" : ""
                     }>
-                <Link href="/admin/negotiations">
+                <Link href="/admin/trades">
                   <span
                     className={`flex items-center rounded-xl font-bold text-md py-3 px-4 lg:pr-0`}
                   >

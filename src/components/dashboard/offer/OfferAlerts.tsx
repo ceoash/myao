@@ -54,10 +54,9 @@ const OfferAlerts = ({
           <AlertBanner
             text={
               completedBy === session?.user.id
-                ? "We've received your payment. Leave a review for " +
-                  participant?.username
-                : "Your offer has been paid. Leave a review for " +
-                  participant?.username
+                ? "You accepted this offer. Contact counterparty to finalise the transfer of items  " 
+                : "Congratulations your offer was accepted. Contact counterparty to finalise the transfer of items" 
+                  
             }
             success
             button

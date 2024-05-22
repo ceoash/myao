@@ -371,12 +371,6 @@ const Offers = ({
                 >
                   WAITING
                 </span>
-
-                {/* {allRequests.length > 0 && (
-                  <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
-                    {allRequests.length} new
-                  </span>
-                )} */}
               </div>
               <div
                 className={`uppercase cursor-pointer font-bold items-start flex`}
@@ -400,44 +394,7 @@ const Offers = ({
                   </span>
                 )} */}
               </div>
-              <div
-                className={`uppercase cursor-pointer font-bold items-start flex`}
-                onClick={() => {
-                  selectedCategory !== "completed" &&
-                    setSelectedCategory("completed");
-                }}
-              >
-                <span
-                  className={`uppercase cursor-pointer font-bold rounded-lg border text-[12px] border-gray-200 bg-white p-3 py-1 ${
-                    selectedCategory === "completed" &&
-                    "border !bg-orange-default border-orange-200 text-white"
-                  }`}
-                >
-                  Paid
-                </span>
-               {/*  <button
-                onClick={() =>
-                  orderOffers({
-                    status: "accepted",
-                    userId: session?.user.id,
-                    from: "",
-                    to: "",
-                    listingId: "",
-                    buyerId: "",
-                    sellerId: "",
-                    userType: "",
-                  })
-                }
-              >
-                Order
-              </button> */}
-
-                {/* {allRequests.length > 0 && (
-                  <span className="bg-orange-200 rounded-full px-2 text-orange-500 text-xs ml-1 lowercase">
-                    {allRequests.length} new
-                  </span>
-                )} */}
-              </div>
+              
             </div>
             <div className="hidden md:block">
               <button
@@ -482,36 +439,6 @@ const Offers = ({
                 </div>
               )}
             </div>
-
-            {/* <div className="border border-gray-200 rounded-lg bg-gray-100 flex items-center  mb-4 -mt-1">
-              <BiFilterAlt className="text-gray-500 mx-2 border-r border-gray-200" />
-              <select
-                key={selectedCategory}
-                value={selectedCategory}
-                defaultValue={"Filter"}
-                onChange={(e) => (
-                  handleCategoryChange(
-                    e.target.value as
-                      | "all"
-                      | "awaiting approval"
-                      | "cancelled"
-                      | "haggling"
-                      | "rejected"
-                      | "accepted"
-                      | "completed"
-                      | "pending"
-                  ),
-                  setIsLoading(true)
-                )}
-                className="w-6 px-2 py-2 rounded-r-lg bg-white"
-              >
-                <option selected>Filter</option>
-                <option value="accepted">Awaiting Payment</option>
-                <option value="completed">Paid</option>
-                <option value="rejected">Declined</option>
-                <option value="cancelled">Terminated</option>
-              </select>
-            </div> */}
           </>
         </div>
       </div>
@@ -530,7 +457,7 @@ const Offers = ({
               <div className="min-w-full transition-all ease-in-out duration-200">
                 {categorisedOffers[selectedCategory] &&
                 categorisedOffers[selectedCategory].length > 0 ? (
-                  categorisedOffers[selectedCategory].map((item: Listing) => {
+                  categorisedOffers[selectedCategory].map((item: DashListing) => {
                     return <Offer key={item.id} {...item} />;
                   })
                 ) : (
@@ -547,130 +474,10 @@ const Offers = ({
               </div>
             )}
           </div>
-          {multipage && countSent + countReceived > 0 && (
-            <div className="flex" key={selectedCategory}>
-              {categorisedOffers[selectedCategory] && (
-                <div className="flex gap-2">
-                  {Array.from({ length: countSent / 5 + 1 }).map((_, index) => (
-                    <Button
-                      key={index}
-                      label={`${index + 1}`}
-                      onClick={() => handlePageChange(index + 1)}
-                      secondary={currentPage === index + 1}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          
         </>
 
-        {/* {activeTab === "sent" && (
-          <>
-            <div className="transition-all ease-in-out duration-200">
-              {isLoading ? (
-                [
-                  ...Array(
-                    (sentListings[selectedCategory] &&
-                      sentListings[selectedCategory].length) ||
-                      0
-                  ),
-                ].map((_, index) => <OfferSkeleton key={index} />)
-              ) : (
-                <div className="min-w-full transition-all ease-in-out duration-200">
-                  {sentListings.all.length > 0 &&
-                  sentListings[selectedCategory] ? (
-                    sentListings[selectedCategory].map((item: Listing) => {
-                      return <Offer key={item.id} {...item} />;
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center rounded-xl bg-white  border border-gray-200 py-16 ">
-                      <div className="text-gray-700 text-lg font-bold  mx-4 mb-4 text-center">
-                        No offers to display{" "}
-                        <p className="text-gray-700 text-sm mt-2 font-normal mb-3">
-                          Connect and create a offer to get started
-                        </p>
-                      </div>
-                      <Button label="Get started" onClick={create.onOpen} />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            {multipage && countSent > 0 && (
-              <div className="flex" key={activeTab + selectedCategory}>
-                {sentListings[selectedCategory] && (
-                  <div className="flex gap-2">
-                    {Array.from({ length: countSent / 5 + 1 }).map(
-                      (_, index) => (
-                        <Button
-                          key={index}
-                          label={`${index + 1}`}
-                          onClick={() => handlePageChange(index + 1)}
-                          secondary={currentPage === index + 1}
-                        />
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-        {activeTab === "received" && (
-          <>
-            <div className="transition-all ease-in-out duration-200">
-              {isLoading ? (
-                [
-                  ...Array(
-                    (receivedListings[selectedCategory] &&
-                      receivedListings[selectedCategory].length) ||
-                      0
-                  ),
-                ].map((_, index) => <OfferSkeleton key={index} />)
-              ) : (
-                <div className="min-w-full transition-all ease-in-out duration-200">
-                  {receivedListings.all.length > 0 &&
-                  receivedListings[selectedCategory] ? (
-                    receivedListings[selectedCategory].map((item: Listing) => {
-                      return <Offer key={item.id} {...item} />;
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center rounded-xl bg-white  border border-gray-200 py-16 ">
-                      <div className="text-gray-700 text-lg font-bold  mx-4 mb-4 text-center ">
-                        No offers to display{" "}
-                        <p className="text-gray-700 text-sm mt-2 font-normal mb-3">
-                          Connect and create a offer to get started
-                        </p>
-                      </div>
-
-                      <Button label="Get started" onClick={create.onOpen} />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {multipage && countReceived > 0 && (
-              <div className="flex" key={activeTab + selectedCategory}>
-                {receivedListings[selectedCategory] && (
-                  <div className="flex gap-2">
-                    {Array.from({ length: countReceived / 5 + 1 }).map(
-                      (_, index) => (
-                        <Button
-                          key={index}
-                          label={`${index + 1}`}
-                          onClick={() => handlePageChange(index + 1)}
-                          secondary={currentPage === index + 1}
-                        />
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )} */}
+        
       </div>
     </div>
   );

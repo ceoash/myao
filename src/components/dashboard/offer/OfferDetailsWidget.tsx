@@ -30,7 +30,6 @@ import useOfferEditModal from "@/hooks/useOfferEditModal";
 import StatusChecker from "@/utils/status";
 import Card from "../Card";
 import { tempId } from "@/utils/generate";
-import CountdownTimer from "@/components/Countdown";
 
 interface OfferDetailsWidgetProps {
   listing: CustomListing;
@@ -66,6 +65,7 @@ interface OfferDetailsWidgetProps {
       byUsername: string;
       me: Bid;
       participant: Bid;
+      final?: boolean
     }>
   >;
   loadingState: {
@@ -100,7 +100,7 @@ interface OfferDetailsWidgetProps {
     byUsername: string;
     me: Bid;
     participant: Bid;
-  
+    final?: boolean
   };
   setBids: Dispatch<SetStateAction<Bid[]>>;
   setEvents: Dispatch<SetStateAction<any>>;
@@ -137,8 +137,6 @@ const OfferDetailsWidget = ({
   });
   const edit = useOfferEditModal();
   const { options } = listing;
-
-  console.log("OfferDetailsWidget: ", listing);
 
   useEffect(() => {
     if (!session || !session?.user?.id) {
@@ -191,45 +189,9 @@ const OfferDetailsWidget = ({
       ? listing?.seller
       : listing?.buyer || session?.user;
 
-  if (listing?.image) {
-    parsedImage = JSON.parse(listing?.image || "");
-  }
+  if (listing?.image) { parsedImage = JSON.parse(listing?.image || ""); }
 
   const now = new Date();
-
-  const handleUpdatedBid = (data: any) => {
-    const { price, userId, username, listingId, previous } = data;
-    console.log(
-      `Received offer price update for listing ${listingId}: ${price}`
-    );
-    setBids((prevBids) => {
-      let temporaryId = tempId();
-      const newBid = {
-        id: temporaryId,
-        price: price,
-        userId: userId,
-        listingId: listingId,
-        previous: previous,
-        createdAt: new Date(now),
-        updatedAt: new Date(now),
-      };
-      const updatedBids = [...prevBids, newBid];
-      return updatedBids;
-    });
-
-    setCurrentBid((prev) => {
-      const newBid = {
-        ...prev,
-        currentPrice: price,
-        byUserId: userId || "",
-        byUsername: username || "",
-        me: bids && bids.length > 0 ? bids[bids.length - 1] : null,
-      };
-      return newBid;
-    });
-    setStatus("haggling");
-    return console.log("New bid: ", data);
-  };
 
   return (
     <div
@@ -424,14 +386,14 @@ const OfferDetailsWidget = ({
           </div>
           <div className="px-6">
             <div className="text-md -mb-1 font-bold text-center flex flex-col items-center md:mt-6 ">
-              {status === "rejected" ||
-              status === "cancelled" ||
-              status === "expired"
-                ? "Last Offer" + " "
+              {currentBid.final  ? "Final Offer" + " " : 
+              status === "rejected" ||
+              status === "cancelled" 
+                ? "Current Offer" + " "
                 : status === "completed"
-                ? "Last Offer" + " "
+                ? "Accepted Offer" + " "
                 : status === "accepted"
-                ? "Last Offer" + " "
+                ? "Accepted Offer" + " "
                 : !currentBid.currentPrice || currentBid.currentPrice == ""
                 ? currentBid.currentPrice == "0" &&
                   (listing.price === "" ||
@@ -463,7 +425,7 @@ const OfferDetailsWidget = ({
               ></div>
             </div>
 
-            <div className="">
+            <div className="pb-4">
               <div className="flex justify-center gap-1 text-center ">
                 <span>By</span>
                 <Link
@@ -486,7 +448,8 @@ const OfferDetailsWidget = ({
                   Number(listing.price) > 0 &&
                   listing.userId !== sessionUser.id) ? (
                   <div className="flex flex-col justify-center items-center w-full mb-3">
-                    {bids && bids.length > 0 ? <CountdownTimer className="" date={currentBid.participant.createdAt} >
+                    {bids && bids.length > 0 ?
+
                     <div className="w-2/3 flex gap-2 mx-auto justify-center pt-4">
                       {
                         <>
@@ -495,7 +458,7 @@ const OfferDetailsWidget = ({
                               isLoading={loadingState.yes}
                               accept
                               onClick={() =>
-                                handleStatusChange("accepted", session?.user.id)
+                                handleStatusChange("completed", session?.user.id)
                               }
                               className="rounded-xl px-3 py-1 text-center w-10"
                             >
@@ -517,14 +480,14 @@ const OfferDetailsWidget = ({
                         </>
                       }
                     </div>
-                    </CountdownTimer> : (
+                 : (
                       <div className="flex justify-center mt-4 gap-2">
                        <div className="flex flex-col justify-center  items-center gap-4">
                             <Button
                               isLoading={loadingState.yes}
                               accept
                               onClick={() =>
-                                handleStatusChange("accepted", session?.user.id)
+                                handleStatusChange("completed", session?.user.id)
                               }
                               className="rounded-xl px-3 py-1 text-center w-10"
                             >
@@ -546,11 +509,10 @@ const OfferDetailsWidget = ({
                     )}
                   </div>
 
-                ) : bids && bids.length > 0 && <div className="w-full flex justify-center mt-2"><CountdownTimer className="" date={currentBid?.me?.createdAt} /></div>
+                ) : null
               )  : null}
 
-              {status === "awaiting approval" &&
-              listing.userId !== sessionUser.id &&
+              {status === "awaiting approval" && listing.userId !== sessionUser.id &&
               !currentBid?.currentPrice &&
               listing.price &&
               Number(listing.price) > 0 ? (

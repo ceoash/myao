@@ -9,6 +9,7 @@ import { Session } from "next-auth";
 import { getSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import prisma from "@/libs/prismadb";
+import getCurrentUser from "@/actions/getCurrentUser";
 
 interface IIndexProps {
   session: Session;
@@ -75,6 +76,26 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
       return {
         redirect: {
           destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+
+    const currentUser = await getCurrentUser(session);
+
+    if (!currentUser) {
+      return {
+        redirect: {
+          destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+  
+    if(currentUser.role !== "admin") {
+      return {
+        redirect: {
+          destination: "/dashboard",
           permanent: false,
         },
       };

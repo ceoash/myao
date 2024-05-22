@@ -4,9 +4,6 @@ import { DirectMessage } from ".prisma/client";
 import { PrismaClient } from "@prisma/client";
 import { createActivity } from "@/prisma";
 import { ExtendedActivity } from "@/interfaces/authenticated";
-import { da } from "date-fns/locale";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
 
 interface ErrorResponse {
   error: string;

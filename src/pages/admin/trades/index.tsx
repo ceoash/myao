@@ -13,7 +13,7 @@ import Image from "next/image";
 import { ImSortAmountAsc, ImSortAmountDesc } from "react-icons/im";
 import Link from "next/link";
 import StatusChecker from "@/utils/status";
-import { useRouter } from "next/navigation";
+import getCurrentUser from "@/actions/getCurrentUser";
 
 interface IndexProps {
   session: any;
@@ -40,9 +40,9 @@ const Index = ({
 }: IndexProps) => {
   const sortDesc = <ImSortAmountDesc className="inline ml-1 text-gray-500" />;
   const sortAsc = <ImSortAmountAsc className="inline ml-1 text-gray-500" />;
-  const router = useRouter();
   return (
     <Dash
+     admin
       meta={
         <Meta title="Offers" description="View your offers and manage them" />
       }
@@ -51,7 +51,7 @@ const Index = ({
         <div className=" bg-white rounded px-4">
           <div className="pt-6">
             <div className="flex justify-between items-center mb-4">
-              <h3>Your Trades</h3>
+              <h3>Trades</h3>
             </div>
             {listings && listings.length > 0 ? (
               <table className="text-left w-full font-normal">
@@ -141,7 +141,7 @@ const Index = ({
                         }`}
                       >
                         Last Updated{" "}
-                        {orderBy === "updatedAt"
+                        {!orderBy || orderBy === "updatedAt"
                           ? sortBy === "asc"
                             ? sortAsc
                             : sortDesc
@@ -155,7 +155,7 @@ const Index = ({
                   {listings.map((listing) => (
                     <tr key={listing.id}>
                       <td className="p-2 ">
-                        <div  className="flex" onClick={() => router.push(`/dashboard/trades/${listing.id}`)}>
+                        <Link className="flex" href={`/dashboard/trades/${listing.id}`}>
                         <div className="pr-4">
                           <Image
                             src={
@@ -191,7 +191,7 @@ const Index = ({
                             </div>
                           </div>
                         </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="p-2">£{Number(listing.price)}</td>
                       <td className="p-2">£{listing.bids[0].price ? Number(listing.bids[0].price) : "0.00"}</td>
@@ -214,7 +214,7 @@ const Index = ({
             page={page || 1}
             limit={limit || 10}
             pages={pages || 1}
-            model="dashboard/trade"
+            model="admin/trade"
           />
         </div>
       </div>
@@ -225,27 +225,44 @@ const Index = ({
 export const getServerSideProps: GetServerSideProps<any> = async (context) => {
   try {
     const session = await getSession(context);
+    if (!session) {
+      return {
+        redirect: {
+          destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+
+    const currentUser = await getCurrentUser(session);
+
+    if (!currentUser) {
+      return {
+        redirect: {
+          destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+
+    if(session?.user.role !== "admin") {
+      return {
+        redirect: {
+          destination: "/dashboard",
+          permanent: false,
+        },
+      };
+    }
+
     const id = context.query?.id ?? null;
     const page = Number(context.query.page) || 1;
     const limit = 5;
     const status = context.query.status || "all";
     const orderBy = context.query.orderBy || "updatedAt";
     const sortBy = context.query.sort || "desc";
-
+  
     let where = {
-      OR: [
-            { buyerId: session?.user?.id,
-              sellerId: {
-                notIn: [],
-              },
-            },
-        
-            { sellerId: session?.user?.id,
-              buyerId: {
-                notIn: [],
-              },
-            },
-          ],
+      
     };
 
     if (status !== "all") Object.assign(where, { status });
@@ -253,7 +270,6 @@ export const getServerSideProps: GetServerSideProps<any> = async (context) => {
     const tradesCount = await prisma.listing.count({
       where,
     });
-
     let query = "";
 
     const pages = Math.ceil(tradesCount / limit);

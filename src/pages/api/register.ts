@@ -22,6 +22,8 @@ const registerUser = async (name: string, email: string, password: string, usern
         hashedPassword: hashedPassword,
         username: username,
         activated: true,
+        status: "active",
+        role: "user",
       },
     });
 

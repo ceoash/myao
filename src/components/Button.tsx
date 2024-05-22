@@ -10,6 +10,7 @@ interface ButtonProps {
     type?: 'button' | 'submit' | 'reset';
     noBg?: boolean;
     children?: React.ReactNode;
+    className?: string;
     options?: {
         color?: 'primary' | 'danger';
     }
@@ -26,6 +27,7 @@ const Button: React.FC<ButtonProps> = ({
     icon: Icon = null,
     children,
     danger,
+    className,
     options = {
         color: 'primary'
     }

@@ -3,7 +3,8 @@ import prisma from "@/libs/prismadb";
 export default async function getAllOffersByUserId(
   session: any,
   PAGE_SIZE: number,
-  blocked?: { friendBlockedId: string, id: string }[]
+  blocked?: { friendBlockedId: string, id: string }[],
+  skip?: number
 ) {
   if (!session?.user?.email) {
     console.log("No session found");
@@ -43,6 +44,7 @@ export default async function getAllOffersByUserId(
         createdAt: "desc",
       },
       take: PAGE_SIZE || 4,
+      skip: skip || 0,
       include: {
         bids: {
           take: 1,
@@ -224,7 +226,6 @@ export default async function getAllOffersByUserId(
       })),
     }));
     
-
     return { listings, countSent, countPendingSent, countReceived, countPendingReceived };
   } catch (error: any) {
     throw new Error(error);

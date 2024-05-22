@@ -1,15 +1,18 @@
-import axios from 'axios';
-import Button from '../dashboard/Button';
-import PriceInput from '../inputs/PriceInput';
-import { Dispatch, SetStateAction, useState } from 'react';
-import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
-import { Bid } from '@prisma/client';
-import { useSession } from 'next-auth/react';
-import { useSocketContext } from '@/context/SocketContext';
-import { Session } from 'next-auth';
-import Spinner from '../Spinner';
-import useDataModal from '@/hooks/useDataModal';
+import axios from "axios";
+import Button from "../dashboard/Button";
+import PriceInput from "../inputs/PriceInput";
+import { Dispatch, SetStateAction, useState } from "react";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import { Bid } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import { useSocketContext } from "@/context/SocketContext";
+import { Session } from "next-auth";
+import Spinner from "../Spinner";
+import useDataModal from "@/hooks/useDataModal";
+import { MdCancel } from "react-icons/md";
+import { FaTimes } from "react-icons/fa";
+import { fi } from "date-fns/locale";
 
 interface PriceWidgetProps {
   listing: any;
@@ -23,12 +26,12 @@ interface PriceWidgetProps {
       name?: string;
       price: string | number;
       previous: string | number;
-    }
+    };
     participant: {
       name?: string;
       price: string | number;
       previous: string | number;
-    }
+    };
   };
   bids: Bid[];
   setBids: Dispatch<React.SetStateAction<Bid[]>>;
@@ -42,25 +45,26 @@ interface PriceWidgetProps {
     category?: string;
     subcategory?: string;
   }) => void;
-
 }
 
 export interface ErrorResponse {
   error: string;
 }
 
-const PriceWidget = ({ listing,
+const PriceWidget = ({
+  listing,
   currentBid,
   status,
   bids,
   setBids,
   events,
   handleStatusChange,
-  handleUpdateDetails, }: PriceWidgetProps) => {
-
+  handleUpdateDetails,
+}: PriceWidgetProps) => {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [finalOffer, setFinalOffer] = useState(false);
   const [bid, setBid] = useState<null | number>(null);
   const socket = useSocketContext();
 
@@ -73,10 +77,10 @@ const PriceWidget = ({ listing,
       toast.error("Please enter a offer price");
       return;
     }
-    handleUpdateDetails({ price: bid  });
+    handleUpdateDetails({ price: bid });
     setBid(null);
     setIsLoading(false);
-  }
+  };
 
   const updateBid = async (num: number | string | null) => {
     if (num === null) {
@@ -96,13 +100,27 @@ const PriceWidget = ({ listing,
       return;
     }
 
-    if (listing.buyerId === session?.user.id && currentBid?.participant?.price && typeof currentBid?.participant.price === "number" && num > currentBid.participant.price ) {
-      toast.error(`You can not submit a offer higher than £${currentBid.participant.price}!`);
+    if (
+      listing.buyerId === session?.user.id &&
+      currentBid?.participant?.price &&
+      typeof currentBid?.participant.price === "number" &&
+      num > currentBid.participant.price
+    ) {
+      toast.error(
+        `You can not submit a offer higher than £${currentBid.participant.price}!`
+      );
       return;
     }
 
-    if (listing.sellerId === session?.user.id && currentBid?.participant?.price && typeof currentBid?.participant.price === "number" && num < currentBid.participant.price) {
-      toast.error(`You can not submit a offer lower £${currentBid.participant.price}!`);
+    if (
+      listing.sellerId === session?.user.id &&
+      currentBid?.participant?.price &&
+      typeof currentBid?.participant.price === "number" &&
+      num < currentBid.participant.price
+    ) {
+      toast.error(
+        `You can not submit a offer lower £${currentBid.participant.price}!`
+      );
       return;
     }
 
@@ -117,6 +135,7 @@ const PriceWidget = ({ listing,
       setIsLoading(true);
       const response = await axios.post("/api/submitBid", {
         price: data.price,
+        final: finalOffer ? true : false,
         id: data.id,
         userId: session?.user.id,
       });
@@ -138,6 +157,7 @@ const PriceWidget = ({ listing,
         const previous = currentBid.currentPrice;
         const sellerId = listing?.sellerId || "";
         const buyerId = listing?.buyerId || "";
+      
 
         socket.emit("update_bid", {
           price: num,
@@ -147,6 +167,7 @@ const PriceWidget = ({ listing,
           previous,
           buyerId,
           sellerId,
+          final: finalOffer,
         });
 
         toast.success("New offer submitted!");
@@ -160,125 +181,129 @@ const PriceWidget = ({ listing,
   };
 
   const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       updateBid(bid);
     }
   };
 
-  return (
-    events &&
-      events.length > 0 &&
-      events[0].event !== "cancelled" &&
-      events[0].event !== "completed" &&
-      events[0].event !== "accepted" ? (
-        <div className="flex justify-between border rounded-lg border-orange-300 shadow  p-2 bg-orange-200">
-          <div className='w-full'>
-            <div className="flex rounded divide-x bg-orange-200 border border-orange-100">
-              <span className="p-2 px-3 text-md text-orange-500 mr-1">£</span>
-              <input
-                type="number"
-                disabled={isLoading}
-                className="w-full  px-2 hover:outline outline-orange-300 rounded-l "
-                placeholder="0.00"
-                value={bid ? bid : ""}
-                onChange={(e) => setBid(Number(e.target.value) > 0 ? Number(e.target.value) : null)}
-                onKeyDown={handleKeyDown}
-              />
-              {bids.length > 0 ? (
-                <button
-                  onClick={() => updateBid(bid)}
-                  disabled={isLoading}
-                  className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
-                >
-                  {isLoading ? (
-                    <Spinner />
-                  ) : currentBid.byUserId === session?.user?.id ? (
-                    "Update Offer"
-                  ) : (
-                    "Counter Offer"
-                  )}
-                </button>
-              ) : listing?.user?.id === session?.user?.id ? (
-                <button
-                  disabled={isLoading}
-                  onClick={() => updateBid(bid)}
-                  className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
-                >
-                  {isLoading ? <Spinner /> : "Update Offer"}
-                </button>
-              ) : (
-                <button
-                  disabled={isLoading}
-                  onClick={() => updateBid(bid)}
-                  className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
-                >
-                  {isLoading ? <Spinner /> : "Counter"}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {status !== "cancelled" &&
-            status !== "accepted" &&
-            status !== "completed" && (
-              <div className="flex justify-end">
-                <button
-                  disabled={isLoading}
-                  onClick={() =>
-                    handleStatusChange("cancelled", session?.user.id)
-                  }
-                  className="p-2 rounded whitespace-nowrap px-4  bg-gradient-to-b from-red-400 to-red-600 text-white  hover:opacity-80 border border-red-100 border-l-0 "
-                >
-                  Terminate
-                </button>
-              </div>
-            )}
-        </div>
-      ) : ( listing.userId === session?.user.id && status === "awaiting approval" ?
-      (
-      <div className="flex  justify-between   p-2 rounded-lg border-orange-300 shadow  bg-orange-200">
-        <div className='w-full'>
-          <div className="flex rounded  divide-x bg-gray-50">
-            <span className="p-2 px-3">£</span>
-            <input
-              type="number"
-              className="w-full  px-2"
-              placeholder="0.00"
-              value={bid ? bid : ""}
-              disabled={isLoading}
-              onChange={(e) => setBid(Number(e.target.value) > 0 ? Number(e.target.value) : null)}
-            />
-              <button
-                onClick={updateInitialOffer}
-                disabled={isLoading}
-                className="whitespace-nowrap p-2 px-3 text-sm bg-gradient-to-b from-orange-400 to-orange-600 text-white  hover:opacity-80 border border-red-100 border-l-0"
-              >
-                {isLoading ? (
-                  <Spinner />
-                ) : "Update Offer" }
-               
-              </button>
-            
-          </div>
-        </div>
-        
-
-        <div className="flex justify-end">
-          <button
-             onClick={() =>
-              handleStatusChange("cancelled", session?.user.id)
-            }
+  return events &&
+    events.length > 0 &&
+    events[0].event !== "cancelled" &&
+    events[0].event !== "completed" &&
+    events[0].event !== "accepted" ? (
+    <div className="flex justify-between border rounded-lg border-orange-300 shadow  p-2 bg-orange-200">
+      <div className="w-full">
+        <div className="flex rounded divide-x bg-orange-200 border border-orange-100">
+          <span className="p-2 px-3 text-md text-orange-500 mr-1">£</span>
+          <input
+            type="number"
             disabled={isLoading}
-            className=" rounded whitespace-nowrap px-4 bg-gradient-to-b from-red-400 to-red-600 text-white  border border-red-100 border-l-0 hover:opacity-80  "
+            className="w-full  px-2 hover:outline outline-orange-300 rounded-l "
+            placeholder="0.00"
+            value={bid ? bid : ""}
+            onChange={(e) =>
+              setBid(Number(e.target.value) > 0 ? Number(e.target.value) : null)
+            }
+            onKeyDown={handleKeyDown}
+          />
+          {bids.length > 0 ? (
+            <button
+              onClick={() => updateBid(bid)}
+              disabled={isLoading}
+              className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
+            >
+              {isLoading ? (
+                <Spinner />
+              ) : currentBid.byUserId === session?.user?.id ? (
+                "Update Offer"
+              ) : (
+                "Counter Offer"
+              )}
+            </button>
+          ) : listing?.user?.id === session?.user?.id ? (
+            <button
+              disabled={isLoading}
+              onClick={() => updateBid(bid)}
+              className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
+            >
+              {isLoading ? <Spinner /> : "Update Offer"}
+            </button>
+          ) : (
+            <button
+              disabled={isLoading}
+              onClick={() => updateBid(bid)}
+              className="whitespace-nowrap p-2 px-3 text-sm hover:opacity-80 text-white bg-gradient-to-b from-orange-300 to-orange-400 rounded-r"
+            >
+              {isLoading ? <Spinner /> : "Counter"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {status !== "cancelled" &&
+        status !== "accepted" &&
+        status !== "completed" && (
+          <div className="flex justify-end">
+            <button
+              disabled={isLoading}
+              onClick={() => handleStatusChange("cancelled", session?.user.id)}
+              className="p-2 rounded whitespace-nowrap px-4  bg-gradient-to-b from-red-400 to-red-600 text-white  hover:opacity-80 border border-red-100 border-l-0 "
+            >
+              <FaTimes />
+            </button>
+          </div>
+        )}
+      <label
+        htmlFor="final"
+        className="ml-4 whitespace-nowrap flex items-center"
+      >
+        <input
+          type="checkbox"
+          id="final"
+          checked={finalOffer}
+          onChange={() => setFinalOffer(!finalOffer)}
+        />
+        <span className="text-xs text-gray-600 whitespace-nowrap mx-2">
+          Final Offer
+        </span>
+      </label>
+    </div>
+  ) : listing.userId === session?.user.id && status === "awaiting approval" ? (
+    <div className="flex  justify-between   p-2 rounded-lg border-orange-300 shadow  bg-orange-200">
+      <div className="w-full">
+        <div className="flex rounded  divide-x bg-gray-50">
+          <span className="p-2 px-3">£</span>
+          <input
+            type="number"
+            className="w-full  px-2"
+            placeholder="0.00"
+            value={bid ? bid : ""}
+            disabled={isLoading}
+            onChange={(e) =>
+              setBid(Number(e.target.value) > 0 ? Number(e.target.value) : null)
+            }
+          />
+          <button
+            onClick={updateInitialOffer}
+            disabled={isLoading}
+            className="whitespace-nowrap p-2 px-3 text-sm bg-gradient-to-b from-orange-400 to-orange-600 text-white  hover:opacity-80 border border-red-100 border-l-0"
           >
-            Terminate
+            {isLoading ? <Spinner /> : "Update Offer"}
           </button>
         </div>
-    
       </div>
-    ) : null )
 
-  );
+      <div className="flex justify-end">
+        <button
+          onClick={() => handleStatusChange("cancelled", session?.user.id)}
+          disabled={isLoading}
+          className=" rounded whitespace-nowrap px-4 bg-gradient-to-b from-red-400 to-red-600 text-white  border border-red-100 border-l-0 hover:opacity-80  "
+        >
+          Terminate
+        </button>
+      </div>
+    </div>
+  ) : null;
 };
 
 export default PriceWidget;

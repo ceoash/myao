@@ -235,6 +235,7 @@ const Dash = (props: IDashProps) => {
                   <Breadcrumbs
                     pageTitle={props.pageTitle}
                     dashboard={props.dashboard}
+                    admin={props.admin}
                   />
                   {props.optionalData}
                 </div>

@@ -138,7 +138,7 @@ const UserMenu: React.FC<IUserMenuProps> = ({ session, blockedUsers, setToggle, 
               </button>
             </div>
 
-            <div className="hidden md:block relative cursor-pointer">
+            <div className="block relative cursor-pointer">
               <Link href={`/dashboard/conversations`} className="relative">
                {unreadCount > 0 && (
                   <div className="

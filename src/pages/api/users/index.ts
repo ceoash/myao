@@ -23,6 +23,11 @@ export default async function users(
 
   const {password, ...rest} = body
 
+  rest.email ? rest.email = rest.email.toLowerCase() : null
+  rest.username ? rest.username = rest.username.toLowerCase() : null
+  rest.role ? rest.role = rest.role.toLowerCase() : null
+  
+
   switch (method) {
     case "GET":
       try {
@@ -55,6 +60,7 @@ export default async function users(
         if (!password)
           return res.status(400).json({ error: "Missing required fields" });
         const hashedPassword = await bcrypt.hash(password, 10);
+
         const user = await prisma.user.create({
           data: {
             ...rest,

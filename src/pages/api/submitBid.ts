@@ -22,7 +22,7 @@ export default async function submitBid(
   const now = Date.now();
 
   if (req.method === "POST") {
-    const { price, id, bidById, userId } = req.body;
+    const { price, id, bidById, userId, final } = req.body;
 
 
     try {
@@ -73,6 +73,7 @@ export default async function submitBid(
               {
                 price: parseFloat(price.toString()),
                 userId: userId,
+                final: final || false,
                 previous:
                   updateListing.bids[updateListing.bids.length - 1]?.price ||
                   0,

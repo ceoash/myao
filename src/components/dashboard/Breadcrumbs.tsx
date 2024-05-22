@@ -2,7 +2,7 @@ import { truncateFromMiddle } from "@/utils/helpers";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boolean}) => {
+const Breadcrumb = ({pageTitle, dashboard, admin}: {pageTitle?: string, dashboard?: boolean, admin?: boolean}) => {
   const router = useRouter();
   const { asPath } = router;
   const pathParts = asPath.split("/").filter(Boolean);
@@ -11,7 +11,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
     <ol className="inline-flex items-center space-x-1 md:space-x-3">
       <li className="inline-flex items-center">
         <Link
-          href={`/dashboard/`}
+          href={admin ? '/admin/' : '/dashboard/'}
           className={`inline-flex items-center font-medium hover:text-orange-400 text-sm md:text-md md:font-bold ${
             pathParts.length === 1 ? "text-gray-700" : "text-gray-500"
           }`}
@@ -56,7 +56,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
             </svg>
           </span>
     
-          <span className="capitalize whitespace-nowrap">{pathParts[1]}</span>
+          <span className="capitalize whitespace-nowrap">{pathParts[1].includes("?") ? pathParts[1].split("?")[0] : pathParts[1]}</span>
         </Link>
       </li>
       )}
@@ -90,7 +90,7 @@ const Breadcrumb = ({pageTitle, dashboard}: {pageTitle?: string, dashboard?: boo
         )}
           <span className={`inline-flex items-center  font-medium text-sm md:text-md md:font-bold whitespace-nowrap ${
             pathParts.length === 3 ? "text-gray-700" : "text-gray-500"
-          }` }>{pathParts.length < 4 && pageTitle ? truncateFromMiddle(pageTitle) : truncateFromMiddle(pathParts[2]) && typeof pathParts[2] === 'string' && pathParts[2].includes('?') ? truncateFromMiddle(pathParts[2].split("?")[0]) : truncateFromMiddle(pathParts[2])}</span>
+          }` }>{pathParts.length < 4 && pageTitle ? truncateFromMiddle(pageTitle.includes("?") ? pageTitle.split("?")[0] : pageTitle) : truncateFromMiddle(pathParts[2]) && typeof pathParts[2] === 'string' && pathParts[2].includes('?') ? truncateFromMiddle(pathParts[2].split("?")[0]) : truncateFromMiddle(pathParts[2])}</span>
         </Link>
       </li>
       
